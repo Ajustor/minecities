@@ -104,30 +104,30 @@ décision par défaut pour avancer ; elle est indiquée, et facile à changer.
     restent des villageois. Veux-tu aussi que les **maisons du village soient déclarées
     automatiquement** (les lits des villageois deviendraient des maisons de la ville), ou que des
     villageois **sans métier puissent devenir citoyens** ?
-    > Réponse :
+    > Réponse : oui
 
 18. **Métiers sans poste vanilla** : le bûcheron et l'éleveur n'ont pas de poste de travail
     vanilla. Je propose une **bûche écorcée** (billot) pour le bûcheron et une **botte de foin**
     pour l'éleveur. D'accord, ou une autre idée ?
-    > Réponse :
+    > Réponse : ça me vas
 
 19. **Pêcheur et baril** : le baril est le poste du pêcheur vanilla, mais le mod s'en sert déjà
     comme garde-manger (comme les coffres). Le baril devient-il un poste de pêcheur seulement si
     l'atelier est au bord de l'eau, ou on garde le baril pour le stockage et on choisit un autre
     poste ?
-    > Réponse :
+    > Réponse : parfait
 
 20. **Dormir dans le Nether / l'End** : les lits y explosent. Les citoyens d'une ville du Nether
     ne dorment pas (et n'en souffrent pas), ou on imagine un « lit » propre à ces dimensions
     (ancre de réapparition ?) ?
-    > Réponse :
+    > Réponse : oui
 
 21. **Bâtisseur (brief 09)** : quels schémas livrer d'abord (maison 2 lits, maison 4 lits, ferme,
     cuisine, entrepôt…), et dans quel style (plaines, désert, taïga, comme les villages vanilla) ?
     Le bâtisseur doit-il aussi pouvoir agrandir/améliorer un bâtiment existant ?
-    > Réponse :
+    > Réponse : tout si possible
 
 22. **Pousser sur GitHub** : le remote est prêt. Je pousse `master` (ce qui lance le build, le site
     Pages et rend le dépôt visible selon ses réglages) ? Et je crée un premier tag `v0.2.0` pour
     déclencher une release ?
-    > Réponse :
+    > Réponse : fals une grosse branche par avancée de version
