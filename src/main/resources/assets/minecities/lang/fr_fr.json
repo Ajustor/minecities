@@ -6,24 +6,20 @@
   "entity.minecities.citizen": "Citoyen",
   "container.minecities.granary": "Grenier",
   "container.minecities.granary.of": "Grenier de %s",
-
   "tier.minecities.village": "Village",
   "tier.minecities.town": "Ville",
   "tier.minecities.city": "Grande ville",
   "tier.minecities.megalopolis": "Mégalopole",
-
   "hunger.minecities.well_fed": "repu",
   "hunger.minecities.fed": "nourri",
   "hunger.minecities.hungry": "affamé",
   "hunger.minecities.starving": "mourant de faim",
-
   "house.minecities.status.valid": "maison valide",
   "house.minecities.status.not_enclosed": "la pièce n'est pas close (une ouverture sans porte, un toit manquant, ou une maison trop grande)",
   "house.minecities.status.too_small": "la pièce est trop petite",
   "house.minecities.status.no_door": "il manque une porte",
   "house.minecities.status.no_bed": "il n'y a aucun lit libre (ils appartiennent peut-être à une autre maison)",
   "house.minecities.status.already_declared": "une autre plaque déclare déjà cette maison",
-
   "message.minecities.prefix": "[%s] ",
   "message.minecities.found": "%s a fondé la ville de %s !",
   "message.minecities.found.hint": "Construisez des maisons avec des lits et une porte, accrochez-y une plaque de maison, et garnissez le grenier de l'hôtel de ville : les citoyens viendront.",
@@ -32,14 +28,13 @@
   "message.minecities.hall.not_mayor": "Seul le maire de %s peut démolir son hôtel de ville.",
   "message.minecities.hall.orphan": "Cet hôtel de ville n'appartient à aucune ville.",
   "message.minecities.house.no_town": "Cette maison n'est sur le territoire d'aucune ville.",
-  "message.minecities.house.valid": "Maison enregistrée à %s : %s lit(s), %s coffre(s), %s blocs d'intérieur.",
+  "message.minecities.house.valid": "Bâtiment enregistré à %s : %s lit(s), %s poste(s) de travail, %s coffre(s), %s blocs d'intérieur.",
   "message.minecities.house.invalid": "Maison non reconnue : %s.",
   "message.minecities.house.removed": "La maison en %s n'est plus déclarée ; ses habitants cherchent un toit.",
   "message.minecities.citizen.arrived": "%s s'installe à %s.",
   "message.minecities.citizen.died": "%s est mort.",
   "message.minecities.tier.up": "%s devient : %s !",
   "message.minecities.tier.down": "%s redescend au rang de %s.",
-
   "info.minecities.title": "=== %s (%s) ===",
   "info.minecities.mayor": "Maire : %s",
   "info.minecities.population": "Citoyens : %s pour %s lit(s), dans %s maison(s)",
@@ -48,12 +43,10 @@
   "info.minecities.next": "Prochain palier, %s : %s citoyens et %s maisons",
   "info.minecities.hint.no_house": "Aucune maison déclarée : bâtissez une maison avec un lit et une porte, et accrochez-y une plaque de maison.",
   "info.minecities.hint.no_food": "Le grenier est vide : aucun citoyen ne viendra s'installer, et les vôtres auront faim.",
-
-  "citizen.minecities.status": "%s, de %s : %s, %s",
+  "citizen.minecities.status": "%s, de %s, %s : %s, %s",
   "citizen.minecities.home": "logé en %s",
   "citizen.minecities.homeless": "sans logis",
   "citizen.minecities.no_town": "nulle part",
-
   "command.minecities.no_town": "Vous n'êtes dans aucune ville, et n'en gérez aucune.",
   "command.minecities.not_mayor": "Vous n'êtes maire d'aucune ville.",
   "command.minecities.which_town": "Vous dirigez plusieurs villes : rendez-vous dans celle que vous voulez gérer.",
@@ -68,5 +61,15 @@
   "command.minecities.deputy.unchanged": "Rien à changer.",
   "command.minecities.deputy.added": "%s est adjoint au maire de %s.",
   "command.minecities.deputy.removed": "%s n'est plus adjoint au maire de %s.",
-  "command.minecities.hunger.set": "Faim réglée pour %s citoyen(s)."
+  "command.minecities.hunger.set": "Faim réglée pour %s citoyen(s).",
+  "house.minecities.status.empty": "il n'y a ni lit ni poste de travail",
+  "message.minecities.house.workstation": " - poste de travail : %s",
+  "message.minecities.citizen.hired": "%s devient %s.",
+  "info.minecities.jobs": "Emplois : %s occupé(s) sur %s poste(s) de travail",
+  "job.minecities.farmer": "fermier",
+  "job.minecities.cook": "cuisinier",
+  "citizen.minecities.jobless": "sans emploi",
+  "message.minecities.citizen.needs_tool": "%s, %s, a besoin d'%s : mettez-en une au grenier ou dans un coffre de son atelier.",
+  "tool.minecities.farmer": "une houe",
+  "tool.minecities.cook": "un ustensile"
 }

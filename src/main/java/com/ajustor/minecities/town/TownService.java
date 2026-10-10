@@ -139,8 +139,14 @@ public final class TownService {
 		Town town = found.get();
 		HouseScanner.Result result = survey(level, town, plaque);
 		if (result.valid()) {
+			House house = town.house(plaque).orElseThrow();
 			player.sendSystemMessage(Component.translatable("message.minecities.house.valid", town.name(),
-					result.beds().size(), result.containers().size(), result.volume()).withStyle(ChatFormatting.GREEN));
+					house.beds().size(), house.workstations().size(), house.containers().size(), house.volume())
+					.withStyle(ChatFormatting.GREEN));
+			for (House.Workstation station : house.workstations()) {
+				player.sendSystemMessage(Component.translatable("message.minecities.house.workstation",
+						Component.translatable(station.job().translationKey())).withStyle(ChatFormatting.GRAY));
+			}
 		} else {
 			player.sendSystemMessage(Component.translatable("message.minecities.house.invalid",
 					Component.translatable(result.status().translationKey())).withStyle(ChatFormatting.RED));
@@ -149,29 +155,33 @@ public final class TownService {
 		towns.changed();
 	}
 
-	/** Relève la maison et met la ville à jour : enregistrée si elle est valide, oubliée sinon. */
+	/** Relève le bâtiment et met la ville à jour : enregistré s'il est valide, oublié sinon. */
 	static HouseScanner.Result survey(ServerLevel level, Town town, BlockPos plaque) {
 		HouseScanner.Result raw = HouseScanner.scan((x, y, z) -> classify(level, new BlockPos(x, y, z)),
 				new HouseScanner.Pos(plaque.getX(), plaque.getY(), plaque.getZ()));
-		List<BlockPos> beds = raw.beds().stream().map(p -> new BlockPos(p.x(), p.y(), p.z()))
+		List<BlockPos> beds = raw.beds().stream().map(TownService::pos)
 				.filter(b -> !town.bedClaimedElsewhere(b, plaque)).toList();
+		List<House.Workstation> stations = raw.workstations().stream().map(TownService::pos)
+				.flatMap(p -> Job.ofWorkstation(level.getBlockState(p)).map(j -> new House.Workstation(p, j)).stream())
+				.toList();
 		HouseScanner.Result result = raw;
-		boolean declared = raw.plaques().stream()
-				.anyMatch(p -> town.house(new BlockPos(p.x(), p.y(), p.z())).isPresent());
+		boolean declared = raw.plaques().stream().anyMatch(p -> town.house(pos(p)).isPresent());
 		if (raw.valid() && declared) {
-			result = new HouseScanner.Result(HouseScanner.Status.ALREADY_DECLARED, raw.volume(), List.of(),
-					raw.containers(), raw.doors(), raw.plaques());
-		} else if (raw.valid() && beds.isEmpty()) {
-			result = new HouseScanner.Result(HouseScanner.Status.NO_BED, raw.volume(), List.of(), raw.containers(),
-					raw.doors(), raw.plaques());
+			result = raw.withStatus(HouseScanner.Status.ALREADY_DECLARED);
+		} else if (raw.valid() && beds.isEmpty() && stations.isEmpty()) {
+			result = raw.withStatus(HouseScanner.Status.NO_BED);
 		}
 		if (result.valid()) {
-			List<BlockPos> containers = raw.containers().stream().map(p -> new BlockPos(p.x(), p.y(), p.z())).toList();
-			town.putHouse(new House(plaque, beds, containers, raw.volume()));
+			List<BlockPos> containers = raw.containers().stream().map(TownService::pos).toList();
+			town.putHouse(new House(plaque, beds, containers, stations, raw.volume()));
 		} else {
 			town.removeHouse(plaque);
 		}
 		return result;
+	}
+
+	private static BlockPos pos(HouseScanner.Pos p) {
+		return new BlockPos(p.x(), p.y(), p.z());
 	}
 
 	/** Ce qu'est un bloc pour une maison : voir {@link HouseScanner.Cell}. */
@@ -191,6 +201,9 @@ public final class TownService {
 		if (block instanceof CrossCollisionBlock || block instanceof WallBlock) {
 			// Vitres, barreaux, clôtures et murets ferment une ouverture.
 			return HouseScanner.Cell.SOLID;
+		}
+		if (Job.ofWorkstation(state).isPresent()) {
+			return HouseScanner.Cell.WORKSTATION;
 		}
 		BlockEntity blockEntity = level.getBlockEntity(pos);
 		if (blockEntity instanceof ChestBlockEntity || blockEntity instanceof BarrelBlockEntity) {
@@ -218,11 +231,17 @@ public final class TownService {
 		});
 	}
 
-	/** Loge les sans-abri là où il reste des lits, et recalcule le palier. */
+	/**
+	 * Loge les sans-abri là où il reste des lits, donne les postes libres aux sans-emploi, et
+	 * recalcule le palier.
+	 */
 	private static void settle(ServerLevel level, Town town) {
 		for (UUID citizen : town.residents().keySet()) {
 			town.house(citizen);
 		}
+		town.assignJobs().forEach((citizen, job) -> notify(level.getServer(), town, Component.translatable(
+				"message.minecities.citizen.hired", town.resident(citizen).map(Resident::name).orElse("?"),
+				Component.translatable(job.job().translationKey()))));
 		town.updateTier().ifPresent(before -> announceTier(level, town, before));
 	}
 
@@ -420,7 +439,11 @@ public final class TownService {
 				Component.translatable(town.tier().translationKey())).withStyle(ChatFormatting.GOLD));
 		player.sendSystemMessage(Component.translatable("info.minecities.mayor", town.mayorName()));
 		player.sendSystemMessage(Component.translatable("info.minecities.population", town.population(),
-				town.capacity(), town.houses().size()));
+				town.capacity(), town.homes().size()));
+		if (town.workstations() > 0) {
+			long employed = town.residents().values().stream().filter(r -> r.job().isPresent()).count();
+			player.sendSystemMessage(Component.translatable("info.minecities.jobs", employed, town.workstations()));
+		}
 		player.sendSystemMessage(Component.translatable("info.minecities.territory", town.radius(),
 				town.hall().toShortString()));
 		granary(level, town).ifPresent(g -> player.sendSystemMessage(

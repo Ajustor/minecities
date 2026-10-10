@@ -176,29 +176,81 @@ public final class Town {
 		return houses.values().stream().anyMatch(h -> !h.plaque().equals(plaque) && h.beds().contains(bed));
 	}
 
+	/** Les bâtiments où l'on dort ; ce sont eux qui comptent pour le palier. */
+	public List<House> homes() {
+		return houses.values().stream().filter(House::isHome).toList();
+	}
+
 	/**
-	 * Enregistre (ou relève à nouveau) une maison. Les habitants dont le lit a disparu se retrouvent
-	 * sans logis.
+	 * Enregistre (ou relève à nouveau) un bâtiment. Les habitants dont le lit a disparu se retrouvent
+	 * sans logis, les travailleurs dont le poste a disparu sans emploi.
 	 */
 	public void putHouse(House house) {
 		houses.put(house.plaque(), house);
-		residents.replaceAll((uuid, r) -> r.home().filter(house.plaque()::equals).isPresent()
-				&& r.bed().filter(house.beds()::contains).isEmpty() ? r.evicted() : r);
+		List<BlockPos> stations = house.workstations().stream().map(House.Workstation::pos).toList();
+		residents.replaceAll((uuid, r) -> {
+			if (r.home().filter(house.plaque()::equals).isPresent()
+					&& r.bed().filter(house.beds()::contains).isEmpty()) {
+				r = r.evicted();
+			}
+			if (r.job().filter(j -> j.workshop().equals(house.plaque()) && !stations.contains(j.station())).isPresent()) {
+				r = r.unemployed();
+			}
+			return r;
+		});
 	}
 
-	/** Oublie une maison ; ses habitants se retrouvent sans logis. Renvoie leurs UUID. */
+	/**
+	 * Oublie un bâtiment ; ses habitants se retrouvent sans logis, ses travailleurs sans emploi.
+	 * Renvoie les UUID des habitants.
+	 */
 	public List<UUID> removeHouse(BlockPos plaque) {
 		List<UUID> evicted = new ArrayList<>();
 		if (houses.remove(plaque) != null) {
 			residents.replaceAll((uuid, r) -> {
 				if (r.home().filter(plaque::equals).isPresent()) {
 					evicted.add(uuid);
-					return r.evicted();
+					r = r.evicted();
+				}
+				if (r.job().filter(j -> j.workshop().equals(plaque)).isPresent()) {
+					r = r.unemployed();
 				}
 				return r;
 			});
 		}
 		return evicted;
+	}
+
+	/**
+	 * Donne les postes de travail libres aux citoyens sans emploi, dans l'ordre d'arrivée. Renvoie
+	 * les nouveaux emplois.
+	 */
+	public Map<UUID, Resident.Employment> assignJobs() {
+		Set<BlockPos> taken = new HashSet<>();
+		residents.values().forEach(r -> r.job().ifPresent(j -> taken.add(j.station())));
+		Map<UUID, Resident.Employment> hired = new LinkedHashMap<>();
+		for (House house : houses.values()) {
+			for (House.Workstation station : house.workstations()) {
+				if (taken.contains(station.pos())) {
+					continue;
+				}
+				Optional<UUID> jobless = residents.entrySet().stream().filter(e -> e.getValue().job().isEmpty())
+						.map(Map.Entry::getKey).findFirst();
+				if (jobless.isEmpty()) {
+					return hired;
+				}
+				Resident.Employment employment = new Resident.Employment(station.job(), house.plaque(), station.pos());
+				residents.put(jobless.get(), residents.get(jobless.get()).employed(employment));
+				taken.add(station.pos());
+				hired.put(jobless.get(), employment);
+			}
+		}
+		return hired;
+	}
+
+	/** Les postes de travail de la ville, et combien sont occupés. */
+	public int workstations() {
+		return houses.values().stream().mapToInt(h -> h.workstations().size()).sum();
 	}
 
 	public int capacity() {
@@ -264,7 +316,7 @@ public final class Town {
 
 	/** Recalcule le palier ; renvoie l'ancien s'il a changé. */
 	public Optional<TownTier> updateTier() {
-		TownTier now = TownTier.of(population(), houses.size());
+		TownTier now = TownTier.of(population(), homes().size());
 		if (now == tier) {
 			return Optional.empty();
 		}

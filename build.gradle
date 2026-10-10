@@ -105,3 +105,10 @@ fabricApi {
 		eula = true
 	}
 }
+
+// ./gradlew runClientGameTest -PminecitiesGametest=city,work : ne joue que ces scènes (voir CityScenes.selected).
+loom.runs.matching { it.name == 'clientGameTest' }.configureEach {
+	if (project.hasProperty('minecitiesGametest')) {
+		vmArg "-Dminecities.gametest=${project.property('minecitiesGametest')}"
+	}
+}

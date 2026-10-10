@@ -2,11 +2,13 @@ package com.ajustor.minecities.citizen;
 
 import com.ajustor.minecities.town.Names;
 import com.ajustor.minecities.town.Resident;
+import com.ajustor.minecities.town.Stock;
 import com.ajustor.minecities.town.Town;
 import com.ajustor.minecities.town.TownService;
 import com.ajustor.minecities.town.Towns;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.NonNullList;
 import net.minecraft.core.UUIDUtil;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.particles.ItemParticleOption;
@@ -19,11 +21,13 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.ContainerHelper;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
@@ -60,6 +64,7 @@ public class CitizenEntity extends PathfinderMob {
 			EntityDataSerializers.INT);
 	/** Le citoyen relit ce que la ville sait de lui toutes les 5 secondes. */
 	private static final int SYNC_INTERVAL = 100;
+	public static final int INVENTORY_SIZE = 9;
 
 	private UUID townId;
 	private float hunger = Hunger.SATED;
@@ -67,11 +72,17 @@ public class CitizenEntity extends PathfinderMob {
 	/** Ce que la ville sait de lui, relu régulièrement (vide s'il n'a pas de ville). */
 	private Optional<Resident> resident = Optional.empty();
 	private final DoorKeeper doors = new DoorKeeper(this);
+	/** Ce qu'il porte : récoltes, ingrédients, semences. */
+	private final NonNullList<ItemStack> inventory = NonNullList.withSize(INVENTORY_SIZE, ItemStack.EMPTY);
+	/** Quand il s'est plaint pour la dernière fois, par motif : une fois par jour au plus. */
+	private final java.util.Map<String, Long> complaints = new java.util.HashMap<>();
 
 	public CitizenEntity(EntityType<? extends PathfinderMob> type, Level level) {
 		super(type, level);
 		setPersistenceRequired();
 		getNavigation().setCanOpenDoors(true);
+		// L'outil qu'il a en main lui vient de la ville : il le rend à sa mort.
+		setDropChance(EquipmentSlot.MAINHAND, 2.0f);
 	}
 
 	public static AttributeSupplier.Builder createAttributes() {
@@ -94,6 +105,8 @@ public class CitizenEntity extends PathfinderMob {
 		goalSelector.addGoal(1, new AvoidEntityGoal<>(this, Monster.class, 8.0f, 0.6, 0.75));
 		goalSelector.addGoal(2, new SleepInBedGoal(this));
 		goalSelector.addGoal(3, new EatGoal(this));
+		goalSelector.addGoal(4, new FarmerGoal(this));
+		goalSelector.addGoal(4, new CookGoal(this));
 		goalSelector.addGoal(5, new MoveTowardsRestrictionGoal(this, 0.6));
 		goalSelector.addGoal(6, new WaterAvoidingRandomStrollGoal(this, 0.5));
 		goalSelector.addGoal(7, new InteractGoal(this, CitizenEntity.class, 6.0f, 0.03f));
@@ -128,6 +141,68 @@ public class CitizenEntity extends PathfinderMob {
 
 	public Optional<Resident> resident() {
 		return resident;
+	}
+
+	/** Son emploi, s'il en a un. */
+	public Optional<Resident.Employment> job() {
+		return resident.flatMap(Resident::job);
+	}
+
+	public NonNullList<ItemStack> inventory() {
+		return inventory;
+	}
+
+	/** Met un objet dans son inventaire ; ce qui ne rentre pas tombe à ses pieds. */
+	public void carry(ItemStack stack) {
+		ItemStack rest = Stock.insert(inventory, stack);
+		if (!rest.isEmpty() && level() instanceof ServerLevel serverLevel) {
+			spawnAtLocation(serverLevel, rest);
+		}
+	}
+
+	public boolean inventoryFull() {
+		return inventory.stream().noneMatch(ItemStack::isEmpty);
+	}
+
+	/**
+	 * Se dirige vers un bloc. S'il est plein (un coffre, un fumoir), vers la case libre la plus proche
+	 * à côté : un chemin qui vise un bloc plein n'aboutit pas.
+	 */
+	public void walkTo(BlockPos target, double speed) {
+		BlockPos spot = target;
+		if (!level().getBlockState(target).getCollisionShape(level(), target).isEmpty()) {
+			double best = Double.MAX_VALUE;
+			for (net.minecraft.core.Direction d : net.minecraft.core.Direction.Plane.HORIZONTAL) {
+				BlockPos side = target.relative(d);
+				if (level().getBlockState(side).getCollisionShape(level(), side).isEmpty()) {
+					double distance = distanceToSqr(side.getX() + 0.5, side.getY(), side.getZ() + 0.5);
+					if (distance < best) {
+						best = distance;
+						spot = side;
+					}
+				}
+			}
+		}
+		getNavigation().moveTo(spot.getX() + 0.5, spot.getY(), spot.getZ() + 0.5, 1, speed);
+	}
+
+	/** À portée de bras de ce bloc (3 blocs, comme un joueur). */
+	public boolean reached(BlockPos target) {
+		return distanceToSqr(target.getX() + 0.5, target.getY() + 0.5, target.getZ() + 0.5) <= 3.0 * 3.0;
+	}
+
+	/** Prévient le maire d'un souci (un outil manquant…), une fois par jour et par motif. */
+	public void complain(String key, Component message) {
+		if (!(level() instanceof ServerLevel serverLevel) || townId == null) {
+			return;
+		}
+		long now = serverLevel.getGameTime();
+		Long last = complaints.get(key);
+		if (last != null && now - last < 24000) {
+			return;
+		}
+		complaints.put(key, now);
+		town().ifPresent(t -> TownService.notify(serverLevel.getServer(), t, message));
 	}
 
 	public float hunger() {
@@ -236,6 +311,10 @@ public class CitizenEntity extends PathfinderMob {
 	@Override
 	public void die(DamageSource source) {
 		super.die(source);
+		if (level() instanceof ServerLevel serverLevel) {
+			inventory.forEach(stack -> spawnAtLocation(serverLevel, stack));
+			inventory.clear();
+		}
 		if (level() instanceof ServerLevel serverLevel && townId != null) {
 			TownService.farewell(serverLevel, townId, getUUID(),
 					Component.translatable("message.minecities.citizen.died", getName()));
@@ -264,7 +343,9 @@ public class CitizenEntity extends PathfinderMob {
 				.orElse(Component.translatable("citizen.minecities.homeless"));
 		Component town = town().<Component>map(t -> Component.literal(t.name()))
 				.orElse(Component.translatable("citizen.minecities.no_town"));
-		player.sendSystemMessage(Component.translatable("citizen.minecities.status", getName(), town,
+		Component job = job().<Component>map(j -> Component.translatable(j.job().translationKey()))
+				.orElse(Component.translatable("citizen.minecities.jobless"));
+		player.sendSystemMessage(Component.translatable("citizen.minecities.status", getName(), town, job,
 				Component.translatable(Hunger.state(hunger).translationKey()), home).withStyle(ChatFormatting.AQUA));
 	}
 
@@ -286,6 +367,7 @@ public class CitizenEntity extends PathfinderMob {
 		output.putFloat("hunger", hunger);
 		output.putInt("starving", starvingTicks);
 		output.putInt("variant", variant());
+		ContainerHelper.saveAllItems(output.child("inventory"), inventory);
 	}
 
 	@Override
@@ -295,5 +377,7 @@ public class CitizenEntity extends PathfinderMob {
 		hunger = input.getFloatOr("hunger", Hunger.SATED);
 		starvingTicks = input.getIntOr("starving", 0);
 		setVariant(input.getIntOr("variant", 0));
+		inventory.clear();
+		ContainerHelper.loadAllItems(input.childOrEmpty("inventory"), inventory);
 	}
 }

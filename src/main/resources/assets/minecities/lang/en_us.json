@@ -6,24 +6,20 @@
   "entity.minecities.citizen": "Citizen",
   "container.minecities.granary": "Granary",
   "container.minecities.granary.of": "%s Granary",
-
   "tier.minecities.village": "Village",
   "tier.minecities.town": "Town",
   "tier.minecities.city": "City",
   "tier.minecities.megalopolis": "Megalopolis",
-
   "hunger.minecities.well_fed": "well fed",
   "hunger.minecities.fed": "fed",
   "hunger.minecities.hungry": "hungry",
   "hunger.minecities.starving": "starving",
-
   "house.minecities.status.valid": "valid house",
   "house.minecities.status.not_enclosed": "the room is not enclosed (an opening without a door, a missing roof, or a house too big)",
   "house.minecities.status.too_small": "the room is too small",
   "house.minecities.status.no_door": "a door is missing",
   "house.minecities.status.no_bed": "there is no free bed (they may belong to another house)",
   "house.minecities.status.already_declared": "another plaque already declares this house",
-
   "message.minecities.prefix": "[%s] ",
   "message.minecities.found": "%s founded the town of %s!",
   "message.minecities.found.hint": "Build houses with beds and a door, hang a house plaque inside, and stock the town hall granary: citizens will come.",
@@ -32,14 +28,13 @@
   "message.minecities.hall.not_mayor": "Only the mayor of %s can tear down its town hall.",
   "message.minecities.hall.orphan": "This town hall belongs to no town.",
   "message.minecities.house.no_town": "This house is not on any town's territory.",
-  "message.minecities.house.valid": "House registered in %s: %s bed(s), %s chest(s), %s interior blocks.",
+  "message.minecities.house.valid": "Building registered in %s: %s bed(s), %s workstation(s), %s chest(s), %s interior blocks.",
   "message.minecities.house.invalid": "House not recognised: %s.",
   "message.minecities.house.removed": "The house at %s is no longer declared; its residents are looking for a roof.",
   "message.minecities.citizen.arrived": "%s settles in %s.",
   "message.minecities.citizen.died": "%s died.",
   "message.minecities.tier.up": "%s becomes a %s!",
   "message.minecities.tier.down": "%s falls back to %s.",
-
   "info.minecities.title": "=== %s (%s) ===",
   "info.minecities.mayor": "Mayor: %s",
   "info.minecities.population": "Citizens: %s for %s bed(s), in %s house(s)",
@@ -48,12 +43,10 @@
   "info.minecities.next": "Next tier, %s: %s citizens and %s houses",
   "info.minecities.hint.no_house": "No house declared: build a house with a bed and a door, and hang a house plaque inside.",
   "info.minecities.hint.no_food": "The granary is empty: no citizen will settle, and yours will go hungry.",
-
-  "citizen.minecities.status": "%s, of %s: %s, %s",
+  "citizen.minecities.status": "%s, of %s, %s: %s, %s",
   "citizen.minecities.home": "lives at %s",
   "citizen.minecities.homeless": "homeless",
   "citizen.minecities.no_town": "nowhere",
-
   "command.minecities.no_town": "You are in no town, and manage none.",
   "command.minecities.not_mayor": "You are not the mayor of any town.",
   "command.minecities.which_town": "You run several towns: go to the one you want to manage.",
@@ -68,5 +61,15 @@
   "command.minecities.deputy.unchanged": "Nothing to change.",
   "command.minecities.deputy.added": "%s is now deputy mayor of %s.",
   "command.minecities.deputy.removed": "%s is no longer deputy mayor of %s.",
-  "command.minecities.hunger.set": "Hunger set for %s citizen(s)."
+  "command.minecities.hunger.set": "Hunger set for %s citizen(s).",
+  "house.minecities.status.empty": "there is neither a bed nor a workstation",
+  "message.minecities.house.workstation": " - workstation: %s",
+  "message.minecities.citizen.hired": "%s becomes a %s.",
+  "info.minecities.jobs": "Jobs: %s filled out of %s workstation(s)",
+  "job.minecities.farmer": "farmer",
+  "job.minecities.cook": "cook",
+  "citizen.minecities.jobless": "jobless",
+  "message.minecities.citizen.needs_tool": "%s, %s, needs %s: put one in the granary or in a chest of their workshop.",
+  "tool.minecities.farmer": "a hoe",
+  "tool.minecities.cook": "a utensil"
 }

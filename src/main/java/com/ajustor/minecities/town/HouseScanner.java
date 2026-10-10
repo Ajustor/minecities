@@ -7,10 +7,10 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * Reconnaît une maison construite par le joueur, sans plan imposé : depuis la plaque posée à
+ * Reconnaît un bâtiment construit par le joueur, sans plan imposé : depuis la plaque posée à
  * l'intérieur, on remplit l'espace libre de proche en proche. Si ce remplissage reste enfermé
- * (murs, toit, sol, portes fermant les ouvertures), c'est une maison ; les lits et les coffres qui
- * bordent cet espace sont les siens.
+ * (murs, toit, sol, portes fermant les ouvertures), c'est un bâtiment ; les lits (une maison), les
+ * postes de travail (un atelier) et les coffres qui bordent cet espace sont les siens.
  *
  * <p>Indépendant de Minecraft : le monde est vu à travers {@link World}, ce qui permet de tester
  * l'algorithme sur des maisons dessinées à la main.
@@ -37,6 +37,8 @@ public final class HouseScanner {
 		BED,
 		/** Un coffre, un tonneau : des réserves. */
 		CONTAINER,
+		/** Un poste de travail (composteur, fumoir…) : un emploi, voir {@link Job}. */
+		WORKSTATION,
 		/** Une plaque de maison : libre, mais on la note (une pièce n'a qu'une plaque). */
 		PLAQUE
 	}
@@ -59,6 +61,9 @@ public final class HouseScanner {
 		NOT_ENCLOSED("not_enclosed"),
 		TOO_SMALL("too_small"),
 		NO_DOOR("no_door"),
+		/** Ni lit ni poste de travail : la pièce ne sert à rien à la ville. */
+		EMPTY("empty"),
+		/** Les lits de la pièce appartiennent déjà à une autre maison. */
 		NO_BED("no_bed"),
 		/** Une autre plaque déclare déjà cette pièce. */
 		ALREADY_DECLARED("already_declared");
@@ -78,8 +83,12 @@ public final class HouseScanner {
 	 * Le résultat d'un relevé : son verdict, le volume intérieur, ce qui borde l'intérieur, et les
 	 * autres plaques trouvées dedans. Les listes sont dans l'ordre de découverte.
 	 */
-	public record Result(Status status, int volume, List<Pos> beds, List<Pos> containers, int doors,
-			List<Pos> plaques) {
+	public record Result(Status status, int volume, List<Pos> beds, List<Pos> containers, List<Pos> workstations,
+			int doors, List<Pos> plaques) {
+		public Result withStatus(Status status) {
+			return new Result(status, volume, beds, containers, workstations, doors, plaques);
+		}
+
 		public boolean valid() {
 			return status == Status.VALID;
 		}
@@ -94,6 +103,7 @@ public final class HouseScanner {
 		Set<Pos> border = new HashSet<>();
 		List<Pos> beds = new ArrayList<>();
 		List<Pos> containers = new ArrayList<>();
+		List<Pos> workstations = new ArrayList<>();
 		List<Pos> plaques = new ArrayList<>();
 		int doors = 0;
 		ArrayDeque<Pos> queue = new ArrayDeque<>();
@@ -131,6 +141,7 @@ public final class HouseScanner {
 					switch (cell) {
 						case BED -> beds.add(n);
 						case CONTAINER -> containers.add(n);
+						case WORKSTATION -> workstations.add(n);
 						case DOOR -> doors++;
 						default -> {
 						}
@@ -143,16 +154,16 @@ public final class HouseScanner {
 			status = Status.TOO_SMALL;
 		} else if (doors == 0) {
 			status = Status.NO_DOOR;
-		} else if (beds.isEmpty()) {
-			status = Status.NO_BED;
+		} else if (beds.isEmpty() && workstations.isEmpty()) {
+			status = Status.EMPTY;
 		} else {
 			status = Status.VALID;
 		}
-		return new Result(status, interior.size(), List.copyOf(beds), List.copyOf(containers), doors,
-				List.copyOf(plaques));
+		return new Result(status, interior.size(), List.copyOf(beds), List.copyOf(containers),
+				List.copyOf(workstations), doors, List.copyOf(plaques));
 	}
 
 	private static Result leak(int volume) {
-		return new Result(Status.NOT_ENCLOSED, volume, List.of(), List.of(), 0, List.of());
+		return new Result(Status.NOT_ENCLOSED, volume, List.of(), List.of(), List.of(), 0, List.of());
 	}
 }
