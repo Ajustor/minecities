@@ -1,0 +1,8 @@
+{
+  "variants": {
+    "facing=north": { "model": "minecities:block/town_hall" },
+    "facing=east": { "model": "minecities:block/town_hall", "y": 90 },
+    "facing=south": { "model": "minecities:block/town_hall", "y": 180 },
+    "facing=west": { "model": "minecities:block/town_hall", "y": 270 }
+  }
+}

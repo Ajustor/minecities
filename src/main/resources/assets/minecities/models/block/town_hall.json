@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/orientable",
+  "textures": {
+    "top": "minecities:block/town_hall_top",
+    "front": "minecities:block/town_hall_front",
+    "side": "minecities:block/town_hall_side"
+  }
+}

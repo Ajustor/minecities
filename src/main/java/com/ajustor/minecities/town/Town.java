@@ -1,0 +1,275 @@
+package com.ajustor.minecities.town;
+
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.UUIDUtil;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.level.Level;
+
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
+
+/**
+ * Une ville : son hôtel de ville, son maire et ses adjoints, ses maisons et ses citoyens. Elle
+ * grandit de palier en palier ({@link TownTier}) avec sa population.
+ *
+ * <p>Les citoyens sont tenus ici par leur UUID, chargés ou non ; leur entité garde le reste (faim,
+ * apparence).
+ */
+public final class Town {
+	public static final Codec<Town> CODEC = RecordCodecBuilder.create(i -> i.group(
+			UUIDUtil.CODEC.fieldOf("id").forGetter(t -> t.id),
+			Codec.STRING.fieldOf("name").forGetter(t -> t.name),
+			Level.RESOURCE_KEY_CODEC.fieldOf("dimension").forGetter(t -> t.dimension),
+			BlockPos.CODEC.fieldOf("hall").forGetter(t -> t.hall),
+			UUIDUtil.CODEC.fieldOf("mayor").forGetter(t -> t.mayor),
+			Codec.STRING.optionalFieldOf("mayor_name", "").forGetter(t -> t.mayorName),
+			UUIDUtil.CODEC.listOf().optionalFieldOf("deputies", List.of()).forGetter(t -> List.copyOf(t.deputies)),
+			Codec.LONG.optionalFieldOf("founded", 0L).forGetter(t -> t.founded),
+			House.CODEC.listOf().optionalFieldOf("houses", List.of()).forGetter(t -> List.copyOf(t.houses.values())),
+			Codec.unboundedMap(UUIDUtil.STRING_CODEC, Resident.CODEC).optionalFieldOf("residents", Map.of())
+					.forGetter(t -> t.residents),
+			Codec.STRING.optionalFieldOf("tier", TownTier.VILLAGE.serializedName())
+					.forGetter(t -> t.tier.serializedName()),
+			Codec.LONG.optionalFieldOf("last_arrival", 0L).forGetter(t -> t.lastArrival)
+	).apply(i, Town::new));
+
+	private final UUID id;
+	private String name;
+	private final ResourceKey<Level> dimension;
+	private final BlockPos hall;
+	private UUID mayor;
+	private String mayorName;
+	private final Set<UUID> deputies;
+	private final long founded;
+	private final Map<BlockPos, House> houses = new LinkedHashMap<>();
+	private final Map<UUID, Resident> residents;
+	private TownTier tier;
+	private long lastArrival;
+
+	private Town(UUID id, String name, ResourceKey<Level> dimension, BlockPos hall, UUID mayor, String mayorName,
+			List<UUID> deputies, long founded, List<House> houses, Map<UUID, Resident> residents, String tier,
+			long lastArrival) {
+		this.id = id;
+		this.name = name;
+		this.dimension = dimension;
+		this.hall = hall;
+		this.mayor = mayor;
+		this.mayorName = mayorName;
+		this.deputies = new HashSet<>(deputies);
+		this.founded = founded;
+		houses.forEach(h -> this.houses.put(h.plaque(), h));
+		this.residents = new LinkedHashMap<>(residents);
+		this.tier = TownTier.fromSerializedName(tier);
+		this.lastArrival = lastArrival;
+	}
+
+	public static Town found(String name, ResourceKey<Level> dimension, BlockPos hall, UUID mayor, String mayorName,
+			long now) {
+		return new Town(UUID.randomUUID(), name, dimension, hall, mayor, mayorName, List.of(), now, List.of(),
+				Map.of(), TownTier.VILLAGE.serializedName(), now);
+	}
+
+	public UUID id() {
+		return id;
+	}
+
+	public String name() {
+		return name;
+	}
+
+	public void rename(String name) {
+		this.name = name;
+	}
+
+	public ResourceKey<Level> dimension() {
+		return dimension;
+	}
+
+	public BlockPos hall() {
+		return hall;
+	}
+
+	public UUID mayor() {
+		return mayor;
+	}
+
+	public String mayorName() {
+		return mayorName;
+	}
+
+	public void setMayor(UUID mayor, String mayorName) {
+		this.mayor = mayor;
+		this.mayorName = mayorName;
+		deputies.remove(mayor);
+	}
+
+	public Set<UUID> deputies() {
+		return Set.copyOf(deputies);
+	}
+
+	public boolean addDeputy(UUID player) {
+		return !player.equals(mayor) && deputies.add(player);
+	}
+
+	public boolean removeDeputy(UUID player) {
+		return deputies.remove(player);
+	}
+
+	/** Le maire et ses adjoints gèrent la ville. */
+	public boolean canManage(UUID player) {
+		return mayor.equals(player) || deputies.contains(player);
+	}
+
+	public long founded() {
+		return founded;
+	}
+
+	public TownTier tier() {
+		return tier;
+	}
+
+	public int radius() {
+		return tier.radius();
+	}
+
+	public long lastArrival() {
+		return lastArrival;
+	}
+
+	/** Dans le territoire de la ville : un disque autour de l'hôtel de ville, sur toute la hauteur. */
+	public boolean contains(ResourceKey<Level> dimension, BlockPos pos) {
+		if (!this.dimension.equals(dimension)) {
+			return false;
+		}
+		long dx = pos.getX() - hall.getX();
+		long dz = pos.getZ() - hall.getZ();
+		return dx * dx + dz * dz <= (long) radius() * radius();
+	}
+
+	/** La distance horizontale entre l'hôtel de ville et ce point. */
+	public double distance(BlockPos pos) {
+		double dx = pos.getX() - hall.getX();
+		double dz = pos.getZ() - hall.getZ();
+		return Math.sqrt(dx * dx + dz * dz);
+	}
+
+	// Maisons
+
+	public List<House> houses() {
+		return List.copyOf(houses.values());
+	}
+
+	public Optional<House> house(BlockPos plaque) {
+		return Optional.ofNullable(houses.get(plaque));
+	}
+
+	/** Une autre maison de la ville a-t-elle déjà ce lit ? */
+	public boolean bedClaimedElsewhere(BlockPos bed, BlockPos plaque) {
+		return houses.values().stream().anyMatch(h -> !h.plaque().equals(plaque) && h.beds().contains(bed));
+	}
+
+	/**
+	 * Enregistre (ou relève à nouveau) une maison. Les habitants dont le lit a disparu se retrouvent
+	 * sans logis.
+	 */
+	public void putHouse(House house) {
+		houses.put(house.plaque(), house);
+		residents.replaceAll((uuid, r) -> r.home().filter(house.plaque()::equals).isPresent()
+				&& r.bed().filter(house.beds()::contains).isEmpty() ? r.evicted() : r);
+	}
+
+	/** Oublie une maison ; ses habitants se retrouvent sans logis. Renvoie leurs UUID. */
+	public List<UUID> removeHouse(BlockPos plaque) {
+		List<UUID> evicted = new ArrayList<>();
+		if (houses.remove(plaque) != null) {
+			residents.replaceAll((uuid, r) -> {
+				if (r.home().filter(plaque::equals).isPresent()) {
+					evicted.add(uuid);
+					return r.evicted();
+				}
+				return r;
+			});
+		}
+		return evicted;
+	}
+
+	public int capacity() {
+		return houses.values().stream().mapToInt(House::capacity).sum();
+	}
+
+	public int freeBeds() {
+		return capacity() - (int) residents.values().stream().filter(Resident::hasHome).count();
+	}
+
+	/** Un lit libre, et la maison où il se trouve. */
+	public Optional<Map.Entry<House, BlockPos>> findFreeBed() {
+		Set<BlockPos> taken = new HashSet<>();
+		residents.values().forEach(r -> r.bed().ifPresent(taken::add));
+		for (House house : houses.values()) {
+			for (BlockPos bed : house.beds()) {
+				if (!taken.contains(bed)) {
+					return Optional.of(Map.entry(house, bed));
+				}
+			}
+		}
+		return Optional.empty();
+	}
+
+	// Citoyens
+
+	public Map<UUID, Resident> residents() {
+		return Map.copyOf(residents);
+	}
+
+	public Optional<Resident> resident(UUID citizen) {
+		return Optional.ofNullable(residents.get(citizen));
+	}
+
+	public int population() {
+		return residents.size();
+	}
+
+	/** Accueille un nouveau citoyen, et lui donne un lit s'il en reste un. */
+	public Resident welcome(UUID citizen, String name, long now) {
+		Resident resident = Resident.homeless(name);
+		residents.put(citizen, resident);
+		lastArrival = now;
+		return house(citizen).orElse(resident);
+	}
+
+	/** Donne un lit libre à un citoyen sans logis. */
+	public Optional<Resident> house(UUID citizen) {
+		Resident resident = residents.get(citizen);
+		if (resident == null || resident.hasHome()) {
+			return Optional.ofNullable(resident);
+		}
+		return findFreeBed().map(e -> {
+			Resident housed = resident.housed(e.getKey().plaque(), e.getValue());
+			residents.put(citizen, housed);
+			return housed;
+		});
+	}
+
+	public void farewell(UUID citizen) {
+		residents.remove(citizen);
+	}
+
+	/** Recalcule le palier ; renvoie l'ancien s'il a changé. */
+	public Optional<TownTier> updateTier() {
+		TownTier now = TownTier.of(population(), houses.size());
+		if (now == tier) {
+			return Optional.empty();
+		}
+		TownTier before = tier;
+		tier = now;
+		return Optional.of(before);
+	}
+}

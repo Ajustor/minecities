@@ -1,0 +1,8 @@
+{
+  "variants": {
+    "facing=north": { "model": "minecities:block/house_plaque" },
+    "facing=east": { "model": "minecities:block/house_plaque", "y": 90 },
+    "facing=south": { "model": "minecities:block/house_plaque", "y": 180 },
+    "facing=west": { "model": "minecities:block/house_plaque", "y": 270 }
+  }
+}

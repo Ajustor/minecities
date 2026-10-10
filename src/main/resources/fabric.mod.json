@@ -1,0 +1,30 @@
+{
+	"schemaVersion": 1,
+	"id": "minecities",
+	"version": "${version}",
+	"name": "MineCities",
+	"description": "Living towns, vanilla style: found a town with a town hall and become its mayor, build houses your own way, feed your citizens, and grow from village to town, city and megalopolis. Inspired by MineColonies. / Des villes vivantes dans l'esprit vanilla : fondez une ville, devenez-en le maire, bâtissez des maisons à votre façon, nourrissez vos citoyens, et passez du village à la mégalopole.",
+	"authors": [
+		"Ajustor"
+	],
+	"contact": {
+		"sources": "https://github.com/Ajustor/minecities",
+		"issues": "https://github.com/Ajustor/minecities/issues"
+	},
+	"license": "All-Rights-Reserved",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"com.ajustor.minecities.MineCities"
+		],
+		"client": [
+			"com.ajustor.minecities.client.MineCitiesClient"
+		]
+	},
+	"depends": {
+		"fabricloader": ">=0.19.3",
+		"minecraft": "~26.2",
+		"java": ">=25",
+		"fabric-api": ">=0.161.0"
+	}
+}

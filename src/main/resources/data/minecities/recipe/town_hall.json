@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "EBE",
+    "PLP",
+    "PCP"
+  ],
+  "key": {
+    "E": "minecraft:emerald",
+    "B": "minecraft:bell",
+    "P": "#minecraft:planks",
+    "L": "minecraft:lectern",
+    "C": "minecraft:chest"
+  },
+  "result": {
+    "id": "minecities:town_hall",
+    "count": 1
+  }
+}
