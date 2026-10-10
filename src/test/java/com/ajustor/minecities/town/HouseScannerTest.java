@@ -94,7 +94,7 @@ class HouseScannerTest {
 	void aHouseNeedsABed() {
 		Blocks world = furnishedRoom();
 		world.set(4, 0, 2, HouseScanner.Cell.SOLID);
-		assertEquals(HouseScanner.Status.NO_BED, HouseScanner.scan(world, PLAQUE).status());
+		assertEquals(HouseScanner.Status.EMPTY, HouseScanner.scan(world, PLAQUE).status());
 	}
 
 	@Test
@@ -104,6 +104,16 @@ class HouseScannerTest {
 		HouseScanner.Result result = HouseScanner.scan(world, PLAQUE);
 		assertTrue(result.valid());
 		assertEquals(java.util.List.of(new HouseScanner.Pos(3, 1, 0)), result.plaques());
+	}
+
+	@Test
+	void aWorkshopNeedsNoBed() {
+		Blocks world = furnishedRoom();
+		world.set(4, 0, 2, HouseScanner.Cell.WORKSTATION);
+		HouseScanner.Result result = HouseScanner.scan(world, PLAQUE);
+		assertTrue(result.valid());
+		assertTrue(result.beds().isEmpty());
+		assertEquals(1, result.workstations().size());
 	}
 
 	@Test

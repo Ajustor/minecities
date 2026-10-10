@@ -126,6 +126,37 @@ class TownTest {
 	}
 
 	@Test
+	void workstationsHireTheJobless() {
+		Town town = town();
+		BlockPos workshop = new BlockPos(30, 64, 30);
+		BlockPos composter = workshop.east();
+		BlockPos smoker = workshop.west();
+		UUID alice = UUID.randomUUID();
+		UUID bob = UUID.randomUUID();
+		UUID carol = UUID.randomUUID();
+		town.welcome(alice, "Alice", 0);
+		town.welcome(bob, "Bob", 0);
+		town.welcome(carol, "Carol", 0);
+		town.putHouse(new House(workshop, List.of(), List.of(), List.of(new House.Workstation(composter, Job.FARMER),
+				new House.Workstation(smoker, Job.COOK)), 20));
+		var hired = town.assignJobs();
+		assertEquals(2, hired.size());
+		assertEquals(Job.FARMER, town.resident(alice).orElseThrow().job().orElseThrow().job());
+		assertEquals(Job.COOK, town.resident(bob).orElseThrow().job().orElseThrow().job());
+		assertTrue(town.resident(carol).orElseThrow().job().isEmpty());
+		assertTrue(town.assignJobs().isEmpty());
+		// Un atelier sans lit ne compte pas comme maison pour le palier.
+		assertEquals(0, town.homes().size());
+
+		// Le fumoir disparaît : le cuisinier perd son emploi, et le poste ne revient à personne.
+		town.putHouse(new House(workshop, List.of(), List.of(), List.of(new House.Workstation(composter, Job.FARMER)), 20));
+		assertTrue(town.resident(bob).orElseThrow().job().isEmpty());
+		assertTrue(town.resident(alice).orElseThrow().job().isPresent());
+		town.removeHouse(workshop);
+		assertTrue(town.resident(alice).orElseThrow().job().isEmpty());
+	}
+
+	@Test
 	void theMayorManagesWithDeputies() {
 		UUID mayor = UUID.randomUUID();
 		Town town = Town.found("Valombre", Level.OVERWORLD, HALL, mayor, "Maire", 0);

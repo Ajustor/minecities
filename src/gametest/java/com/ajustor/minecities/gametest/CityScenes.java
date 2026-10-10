@@ -142,20 +142,29 @@ public class CityScenes implements FabricClientGameTest {
 	}
 
 	/** Attend la condition ; sinon échoue en décrivant chaque citoyen (faim, position, sommeil). */
-	private static void waitOrExplain(TestSingleplayerContext sp, java.util.function.Predicate<MinecraftServer> done,
+	static void waitOrExplain(TestSingleplayerContext sp, java.util.function.Predicate<MinecraftServer> done,
 			int ticks, String what) {
 		try {
 			sp.getServer().waitFor(done, ticks);
 		} catch (AssertionError e) {
 			String state = sp.getServer().computeOnServer(server -> citizens(server).stream()
-					.map(c -> "%s faim=%.1f pos=%s couché=%s".formatted(c.getName().getString(), c.hunger(),
-							c.blockPosition().toShortString(), c.isSleeping()))
+					.map(CityScenes::describe)
 					.reduce((x, y) -> x + " ; " + y).orElse("aucun citoyen"));
 			throw new AssertionError(what + " : " + state, e);
 		}
 	}
 
-	private static void check(String failure) {
+	static String describe(CitizenEntity c) {
+		return "%s faim=%.1f pv=%.0f pos=%s pose=%s métier=%s main=%s".formatted(c.getName().getString(), c.hunger(),
+				c.getHealth(), c.blockPosition().toShortString(), c.getPose(),
+				c.job().map(j -> j.job().serializedName()).orElse("-"), c.getMainHandItem());
+	}
+
+	static String census(MinecraftServer server) {
+		return citizens(server).stream().map(CityScenes::describe).reduce((x, y) -> x + " ; " + y).orElse("aucun citoyen");
+	}
+
+	static void check(String failure) {
 		if (failure != null) {
 			throw new AssertionError(failure);
 		}
@@ -165,7 +174,7 @@ public class CityScenes implements FabricClientGameTest {
 		return Towns.get(server).byHall(server.overworld().dimension(), HALL).orElse(null);
 	}
 
-	private static List<CitizenEntity> citizens(MinecraftServer server) {
+	static List<CitizenEntity> citizens(MinecraftServer server) {
 		List<CitizenEntity> all = new ArrayList<>();
 		server.overworld().getAllEntities().forEach(e -> {
 			if (e instanceof CitizenEntity c) {
@@ -228,23 +237,23 @@ public class CityScenes implements FabricClientGameTest {
 		command(server, "gamemode spectator @p");
 	}
 
-	private static void command(MinecraftServer server, String command) {
+	static void command(MinecraftServer server, String command) {
 		server.getCommands().performPrefixedCommand(server.createCommandSourceStack(), command);
 	}
 
-	private static void command(TestSingleplayerContext sp, String command) {
+	static void command(TestSingleplayerContext sp, String command) {
 		sp.getServer().runCommand(command);
 	}
 
 	/** Se poste à (x, y, z), les yeux vers (tx, ty, tz). */
-	private static void look(TestSingleplayerContext sp, double x, double y, double z, double tx, double ty, double tz) {
+	static void look(TestSingleplayerContext sp, double x, double y, double z, double tx, double ty, double tz) {
 		double dx = tx - x, dy = ty - y, dz = tz - z;
 		float yaw = (float) Math.toDegrees(Math.atan2(-dx, dz));
 		float pitch = (float) -Math.toDegrees(Math.atan2(dy, Math.hypot(dx, dz)));
 		sp.getServer().runCommand(String.format(Locale.ROOT, "tp @p %.2f %.2f %.2f %.1f %.1f", x, y - 1.62, z, yaw, pitch));
 	}
 
-	private static void hideGui(Minecraft mc, boolean hidden) {
+	static void hideGui(Minecraft mc, boolean hidden) {
 		if (mc.gui.hud.isHidden() != hidden) {
 			mc.gui.hud.toggle();
 		}

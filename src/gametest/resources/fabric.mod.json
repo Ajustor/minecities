@@ -6,7 +6,8 @@
 	"environment": "client",
 	"entrypoints": {
 		"fabric-client-gametest": [
-			"com.ajustor.minecities.gametest.CityScenes"
+			"com.ajustor.minecities.gametest.CityScenes",
+			"com.ajustor.minecities.gametest.WorkScenes"
 		]
 	},
 	"depends": {
