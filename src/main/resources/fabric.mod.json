@@ -11,7 +11,7 @@
 		"sources": "https://github.com/Ajustor/minecities",
 		"issues": "https://github.com/Ajustor/minecities/issues"
 	},
-	"license": "All-Rights-Reserved",
+	"license": "MIT",
 	"environment": "*",
 	"entrypoints": {
 		"main": [
