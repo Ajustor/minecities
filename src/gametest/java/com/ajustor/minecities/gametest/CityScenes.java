@@ -152,20 +152,25 @@ public class CityScenes implements FabricClientGameTest {
 	/** Attend la condition ; sinon échoue en décrivant chaque citoyen (faim, position, sommeil). */
 	static void waitOrExplain(TestSingleplayerContext sp, java.util.function.Predicate<MinecraftServer> done,
 			int ticks, String what) {
+		waitOrExplain(sp, done, ticks, what, server -> "");
+	}
+
+	/** Comme l'autre, avec un détail de plus calculé au moment de l'échec. */
+	static void waitOrExplain(TestSingleplayerContext sp, java.util.function.Predicate<MinecraftServer> done,
+			int ticks, String what, java.util.function.Function<MinecraftServer, String> detail) {
 		try {
 			sp.getServer().waitFor(done, ticks);
 		} catch (AssertionError e) {
-			String state = sp.getServer().computeOnServer(server -> citizens(server).stream()
-					.map(CityScenes::describe)
-					.reduce((x, y) -> x + " ; " + y).orElse("aucun citoyen"));
+			String state = sp.getServer().computeOnServer(server -> detail.apply(server) + " " + census(server));
 			throw new AssertionError(what + " : " + state, e);
 		}
 	}
 
 	static String describe(CitizenEntity c) {
-		return "%s faim=%.1f pv=%.0f pos=%s pose=%s métier=%s main=%s".formatted(c.getName().getString(), c.hunger(),
-				c.getHealth(), c.blockPosition().toShortString(), c.getPose(),
-				c.job().map(j -> j.job().serializedName()).orElse("-"), c.getMainHandItem());
+		return "%s faim=%.1f pv=%.0f pos=%s pose=%s métier=%s main=%s poches=%s".formatted(c.getName().getString(),
+				c.hunger(), c.getHealth(), c.blockPosition().toShortString(), c.getPose(),
+				c.job().map(j -> j.job().serializedName()).orElse("-"), c.getMainHandItem(),
+				c.inventory().stream().filter(st -> !st.isEmpty()).toList());
 	}
 
 	static String census(MinecraftServer server) {
