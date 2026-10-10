@@ -18,7 +18,9 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.ai.memory.MemoryModuleType;
 import net.minecraft.world.entity.npc.villager.Villager;
+import net.minecraft.world.entity.npc.villager.VillagerProfession;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.item.ItemStack;
@@ -178,9 +180,14 @@ public final class TownService {
 		} else if (raw.valid() && beds.isEmpty() && stations.isEmpty()) {
 			result = raw.withStatus(HouseScanner.Status.NO_BED);
 		}
+		boolean village = town.house(plaque).map(House::village).orElse(false);
+		if (result.valid() && village && beds.isEmpty()) {
+			result = raw.withStatus(HouseScanner.Status.NO_BED);
+		}
 		if (result.valid()) {
 			List<BlockPos> containers = raw.containers().stream().map(TownService::pos).toList();
-			town.putHouse(new House(plaque, beds, containers, stations, raw.volume()));
+			// Une maison de village garde ses postes de travail pour ses villageois.
+			town.putHouse(new House(plaque, beds, containers, village ? List.of() : stations, raw.volume(), village));
 		} else {
 			town.removeHouse(plaque);
 		}
@@ -271,7 +278,7 @@ public final class TownService {
 					if (!level.isLoaded(house.plaque())) {
 						continue;
 					}
-					if (level.getBlockState(house.plaque()).is(McBlocks.HOUSE_PLAQUE)) {
+					if (house.village() || level.getBlockState(house.plaque()).is(McBlocks.HOUSE_PLAQUE)) {
 						survey(level, town, house.plaque());
 					} else {
 						town.removeHouse(house.plaque());
@@ -297,11 +304,78 @@ public final class TownService {
 		int r = town.radius();
 		AABB area = new AABB(hall.getX() - r, hall.getY() - 48, hall.getZ() - r, hall.getX() + r + 1,
 				hall.getY() + 48, hall.getZ() + r + 1);
-		int villagers = level.getEntitiesOfClass(Villager.class, area,
-				v -> v.isAlive() && town.contains(level.dimension(), v.blockPosition())).size();
-		if (town.setVillagers(villagers)) {
+		List<Villager> villagers = level.getEntitiesOfClass(Villager.class, area,
+				v -> v.isAlive() && town.contains(level.dimension(), v.blockPosition()));
+		// Leurs lits leur restent ; les maisons où ils sont deviennent des maisons de la ville.
+		java.util.Set<BlockPos> beds = new java.util.HashSet<>();
+		for (Villager villager : villagers) {
+			villager.getBrain().getMemory(MemoryModuleType.HOME)
+					.filter(home -> home.dimension().equals(level.dimension()) && town.contains(level.dimension(), home.pos()))
+					.ifPresent(home -> beds.add(home.pos()));
+		}
+		town.reserveBeds(beds);
+		for (BlockPos bed : beds) {
+			if (!town.hasBed(bed) && level.isLoaded(bed)) {
+				adoptVillageHouse(level, town, bed);
+			}
+		}
+		if (town.setVillagers(villagers.size())) {
 			town.updateTier().ifPresent(before -> announceTier(level, town, before));
 		}
+		// Un villageois sans métier peut devenir citoyen, un à la fois, au rythme de l'immigration.
+		if (level.getGameTime() - town.lastArrival() >= IMMIGRATION_DELAY) {
+			villagers.stream().filter(TownService::jobless).findFirst().ifPresent(v -> naturalize(level, town, v));
+		}
+	}
+
+	private static boolean jobless(Villager villager) {
+		var profession = villager.getVillagerData().profession();
+		return !villager.isBaby() && (profession.is(VillagerProfession.NONE) || profession.is(VillagerProfession.NITWIT));
+	}
+
+	/**
+	 * Relève la maison d'un village vanilla depuis le lit d'un de ses villageois, sans plaque : la
+	 * première case libre autour du lit sert de point de départ.
+	 */
+	static void adoptVillageHouse(ServerLevel level, Town town, BlockPos bed) {
+		List<BlockPos> starts = new ArrayList<>(List.of(bed.above()));
+		for (net.minecraft.core.Direction d : net.minecraft.core.Direction.Plane.HORIZONTAL) {
+			starts.add(bed.relative(d));
+		}
+		for (BlockPos start : starts) {
+			if (classify(level, start) != HouseScanner.Cell.OPEN || town.house(start).isPresent()) {
+				continue;
+			}
+			HouseScanner.Result raw = HouseScanner.scan((x, y, z) -> classify(level, new BlockPos(x, y, z)),
+					new HouseScanner.Pos(start.getX(), start.getY(), start.getZ()));
+			List<BlockPos> beds = raw.beds().stream().map(TownService::pos)
+					.filter(b -> !town.bedClaimedElsewhere(b, start)).toList();
+			if (raw.valid() && !beds.isEmpty() && raw.plaques().isEmpty()) {
+				town.putHouse(new House(start, beds, raw.containers().stream().map(TownService::pos).toList(),
+						List.of(), raw.volume(), true));
+				return;
+			}
+		}
+	}
+
+	/** Un villageois sans métier devient citoyen : il garde sa place, change d'habit et de nom. */
+	static void naturalize(ServerLevel level, Town town, Villager villager) {
+		CitizenEntity citizen = McEntities.CITIZEN.create(level, EntitySpawnReason.CONVERSION);
+		if (citizen == null) {
+			return;
+		}
+		String name = Names.citizen(level.getRandom()::nextInt);
+		citizen.snapTo(villager.getX(), villager.getY(), villager.getZ(), villager.getYRot(), villager.getXRot());
+		citizen.joinTown(town, name);
+		level.addFreshEntity(citizen);
+		town.welcome(citizen.getUUID(), name, level.getGameTime());
+		villager.discard();
+		level.sendParticles(ParticleTypes.HAPPY_VILLAGER, citizen.getX(), citizen.getY() + 1, citizen.getZ(), 12,
+				0.4, 0.6, 0.4, 0);
+		notify(level.getServer(), town, Component.translatable("message.minecities.citizen.naturalized", name,
+				town.name()));
+		town.setVillagers(Math.max(0, town.villagers() - 1));
+		Towns.get(level.getServer()).changed();
 	}
 
 	/** Un nouveau citoyen arrive à l'hôtel de ville, attiré par un lit libre et un grenier garni. */

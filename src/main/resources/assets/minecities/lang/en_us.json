@@ -79,5 +79,6 @@
   "job.minecities.fisherman": "fisherman",
   "tool.minecities.lumberjack": "an axe",
   "tool.minecities.breeder": "nothing",
-  "tool.minecities.fisherman": "a fishing rod"
+  "tool.minecities.fisherman": "a fishing rod",
+  "message.minecities.citizen.naturalized": "%s, a jobless villager, becomes a citizen of %s."
 }

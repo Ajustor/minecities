@@ -56,6 +56,8 @@ public final class Town {
 	private long lastArrival;
 	/** Les villageois vanilla qui vivent sur le territoire : ils comptent dans la population. */
 	private int villagers;
+	/** Les lits où dorment ces villageois : on n'y loge pas de citoyen (non sauvegardé). */
+	private Set<BlockPos> reservedBeds = Set.of();
 
 	private Town(UUID id, String name, ResourceKey<Level> dimension, BlockPos hall, UUID mayor, String mayorName,
 			List<UUID> deputies, long founded, List<House> houses, Map<UUID, Resident> residents, String tier,
@@ -175,6 +177,11 @@ public final class Town {
 		return Optional.ofNullable(houses.get(plaque));
 	}
 
+	/** Une maison de la ville (n'importe laquelle) a-t-elle ce lit ? */
+	public boolean hasBed(BlockPos bed) {
+		return houses.values().stream().anyMatch(h -> h.beds().contains(bed));
+	}
+
 	/** Une autre maison de la ville a-t-elle déjà ce lit ? */
 	public boolean bedClaimedElsewhere(BlockPos bed, BlockPos plaque) {
 		return houses.values().stream().anyMatch(h -> !h.plaque().equals(plaque) && h.beds().contains(bed));
@@ -262,12 +269,19 @@ public final class Town {
 	}
 
 	public int freeBeds() {
-		return capacity() - (int) residents.values().stream().filter(Resident::hasHome).count();
+		Set<BlockPos> taken = new HashSet<>(reservedBeds);
+		residents.values().forEach(r -> r.bed().ifPresent(taken::add));
+		return (int) houses.values().stream().flatMap(h -> h.beds().stream()).filter(b -> !taken.contains(b)).count();
+	}
+
+	/** Les lits des villageois vanilla du territoire, qu'aucun citoyen ne prendra. */
+	public void reserveBeds(Set<BlockPos> beds) {
+		reservedBeds = Set.copyOf(beds);
 	}
 
 	/** Un lit libre, et la maison où il se trouve. */
 	public Optional<Map.Entry<House, BlockPos>> findFreeBed() {
-		Set<BlockPos> taken = new HashSet<>();
+		Set<BlockPos> taken = new HashSet<>(reservedBeds);
 		residents.values().forEach(r -> r.bed().ifPresent(taken::add));
 		for (House house : houses.values()) {
 			for (BlockPos bed : house.beds()) {

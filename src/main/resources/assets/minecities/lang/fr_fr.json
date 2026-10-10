@@ -79,5 +79,6 @@
   "job.minecities.fisherman": "pêcheur",
   "tool.minecities.lumberjack": "une hache",
   "tool.minecities.breeder": "rien",
-  "tool.minecities.fisherman": "une canne à pêche"
+  "tool.minecities.fisherman": "une canne à pêche",
+  "message.minecities.citizen.naturalized": "%s, villageois sans métier, devient citoyen de %s."
 }
