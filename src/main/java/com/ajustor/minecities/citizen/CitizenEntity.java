@@ -182,11 +182,10 @@ public class CitizenEntity extends PathfinderMob {
 	private void starve(ServerLevel level) {
 		starvingTicks += 20;
 		addEffect(new MobEffectInstance(MobEffects.SLOWNESS, 60, 0, false, false));
-		if (starvingTicks % 1200 == 0 && getHealth() > 4) {
-			hurtServer(level, damageSources().starve(), 1);
-		}
-		if (starvingTicks >= Hunger.STARVATION_LIMIT) {
-			leaveTown(level, Component.translatable("message.minecities.citizen.starved_away", getName()));
+		// Comme un joueur, il dépérit : un cœur toutes les {@link Hunger#STARVATION_DAMAGE_INTERVAL} ticks,
+		// jusqu'à en mourir si personne ne le nourrit.
+		if (starvingTicks % Hunger.STARVATION_DAMAGE_INTERVAL == 0) {
+			hurtServer(level, damageSources().starve(), 2);
 		}
 	}
 

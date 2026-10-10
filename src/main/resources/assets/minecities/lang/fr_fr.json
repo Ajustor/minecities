@@ -27,7 +27,6 @@
   "message.minecities.prefix": "[%s] ",
   "message.minecities.found": "%s a fondé la ville de %s !",
   "message.minecities.found.hint": "Construisez des maisons avec des lits et une porte, accrochez-y une plaque de maison, et garnissez le grenier de l'hôtel de ville : les citoyens viendront.",
-  "message.minecities.found.already_mayor": "Vous êtes déjà maire de %s.",
   "message.minecities.found.too_close": "Trop près de %s : éloignez-vous pour fonder une ville.",
   "message.minecities.disbanded": "La ville de %s a été dissoute.",
   "message.minecities.hall.not_mayor": "Seul le maire de %s peut démolir son hôtel de ville.",
@@ -38,7 +37,6 @@
   "message.minecities.house.removed": "La maison en %s n'est plus déclarée ; ses habitants cherchent un toit.",
   "message.minecities.citizen.arrived": "%s s'installe à %s.",
   "message.minecities.citizen.died": "%s est mort.",
-  "message.minecities.citizen.starved_away": "%s, affamé, a quitté la ville.",
   "message.minecities.tier.up": "%s devient : %s !",
   "message.minecities.tier.down": "%s redescend au rang de %s.",
 
@@ -58,6 +56,7 @@
 
   "command.minecities.no_town": "Vous n'êtes dans aucune ville, et n'en gérez aucune.",
   "command.minecities.not_mayor": "Vous n'êtes maire d'aucune ville.",
+  "command.minecities.which_town": "Vous dirigez plusieurs villes : rendez-vous dans celle que vous voulez gérer.",
   "command.minecities.list.empty": "Aucune ville n'a encore été fondée.",
   "command.minecities.list.entry": "%s (%s) : %s citoyen(s), maire %s, hôtel de ville en %s",
   "command.minecities.citizens": "Citoyens de %s (%s) :",
@@ -65,7 +64,6 @@
   "command.minecities.citizens.away": "au loin",
   "command.minecities.rename.taken": "Le nom « %s » est déjà pris.",
   "command.minecities.rename.done": "%s s'appelle désormais %s.",
-  "command.minecities.mayor.already": "%s est déjà maire d'une ville.",
   "command.minecities.mayor.done": "%s est le nouveau maire de %s !",
   "command.minecities.deputy.unchanged": "Rien à changer.",
   "command.minecities.deputy.added": "%s est adjoint au maire de %s.",

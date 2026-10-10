@@ -27,7 +27,6 @@
   "message.minecities.prefix": "[%s] ",
   "message.minecities.found": "%s founded the town of %s!",
   "message.minecities.found.hint": "Build houses with beds and a door, hang a house plaque inside, and stock the town hall granary: citizens will come.",
-  "message.minecities.found.already_mayor": "You are already the mayor of %s.",
   "message.minecities.found.too_close": "Too close to %s: move further away to found a town.",
   "message.minecities.disbanded": "The town of %s has been disbanded.",
   "message.minecities.hall.not_mayor": "Only the mayor of %s can tear down its town hall.",
@@ -38,7 +37,6 @@
   "message.minecities.house.removed": "The house at %s is no longer declared; its residents are looking for a roof.",
   "message.minecities.citizen.arrived": "%s settles in %s.",
   "message.minecities.citizen.died": "%s died.",
-  "message.minecities.citizen.starved_away": "%s, starving, left the town.",
   "message.minecities.tier.up": "%s becomes a %s!",
   "message.minecities.tier.down": "%s falls back to %s.",
 
@@ -58,6 +56,7 @@
 
   "command.minecities.no_town": "You are in no town, and manage none.",
   "command.minecities.not_mayor": "You are not the mayor of any town.",
+  "command.minecities.which_town": "You run several towns: go to the one you want to manage.",
   "command.minecities.list.empty": "No town has been founded yet.",
   "command.minecities.list.entry": "%s (%s): %s citizen(s), mayor %s, town hall at %s",
   "command.minecities.citizens": "Citizens of %s (%s):",
@@ -65,7 +64,6 @@
   "command.minecities.citizens.away": "far away",
   "command.minecities.rename.taken": "The name \"%s\" is already taken.",
   "command.minecities.rename.done": "%s is now called %s.",
-  "command.minecities.mayor.already": "%s is already the mayor of a town.",
   "command.minecities.mayor.done": "%s is the new mayor of %s!",
   "command.minecities.deputy.unchanged": "Nothing to change.",
   "command.minecities.deputy.added": "%s is now deputy mayor of %s.",

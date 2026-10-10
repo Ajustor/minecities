@@ -2,8 +2,8 @@ package com.ajustor.minecities.citizen;
 
 /**
  * La faim d'un citoyen, comme la barre du joueur : de 0 (affamé) à 20 (repu). Elle se vide en une
- * journée de jeu ; un citoyen mange dès qu'il a faim, souffre quand il n'a plus rien, et finit par
- * quitter la ville s'il y meurt de faim trop longtemps.
+ * journée de jeu ; un citoyen mange dès qu'il a faim, et quand il n'a plus rien il dépérit jusqu'à
+ * en mourir.
  */
 public final class Hunger {
 	public static final float MAX = 20;
@@ -15,8 +15,8 @@ public final class Hunger {
 	public static final float SATED = 18;
 	/** Au-dessus, il se soigne de lui-même. */
 	public static final float WELL_FED = 16;
-	/** Après tant de ticks le ventre vide (une journée), il quitte la ville. */
-	public static final int STARVATION_LIMIT = 24000;
+	/** Le ventre vide, il perd un cœur toutes les 30 secondes : il meurt en 5 minutes sans soins. */
+	public static final int STARVATION_DAMAGE_INTERVAL = 600;
 
 	public enum State {
 		WELL_FED("well_fed"),

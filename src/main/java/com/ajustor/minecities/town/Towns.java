@@ -62,8 +62,9 @@ public final class Towns extends SavedData {
 				.min(Comparator.comparingDouble(t -> t.distance(pos)));
 	}
 
-	public Optional<Town> ofMayor(UUID player) {
-		return towns.values().stream().filter(t -> t.mayor().equals(player)).findFirst();
+	/** Les villes dont ce joueur est le maire (il peut en diriger plusieurs). */
+	public List<Town> ofMayor(UUID player) {
+		return towns.values().stream().filter(t -> t.mayor().equals(player)).toList();
 	}
 
 	/** Les villes qu'un joueur gère, comme maire ou adjoint. */

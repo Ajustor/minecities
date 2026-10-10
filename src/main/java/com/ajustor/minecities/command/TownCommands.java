@@ -22,6 +22,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -36,6 +37,8 @@ public final class TownCommands {
 			Component.translatable("command.minecities.no_town"));
 	private static final SimpleCommandExceptionType NOT_MAYOR = new SimpleCommandExceptionType(
 			Component.translatable("command.minecities.not_mayor"));
+	private static final SimpleCommandExceptionType WHICH_TOWN = new SimpleCommandExceptionType(
+			Component.translatable("command.minecities.which_town"));
 
 	private TownCommands() {
 	}
@@ -85,10 +88,27 @@ public final class TownCommands {
 		return town.orElseThrow(NO_TOWN::create);
 	}
 
-	/** La ville dont le joueur est maire. */
+	/**
+	 * La ville dont le joueur est maire : celle où il se trouve, ou la seule qu'il dirige. S'il en
+	 * dirige plusieurs, il doit se rendre dans celle qu'il veut gérer.
+	 */
 	private static Town mayorTown(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
-		ServerPlayer player = context.getSource().getPlayerOrException();
-		return Towns.get(context.getSource().getServer()).ofMayor(player.getUUID()).orElseThrow(NOT_MAYOR::create);
+		CommandSourceStack source = context.getSource();
+		ServerPlayer player = source.getPlayerOrException();
+		Towns towns = Towns.get(source.getServer());
+		Optional<Town> here = towns.at(source.getLevel().dimension(), player.blockPosition())
+				.filter(t -> t.mayor().equals(player.getUUID()));
+		if (here.isPresent()) {
+			return here.get();
+		}
+		List<Town> mine = towns.ofMayor(player.getUUID());
+		if (mine.isEmpty()) {
+			throw NOT_MAYOR.create();
+		}
+		if (mine.size() > 1) {
+			throw WHICH_TOWN.create();
+		}
+		return mine.getFirst();
 	}
 
 	private static int info(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
@@ -152,11 +172,6 @@ public final class TownCommands {
 		Town town = mayorTown(context);
 		ServerPlayer successor = EntityArgument.getPlayer(context, "player");
 		Towns towns = Towns.get(context.getSource().getServer());
-		if (towns.ofMayor(successor.getUUID()).isPresent()) {
-			context.getSource().sendFailure(Component.translatable("command.minecities.mayor.already",
-					successor.getDisplayName()));
-			return 0;
-		}
 		town.setMayor(successor.getUUID(), successor.getGameProfile().name());
 		towns.changed();
 		context.getSource().getServer().getPlayerList().broadcastSystemMessage(Component.translatable(

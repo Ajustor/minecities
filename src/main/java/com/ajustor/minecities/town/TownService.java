@@ -85,16 +85,10 @@ public final class TownService {
 
 	public static void found(ServerLevel level, BlockPos pos, ServerPlayer player, ItemStack stack) {
 		Towns towns = Towns.get(level.getServer());
-		Optional<Town> already = towns.ofMayor(player.getUUID());
 		Optional<Town> neighbour = towns.tooClose(level.dimension(), pos);
-		Component refusal = null;
-		if (already.isPresent()) {
-			refusal = Component.translatable("message.minecities.found.already_mayor", already.get().name());
-		} else if (neighbour.isPresent()) {
-			refusal = Component.translatable("message.minecities.found.too_close", neighbour.get().name());
-		}
-		if (refusal != null) {
-			player.sendSystemMessage(refusal.copy().withStyle(ChatFormatting.RED));
+		if (neighbour.isPresent()) {
+			player.sendSystemMessage(Component.translatable("message.minecities.found.too_close",
+					neighbour.get().name()).withStyle(ChatFormatting.RED));
 			level.removeBlock(pos, false);
 			if (!player.isCreative()) {
 				player.getInventory().placeItemBackInInventory(stack.copyWithCount(1));
