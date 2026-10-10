@@ -143,9 +143,9 @@ public class CityScenes implements FabricClientGameTest {
 			for (int i = 0; i < 3; i++) {
 				command(sp, "summon minecraft:villager %d %d -6".formatted(-4 + i * 3, Y));
 			}
-			waitOrExplain(sp, server -> town(server).villagers() == 3, 400, "les villageois n'ont pas été recensés");
-			check(sp.getServer().computeOnServer(server -> town(server).population() == 5
-					&& town(server).citizens() == 2 ? null : "population mal comptée : " + town(server).population()));
+			// (Sans métier, ils peuvent aussi devenir citoyens : la population reste la même.)
+			waitOrExplain(sp, server -> town(server).population() == 5, 400, "les villageois n'ont pas été recensés",
+					server -> "population " + town(server).population() + ", villageois " + town(server).villagers() + ".");
 		}
 	}
 

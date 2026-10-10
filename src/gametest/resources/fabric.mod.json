@@ -8,7 +8,8 @@
 		"fabric-client-gametest": [
 			"com.ajustor.minecities.gametest.CityScenes",
 			"com.ajustor.minecities.gametest.WorkScenes",
-			"com.ajustor.minecities.gametest.CountrysideScenes"
+			"com.ajustor.minecities.gametest.CountrysideScenes",
+			"com.ajustor.minecities.gametest.VillageScenes"
 		]
 	},
 	"depends": {
