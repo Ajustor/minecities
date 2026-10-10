@@ -1,0 +1,75 @@
+{
+ "kind": "workshop",
+ "layers": [
+  [
+   "FFFFFFF",
+   "FfffffF",
+   "FfffffF",
+   "FfffffF",
+   "FfffffF",
+   "FfffffF",
+   "FFFFFFF"
+  ],
+  [
+   "PWWDWWP",
+   "W    CW",
+   "W     W",
+   "W     W",
+   "W     W",
+   "Wt   lW",
+   "PWWWWWP"
+  ],
+  [
+   "PWWdWWP",
+   "W L   W",
+   "W     W",
+   "G     G",
+   "W     W",
+   "W     W",
+   "PWWGWWP"
+  ],
+  [
+   "PWWWWWP",
+   "W     W",
+   "W     W",
+   "W     W",
+   "W     W",
+   "W     W",
+   "PWWWWWP"
+  ],
+  [
+   "RRRRRRR",
+   "RRRRRRR",
+   "RRRRRRR",
+   "RRRRRRR",
+   "RRRRRRR",
+   "RRRRRRR",
+   "RRRRRRR"
+  ],
+  [
+   ".......",
+   ".SSSSS.",
+   ".SSSSS.",
+   ".SSSSS.",
+   ".SSSSS.",
+   ".SSSSS.",
+   "......."
+  ]
+ ],
+ "key": {
+  " ": "minecraft:air",
+  "C": "minecraft:chest[facing=south]",
+  "D": "{door}[facing=north,half=lower,hinge=left]",
+  "F": "{foundation}",
+  "G": "{window}",
+  "L": "minecities:house_plaque[facing=south]",
+  "P": "{frame}[axis=y]",
+  "R": "{roof}",
+  "S": "{roof_slab}[type=bottom]",
+  "W": "{wall}",
+  "d": "{door}[facing=north,half=upper,hinge=left]",
+  "f": "{floor}",
+  "l": "{stripped_log}[axis=y]",
+  "t": "minecraft:torch"
+ }
+}

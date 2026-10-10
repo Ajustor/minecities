@@ -36,7 +36,9 @@ public enum Job {
 	BREEDER("breeder", (level, pos, state) -> state.is(Blocks.HAY_BLOCK) && standsAlone(level, pos), null),
 	/** Pêche au bord de l'eau ; au baril, quand l'atelier est au bord de l'eau. */
 	FISHERMAN("fisherman", (level, pos, state) -> state.is(Blocks.BARREL) && nearWater(level, pos),
-			s -> s.is(Items.FISHING_ROD));
+			s -> s.is(Items.FISHING_ROD)),
+	/** Bâtit les chantiers que commande le maire, d'après les schémas ; à la table d'artisan. */
+	BUILDER("builder", (level, pos, state) -> state.is(Blocks.CRAFTER), null);
 
 	/** Un bloc, à sa place, est-il ce poste de travail ? */
 	@FunctionalInterface

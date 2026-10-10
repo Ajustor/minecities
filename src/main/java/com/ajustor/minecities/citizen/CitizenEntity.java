@@ -110,6 +110,7 @@ public class CitizenEntity extends PathfinderMob {
 		goalSelector.addGoal(4, new LumberjackGoal(this));
 		goalSelector.addGoal(4, new BreederGoal(this));
 		goalSelector.addGoal(4, new FishermanGoal(this));
+		goalSelector.addGoal(4, new BuilderGoal(this));
 		goalSelector.addGoal(5, new MoveTowardsRestrictionGoal(this, 0.6));
 		goalSelector.addGoal(6, new WaterAvoidingRandomStrollGoal(this, 0.5));
 		goalSelector.addGoal(7, new InteractGoal(this, CitizenEntity.class, 6.0f, 0.03f));

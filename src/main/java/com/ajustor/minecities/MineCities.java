@@ -1,5 +1,6 @@
 package com.ajustor.minecities;
 
+import com.ajustor.minecities.build.Blueprints;
 import com.ajustor.minecities.command.TownCommands;
 import com.ajustor.minecities.registry.McBlockEntities;
 import com.ajustor.minecities.registry.McBlocks;
@@ -28,6 +29,7 @@ public class MineCities implements ModInitializer {
 		McEntities.register();
 		McItems.register();
 		TownService.register();
+		Blueprints.register();
 		TownCommands.register();
 	}
 

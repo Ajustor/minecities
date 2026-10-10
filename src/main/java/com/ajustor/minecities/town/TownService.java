@@ -232,6 +232,17 @@ public final class TownService {
 		return state.blocksMotion() ? HouseScanner.Cell.SOLID : HouseScanner.Cell.OPEN;
 	}
 
+	/** Un chantier fini : sa plaque déclare le bâtiment, sans joueur pour l'entendre. */
+	public static void declareBuilt(ServerLevel level, Town town, BlockPos plaque) {
+		HouseScanner.Result result = survey(level, town, plaque);
+		if (!result.valid()) {
+			notify(level.getServer(), town, Component.translatable("message.minecities.house.invalid",
+					Component.translatable(result.status().translationKey())));
+		}
+		settle(level, town);
+		Towns.get(level.getServer()).changed();
+	}
+
 	public static void plaqueRemoved(ServerLevel level, BlockPos plaque) {
 		Towns towns = Towns.get(level.getServer());
 		towns.at(level.dimension(), plaque).ifPresent(town -> {

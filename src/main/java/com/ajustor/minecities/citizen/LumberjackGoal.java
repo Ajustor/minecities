@@ -90,7 +90,9 @@ class LumberjackGoal extends WorkGoal {
 				return;
 			}
 		}
-		if (goTo(tree)) {
+		// Il abat à portée de hache, comme un joueur : un tronc sur une butte reste atteignable.
+		if (citizen.distanceToSqr(tree.getX() + 0.5, tree.getY() + 0.5, tree.getZ() + 0.5) <= 4.5 * 4.5 || goTo(tree)) {
+			citizen.getNavigation().stop();
 			fell(tree);
 			tree = null;
 		}

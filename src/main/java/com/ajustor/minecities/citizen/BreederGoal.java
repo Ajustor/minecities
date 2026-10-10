@@ -45,6 +45,7 @@ class BreederGoal extends WorkGoal {
 	private EntityType<?> species;
 	private Animal target;
 	private int scan;
+	private int repath;
 	private boolean delivering;
 
 	BreederGoal(CitizenEntity citizen) {
@@ -162,7 +163,7 @@ class BreederGoal extends WorkGoal {
 		}
 		citizen.getLookControl().setLookAt(target);
 		if (citizen.distanceToSqr(target) > 2.5 * 2.5) {
-			citizen.getNavigation().moveTo(target, 0.6);
+			follow(target);
 			return;
 		}
 		citizen.getNavigation().stop();
@@ -179,6 +180,14 @@ class BreederGoal extends WorkGoal {
 		target = null;
 	}
 
+	/** Suit une bête, en recalculant le chemin une fois par seconde (elle bouge). */
+	private void follow(Animal animal) {
+		if (--repath <= 0 || citizen.getNavigation().isDone()) {
+			repath = 20;
+			citizen.getNavigation().moveTo(animal, 0.7);
+		}
+	}
+
 	private void cull() {
 		if (target == null || !target.isAlive()) {
 			task = Task.NONE;
@@ -187,7 +196,7 @@ class BreederGoal extends WorkGoal {
 		}
 		citizen.getLookControl().setLookAt(target);
 		if (citizen.distanceToSqr(target) > 2.5 * 2.5) {
-			citizen.getNavigation().moveTo(target, 0.6);
+			follow(target);
 			return;
 		}
 		citizen.swing(InteractionHand.MAIN_HAND);
