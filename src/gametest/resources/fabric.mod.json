@@ -1,0 +1,15 @@
+{
+	"schemaVersion": 1,
+	"id": "minecities-gametest",
+	"version": "1.0.0",
+	"name": "MineCities in-game scenes",
+	"environment": "client",
+	"entrypoints": {
+		"fabric-client-gametest": [
+			"com.ajustor.minecities.gametest.CityScenes"
+		]
+	},
+	"depends": {
+		"minecities": "*"
+	}
+}
