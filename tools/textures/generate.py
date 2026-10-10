@@ -1,4 +1,5 @@
-"""Génère les textures du mod : peaux des citoyens, hôtel de ville, plaque de maison, œuf.
+"""Génère les textures du mod : peaux des citoyens, plaque de maison, œuf. (L'hôtel de ville est un
+modèle en textures vanilla : voir tools/models/town_hall.py.)
 
 Usage : python tools/textures/generate.py
 Les PNG sont écrits dans src/main/resources/assets/minecities/textures. Modifier ce script puis le
@@ -169,10 +170,6 @@ def citizen_skin(index):
 
 OAK = hexc("#a2824e")
 OAK_DARK = hexc("#6b5230")
-STONE = hexc("#8f8f8f")
-STONE_DARK = hexc("#616161")
-GOLD = hexc("#f2c94c")
-BLUE = hexc("#2f4f8f")
 
 
 def planks(rng, img, y0=0, y1=16):
@@ -186,14 +183,6 @@ def planks(rng, img, y0=0, y1=16):
             img.putpixel((x, y), c)
 
 
-def stone_base(rng, img, y0):
-    for y in range(y0, 16):
-        for x in range(16):
-            c = jitter(rng, STONE, 0.07)
-            if (y - y0) % 4 == 3 or (x + ((y - y0) // 4) * 4) % 8 == 0:
-                c = jitter(rng, STONE_DARK, 0.05)
-            img.putpixel((x, y), c)
-
 
 def frame(img, color):
     for i in range(16):
@@ -201,72 +190,7 @@ def frame(img, color):
             img.putpixel(p, color)
 
 
-def town_hall_side():
-    rng = random.Random(1)
-    img = Image.new("RGBA", (16, 16))
-    planks(rng, img, 0, 12)
-    stone_base(rng, img, 12)
-    for y in range(12):
-        img.putpixel((0, y), OAK_DARK)
-        img.putpixel((15, y), OAK_DARK)
-    # Une fenêtre à croisillons.
-    for y in range(3, 9):
-        for x in range(5, 11):
-            img.putpixel((x, y), hexc("#9cc7d9") if (x + y) % 5 else hexc("#c9e4ef"))
-    for i in range(5, 11):
-        img.putpixel((i, 5), OAK_DARK)
-    for j in range(3, 9):
-        img.putpixel((7, j), OAK_DARK)
-    for i in range(4, 12):
-        img.putpixel((i, 2), OAK_DARK)
-        img.putpixel((i, 9), OAK_DARK)
-    for j in range(2, 10):
-        img.putpixel((4, j), OAK_DARK)
-        img.putpixel((11, j), OAK_DARK)
-    return img
 
-
-def town_hall_front():
-    rng = random.Random(2)
-    img = Image.new("RGBA", (16, 16))
-    planks(rng, img, 0, 12)
-    stone_base(rng, img, 12)
-    for y in range(12):
-        img.putpixel((0, y), OAK_DARK)
-        img.putpixel((15, y), OAK_DARK)
-    # Une bannière bleue frappée d'une cloche dorée.
-    for y in range(1, 12):
-        for x in range(4, 12):
-            img.putpixel((x, y), jitter(rng, BLUE, 0.05))
-    img.putpixel((4, 11), OAK)
-    img.putpixel((11, 11), OAK)
-    for x in range(3, 13):
-        img.putpixel((x, 1), OAK_DARK)
-    bell = [
-        "..##..",
-        ".####.",
-        ".####.",
-        ".####.",
-        "######",
-        "..##..",
-    ]
-    for j, row in enumerate(bell):
-        for i, ch in enumerate(row):
-            if ch == "#":
-                img.putpixel((5 + i, 3 + j), shade(GOLD, 0.85 if i > 3 else 1.0))
-    return img
-
-
-def town_hall_top():
-    rng = random.Random(3)
-    img = Image.new("RGBA", (16, 16))
-    planks(rng, img)
-    frame(img, OAK_DARK)
-    for y in range(5, 11):
-        for x in range(5, 11):
-            if abs(x - 7.5) + abs(y - 7.5) <= 3.5:
-                img.putpixel((x, y), jitter(rng, GOLD, 0.06))
-    return img
 
 
 def house_plaque():
@@ -324,9 +248,6 @@ def save(img, path):
 def main():
     for i in range(len(OUTFITS)):
         save(citizen_skin(i), TEXTURES / f"entity/citizen/citizen_{i}.png")
-    save(town_hall_side(), TEXTURES / "block/town_hall_side.png")
-    save(town_hall_front(), TEXTURES / "block/town_hall_front.png")
-    save(town_hall_top(), TEXTURES / "block/town_hall_top.png")
     save(house_plaque(), TEXTURES / "block/house_plaque.png")
     save(spawn_egg(), TEXTURES / "item/citizen_spawn_egg.png")
 

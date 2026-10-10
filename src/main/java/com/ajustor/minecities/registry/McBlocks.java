@@ -20,6 +20,7 @@ public final class McBlocks {
 			BlockBehaviour.Properties.of()
 					.mapColor(MapColor.WOOD)
 					.strength(3.5f, 1200.0f)
+					.noOcclusion()
 					.sound(SoundType.WOOD)
 					.pushReaction(PushReaction.BLOCK));
 
