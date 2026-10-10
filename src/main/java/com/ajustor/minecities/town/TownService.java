@@ -162,9 +162,14 @@ public final class TownService {
 		List<BlockPos> beds = raw.beds().stream().map(p -> new BlockPos(p.x(), p.y(), p.z()))
 				.filter(b -> !town.bedClaimedElsewhere(b, plaque)).toList();
 		HouseScanner.Result result = raw;
-		if (raw.valid() && beds.isEmpty()) {
+		boolean declared = raw.plaques().stream()
+				.anyMatch(p -> town.house(new BlockPos(p.x(), p.y(), p.z())).isPresent());
+		if (raw.valid() && declared) {
+			result = new HouseScanner.Result(HouseScanner.Status.ALREADY_DECLARED, raw.volume(), List.of(),
+					raw.containers(), raw.doors(), raw.plaques());
+		} else if (raw.valid() && beds.isEmpty()) {
 			result = new HouseScanner.Result(HouseScanner.Status.NO_BED, raw.volume(), List.of(), raw.containers(),
-					raw.doors());
+					raw.doors(), raw.plaques());
 		}
 		if (result.valid()) {
 			List<BlockPos> containers = raw.containers().stream().map(p -> new BlockPos(p.x(), p.y(), p.z())).toList();
@@ -199,6 +204,9 @@ public final class TownService {
 		}
 		if (state.isAir()) {
 			return HouseScanner.Cell.OPEN;
+		}
+		if (state.is(McBlocks.HOUSE_PLAQUE)) {
+			return HouseScanner.Cell.PLAQUE;
 		}
 		return state.blocksMotion() ? HouseScanner.Cell.SOLID : HouseScanner.Cell.OPEN;
 	}

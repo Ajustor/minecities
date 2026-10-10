@@ -30,8 +30,6 @@ entre villes, taille maximale d'une maison, une ville par maire ou non, nourritu
   relevés sur plusieurs ticks.
 - **Dimensions** : une ville peut être fondée dans le Nether/l'End (le sommeil y est réglé sur
   l'heure de l'Overworld, et les lits explosent dans le Nether !). Interdire hors Overworld ?
-- **Deux plaques dans la même pièce** : deux maisons se disputent les lits ; le premier relevé
-  garde ses lits, l'autre devient invalide. Mieux : refuser la seconde plaque explicitement.
 
 ## Performance
 

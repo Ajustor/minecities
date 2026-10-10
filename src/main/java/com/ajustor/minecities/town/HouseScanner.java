@@ -36,7 +36,9 @@ public final class HouseScanner {
 		/** La tête d'un lit : une place pour dormir. */
 		BED,
 		/** Un coffre, un tonneau : des réserves. */
-		CONTAINER
+		CONTAINER,
+		/** Une plaque de maison : libre, mais on la note (une pièce n'a qu'une plaque). */
+		PLAQUE
 	}
 
 	/** Le monde, vu par le scanner. */
@@ -57,7 +59,9 @@ public final class HouseScanner {
 		NOT_ENCLOSED("not_enclosed"),
 		TOO_SMALL("too_small"),
 		NO_DOOR("no_door"),
-		NO_BED("no_bed");
+		NO_BED("no_bed"),
+		/** Une autre plaque déclare déjà cette pièce. */
+		ALREADY_DECLARED("already_declared");
 
 		private final String key;
 
@@ -71,10 +75,11 @@ public final class HouseScanner {
 	}
 
 	/**
-	 * Le résultat d'un relevé : son verdict, le volume intérieur, et ce qui borde l'intérieur. Les
-	 * listes sont dans l'ordre de découverte.
+	 * Le résultat d'un relevé : son verdict, le volume intérieur, ce qui borde l'intérieur, et les
+	 * autres plaques trouvées dedans. Les listes sont dans l'ordre de découverte.
 	 */
-	public record Result(Status status, int volume, List<Pos> beds, List<Pos> containers, int doors) {
+	public record Result(Status status, int volume, List<Pos> beds, List<Pos> containers, int doors,
+			List<Pos> plaques) {
 		public boolean valid() {
 			return status == Status.VALID;
 		}
@@ -89,6 +94,7 @@ public final class HouseScanner {
 		Set<Pos> border = new HashSet<>();
 		List<Pos> beds = new ArrayList<>();
 		List<Pos> containers = new ArrayList<>();
+		List<Pos> plaques = new ArrayList<>();
 		int doors = 0;
 		ArrayDeque<Pos> queue = new ArrayDeque<>();
 		queue.add(start);
@@ -102,10 +108,13 @@ public final class HouseScanner {
 					continue;
 				}
 				Cell cell = world.classify(n.x, n.y, n.z);
-				if (cell == Cell.OPEN) {
+				if (cell == Cell.OPEN || cell == Cell.PLAQUE) {
 					interior.add(n);
+					if (cell == Cell.PLAQUE) {
+						plaques.add(n);
+					}
 					if (interior.size() > MAX_VOLUME) {
-						return new Result(Status.NOT_ENCLOSED, interior.size(), List.of(), List.of(), 0);
+						return leak(interior.size());
 					}
 					minX = Math.min(minX, n.x);
 					maxX = Math.max(maxX, n.x);
@@ -114,7 +123,7 @@ public final class HouseScanner {
 					minZ = Math.min(minZ, n.z);
 					maxZ = Math.max(maxZ, n.z);
 					if (maxX - minX >= MAX_EXTENT || maxY - minY >= MAX_EXTENT || maxZ - minZ >= MAX_EXTENT) {
-						return new Result(Status.NOT_ENCLOSED, interior.size(), List.of(), List.of(), 0);
+						return leak(interior.size());
 					}
 					queue.add(n);
 				} else {
@@ -139,6 +148,11 @@ public final class HouseScanner {
 		} else {
 			status = Status.VALID;
 		}
-		return new Result(status, interior.size(), List.copyOf(beds), List.copyOf(containers), doors);
+		return new Result(status, interior.size(), List.copyOf(beds), List.copyOf(containers), doors,
+				List.copyOf(plaques));
+	}
+
+	private static Result leak(int volume) {
+		return new Result(Status.NOT_ENCLOSED, volume, List.of(), List.of(), 0, List.of());
 	}
 }

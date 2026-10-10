@@ -98,6 +98,15 @@ class HouseScannerTest {
 	}
 
 	@Test
+	void otherPlaquesInsideAreReported() {
+		Blocks world = furnishedRoom();
+		world.set(3, 1, 0, HouseScanner.Cell.PLAQUE);
+		HouseScanner.Result result = HouseScanner.scan(world, PLAQUE);
+		assertTrue(result.valid());
+		assertEquals(java.util.List.of(new HouseScanner.Pos(3, 1, 0)), result.plaques());
+	}
+
+	@Test
 	void aCupboardIsNotAHouse() {
 		Blocks world = new Blocks().room(0, 0, 0, 0, 2);
 		world.set(0, 0, -1, HouseScanner.Cell.DOOR);

@@ -22,6 +22,7 @@
   "house.minecities.status.too_small": "the room is too small",
   "house.minecities.status.no_door": "a door is missing",
   "house.minecities.status.no_bed": "there is no free bed (they may belong to another house)",
+  "house.minecities.status.already_declared": "another plaque already declares this house",
 
   "message.minecities.prefix": "[%s] ",
   "message.minecities.found": "%s founded the town of %s!",
