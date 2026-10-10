@@ -1,0 +1,57 @@
+# Build du mod à chaque pull request et à chaque push sur master (ou à la demande) : compilation,
+# tests (relevé des maisons, villes et paliers, faim, clés fr_fr/en_us), puis le jar du mod en
+# artefact téléchargeable, nommé d'après sa version et son commit. La release au tag est dans
+# release.yml.
+name: build
+on:
+  pull_request:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+# Un nouveau push sur la même branche annule le build devenu inutile.
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: checkout repository
+        uses: actions/checkout@v6
+        with:
+          # Tout l'historique et les tags : la version du jar en dépend.
+          fetch-depth: 0
+      - name: validate gradle wrapper
+        uses: gradle/actions/wrapper-validation@v6
+      - name: setup jdk
+        uses: actions/setup-java@v5
+        with:
+          java-version: '25'
+          distribution: 'microsoft'
+      - name: setup gradle
+        uses: gradle/actions/setup-gradle@v6
+      - name: make gradle wrapper executable
+        run: chmod +x ./gradlew
+      - name: build
+        run: ./gradlew build
+      - name: name the jar
+        id: jar
+        run: |
+          jar=$(ls build/libs/*.jar | grep -v -- '-sources\.jar$' | head -n 1)
+          name=$(basename "$jar" .jar)-${GITHUB_SHA::7}
+          echo "path=$jar" >> "$GITHUB_OUTPUT"
+          echo "name=$name" >> "$GITHUB_OUTPUT"
+          {
+            echo "### Jar du mod"
+            echo
+            echo "\`$(basename "$jar")\` ($(du -h "$jar" | cut -f1)), commit \`${GITHUB_SHA::7}\` :"
+            echo "artefact **$name** ci-dessous, à poser dans \`mods/\` (Minecraft 26.2, Fabric API)."
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: upload the mod jar
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ steps.jar.outputs.name }}
+          path: ${{ steps.jar.outputs.path }}
+          if-no-files-found: error

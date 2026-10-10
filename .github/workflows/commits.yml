@@ -1,0 +1,15 @@
+# Refuse une pull request dont un commit ne respecte pas la convention : sinon le changelog
+# automatique serait incomplet (voir .github/scripts/check_commits.py).
+name: commits
+on: [pull_request]
+
+jobs:
+  convention:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: check commit messages
+        run: python3 .github/scripts/check_commits.py "${{ github.event.pull_request.base.sha }}" "${{ github.event.pull_request.head.sha }}"

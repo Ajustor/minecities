@@ -1,0 +1,89 @@
+# Release au tag (v0.1.0, v0.2.0-beta…) : construit le jar à la version du tag, génère le
+# changelog (français et anglais) avec git-cliff, publie la GitHub Release (préversion si le tag
+# porte un suffixe), puis recommite CHANGELOG.md et CHANGELOG.fr.md sur master.
+name: release
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: setup jdk
+        uses: actions/setup-java@v5
+        with:
+          java-version: '25'
+          distribution: 'microsoft'
+      - name: setup gradle
+        uses: gradle/actions/setup-gradle@v6
+      - name: build
+        run: |
+          chmod +x ./gradlew
+          ./gradlew build -PreleaseVersion=${{ github.ref_name }}
+      - name: changelog of this version (en)
+        uses: orhun/git-cliff-action@v4
+        with:
+          config: cliff.toml
+          args: --latest --strip header
+        env:
+          OUTPUT: RELEASE.en.md
+      - name: changelog of this version (fr)
+        uses: orhun/git-cliff-action@v4
+        with:
+          config: cliff.fr.toml
+          args: --latest --strip header
+        env:
+          OUTPUT: RELEASE.fr.md
+      - name: release notes
+        run: |
+          {
+            echo "## Français"
+            sed '1d' RELEASE.fr.md
+            echo
+            echo "## English"
+            sed '1d' RELEASE.en.md
+            echo
+            echo "Minecraft 26.2 · Fabric Loader ≥ 0.19.3 · Fabric API · Java 25"
+          } > RELEASE.md
+      - name: publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: MineCities ${{ github.ref_name }}
+          body_path: RELEASE.md
+          prerelease: ${{ contains(github.ref_name, '-') }}
+          files: |
+            build/libs/minecities-*+26.2.jar
+            !build/libs/*-sources.jar
+      - name: back to master
+        run: |
+          git fetch origin master
+          git checkout master
+      - name: full changelog (en)
+        uses: orhun/git-cliff-action@v4
+        with:
+          config: cliff.toml
+          args: --tag ${{ github.ref_name }}
+        env:
+          OUTPUT: CHANGELOG.md
+      - name: full changelog (fr)
+        uses: orhun/git-cliff-action@v4
+        with:
+          config: cliff.fr.toml
+          args: --tag ${{ github.ref_name }}
+        env:
+          OUTPUT: CHANGELOG.fr.md
+      - name: commit changelogs on master
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add CHANGELOG.md CHANGELOG.fr.md
+          git diff --cached --quiet || git commit -m "docs: changelog ${{ github.ref_name }}"
+          git push origin master
