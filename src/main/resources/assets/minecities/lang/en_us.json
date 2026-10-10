@@ -73,5 +73,11 @@
   "tool.minecities.farmer": "a hoe",
   "tool.minecities.cook": "a utensil",
   "message.minecities.found.village": "The town takes over a village: %s villagers already belong to it (%s).",
-  "info.minecities.villagers": "Villagers: %s, for a population of %s"
+  "info.minecities.villagers": "Villagers: %s, for a population of %s",
+  "job.minecities.lumberjack": "lumberjack",
+  "job.minecities.breeder": "breeder",
+  "job.minecities.fisherman": "fisherman",
+  "tool.minecities.lumberjack": "an axe",
+  "tool.minecities.breeder": "nothing",
+  "tool.minecities.fisherman": "a fishing rod"
 }

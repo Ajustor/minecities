@@ -73,5 +73,11 @@
   "tool.minecities.farmer": "une houe",
   "tool.minecities.cook": "un ustensile",
   "message.minecities.found.village": "La ville reprend un village : %s villageois en font déjà partie (%s).",
-  "info.minecities.villagers": "Villageois : %s, pour une population de %s"
+  "info.minecities.villagers": "Villageois : %s, pour une population de %s",
+  "job.minecities.lumberjack": "bûcheron",
+  "job.minecities.breeder": "éleveur",
+  "job.minecities.fisherman": "pêcheur",
+  "tool.minecities.lumberjack": "une hache",
+  "tool.minecities.breeder": "rien",
+  "tool.minecities.fisherman": "une canne à pêche"
 }

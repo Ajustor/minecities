@@ -8,11 +8,9 @@ import com.ajustor.minecities.town.Town;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.tags.TagKey;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.ai.goal.Goal;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
 import java.util.ArrayList;
@@ -39,6 +37,9 @@ abstract class WorkGoal extends Goal {
 	private long idleUntil;
 	private BlockPos errand;
 	private int repath;
+	private net.minecraft.world.entity.item.ItemEntity litter;
+	private int litterTicks;
+	private final java.util.Set<java.util.UUID> ignoredLitter = new java.util.HashSet<>();
 
 	protected WorkGoal(CitizenEntity citizen, Job job) {
 		this.citizen = citizen;
@@ -141,11 +142,11 @@ abstract class WorkGoal extends Goal {
 	 * aller le chercher, ou il n'y en a nulle part (le maire est prévenu, et le travail attend).
 	 */
 	protected boolean ensureTool() {
-		Optional<TagKey<Item>> tool = job.tool();
-		if (tool.isEmpty() || citizen.getMainHandItem().is(tool.get())) {
+		Optional<Predicate<ItemStack>> tool = job.tool();
+		if (tool.isEmpty() || tool.get().test(citizen.getMainHandItem())) {
 			return true;
 		}
-		Predicate<ItemStack> isTool = s -> s.is(tool.get());
+		Predicate<ItemStack> isTool = tool.get();
 		Optional<BlockPos> source = find(supplies(), isTool);
 		if (source.isEmpty()) {
 			citizen.complain("tool", Component.translatable("message.minecities.citizen.needs_tool",
@@ -167,6 +168,101 @@ abstract class WorkGoal extends Goal {
 			});
 		}
 		return false;
+	}
+
+	/**
+	 * Porte au grenier ce qu'il a dans les poches, en gardant ce que {@code kept} dit de garder (des
+	 * semences, des pousses), {@code keep} de chaque sorte au plus. Renvoie vrai une fois livré.
+	 */
+	protected boolean deliver(Predicate<ItemStack> kept, int keep) {
+		BlockPos granary = town().hall();
+		if (!goTo(granary)) {
+			return false;
+		}
+		container(granary).ifPresent(container -> {
+			java.util.Map<net.minecraft.world.item.Item, Integer> held = new java.util.HashMap<>();
+			List<ItemStack> inventory = citizen.inventory();
+			for (ItemStack stack : inventory) {
+				if (stack.isEmpty()) {
+					continue;
+				}
+				int keepHere = 0;
+				if (kept.test(stack)) {
+					int already = held.getOrDefault(stack.getItem(), 0);
+					keepHere = Math.min(stack.getCount(), keep - already);
+					held.put(stack.getItem(), already + keepHere);
+				}
+				ItemStack rest = Stock.insert(container, stack.copyWithCount(stack.getCount() - keepHere));
+				stack.setCount(keepHere + rest.getCount());
+			}
+		});
+		return true;
+	}
+
+	/** Ce qu'il porte, hors ce qu'il garde ({@code keep} de chaque sorte que {@code kept} retient). */
+	protected int produce(Predicate<ItemStack> kept, int keep) {
+		java.util.Map<net.minecraft.world.item.Item, Integer> held = new java.util.HashMap<>();
+		int produce = 0;
+		for (ItemStack stack : citizen.inventory()) {
+			if (stack.isEmpty()) {
+				continue;
+			}
+			if (kept.test(stack)) {
+				int total = held.merge(stack.getItem(), stack.getCount(), Integer::sum);
+				produce += Math.max(0, Math.min(stack.getCount(), total - keep));
+			} else {
+				produce += stack.getCount();
+			}
+		}
+		return produce;
+	}
+
+	/** Le soir approche : on rentre déposer la journée. */
+	protected boolean evening() {
+		return Math.floorMod(level().getOverworldClockTime(), 24000L) >= 11000;
+	}
+
+	/** Ramasse ce qui traîne à ses pieds (pousses, pommes, butin des bêtes…). */
+	protected void pickUp(Predicate<ItemStack> wanted) {
+		for (net.minecraft.world.entity.item.ItemEntity item : level().getEntitiesOfClass(
+				net.minecraft.world.entity.item.ItemEntity.class, citizen.getBoundingBox().inflate(1.5, 0.5, 1.5),
+				e -> e.isAlive() && wanted.test(e.getItem()))) {
+			ItemStack rest = Stock.insert(citizen.inventory(), item.getItem());
+			if (rest.isEmpty()) {
+				citizen.take(item, item.getItem().getCount());
+				item.discard();
+			} else {
+				item.setItem(rest);
+			}
+		}
+	}
+
+	/**
+	 * Va ramasser ce qui traîne par terre dans ce rayon autour d'un point (au sol, pas sur la cime
+	 * d'un arbre). Un objet qu'il n'atteint pas en 10 secondes est laissé. Renvoie vrai tant qu'il
+	 * est occupé à ramasser.
+	 */
+	protected boolean collectLitter(BlockPos center, int radius, Predicate<ItemStack> wanted) {
+		pickUp(wanted);
+		if (litter != null && (!litter.isAlive() || ++litterTicks > 200)) {
+			if (litter.isAlive()) {
+				ignoredLitter.add(litter.getUUID());
+			}
+			litter = null;
+		}
+		if (litter == null) {
+			litterTicks = 0;
+			litter = level().getEntitiesOfClass(net.minecraft.world.entity.item.ItemEntity.class,
+							new net.minecraft.world.phys.AABB(center).inflate(radius, 4, radius),
+							e -> e.isAlive() && e.onGround() && !ignoredLitter.contains(e.getUUID())
+									&& wanted.test(e.getItem()))
+					.stream().min(java.util.Comparator.comparingDouble(citizen::distanceToSqr)).orElse(null);
+		}
+		if (litter == null) {
+			return false;
+		}
+		goTo(litter.blockPosition());
+		return true;
 	}
 
 	/** Le poste de travail est-il toujours là ? */

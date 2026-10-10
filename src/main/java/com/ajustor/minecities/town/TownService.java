@@ -169,7 +169,7 @@ public final class TownService {
 		List<BlockPos> beds = raw.beds().stream().map(TownService::pos)
 				.filter(b -> !town.bedClaimedElsewhere(b, plaque)).toList();
 		List<House.Workstation> stations = raw.workstations().stream().map(TownService::pos)
-				.flatMap(p -> Job.ofWorkstation(level.getBlockState(p)).map(j -> new House.Workstation(p, j)).stream())
+				.flatMap(p -> Job.ofWorkstation(level, p, level.getBlockState(p)).map(j -> new House.Workstation(p, j)).stream())
 				.toList();
 		HouseScanner.Result result = raw;
 		boolean declared = raw.plaques().stream().anyMatch(p -> town.house(pos(p)).isPresent());
@@ -209,7 +209,7 @@ public final class TownService {
 			// Vitres, barreaux, clôtures et murets ferment une ouverture.
 			return HouseScanner.Cell.SOLID;
 		}
-		if (Job.ofWorkstation(state).isPresent()) {
+		if (Job.ofWorkstation(level, pos, state).isPresent()) {
 			return HouseScanner.Cell.WORKSTATION;
 		}
 		BlockEntity blockEntity = level.getBlockEntity(pos);
