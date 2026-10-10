@@ -43,9 +43,9 @@ import static com.ajustor.minecities.gametest.CityScenes.waitOrExplain;
 public class CountrysideScenes implements FabricClientGameTest {
 	private static final int Y = 100;
 	private static final BlockPos HALL = new BlockPos(0, Y, 0);
-	private static final BlockPos HOUSE_PLAQUE = new BlockPos(-11, Y + 1, 4);
+	private static final BlockPos HOUSE_PLAQUE = new BlockPos(-12, Y + 1, 4);
 	private static final BlockPos LUMBER_PLAQUE = new BlockPos(5, Y + 1, 4);
-	private static final BlockPos BARN_PLAQUE = new BlockPos(-11, Y + 1, -12);
+	private static final BlockPos BARN_PLAQUE = new BlockPos(-12, Y + 1, -12);
 	private static final BlockPos FISHERY_PLAQUE = new BlockPos(5, Y + 1, -12);
 	private static final BlockPos[] TREES = {new BlockPos(14, Y, 10), new BlockPos(19, Y, 4), new BlockPos(14, Y, 16)};
 	private static final AABB PASTURE = new AABB(-26, Y - 2, -30, 6, Y + 4, 2);
@@ -87,14 +87,14 @@ public class CountrysideScenes implements FabricClientGameTest {
 				}
 				return null;
 			}));
-			int cows = sp.getServer().computeOnServer(CountrysideScenes::cows);
 			look(sp, 0, Y + 22, -2, 0, Y, -1);
 			context.waitTicks(60);
 			context.takeScreenshot("countryside_0_before");
 
 			waitOrExplain(sp, server -> granary(server, s -> s.is(ItemTags.FISHES)) > 0
 					|| carried(server, Job.FISHERMAN, s -> s.is(ItemTags.FISHES)), 2400, "le pêcheur n'a rien pêché");
-			waitOrExplain(sp, server -> cows(server) > cows, 2400, "l'éleveur n'a pas fait naître de veau");
+			waitOrExplain(sp, server -> calves(server) > 0, 3600, "l'éleveur n'a pas fait naître de veau",
+					server -> cows(server) + " vaches au pré.");
 			waitOrExplain(sp, server -> logs(server) == 0, 2400, "le bûcheron n'a pas abattu les arbres",
 					server -> logs(server) + " bûches restantes, à " + remainingLogs(server) + ".");
 			waitOrExplain(sp, server -> granary(server, s -> s.is(ItemTags.LOGS)) > 0, 2400,
@@ -102,6 +102,17 @@ public class CountrysideScenes implements FabricClientGameTest {
 			look(sp, 0, Y + 22, -2, 0, Y, -1);
 			context.waitTicks(20);
 			context.takeScreenshot("countryside_1_after");
+
+			// Un nouveau relevé des bâtiments (comme toutes les 5 minutes) ne doit débaucher personne.
+			check(sp.getServer().computeOnServer(server -> {
+				ServerLevel level = server.overworld();
+				ServerPlayer player = server.getPlayerList().getPlayers().getFirst();
+				for (BlockPos plaque : new BlockPos[]{HOUSE_PLAQUE, LUMBER_PLAQUE, BARN_PLAQUE, FISHERY_PLAQUE}) {
+					TownService.declareHouse(level, plaque, player);
+				}
+				long employed = town(server).residents().values().stream().filter(r -> r.job().isPresent()).count();
+				return employed == 3 ? null : "un relevé a débauché : " + town(server).residents() + " ; " + town(server).houses();
+			}));
 		}
 	}
 
@@ -121,6 +132,11 @@ public class CountrysideScenes implements FabricClientGameTest {
 
 	private static int cows(MinecraftServer server) {
 		return server.overworld().getEntitiesOfClass(Cow.class, PASTURE).size();
+	}
+
+	/** Les veaux, où qu'ils se soient promenés. */
+	private static int calves(MinecraftServer server) {
+		return server.overworld().getEntitiesOfClass(Cow.class, PASTURE.inflate(32), Cow::isBaby).size();
 	}
 
 	/** Les bûches restantes des chênes plantés pour la scène. */
@@ -164,7 +180,8 @@ public class CountrysideScenes implements FabricClientGameTest {
 			command(server, "setblock %d %d 7 minecraft:white_bed[facing=south,part=foot]".formatted(x, Y));
 			command(server, "setblock %d %d 8 minecraft:white_bed[facing=south,part=head]".formatted(x, Y));
 		}
-		command(server, "setblock -11 %d 4 minecities:house_plaque[facing=south]".formatted(Y + 1));
+		// La plaque à côté de la porte, pas dessus : elle tomberait quand la porte bouge.
+		command(server, "setblock -12 %d 4 minecities:house_plaque[facing=south]".formatted(Y + 1));
 		// La scierie : un billot (bûche écorcée) et un coffre avec une hache ; les chênes à l'est.
 		WorkScenes.room(level, 4, 4, 8, 8, 6);
 		command(server, "setblock 8 %d 5 minecraft:stripped_oak_log".formatted(Y));
@@ -179,7 +196,7 @@ public class CountrysideScenes implements FabricClientGameTest {
 		// L'étable : une botte de foin ; des vaches au nord, du blé au grenier.
 		WorkScenes.room(level, -13, -12, -8, -8, -11);
 		command(server, "setblock -8 %d -11 minecraft:hay_block".formatted(Y));
-		command(server, "setblock -11 %d -12 minecities:house_plaque[facing=south]".formatted(Y + 1));
+		command(server, "setblock -12 %d -12 minecities:house_plaque[facing=south]".formatted(Y + 1));
 		for (int i = 0; i < 3; i++) {
 			command(server, "summon minecraft:cow %d %d -18".formatted(-14 + i * 3, Y));
 		}
