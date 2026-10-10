@@ -23,11 +23,11 @@ jour) et le travail attend.
 |---|---|---|---|---|
 | Fermier | composteur | houe | récolte les cultures mûres à 16 blocs du composteur, replante, sème la terre nue, livre au grenier en gardant 16 semences de chaque | **fait (v0.2)** |
 | Cuisinier | fumoir | — | cuit viandes, poissons, pommes de terre, algues ; 3 blés = 1 pain ; tout revient au grenier | **fait (v0.2)** |
-| Bûcheron | aucun poste vanilla (voir plus bas) | hache | abat les arbres d'une zone, replante les pousses, livre bûches et pommes | v0.3 |
-| Pêcheur | baril (comme le villageois) — conflit : le baril est aussi un garde-manger (voir plus bas) | canne à pêche | pêche dans l'eau proche de l'atelier | v0.3 |
-| Éleveur | aucun poste vanilla (voir plus bas) | — | nourrit et fait se reproduire les animaux d'un enclos, abat le surplus | v0.3 |
+| Bûcheron | bûche écorcée posée seule (billot) | hache | abat les arbres à 16 blocs, replante, ramasse pousses, pommes, bâtons | **fait (v0.3)** |
+| Pêcheur | baril à 6 blocs de l'eau (sinon garde-manger) | canne à pêche | pêche depuis la rive (table de pêche vanilla) | **fait (v0.3)** |
+| Éleveur | botte de foin posée seule | — | fait naître des petits sous 6 têtes, abat au-delà de 8 adultes, ramasse le butin | **fait (v0.3)** |
 | Garde | meule (*grindstone*, le poste du forgeron d'armes) | épée ou arc | patrouille, combat les monstres (brief 06) | v0.3 |
-| Bâtisseur | table d'artisan (*crafter*) ou établi | — | construit d'après des schémas (brief 09) | v0.3 |
+| Bâtisseur | table d'artisan (*crafter*) | — | construit d'après des schémas (brief 09) | **fait (v0.3)** |
 | Mineur | ? | pioche | creuse dans une zone marquée | plus tard |
 | Forgeron | haut fourneau | — | fond les minerais du grenier | plus tard |
 | Bibliothécaire | pupitre | — | bonheur, savoir (brief 04) | plus tard |

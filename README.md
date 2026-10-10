@@ -5,8 +5,8 @@ vanilla : pas de plans imposés ni de huttes préfabriquées. Vous bâtissez com
 reconnaît vos maisons, et des citoyens viennent y vivre. Le village devient ville, puis grande
 ville, puis mégalopole.
 
-> État : **v0.2** (villes, maisons, citoyens, métiers de fermier et de cuisinier). La suite est
-> décrite dans [BRIEF.md](BRIEF.md) et [docs/briefs](docs/briefs).
+> État : **v0.3** (villes, maisons, citoyens, sept métiers dont le bâtisseur, villages repris). La
+> suite est décrite dans [BRIEF.md](BRIEF.md) et [docs/briefs](docs/briefs).
 
 ## Jouer
 
@@ -32,7 +32,22 @@ ville, puis mégalopole.
      récolte au grenier.
    - **Fumoir → cuisinier** : il cuit la viande, le poisson et les pommes de terre du grenier, et
      fait du pain avec le blé (3 blés = 1 pain).
-6. **Grandir** : la ville monte de palier avec ses citoyens et ses maisons, et son territoire
+   - **Bûche écorcée posée seule au sol (billot) → bûcheron** : avec une **hache**, il abat les
+     arbres à 16 blocs, replante et ramasse pousses, pommes et bâtons.
+   - **Botte de foin posée seule → éleveur** : il fait naître des petits (avec la nourriture du
+     grenier) tant qu'une espèce a moins de 6 têtes, abat le surplus au-delà de 8 adultes.
+   - **Baril au bord de l'eau → pêcheur** : avec une **canne à pêche**, il pêche depuis la rive.
+     (Loin de l'eau, un baril reste un garde-manger.)
+   - **Table d'artisan → bâtisseur** : il bâtit les chantiers commandés par le maire (voir plus bas).
+6. **Faire bâtir** : le maire (ou un adjoint) commande un bâtiment d'après un **schéma**, dans un
+   **style** (plaines, taïga, désert, savane) : `/ville build minecities:house_small taiga`. Le
+   bâtiment se place devant lui, porte vers lui ; le bâtisseur dégage le terrain et pose les blocs
+   en prenant les matériaux au grenier (le maire est prévenu de ce qui manque), et le bâtiment se
+   déclare tout seul une fois fini. `/ville upgrade`, dans un bâtiment bâti par la ville,
+   l'agrandit (la petite maison devient une grande maison). Schémas livrés : petite et grande
+   maison, ferme (avec son champ), cuisine, scierie, étable (avec son enclos), pêcherie (avec son
+   bassin), atelier du bâtisseur. Les datapacks peuvent en ajouter (`data/<ns>/blueprint/*.json`).
+7. **Grandir** : la ville monte de palier avec ses citoyens et ses maisons, et son territoire
    s'étend.
 
 | Palier | Population (citoyens + villageois) | Maisons | Rayon du territoire |
@@ -63,6 +78,10 @@ commandes du maire s'appliquent à la ville où il se trouve.
 | `rename <nom>` | maire | renomme la ville |
 | `mayor <joueur>` | maire | passe l'écharpe à un autre joueur |
 | `deputy add\|remove <joueur>` | maire | nomme ou démet un adjoint |
+| `blueprints` | tous | les schémas disponibles |
+| `build <schéma> [style]` | maire, adjoints | commande un chantier devant soi |
+| `build cancel` | maire, adjoints | annule le chantier en cours |
+| `upgrade` | maire, adjoints | agrandit le bâtiment où l'on se trouve |
 | `admin immigrate\|feed\|starve` | opérateurs | tests : faire venir un citoyen, rassasier ou affamer la ville |
 
 ## Développer
@@ -73,9 +92,10 @@ Java 25 est requis (Loom 1.18.3, Minecraft 26.2).
 ./gradlew build                 # compile, tests unitaires, jar dans build/libs
 ./gradlew runClient             # lance le jeu avec le mod
 ./gradlew runClientGameTest     # scènes en jeu vérifiées et photographiées (build/run/clientGameTest/screenshots)
-./gradlew runClientGameTest -PminecitiesGametest=work   # une seule scène (city, work)
+./gradlew runClientGameTest -PminecitiesGametest=work   # une scène (city, work, countryside, village, build)
 python tools/textures/generate.py   # régénère les textures (peaux des citoyens, plaque, œuf)
 python tools/models/town_hall.py    # régénère le modèle de l'hôtel de ville
+python tools/blueprints/generate.py # régénère les schémas du bâtisseur
 ```
 
 Les textures sont produites par `tools/textures/generate.py` : modifier le script et le relancer,

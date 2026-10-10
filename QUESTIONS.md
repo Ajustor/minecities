@@ -131,3 +131,32 @@ décision par défaut pour avancer ; elle est indiquée, et facile à changer.
     Pages et rend le dépôt visible selon ses réglages) ? Et je crée un premier tag `v0.2.0` pour
     déclencher une release ?
     > Réponse : fals une grosse branche par avancée de version
+
+## Suite donnée aux réponses 17 à 22
+
+| # | Réponse | Ce qui a été fait (branche `v0.3`) |
+|---|---|---|
+| 17 | oui (les deux) | les maisons des villageois deviennent des maisons de la ville (sans plaque, relevées depuis leurs lits) ; les villageois sans métier deviennent citoyens, un à la fois |
+| 18 | d'accord | bûche écorcée posée seule = bûcheron (hache), botte de foin posée seule = éleveur |
+| 19 | parfait | le baril est le poste du pêcheur à 6 blocs d'eau au plus ; ailleurs il reste un garde-manger |
+| 20 | oui | j'ai retenu la première option : là où les lits explosent, les citoyens ne dorment pas (sans en souffrir). Dis-moi si tu préférais un « lit » propre au Nether (Q23) |
+| 21 | tout si possible | bâtisseur, 8 schémas, 4 styles, agrandissement petite → grande maison (brief 09 pour la suite) |
+| 22 | une branche par version | `master` = v0.2 poussé ; la v0.3 est sur la branche `v0.3`, avec une pull request vers `master` |
+
+## Nouvelles questions
+
+23. **Nether / End** : les citoyens n'y dorment pas. Veux-tu en plus un « lit » propre à ces
+    dimensions (l'ancre de réapparition, par exemple), ou c'est bien ainsi ?
+    > Réponse :
+
+24. **Release** : quand la PR `v0.3` sera fusionnée, je pose le tag `v0.3.0` (release GitHub avec le jar
+    et le changelog) ? Ou tu préfères poser les tags toi-même ?
+    > Réponse :
+
+25. **Bâtisseur** : il n'exige pas d'outil (contrairement aux autres métiers). Lui demander une pioche
+    et une pelle pour dégager le terrain ?
+    > Réponse :
+
+26. **Toits** : les schémas ont des toits plats en gradins (dalles), plus simples à orienter. Tu veux
+    des toits à deux pans en escaliers, plus proches des villages vanilla ?
+    > Réponse :

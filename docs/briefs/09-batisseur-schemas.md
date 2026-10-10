@@ -1,5 +1,17 @@
 # Brief 09 — Le bâtisseur et les schémas de bâtiments
 
+## État (v0.3)
+
+Fait : le bâtisseur (table d'artisan), 8 schémas JSON générés par `tools/blueprints/generate.py`
+(petite et grande maison, ferme, cuisine, scierie, étable, pêcherie, atelier du bâtisseur), 4 styles
+(`build/BuildStyle` : plaines, taïga, désert, savane), les commandes `blueprints`, `build`,
+`build cancel`, `upgrade`, la liste des matériaux à la commande, l'emprise en particules, la
+déclaration automatique du bâtiment fini, et les schémas des datapacks (`data/<ns>/blueprint/`).
+Choix faits : schémas en JSON plutôt qu'en `.nbt` (lisibles, déclinables en styles), pas d'outil
+exigé du bâtisseur. Reste à faire : l'objet « plan » et l'aperçu fantôme côté client, les schémas
+enregistrés avec un bloc de structure vanilla, plusieurs bâtisseurs sur plusieurs chantiers, et
+davantage de niveaux d'amélioration pour les ateliers.
+
 ## Objectif
 
 Réponse à la question 8 : tout le monde peut déclarer une maison, et il faut **aussi** un
