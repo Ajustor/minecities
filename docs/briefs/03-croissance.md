@@ -24,15 +24,13 @@ Mégalopole (75, 30). Rayon 48 → 80 → 128 → 224. Annonce à tous les joueu
 
 - **Exigences qualitatives** en plus du nombre : diversité des métiers, bonheur moyen (brief 04),
   un bâtiment public (marché, église = pièce avec une cloche ?).
-- **Adopter un village vanilla** : poser un hôtel de ville dans un village de villageois. Les
-  maisons du village ont des lits et des portes : on pourrait les relever automatiquement (lits
-  du POI vanilla → recherche de la pièce autour). Les villageois restent des villageois (on ne
-  les convertit pas) mais **comptent pour la population** et le village démarre au palier
-  correspondant ? Ou bien ils deviennent citoyens ? À trancher (QUESTIONS.md).
+- **Adopter un village vanilla** (fait en v0.2) : les villageois du territoire restent des
+  villageois (avec leurs échanges) mais **comptent dans la population** (`TownService.census`,
+  toutes les 5 s). Suite possible : relever automatiquement les maisons du village (depuis les
+  lits du POI vanilla), et laisser des villageois sans emploi devenir citoyens.
 - **Quartiers** pour la mégalopole : un hôtel de ville unique ne suffit plus à 224 blocs ; des
   **mairies annexes** (bloc dérivé) étendent le territoire et servent de greniers secondaires.
-- **Descente de palier** : aujourd'hui le palier redescend si la population baisse. Faut-il un
-  palier « acquis » (MineColonies ne redescend pas) ? À trancher.
+- **Descente de palier** : le palier redescend si la population baisse (validé, question 6).
 - **Limite de population** liée au palier (le village plafonne à 20 tant qu'il n'a pas 4
   maisons…), pour pousser à construire.
 

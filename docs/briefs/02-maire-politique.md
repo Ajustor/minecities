@@ -6,10 +6,13 @@ Faire du maire un vrai rôle, surtout en multijoueur : qui dirige, comment on le
 décide. MineColonies a un « propriétaire » de colonie et des rangs de permission ; ici on veut un
 vocabulaire municipal et un peu de jeu politique.
 
-## Déjà en v0.1
+## Déjà en place
 
-- Le fondateur est maire ; un joueur n'est maire que d'une ville.
-- Adjoints (`/ville deputy add|remove`), passation (`/ville mayor <joueur>`), renommage.
+- Le fondateur est maire ; **un joueur peut diriger plusieurs villes** (réponse à la question 7),
+  et faire d'autres joueurs les maires ou adjoints de ses villes.
+- Adjoints (`/ville deputy add|remove`), passation (`/ville mayor <joueur>`), renommage ; les
+  commandes du maire visent la ville où il se trouve.
+- Grenier ouvert à tous, déclaration des maisons ouverte à tous (questions 8 et 10).
 - Seul le maire peut démolir l'hôtel de ville ; maire et adjoints reçoivent les nouvelles.
 
 ## À faire
@@ -21,7 +24,11 @@ vocabulaire municipal et un peu de jeu politique.
 - Rangs : maire, adjoint, habitant, visiteur. Permissions par rang réglables par le maire
   (grenier, déclarer une maison, casser les blocs des bâtiments déclarés…).
 
-### Élections
+### Élections (pas avant la v2, réponse à la question 14)
+
+Le maire ou les habitants pourront **déclencher** une élection ; d'ici là, le maire reste le
+fondateur ou celui à qui il a passé l'écharpe.
+
 - Mandat de N jours de jeu (réglable, défaut 7). À la fin, élection : tout habitant joueur peut se
   porter candidat pendant 1 jour ; vote via l'écran de l'hôtel de ville (ou un **bulletin**
   objet à déposer dans l'urne = l'hôtel de ville, plus vanilla).

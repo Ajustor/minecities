@@ -28,8 +28,9 @@ entre villes, taille maximale d'une maison, une ville par maire ou non, nourritu
 - **Maisons hors chunks chargés** : non relevées (on garde le dernier relevé).
 - **Relevé coûteux** : 2048 blocs par maison toutes les 5 minutes. Avec 30+ maisons, étaler les
   relevés sur plusieurs ticks.
-- **Dimensions** : une ville peut être fondée dans le Nether/l'End (le sommeil y est réglé sur
-  l'heure de l'Overworld, et les lits explosent dans le Nether !). Interdire hors Overworld ?
+- **Dimensions** : les villes sont permises partout (question 13). Dans le Nether et l'End les
+  lits explosent : prévoir que les citoyens n'y dorment pas (ou dorment dans des « lits » propres
+  à ces dimensions : à imaginer).
 
 ## Performance
 
