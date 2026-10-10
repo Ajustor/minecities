@@ -33,7 +33,6 @@ import net.minecraft.world.entity.ai.goal.FloatGoal;
 import net.minecraft.world.entity.ai.goal.InteractGoal;
 import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
 import net.minecraft.world.entity.ai.goal.MoveTowardsRestrictionGoal;
-import net.minecraft.world.entity.ai.goal.OpenDoorGoal;
 import net.minecraft.world.entity.ai.goal.PanicGoal;
 import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
 import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal;
@@ -67,6 +66,7 @@ public class CitizenEntity extends PathfinderMob {
 	private int starvingTicks;
 	/** Ce que la ville sait de lui, relu régulièrement (vide s'il n'a pas de ville). */
 	private Optional<Resident> resident = Optional.empty();
+	private final DoorKeeper doors = new DoorKeeper(this);
 
 	public CitizenEntity(EntityType<? extends PathfinderMob> type, Level level) {
 		super(type, level);
@@ -94,7 +94,6 @@ public class CitizenEntity extends PathfinderMob {
 		goalSelector.addGoal(1, new AvoidEntityGoal<>(this, Monster.class, 8.0f, 0.6, 0.75));
 		goalSelector.addGoal(2, new SleepInBedGoal(this));
 		goalSelector.addGoal(3, new EatGoal(this));
-		goalSelector.addGoal(4, new OpenDoorGoal(this, true));
 		goalSelector.addGoal(5, new MoveTowardsRestrictionGoal(this, 0.6));
 		goalSelector.addGoal(6, new WaterAvoidingRandomStrollGoal(this, 0.5));
 		goalSelector.addGoal(7, new InteractGoal(this, CitizenEntity.class, 6.0f, 0.03f));
@@ -158,7 +157,11 @@ public class CitizenEntity extends PathfinderMob {
 	@Override
 	public void aiStep() {
 		super.aiStep();
-		if (!(level() instanceof ServerLevel serverLevel) || tickCount % 20 != 0) {
+		if (!(level() instanceof ServerLevel serverLevel)) {
+			return;
+		}
+		doors.tick();
+		if (tickCount % 20 != 0) {
 			return;
 		}
 		if (tickCount % SYNC_INTERVAL == 0 && !syncWithTown(serverLevel)) {
@@ -226,6 +229,7 @@ public class CitizenEntity extends PathfinderMob {
 			TownService.farewell(level, townId, getUUID(), message);
 		}
 		level.sendParticles(ParticleTypes.POOF, getX(), getY() + 1, getZ(), 12, 0.3, 0.6, 0.3, 0.02);
+		doors.closeAll();
 		discard();
 	}
 

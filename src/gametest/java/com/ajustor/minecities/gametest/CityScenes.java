@@ -119,7 +119,8 @@ public class CityScenes implements FabricClientGameTest {
 			// Affamés, ils vont manger : au coffre de la maison d'abord.
 			int before = sp.getServer().computeOnServer(server -> meals(server, CHEST) + meals(server, HALL));
 			sp.getServer().runOnServer(server -> citizens(server).forEach(c -> c.setHunger(Hunger.HUNGRY - 4)));
-			sp.getServer().waitFor(server -> citizens(server).stream().allMatch(c -> c.hunger() >= Hunger.HUNGRY), 1200);
+			waitOrExplain(sp, server -> citizens(server).stream().allMatch(c -> c.hunger() >= Hunger.HUNGRY), 1200,
+					"les citoyens n'ont pas mangé");
 			int after = sp.getServer().computeOnServer(server -> meals(server, CHEST) + meals(server, HALL));
 			if (after >= before) {
 				throw new AssertionError("les citoyens ont mangé sans entamer les réserves : " + before + " -> " + after);
@@ -130,12 +131,27 @@ public class CityScenes implements FabricClientGameTest {
 
 			// La nuit, chacun dans son lit.
 			command(sp, "time set 13000");
-			sp.getServer().waitFor(server -> citizens(server).stream().allMatch(CitizenEntity::isSleeping), 1200);
+			waitOrExplain(sp, server -> citizens(server).stream().allMatch(CitizenEntity::isSleeping), 1200,
+					"les citoyens ne sont pas couchés");
 			look(sp, 6, Y + 2.4, 4.6, 6, Y + 0.3, 7.5);
 			context.waitTicks(20);
 			context.takeScreenshot("city_3_night");
 			command(sp, "time set 1000");
 			sp.getServer().waitFor(server -> citizens(server).stream().noneMatch(CitizenEntity::isSleeping), 400);
+		}
+	}
+
+	/** Attend la condition ; sinon échoue en décrivant chaque citoyen (faim, position, sommeil). */
+	private static void waitOrExplain(TestSingleplayerContext sp, java.util.function.Predicate<MinecraftServer> done,
+			int ticks, String what) {
+		try {
+			sp.getServer().waitFor(done, ticks);
+		} catch (AssertionError e) {
+			String state = sp.getServer().computeOnServer(server -> citizens(server).stream()
+					.map(c -> "%s faim=%.1f pos=%s couché=%s".formatted(c.getName().getString(), c.hunger(),
+							c.blockPosition().toShortString(), c.isSleeping()))
+					.reduce((x, y) -> x + " ; " + y).orElse("aucun citoyen"));
+			throw new AssertionError(what + " : " + state, e);
 		}
 	}
 
@@ -201,7 +217,7 @@ public class CityScenes implements FabricClientGameTest {
 		command(server, "setblock 8 %d 5 minecraft:chest[facing=west]".formatted(Y));
 		command(server, "setblock 6 %d 8 minecraft:torch".formatted(Y));
 		command(server, "setblock 5 %d 4 minecities:house_plaque[facing=south]".formatted(Y + 1));
-		command(server, "setblock 0 %d 0 minecities:town_hall[facing=south]".formatted(Y));
+		command(server, "setblock 0 %d 0 minecities:town_hall[facing=north]".formatted(Y));
 		if (level.getBlockEntity(CHEST) instanceof Container chest) {
 			chest.setItem(0, new ItemStack(Items.BREAD, 3));
 		}

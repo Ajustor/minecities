@@ -4,6 +4,7 @@ import com.ajustor.minecities.town.Resident;
 import com.ajustor.minecities.town.Town;
 import com.ajustor.minecities.town.TownService;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.ai.goal.Goal;
@@ -22,6 +23,8 @@ public class EatGoal extends Goal {
 	private static final int NOTHING_COOLDOWN = 1200;
 	/** S'il n'arrive pas jusqu'au garde-manger, il abandonne au bout de 30 secondes. */
 	private static final int GIVE_UP = 600;
+	/** Il se sert à portée de bras, comme un joueur. */
+	private static final double REACH = 3.0;
 
 	private final CitizenEntity citizen;
 	private BlockPos pantry;
@@ -70,15 +73,31 @@ public class EatGoal extends Goal {
 		moveToPantry();
 	}
 
+	/**
+	 * Se dirige vers une case libre à côté du garde-manger : le coffre lui-même est plein, un chemin
+	 * qui le vise n'aboutit pas.
+	 */
 	private void moveToPantry() {
-		citizen.getNavigation().moveTo(pantry.getX() + 0.5, pantry.getY(), pantry.getZ() + 0.5, 0.6);
+		BlockPos spot = pantry;
+		double best = Double.MAX_VALUE;
+		for (Direction d : Direction.Plane.HORIZONTAL) {
+			BlockPos side = pantry.relative(d);
+			if (citizen.level().getBlockState(side).getCollisionShape(citizen.level(), side).isEmpty()) {
+				double distance = citizen.distanceToSqr(side.getX() + 0.5, side.getY(), side.getZ() + 0.5);
+				if (distance < best) {
+					best = distance;
+					spot = side;
+				}
+			}
+		}
+		citizen.getNavigation().moveTo(spot.getX() + 0.5, spot.getY(), spot.getZ() + 0.5, 1, 0.6);
 	}
 
 	@Override
 	public void tick() {
 		elapsed++;
 		citizen.getLookControl().setLookAt(pantry.getX() + 0.5, pantry.getY() + 0.5, pantry.getZ() + 0.5);
-		if (citizen.distanceToSqr(pantry.getX() + 0.5, pantry.getY() + 0.5, pantry.getZ() + 0.5) > 2.5 * 2.5) {
+		if (citizen.distanceToSqr(pantry.getX() + 0.5, pantry.getY() + 0.5, pantry.getZ() + 0.5) > REACH * REACH) {
 			if (elapsed % 40 == 0) {
 				moveToPantry();
 			}
