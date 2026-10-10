@@ -51,7 +51,7 @@
   "command.minecities.not_mayor": "Vous n'êtes maire d'aucune ville.",
   "command.minecities.which_town": "Vous dirigez plusieurs villes : rendez-vous dans celle que vous voulez gérer.",
   "command.minecities.list.empty": "Aucune ville n'a encore été fondée.",
-  "command.minecities.list.entry": "%s (%s) : %s citoyen(s), maire %s, hôtel de ville en %s",
+  "command.minecities.list.entry": "%s (%s) : %s habitant(s), maire %s, hôtel de ville en %s",
   "command.minecities.citizens": "Citoyens de %s (%s) :",
   "command.minecities.citizens.entry": " - %s : %s, %s",
   "command.minecities.citizens.away": "au loin",
@@ -71,5 +71,7 @@
   "citizen.minecities.jobless": "sans emploi",
   "message.minecities.citizen.needs_tool": "%s, %s, a besoin d'%s : mettez-en une au grenier ou dans un coffre de son atelier.",
   "tool.minecities.farmer": "une houe",
-  "tool.minecities.cook": "un ustensile"
+  "tool.minecities.cook": "un ustensile",
+  "message.minecities.found.village": "La ville reprend un village : %s villageois en font déjà partie (%s).",
+  "info.minecities.villagers": "Villageois : %s, pour une population de %s"
 }

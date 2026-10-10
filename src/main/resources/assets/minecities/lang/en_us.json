@@ -51,7 +51,7 @@
   "command.minecities.not_mayor": "You are not the mayor of any town.",
   "command.minecities.which_town": "You run several towns: go to the one you want to manage.",
   "command.minecities.list.empty": "No town has been founded yet.",
-  "command.minecities.list.entry": "%s (%s): %s citizen(s), mayor %s, town hall at %s",
+  "command.minecities.list.entry": "%s (%s): %s inhabitant(s), mayor %s, town hall at %s",
   "command.minecities.citizens": "Citizens of %s (%s):",
   "command.minecities.citizens.entry": " - %s: %s, %s",
   "command.minecities.citizens.away": "far away",
@@ -71,5 +71,7 @@
   "citizen.minecities.jobless": "jobless",
   "message.minecities.citizen.needs_tool": "%s, %s, needs %s: put one in the granary or in a chest of their workshop.",
   "tool.minecities.farmer": "a hoe",
-  "tool.minecities.cook": "a utensil"
+  "tool.minecities.cook": "a utensil",
+  "message.minecities.found.village": "The town takes over a village: %s villagers already belong to it (%s).",
+  "info.minecities.villagers": "Villagers: %s, for a population of %s"
 }

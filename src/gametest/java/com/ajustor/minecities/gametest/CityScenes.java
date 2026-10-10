@@ -138,6 +138,14 @@ public class CityScenes implements FabricClientGameTest {
 			context.takeScreenshot("city_3_night");
 			command(sp, "time set 1000");
 			sp.getServer().waitFor(server -> citizens(server).stream().noneMatch(CitizenEntity::isSleeping), 400);
+
+			// Des villageois vanilla sur le territoire comptent dans la population (sans devenir citoyens).
+			for (int i = 0; i < 3; i++) {
+				command(sp, "summon minecraft:villager %d %d -6".formatted(-4 + i * 3, Y));
+			}
+			waitOrExplain(sp, server -> town(server).villagers() == 3, 400, "les villageois n'ont pas été recensés");
+			check(sp.getServer().computeOnServer(server -> town(server).population() == 5
+					&& town(server).citizens() == 2 ? null : "population mal comptée : " + town(server).population()));
 		}
 	}
 

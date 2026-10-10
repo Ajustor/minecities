@@ -137,7 +137,7 @@ public final class TownCommands {
 		Town town = here(context);
 		ServerLevel level = context.getSource().getServer().getLevel(town.dimension());
 		context.getSource().sendSuccess(() -> Component.translatable("command.minecities.citizens", town.name(),
-				town.population()).withStyle(ChatFormatting.GOLD), false);
+				town.citizens()).withStyle(ChatFormatting.GOLD), false);
 		for (Map.Entry<UUID, Resident> e : town.residents().entrySet()) {
 			Entity entity = level != null ? level.getEntity(e.getKey()) : null;
 			Component hunger = entity instanceof CitizenEntity citizen
@@ -149,7 +149,7 @@ public final class TownCommands {
 			context.getSource().sendSuccess(() -> Component.translatable("command.minecities.citizens.entry",
 					e.getValue().name(), hunger, home), false);
 		}
-		return town.population();
+		return town.citizens();
 	}
 
 	private static int rename(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {

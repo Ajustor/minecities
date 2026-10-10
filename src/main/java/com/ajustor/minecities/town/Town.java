@@ -38,7 +38,8 @@ public final class Town {
 					.forGetter(t -> t.residents),
 			Codec.STRING.optionalFieldOf("tier", TownTier.VILLAGE.serializedName())
 					.forGetter(t -> t.tier.serializedName()),
-			Codec.LONG.optionalFieldOf("last_arrival", 0L).forGetter(t -> t.lastArrival)
+			Codec.LONG.optionalFieldOf("last_arrival", 0L).forGetter(t -> t.lastArrival),
+			Codec.INT.optionalFieldOf("villagers", 0).forGetter(t -> t.villagers)
 	).apply(i, Town::new));
 
 	private final UUID id;
@@ -53,10 +54,12 @@ public final class Town {
 	private final Map<UUID, Resident> residents;
 	private TownTier tier;
 	private long lastArrival;
+	/** Les villageois vanilla qui vivent sur le territoire : ils comptent dans la population. */
+	private int villagers;
 
 	private Town(UUID id, String name, ResourceKey<Level> dimension, BlockPos hall, UUID mayor, String mayorName,
 			List<UUID> deputies, long founded, List<House> houses, Map<UUID, Resident> residents, String tier,
-			long lastArrival) {
+			long lastArrival, int villagers) {
 		this.id = id;
 		this.name = name;
 		this.dimension = dimension;
@@ -69,12 +72,13 @@ public final class Town {
 		this.residents = new LinkedHashMap<>(residents);
 		this.tier = TownTier.fromSerializedName(tier);
 		this.lastArrival = lastArrival;
+		this.villagers = villagers;
 	}
 
 	public static Town found(String name, ResourceKey<Level> dimension, BlockPos hall, UUID mayor, String mayorName,
 			long now) {
 		return new Town(UUID.randomUUID(), name, dimension, hall, mayor, mayorName, List.of(), now, List.of(),
-				Map.of(), TownTier.VILLAGE.serializedName(), now);
+				Map.of(), TownTier.VILLAGE.serializedName(), now, 0);
 	}
 
 	public UUID id() {
@@ -285,8 +289,28 @@ public final class Town {
 		return Optional.ofNullable(residents.get(citizen));
 	}
 
-	public int population() {
+	/** Les villageois vanilla du territoire, au dernier recensement. */
+	public int villagers() {
+		return villagers;
+	}
+
+	/** Recense les villageois du territoire ; renvoie vrai si leur nombre a changé. */
+	public boolean setVillagers(int villagers) {
+		if (this.villagers == villagers) {
+			return false;
+		}
+		this.villagers = villagers;
+		return true;
+	}
+
+	/** Les citoyens du mod, sans les villageois. */
+	public int citizens() {
 		return residents.size();
+	}
+
+	/** Toute la population : les citoyens et les villageois vanilla du territoire. */
+	public int population() {
+		return residents.size() + villagers;
 	}
 
 	/** Accueille un nouveau citoyen, et lui donne un lit s'il en reste un. */

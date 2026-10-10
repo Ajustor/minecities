@@ -18,6 +18,7 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.npc.villager.Villager;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.item.ItemStack;
@@ -35,6 +36,7 @@ import net.minecraft.world.level.block.entity.ChestBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BedPart;
 import net.minecraft.world.level.levelgen.Heightmap;
+import net.minecraft.world.phys.AABB;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -100,8 +102,13 @@ public final class TownService {
 		Town town = Town.found(name, level.dimension(), pos, player.getUUID(), player.getGameProfile().name(),
 				level.getGameTime());
 		towns.add(town);
+		census(level, town);
 		level.getServer().getPlayerList().broadcastSystemMessage(Component.translatable(
 				"message.minecities.found", player.getDisplayName(), name).withStyle(ChatFormatting.GOLD), false);
+		if (town.villagers() > 0) {
+			player.sendSystemMessage(Component.translatable("message.minecities.found.village", town.villagers(),
+					Component.translatable(town.tier().translationKey())).withStyle(ChatFormatting.GREEN));
+		}
 		player.sendSystemMessage(Component.translatable("message.minecities.found.hint")
 				.withStyle(ChatFormatting.GRAY));
 		level.playSound(null, pos, SoundEvents.BELL_BLOCK, SoundSource.BLOCKS, 1.0f, 1.0f);
@@ -271,12 +278,29 @@ public final class TownService {
 					}
 				}
 			}
+			census(level, town);
 			settle(level, town);
 			if (now - town.lastArrival() >= IMMIGRATION_DELAY && town.freeBeds() > 0
 					&& granary(level, town).map(TownService::hasFood).orElse(false)) {
 				immigrate(level, town);
 			}
 			towns.changed();
+		}
+	}
+
+	/**
+	 * Recense les villageois vanilla du territoire : une ville fondée sur un village le reprend, ses
+	 * villageois restent des villageois (et gardent leurs échanges) mais comptent dans la population.
+	 */
+	static void census(ServerLevel level, Town town) {
+		BlockPos hall = town.hall();
+		int r = town.radius();
+		AABB area = new AABB(hall.getX() - r, hall.getY() - 48, hall.getZ() - r, hall.getX() + r + 1,
+				hall.getY() + 48, hall.getZ() + r + 1);
+		int villagers = level.getEntitiesOfClass(Villager.class, area,
+				v -> v.isAlive() && town.contains(level.dimension(), v.blockPosition())).size();
+		if (town.setVillagers(villagers)) {
+			town.updateTier().ifPresent(before -> announceTier(level, town, before));
 		}
 	}
 
@@ -438,8 +462,12 @@ public final class TownService {
 		player.sendSystemMessage(Component.translatable("info.minecities.title", town.name(),
 				Component.translatable(town.tier().translationKey())).withStyle(ChatFormatting.GOLD));
 		player.sendSystemMessage(Component.translatable("info.minecities.mayor", town.mayorName()));
-		player.sendSystemMessage(Component.translatable("info.minecities.population", town.population(),
+		player.sendSystemMessage(Component.translatable("info.minecities.population", town.citizens(),
 				town.capacity(), town.homes().size()));
+		if (town.villagers() > 0) {
+			player.sendSystemMessage(Component.translatable("info.minecities.villagers", town.villagers(),
+					town.population()));
+		}
 		if (town.workstations() > 0) {
 			long employed = town.residents().values().stream().filter(r -> r.job().isPresent()).count();
 			player.sendSystemMessage(Component.translatable("info.minecities.jobs", employed, town.workstations()));
