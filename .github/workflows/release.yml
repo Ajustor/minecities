@@ -1,6 +1,6 @@
 # Release au tag (v0.1.0, v0.2.0-beta…) : construit le jar à la version du tag, génère le
 # changelog (français et anglais) avec git-cliff, publie la GitHub Release (préversion si le tag
-# porte un suffixe), puis recommite CHANGELOG.md et CHANGELOG.fr.md sur master.
+# porte un suffixe), recommite CHANGELOG.md et CHANGELOG.fr.md sur master, puis republie le site.
 name: release
 on:
   push:
@@ -87,3 +87,17 @@ jobs:
           git add CHANGELOG.md CHANGELOG.fr.md
           git diff --cached --quiet || git commit -m "docs: changelog ${{ github.ref_name }}"
           git push origin master
+
+  # Le site se déploie depuis master (l'environnement github-pages refuse les tags), et un push fait
+  # avec le jeton du workflow ne relance pas d'autre workflow : on le relance par workflow_dispatch,
+  # le seul événement que ce jeton peut déclencher.
+  pages:
+    needs: release
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: write
+    steps:
+      - name: republish the site from master
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run pages.yml --repo "${{ github.repository }}" --ref master
