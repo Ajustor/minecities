@@ -64,7 +64,12 @@ public final class TownService {
 	private static final Set<net.minecraft.world.item.Item> UNHEALTHY = Set.of(Items.ROTTEN_FLESH, Items.SPIDER_EYE,
 			Items.POISONOUS_POTATO, Items.PUFFERFISH, Items.CHORUS_FRUIT, Items.SUSPICIOUS_STEW);
 
-	private static final Map<UUID, Long> LAST_SURVEY = new HashMap<>();
+	/** Quand chaque bâtiment a été relevé pour la dernière fois, par ville. */
+	private static final Map<UUID, Map<BlockPos, Long>> LAST_SURVEY = new HashMap<>();
+	/** Pas plus de tant de relevés par ville à chaque passage : les grandes villes étalent leurs relevés. */
+	private static final int SURVEYS_PER_PASS = 4;
+	/** Les villes dont le maire démonte l'hôtel de ville : elles disparaissent tout de suite. */
+	private static final java.util.Set<UUID> DISMANTLED = new java.util.HashSet<>();
 	private static int ticks;
 
 	private TownService() {
@@ -73,8 +78,11 @@ public final class TownService {
 	public static void register() {
 		ServerTickEvents.END_SERVER_TICK.register(TownService::tick);
 		PlayerBlockBreakEvents.BEFORE.register((level, player, pos, state, blockEntity) -> {
-			if (!state.is(McBlocks.TOWN_HALL) || !(level instanceof ServerLevel serverLevel)) {
+			if (!(level instanceof ServerLevel serverLevel)) {
 				return true;
+			}
+			if (!state.is(McBlocks.TOWN_HALL)) {
+				return mayBreak(serverLevel, player, pos);
 			}
 			Optional<Town> town = Towns.get(serverLevel.getServer()).byHall(level.dimension(), pos);
 			if (town.isPresent() && !town.get().mayor().equals(player.getUUID())) {
@@ -82,14 +90,55 @@ public final class TownService {
 						town.get().name()).withStyle(ChatFormatting.RED));
 				return false;
 			}
+			// Le maire démonte son hôtel de ville : la ville disparaît sans attendre.
+			town.ifPresent(t -> DISMANTLED.add(t.id()));
 			return true;
 		});
+	}
+
+	/**
+	 * Avec la protection des bâtiments (réglage), seuls le maire et ses adjoints (et les opérateurs)
+	 * cassent les blocs d'un bâtiment déclaré.
+	 */
+	private static boolean mayBreak(ServerLevel level, Player player, BlockPos pos) {
+		if (!com.ajustor.minecities.McConfig.get().protectBuildings
+				|| net.minecraft.commands.Commands.LEVEL_GAMEMASTERS.check(player.permissions())) {
+			return true;
+		}
+		for (Town town : Towns.get(level.getServer()).all()) {
+			if (town.dimension().equals(level.dimension()) && !town.canManage(player.getUUID())
+					&& town.houses().stream().anyMatch(h -> h.encloses(pos))) {
+				player.sendSystemMessage(Component.translatable("message.minecities.protected", town.name())
+						.withStyle(ChatFormatting.RED));
+				return false;
+			}
+		}
+		return true;
 	}
 
 	// Fondation et dissolution
 
 	public static void found(ServerLevel level, BlockPos pos, ServerPlayer player, ItemStack stack) {
 		Towns towns = Towns.get(level.getServer());
+		Optional<Town> orphan = towns.byHall(level.dimension(), pos).filter(t -> t.orphanedAt().isPresent());
+		if (orphan.isPresent()) {
+			// L'hôtel de ville détruit est reposé à sa place : la ville le retrouve.
+			if (orphan.get().canManage(player.getUUID())) {
+				orphan.get().orphan(Optional.empty());
+				towns.changed();
+				level.getServer().getPlayerList().broadcastSystemMessage(Component.translatable(
+						"message.minecities.hall.restored", orphan.get().name()).withStyle(ChatFormatting.GREEN), false);
+				level.playSound(null, pos, SoundEvents.BELL_BLOCK, SoundSource.BLOCKS, 1.0f, 1.0f);
+				return;
+			}
+			player.sendSystemMessage(Component.translatable("message.minecities.hall.not_mayor", orphan.get().name())
+					.withStyle(ChatFormatting.RED));
+			level.removeBlock(pos, false);
+			if (!player.isCreative()) {
+				player.getInventory().placeItemBackInInventory(stack.copyWithCount(1));
+			}
+			return;
+		}
 		Optional<Town> neighbour = towns.tooClose(level.dimension(), pos);
 		if (neighbour.isPresent()) {
 			player.sendSystemMessage(Component.translatable("message.minecities.found.too_close",
@@ -125,14 +174,34 @@ public final class TownService {
 		return name;
 	}
 
+	/**
+	 * L'hôtel de ville a disparu. Démonté par le maire, la ville disparaît ; détruit autrement (une
+	 * explosion, une commande), elle attend quelques minutes qu'on le repose au même endroit.
+	 */
 	public static void hallRemoved(ServerLevel level, BlockPos pos) {
 		Towns towns = Towns.get(level.getServer());
 		towns.byHall(level.dimension(), pos).ifPresent(town -> {
-			towns.remove(town);
-			LAST_SURVEY.remove(town.id());
+			int grace = com.ajustor.minecities.McConfig.get().hallGraceMinutes;
+			if (DISMANTLED.remove(town.id()) || grace <= 0) {
+				disband(level, town);
+				return;
+			}
+			if (town.orphanedAt().isPresent()) {
+				// Déjà en attente (la destruction se signale parfois deux fois).
+				return;
+			}
+			town.orphan(Optional.of(level.getGameTime()));
+			towns.changed();
 			level.getServer().getPlayerList().broadcastSystemMessage(Component.translatable(
-					"message.minecities.disbanded", town.name()).withStyle(ChatFormatting.GOLD), false);
+					"message.minecities.hall.destroyed", town.name(), grace).withStyle(ChatFormatting.RED), false);
 		});
+	}
+
+	private static void disband(ServerLevel level, Town town) {
+		Towns.get(level.getServer()).remove(town);
+		LAST_SURVEY.remove(town.id());
+		level.getServer().getPlayerList().broadcastSystemMessage(Component.translatable(
+				"message.minecities.disbanded", town.name()).withStyle(ChatFormatting.GOLD), false);
 	}
 
 	// Annexes
@@ -226,7 +295,8 @@ public final class TownService {
 		if (result.valid()) {
 			List<BlockPos> containers = raw.containers().stream().map(TownService::pos).toList();
 			// Une maison de village garde ses postes de travail pour ses villageois.
-			town.putHouse(new House(plaque, beds, containers, village ? List.of() : stations, raw.volume(), village));
+			town.putHouse(new House(plaque, beds, containers, village ? List.of() : stations, raw.volume(), village)
+					.within(pos(raw.min()).offset(-1, -1, -1), pos(raw.max()).offset(1, 1, 1)));
 		} else {
 			town.removeHouse(plaque);
 		}
@@ -337,25 +407,65 @@ public final class TownService {
 				continue;
 			}
 			long now = level.getGameTime();
-			if (now - LAST_SURVEY.getOrDefault(town.id(), 0L) >= SURVEY_INTERVAL) {
-				LAST_SURVEY.put(town.id(), now);
-				for (House house : town.houses()) {
-					if (!level.isLoaded(house.plaque())) {
-						continue;
-					}
-					if (house.village() || level.getBlockState(house.plaque()).is(McBlocks.HOUSE_PLAQUE)) {
-						survey(level, town, house.plaque());
-					} else {
-						town.removeHouse(house.plaque());
-					}
+			if (town.orphanedAt().isEmpty() && !level.getBlockState(town.hall()).is(McBlocks.TOWN_HALL)) {
+				// L'hôtel de ville a disparu sans prévenir (une commande, un autre mod) : la ville attend.
+				hallRemoved(level, town.hall());
+			}
+			if (town.orphanedAt().isPresent()) {
+				// Sans hôtel de ville : au bout du délai de grâce, la ville disparaît.
+				if (now - town.orphanedAt().get() > com.ajustor.minecities.McConfig.get().hallGraceMinutes * 1200L) {
+					disband(level, town);
+				}
+				continue;
+			}
+			// Les bâtiments sont relevés à leur tour, quelques-uns à chaque passage.
+			Map<BlockPos, Long> surveyed = LAST_SURVEY.computeIfAbsent(town.id(), id -> new HashMap<>());
+			int budget = SURVEYS_PER_PASS;
+			for (House house : town.houses()) {
+				if (budget == 0) {
+					break;
+				}
+				if (!level.isLoaded(house.plaque())
+						|| now - surveyed.computeIfAbsent(house.plaque(), p -> now) < SURVEY_INTERVAL) {
+					continue;
+				}
+				surveyed.put(house.plaque(), now);
+				budget--;
+				if (house.village() || level.getBlockState(house.plaque()).is(McBlocks.HOUSE_PLAQUE)) {
+					survey(level, town, house.plaque());
+				} else {
+					town.removeHouse(house.plaque());
 				}
 			}
+			forgetMissing(level, town, now);
 			census(level, town);
 			settle(level, town);
 			// Plus d'immigration : sous 5 habitants des nouveaux venus arrivent, au-delà on naît.
 			Families.tick(level, town);
 			Raids.consider(level, town);
 			towns.changed();
+		}
+	}
+
+	/**
+	 * Raye les citoyens disparus : jamais revus depuis une heure (réglage) alors que leur maison
+	 * (ou l'hôtel de ville, pour un sans-logis) est chargée. Un citoyen supprimé par une commande ou un
+	 * autre mod ne reste pas inscrit pour toujours.
+	 */
+	private static void forgetMissing(ServerLevel level, Town town, long now) {
+		long limit = com.ajustor.minecities.McConfig.get().missingCitizenMinutes * 1200L;
+		for (Map.Entry<UUID, Resident> e : town.residents().entrySet()) {
+			UUID id = e.getKey();
+			if (level.getEntity(id) != null) {
+				town.seen(id, now);
+				continue;
+			}
+			BlockPos anchor = e.getValue().home().orElse(town.hall());
+			long seen = town.lastSeen(id, now);
+			if (limit > 0 && level.isPositionEntityTicking(anchor) && now - seen > limit) {
+				farewell(level, town.id(), id, Component.translatable("message.minecities.citizen.missing",
+						e.getValue().name()));
+			}
 		}
 	}
 
@@ -419,7 +529,8 @@ public final class TownService {
 					.filter(b -> !town.bedClaimedElsewhere(b, start)).toList();
 			if (raw.valid() && !beds.isEmpty() && raw.plaques().isEmpty()) {
 				town.putHouse(new House(start, beds, raw.containers().stream().map(TownService::pos).toList(),
-						List.of(), raw.volume(), true));
+						List.of(), raw.volume(), true).within(pos(raw.min()).offset(-1, -1, -1),
+						pos(raw.max()).offset(1, 1, 1)));
 				return;
 			}
 		}

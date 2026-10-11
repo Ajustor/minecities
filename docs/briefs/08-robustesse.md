@@ -4,6 +4,22 @@
 
 Rendre le mod sûr sur un serveur et réglable, avant une diffusion large (Modrinth/CurseForge).
 
+## État (v0.8)
+
+- `McConfig` (`config/minecities.json`, Gson) : nouveaux venus, faim, départs, raids, fêtes, marché,
+  protection, délai de grâce, disparus. Réécrit à chaque lancement pour montrer les nouvelles clés.
+- **Protection** (réglage, désactivée par défaut) : un bâtiment déclaré garde son étendue (intérieur
+  et murs, relevée par `HouseScanner`) ; hors maire, adjoints et opérateurs, personne n'y casse.
+- **Hôtel de ville détruit** autrement que par le maire : la ville attend `hall_grace_minutes`
+  (sauvegardé : `orphaned_at`) ; reposé au même endroit par le maire ou un adjoint, elle le retrouve ;
+  sinon elle disparaît. Démonté par le maire, elle disparaît aussitôt.
+- **Disparus** : un citoyen jamais revu depuis `missing_citizen_minutes`, sa maison (ou l'hôtel de
+  ville) chargée, est rayé.
+- **Relevés étalés** : 4 bâtiments au plus par ville à chaque passage (toutes les 5 s), chacun
+  toutes les 5 minutes.
+- Sauvegarde : un test relit une ville avec tous les champs ajoutés depuis la v0.4, et une ville
+  d'avant (sans eux).
+
 ## Configuration
 
 Un fichier `config/minecities.json` (voir `FmabConfig` dans FMAB pour le patron) :

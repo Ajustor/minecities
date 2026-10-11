@@ -90,7 +90,7 @@ class MerchantGoal extends WorkGoal {
 			return;
 		}
 		long now = level().getGameTime();
-		int cap = Market.DAILY_EARNINGS * Math.max(1, town().workers(Job.MERCHANT));
+		int cap = Market.dailyEarnings() * Math.max(1, town().workers(Job.MERCHANT));
 		if (town().chronicle().earnedToday(now) < cap) {
 			for (int i = 0; i < c.getContainerSize(); i++) {
 				ItemStack stack = c.getItem(i);

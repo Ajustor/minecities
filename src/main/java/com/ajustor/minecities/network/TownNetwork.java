@@ -84,7 +84,7 @@ public final class TownNetwork {
 		long now = level.getGameTime();
 		Chronicle chronicle = town.chronicle();
 		TownSnapshot.Life life = new TownSnapshot.Life(town.averageMood().map(m -> (int) Math.round(m * 10)).orElse(-1),
-				chronicle.partying(now), chronicle.canCelebrate(now), chronicle.untilNextFestival(now), Festivals.COST,
+				chronicle.partying(now), chronicle.canCelebrate(now), chronicle.untilNextFestival(now), Festivals.cost(),
 				chronicle.alarmed(now) || Raids.underAttack(town.id()),
 				TownService.granary(level, town).map(g -> Stock.count(g, s -> s.is(Items.EMERALD))).orElse(0),
 				chronicle.earnedToday(now), town.activeAnnexes().size(), town.tier().annexes());
@@ -133,7 +133,7 @@ public final class TownNetwork {
 					return;
 				}
 				Festivals.offer(level, town).ifPresent(refusal -> player.sendSystemMessage(Component.translatable(
-						"message.minecities.festival.refused." + refusal.name().toLowerCase(), Festivals.COST)
+						"message.minecities.festival.refused." + refusal.name().toLowerCase(), Festivals.cost())
 						.withStyle(ChatFormatting.RED)));
 			}
 			case "accept", "refuse" -> {

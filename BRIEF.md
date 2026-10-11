@@ -125,7 +125,8 @@ puis un tag `vX.Y.0` qui publie la release.
    bâtiments à l'écran, plaques colorées, couvre-chefs des métiers) et du brief 06 (cloche, fêtes).
 4. **v0.7** (fait) — brief 07 (trésor, marché, marchand) et brief 03 (déblocages par palier,
    mairies annexes).
-5. **v0.8** — brief 08 (configuration, protections, ménage des citoyens disparus, performances).
+5. **v0.8** (fait) — brief 08 (configuration, protections, hôtel de ville détruit, ménage des
+   citoyens disparus, relevés étalés).
 6. **v0.9** — brief 11 : les **quatre niveaux** de chaque bâtiment, de plus en plus chers ; le
    boulanger, le mineur, le forgeron.
 7. **v1.0** — brief 11 : joaillier, maçon, verrier, tisserand, tanneur, bibliothécaire, apiculteur,
@@ -142,7 +143,7 @@ puis un tag `vX.Y.0` qui publie la release.
 | 05 | [Interface et rendu](docs/briefs/05-interface-rendu.md) | Fait en v0.4–0.6 : écran, HUD, plaques, couvre-chefs ; suite : carte du territoire |
 | 06 | [Défense et événements](docs/briefs/06-defense-evenements.md) | Gardes, archers, inventeur, raids (v0.5), cloche et fêtes (v0.6) ; suite : marché, catastrophes |
 | 07 | [Économie et commerce](docs/briefs/07-economie.md) | Fait en v0.7 : trésor, marché, marchand ; suite : commerce entre villes |
-| 08 | [Robustesse et multijoueur](docs/briefs/08-robustesse.md) | Permissions, protections, configuration, performance, compatibilité |
+| 08 | [Robustesse et multijoueur](docs/briefs/08-robustesse.md) | Fait en v0.8 : configuration, protections, hôtel de ville détruit, disparus ; suite : compatibilité (Jade) |
 | 10 | [Familles, mariages, naissances et animations](docs/briefs/10-familles-animations.md) | Fait en v0.4 : 5 fondateurs, mariages acceptés par le maire, naissances, animations |
 | 11 | [Bâtiments à quatre niveaux et filières](docs/briefs/11-niveaux-et-filieres.md) | v0.9–v1.0 : 4 niveaux de bâtiments, mineur, forgeron, boulanger, joaillier… |
 | 09 | [Bâtisseur et schémas](docs/briefs/09-batisseur-schemas.md) | Fait en v0.3 ; suite : aperçu fantôme, objet plan, schémas enregistrés au bloc de structure |

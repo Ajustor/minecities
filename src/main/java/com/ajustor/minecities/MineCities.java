@@ -29,6 +29,7 @@ public class MineCities implements ModInitializer {
 
 	@Override
 	public void onInitialize() {
+		McConfig.load();
 		McBlocks.register();
 		McBlockEntities.register();
 		McEntities.register();

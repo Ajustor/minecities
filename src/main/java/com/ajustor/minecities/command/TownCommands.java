@@ -221,7 +221,7 @@ public final class TownCommands {
 		Optional<Festivals.Refusal> refusal = Festivals.offer(level, town);
 		if (refusal.isPresent()) {
 			context.getSource().sendFailure(Component.translatable("message.minecities.festival.refused."
-					+ refusal.get().name().toLowerCase(), Festivals.COST));
+					+ refusal.get().name().toLowerCase(), Festivals.cost()));
 			return 0;
 		}
 		return Command.SINGLE_SUCCESS;

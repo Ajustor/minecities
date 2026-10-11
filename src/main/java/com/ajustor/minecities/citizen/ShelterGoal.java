@@ -14,8 +14,13 @@ import java.util.Optional;
  * du raid ou de l'alerte.
  */
 class ShelterGoal extends Goal {
+	/** Sans s'approcher de son refuge pendant 15 secondes (une porte bouchée), il s'y glisse. */
+	private static final int STUCK = 300;
+
 	private final CitizenEntity citizen;
 	private int repath;
+	private int stuck;
+	private double closest;
 
 	ShelterGoal(CitizenEntity citizen) {
 		this.citizen = citizen;
@@ -39,6 +44,8 @@ class ShelterGoal extends Goal {
 	@Override
 	public void start() {
 		repath = 0;
+		stuck = 0;
+		closest = Double.MAX_VALUE;
 		citizen.say("raid", Component.translatable("speech.minecities.raid"));
 	}
 
@@ -50,7 +57,18 @@ class ShelterGoal extends Goal {
 			return;
 		}
 		BlockPos target = refuge.get();
-		if (citizen.distanceToSqr(target.getX() + 0.5, target.getY(), target.getZ() + 0.5) < 2.0 * 2.0) {
+		double distance = citizen.distanceToSqr(target.getX() + 0.5, target.getY(), target.getZ() + 0.5);
+		if (distance < 2.0 * 2.0) {
+			citizen.getNavigation().stop();
+			return;
+		}
+		// Coincé (à deux dans l'embrasure d'une porte, derrière un voisin) : il finit par y arriver.
+		if (distance < closest - 0.5) {
+			closest = distance;
+			stuck = 0;
+		} else if (++stuck > STUCK) {
+			stuck = 0;
+			citizen.snapTo(target.getX() + 0.5, target.getY() + 0.6, target.getZ() + 0.5, citizen.getYRot(), 0);
 			citizen.getNavigation().stop();
 			return;
 		}

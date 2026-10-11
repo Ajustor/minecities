@@ -7,8 +7,10 @@ package com.ajustor.minecities.citizen;
  */
 public final class Hunger {
 	public static final float MAX = 20;
-	/** Une barre pleine dure une journée (24 000 ticks). */
-	public static final float DECAY_PER_TICK = MAX / 24000f;
+	/** Une barre pleine dure une journée (24 000 ticks, réglable). */
+	public static float decayPerTick() {
+		return MAX / Math.max(1, com.ajustor.minecities.McConfig.get().hungerDayTicks);
+	}
 	/** En dessous, il cherche à manger. */
 	public static final float HUNGRY = 12;
 	/** Il mange jusqu'à ce seuil. */
@@ -50,7 +52,7 @@ public final class Hunger {
 
 	/** La faim après {@code ticks} ticks sans manger. */
 	public static float decay(float hunger, int ticks) {
-		return Math.max(0, hunger - DECAY_PER_TICK * ticks);
+		return Math.max(0, hunger - decayPerTick() * ticks);
 	}
 
 	/** La faim après avoir mangé un aliment qui nourrit de {@code nutrition}. */

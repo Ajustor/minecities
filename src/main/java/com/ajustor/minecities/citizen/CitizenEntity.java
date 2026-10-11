@@ -576,7 +576,7 @@ public class CitizenEntity extends PathfinderMob {
 			if (miserableTicks == 100) {
 				say("miserable", Component.translatable("speech.minecities.miserable"));
 			}
-			if (miserableTicks >= 24000) {
+			if (miserableTicks >= 24000 && com.ajustor.minecities.McConfig.get().miserableCitizensLeave) {
 				leaveTown(level, Component.translatable("message.minecities.citizen.left_unhappy", getName()));
 			}
 		} else {

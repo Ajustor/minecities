@@ -277,5 +277,9 @@
   "screen.minecities.annexes": "Annexes: %s of %s",
   "command.minecities.admin.tier": "%s: tier forced to %s.",
   "command.minecities.admin.tier.auto": "%s: the tier follows the population again.",
-  "hud.minecities.tier_up": "New tier: %s!"
+  "hud.minecities.tier_up": "New tier: %s!",
+  "message.minecities.protected": "This building of %s is protected: only the mayor and deputies can break blocks in it.",
+  "message.minecities.hall.destroyed": "The town hall of %s was destroyed! The mayor has %s minutes to place a new one at the same spot.",
+  "message.minecities.hall.restored": "%s has its town hall back.",
+  "message.minecities.citizen.missing": "%s has vanished and is no longer counted among the citizens."
 }

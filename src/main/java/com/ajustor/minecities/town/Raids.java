@@ -46,12 +46,11 @@ import java.util.UUID;
  * victoire rapporte des émeraudes au grenier.
  */
 public final class Raids {
-	/** Une ville attire les pillards à partir de 8 habitants. */
-	public static final int TEMPTING = 8;
+	/**
+	 * Le nombre de vagues au plus. Le seuil de population, l'espacement des raids et leur fréquence
+	 * se règlent dans la configuration (par défaut : 8 habitants, trois jours, une chance sur trois).
+	 */
 	public static final int MAX_WAVES = 7;
-	/** Pas plus d'un raid tous les trois jours ; une chance sur trois à chaque tombée de la nuit. */
-	private static final long SPACING = 3 * 24000L;
-	private static final int ODDS = 3;
 	/** Entre deux vagues, dix secondes de répit. */
 	private static final int RESPITE = 200;
 	/** Un raid qui traîne (pillards perdus) s'achève au bout d'une journée. */
@@ -111,14 +110,16 @@ public final class Raids {
 
 	/** À chaque relevé de la ville (toutes les 5 secondes) : un raid commence-t-il cette nuit ? */
 	static void consider(ServerLevel level, Town town) {
-		if (ACTIVE.containsKey(town.id()) || town.population() < TEMPTING) {
+		com.ajustor.minecities.McConfig config = com.ajustor.minecities.McConfig.get();
+		if (!config.raids || ACTIVE.containsKey(town.id()) || town.population() < config.raidMinPopulation) {
 			return;
 		}
+		long spacing = config.raidSpacingDays * 24000L;
 		long time = Math.floorMod(level.getOverworldClockTime(), 24000L);
 		long now = level.getGameTime();
 		boolean dusk = time >= 13000 && time < 13100;
-		if (dusk && now - LAST.getOrDefault(town.id(), now - SPACING) >= SPACING
-				&& level.getRandom().nextInt(ODDS) == 0) {
+		if (dusk && now - LAST.getOrDefault(town.id(), now - spacing) >= spacing
+				&& level.getRandom().nextInt(Math.max(1, config.raidOdds)) == 0) {
 			start(level, town);
 		}
 	}

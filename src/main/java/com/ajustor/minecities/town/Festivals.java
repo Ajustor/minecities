@@ -25,8 +25,10 @@ import java.util.List;
  * l'hôtel de ville sous les feux d'artifice ; la fête réjouit la ville pendant un jour.
  */
 public final class Festivals {
-	/** Ce que coûte une fête, en émeraudes prises au grenier. */
-	public static final int COST = 4;
+	/** Ce que coûte une fête, en émeraudes prises au grenier (réglable). */
+	public static int cost() {
+		return com.ajustor.minecities.McConfig.get().festivalCost;
+	}
 	/** Un feu d'artifice toutes les secondes et demie pendant la fête. */
 	private static final int FIREWORK_INTERVAL = 30;
 	private static final int[] COLORS = {0xFF5555, 0xFFAA00, 0xFFFF55, 0x55FF55, 0x55FFFF, 0x5555FF, 0xFF55FF,
@@ -57,10 +59,10 @@ public final class Festivals {
 		if (granary.isEmpty()) {
 			return java.util.Optional.of(Refusal.NO_GRANARY);
 		}
-		if (Stock.count(granary.get(), s -> s.is(Items.EMERALD)) < COST) {
+		if (Stock.count(granary.get(), s -> s.is(Items.EMERALD)) < cost()) {
 			return java.util.Optional.of(Refusal.NO_EMERALDS);
 		}
-		Stock.take(granary.get(), s -> s.is(Items.EMERALD), COST);
+		Stock.take(granary.get(), s -> s.is(Items.EMERALD), cost());
 		celebrate(level, town, "message.minecities.festival.offered");
 		return java.util.Optional.empty();
 	}

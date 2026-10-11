@@ -277,5 +277,9 @@
   "screen.minecities.annexes": "Mairies annexes : %s sur %s",
   "command.minecities.admin.tier": "%s : palier imposé, %s.",
   "command.minecities.admin.tier.auto": "%s : le palier suit à nouveau la population.",
-  "hud.minecities.tier_up": "Nouveau palier : %s !"
+  "hud.minecities.tier_up": "Nouveau palier : %s !",
+  "message.minecities.protected": "Ce bâtiment de %s est protégé : seuls le maire et ses adjoints peuvent y casser des blocs.",
+  "message.minecities.hall.destroyed": "L'hôtel de ville de %s a été détruit ! Le maire a %s minutes pour en reposer un au même endroit.",
+  "message.minecities.hall.restored": "%s retrouve son hôtel de ville.",
+  "message.minecities.citizen.missing": "%s a disparu et n'est plus compté parmi les citoyens."
 }
