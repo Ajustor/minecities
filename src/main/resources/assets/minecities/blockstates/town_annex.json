@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "minecities:block/town_annex"
+    },
+    "facing=east": {
+      "model": "minecities:block/town_annex",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "minecities:block/town_annex",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "minecities:block/town_annex",
+      "y": 270
+    }
+  }
+}

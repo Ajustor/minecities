@@ -13,7 +13,8 @@
 			"com.ajustor.minecities.gametest.BuildScenes",
 			"com.ajustor.minecities.gametest.FamilyScenes",
 			"com.ajustor.minecities.gametest.RaidScenes",
-			"com.ajustor.minecities.gametest.LifeScenes"
+			"com.ajustor.minecities.gametest.LifeScenes",
+			"com.ajustor.minecities.gametest.MarketScenes"
 		]
 	},
 	"depends": {

@@ -82,7 +82,10 @@ public class FamilyScenes implements FabricClientGameTest {
 			// Deux d'entre eux s'entendent, et demandent à se marier.
 			UUID[] couple = sp.getServer().computeOnServer(server -> {
 				Town town = town(server);
-				List<UUID> ids = List.copyOf(town.residents().keySet());
+				// Deux habitants de la grande maison, où le joueur ajoutera un lit pour l'enfant.
+				List<UUID> ids = town.residents().entrySet().stream()
+						.filter(e -> e.getValue().home().filter(BIG_PLAQUE::equals).isPresent())
+						.map(java.util.Map.Entry::getKey).sorted().toList();
 				town.addAffinity(ids.get(0), ids.get(1), 100);
 				town.askToMarry(ids.get(0), ids.get(1), server.overworld().getGameTime()).orElseThrow();
 				return new UUID[]{ids.get(0), ids.get(1)};

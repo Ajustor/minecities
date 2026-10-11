@@ -5,6 +5,17 @@
 Donner une valeur à la production de la ville et relier les villes entre elles, en utilisant
 l'émeraude comme monnaie (vanilla).
 
+## État (v0.7)
+
+- Économie fermée : le **trésor** est l'émeraude du grenier ; rien n'en crée, le marché convertit la
+  production (`town/Market` : cours des villageois, réserve de 32 par marchandise).
+- **Marchand** (pupitre, dès la ville ; `citizen/MerchantGoal`) : achète d'abord ce que réclament
+  les travailleurs (outil du métier ou du bâtisseur, flèches, pain si le grenier est vide), sinon
+  vend le surplus ; 32 émeraudes par jour et par marchand au plus (`Chronicle.earn`).
+- Dépenses : fêtes (4 émeraudes), achats du marchand. Le trésor et les gains du jour sont à l'écran.
+
+Suite : commerce entre villes (caravanes), négociant chez les villageois, salaires.
+
 ## Pistes
 
 - **Trésor municipal** : un coffre-fort dans l'hôtel de ville (ou un onglet), en émeraudes.

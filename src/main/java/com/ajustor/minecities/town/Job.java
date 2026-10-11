@@ -48,7 +48,19 @@ public enum Job {
 	/** Assemble des golems quand la ville est attaquée, avec le fer, la neige et les citrouilles du grenier ; à la table de forge. */
 	INVENTOR("inventor", (level, pos, state) -> state.is(Blocks.SMITHING_TABLE), null),
 	/** Soigne les blessés et nourrit les affamés de la ville ; à l'alambic. */
-	DOCTOR("doctor", (level, pos, state) -> state.is(Blocks.BREWING_STAND), null);
+	DOCTOR("doctor", (level, pos, state) -> state.is(Blocks.BREWING_STAND), null),
+	/** Vend le surplus du grenier et achète ce qui manque aux travailleurs ; au pupitre. Dès la ville. */
+	MERCHANT("merchant", (level, pos, state) -> state.is(Blocks.LECTERN), null);
+
+	/** Le palier où ce métier s'ouvre (brief 03) : le marché attend que le village soit une ville. */
+	public TownTier minTier() {
+		return this == MERCHANT ? TownTier.TOWN : TownTier.VILLAGE;
+	}
+
+	/** Ce métier est-il ouvert à ce palier ? */
+	public boolean unlockedAt(TownTier tier) {
+		return tier.ordinal() >= minTier().ordinal();
+	}
 
 	/** Les défenseurs veillent la nuit, ne fuient pas, et se battent. */
 	public boolean defends() {

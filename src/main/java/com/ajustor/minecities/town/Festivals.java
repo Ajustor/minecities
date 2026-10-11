@@ -89,7 +89,7 @@ public final class Festivals {
 	}
 
 	/** Un feu d'artifice de couleurs au hasard, tiré près de l'hôtel de ville. */
-	private static void launch(ServerLevel level, BlockPos hall) {
+	public static void launch(ServerLevel level, BlockPos hall) {
 		RandomSource random = level.getRandom();
 		ItemStack rocket = new ItemStack(Items.FIREWORK_ROCKET);
 		FireworkExplosion.Shape[] shapes = {FireworkExplosion.Shape.SMALL_BALL, FireworkExplosion.Shape.LARGE_BALL,

@@ -10,6 +10,7 @@ import com.ajustor.minecities.citizen.CitizenEntity;
 import com.ajustor.minecities.town.Families;
 import com.ajustor.minecities.town.Job;
 import com.ajustor.minecities.town.Festivals;
+import com.ajustor.minecities.town.TownTier;
 import com.ajustor.minecities.town.Raids;
 import com.ajustor.minecities.citizen.Hunger;
 import com.ajustor.minecities.town.Resident;
@@ -126,6 +127,16 @@ public final class TownCommands {
 							Raids.stop(c.getSource().getServer(), here(c).id());
 							return 1;
 						}))
+						.then(Commands.literal("tier")
+								.then(Commands.argument("tier", StringArgumentType.word())
+										.suggests((c, b) -> {
+											b.suggest("auto");
+											for (TownTier t : TownTier.values()) {
+												b.suggest(t.serializedName());
+											}
+											return b.buildFuture();
+										})
+										.executes(TownCommands::forceTier)))
 						.then(Commands.literal("festival").executes(c -> {
 							Town town = here(c);
 							ServerLevel level = c.getSource().getServer().getLevel(town.dimension());
@@ -172,6 +183,28 @@ public final class TownCommands {
 			throw WHICH_TOWN.create();
 		}
 		return mine.getFirst();
+	}
+
+	/** Un opérateur impose un palier à la ville où il se trouve, ou le rend à la population. */
+	private static int forceTier(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
+		Town town = here(context);
+		String name = StringArgumentType.getString(context, "tier");
+		ServerLevel level = context.getSource().getServer().getLevel(town.dimension());
+		if (name.equals("auto")) {
+			town.forceTier(Optional.empty());
+			context.getSource().sendSuccess(() -> Component.translatable("command.minecities.admin.tier.auto",
+					town.name()), true);
+		} else {
+			TownTier tier = TownTier.fromSerializedName(name);
+			town.forceTier(Optional.of(tier));
+			context.getSource().sendSuccess(() -> Component.translatable("command.minecities.admin.tier",
+					town.name(), Component.translatable(tier.translationKey())), true);
+		}
+		if (level != null) {
+			TownService.retier(level, town);
+		}
+		Towns.get(context.getSource().getServer()).changed();
+		return Command.SINGLE_SUCCESS;
 	}
 
 	/** Le maire (ou un adjoint) offre une fête, contre quelques émeraudes du grenier. */

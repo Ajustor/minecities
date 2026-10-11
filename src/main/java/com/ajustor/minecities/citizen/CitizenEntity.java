@@ -202,6 +202,7 @@ public class CitizenEntity extends PathfinderMob {
 		goalSelector.addGoal(4, new ArcherGoal(this));
 		goalSelector.addGoal(4, new InventorGoal(this));
 		goalSelector.addGoal(4, new DoctorGoal(this));
+		goalSelector.addGoal(4, new MerchantGoal(this));
 		// Les défenseurs prennent pour cible tout ce qui est hostile sur le territoire, et qui les frappe.
 		targetSelector.addGoal(1, new HurtByTargetGoal(this) {
 			@Override

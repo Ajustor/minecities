@@ -53,6 +53,8 @@ KEY = {
     "n": "minecraft:anvil[facing=east]",
     "e": "minecraft:brewing_stand",
     "u": "minecraft:cauldron",
+    "p": "minecraft:lectern[facing=north]",
+    "y": "minecraft:barrel[facing=north]",
     "<": "{roof_stairs}[facing=east,half=bottom,shape=straight]",
     ">": "{roof_stairs}[facing=west,half=bottom,shape=straight]",
 }
@@ -160,7 +162,7 @@ def porch(layers, door_x=3):
     return out
 
 
-def blueprint(name, kind, layers, upgrade=None, door_x=3):
+def blueprint(name, kind, layers, upgrade=None, door_x=3, tier=None):
     layers = porch(layers, door_x)
     used = {ch for layer in layers for row in layer for ch in row}
     data = {
@@ -170,6 +172,9 @@ def blueprint(name, kind, layers, upgrade=None, door_x=3):
     }
     if upgrade:
         data["upgrade"] = upgrade
+    if tier:
+        # Le palier où la ville peut le commander (village par défaut).
+        data["tier"] = tier
     return name, data
 
 
@@ -291,6 +296,14 @@ def main():
             upgrade="minecities:infirmary_large"))
     prints.append(blueprint("infirmary_large", "workshop", rows(workshop({(5, 1, 5): "e", (7, 1, 5): "e",
             (6, 1, 5): "u"}, fine=True))))
+
+    # Le marché, dès la ville : un pupitre (le marchand), des tonneaux et un coffre pour les marchandises.
+    prints.append(blueprint("market", "workshop", rows(shell(9, 7, 3, extras={(4, 1, 4): "p", (1, 1, 5): "y",
+            (2, 1, 5): "y", (7, 1, 5): "y", (7, 1, 1): "C", (1, 1, 1): "t"})), upgrade="minecities:market_large",
+            tier="town"))
+    prints.append(blueprint("market_large", "workshop", rows(shell(9, 7, 3, extras={(3, 1, 4): "p", (5, 1, 4): "p",
+            (1, 1, 5): "y", (2, 1, 5): "y", (7, 1, 5): "y", (6, 1, 5): "y", (7, 1, 1): "C", (1, 1, 1): "t"},
+            fine=True)), tier="town"))
 
     OUT.mkdir(parents=True, exist_ok=True)
     for name, data in prints:

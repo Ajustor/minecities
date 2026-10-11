@@ -3,6 +3,7 @@ package com.ajustor.minecities.build;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.ajustor.minecities.town.TownTier;
 import net.minecraft.resources.Identifier;
 
 import java.util.ArrayList;
@@ -18,9 +19,10 @@ import java.util.TreeMap;
  *
  * @param kind    « house » (on y dort) ou « workshop » (on y travaille)
  * @param upgrade le schéma qui l'agrandit, bâti au même endroit
+ * @param tier    le palier où la ville peut le commander (brief 03) : le marché attend la ville
  */
 public record Blueprint(Identifier id, String kind, int width, int height, int depth, List<Cell> cells,
-		Optional<Identifier> upgrade) {
+		Optional<Identifier> upgrade, TownTier tier) {
 	/** Un bloc du schéma, à sa place locale, encore écrit avec ses jetons. */
 	public record Cell(int x, int y, int z, String template) {
 	}
@@ -64,6 +66,8 @@ public record Blueprint(Identifier id, String kind, int width, int height, int d
 		String kind = json.has("kind") ? json.get("kind").getAsString() : "house";
 		Optional<Identifier> upgrade = json.has("upgrade")
 				? Optional.of(Identifier.parse(json.get("upgrade").getAsString())) : Optional.empty();
-		return new Blueprint(id, kind, width, layers.size(), depth, List.copyOf(cells), upgrade);
+		TownTier tier = json.has("tier") ? TownTier.fromSerializedName(json.get("tier").getAsString())
+				: TownTier.VILLAGE;
+		return new Blueprint(id, kind, width, layers.size(), depth, List.copyOf(cells), upgrade, tier);
 	}
 }

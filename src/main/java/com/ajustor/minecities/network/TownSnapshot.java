@@ -26,7 +26,7 @@ public record TownSnapshot(BlockPos hall, String name, String tier, int populati
 	 * dans combien de ticks sinon, et son prix), l'alerte.
 	 */
 	public record Life(int mood, boolean partying, boolean canCelebrate, long untilFestival, int festivalCost,
-			boolean alarmed) {
+			boolean alarmed, int treasury, int earnedToday, int annexes, int maxAnnexes) {
 	}
 
 	/** Un citoyen : nom, métier et faim (clés), logé ou non, conjoint, enfant, humeur (-1 si inconnue), besoin. */
@@ -34,7 +34,10 @@ public record TownSnapshot(BlockPos hall, String name, String tier, int populati
 			boolean child, int mood, Optional<Component> need) {
 	}
 
-	/** Un bâtiment : sa plaque, ses lits (et combien sont pris), ses métiers, maison de village ou non. */
+	/**
+	 * Un bâtiment : sa plaque, ses lits (et combien sont pris), ses métiers (clés ; « ! » devant un
+	 * métier pas encore ouvert à ce palier), maison de village ou non.
+	 */
 	public record BuildingRow(BlockPos plaque, int beds, int sleepers, List<String> jobs, boolean village) {
 	}
 
@@ -70,6 +73,10 @@ public record TownSnapshot(BlockPos hall, String name, String tier, int populati
 		buf.writeVarLong(s.life.untilFestival());
 		buf.writeVarInt(s.life.festivalCost());
 		buf.writeBoolean(s.life.alarmed());
+		buf.writeVarInt(s.life.treasury());
+		buf.writeVarInt(s.life.earnedToday());
+		buf.writeVarInt(s.life.annexes());
+		buf.writeVarInt(s.life.maxAnnexes());
 		buf.writeVarInt(s.rows.size());
 		for (CitizenRow row : s.rows) {
 			UUIDUtil.STREAM_CODEC.encode(buf, row.id);
@@ -116,7 +123,7 @@ public record TownSnapshot(BlockPos hall, String name, String tier, int populati
 		int nextHouses = buf.readVarInt();
 		boolean manager = buf.readBoolean();
 		Life life = new Life(buf.readInt(), buf.readBoolean(), buf.readBoolean(), buf.readVarLong(), buf.readVarInt(),
-				buf.readBoolean());
+				buf.readBoolean(), buf.readVarInt(), buf.readVarInt(), buf.readVarInt(), buf.readVarInt());
 		int count = buf.readVarInt();
 		List<CitizenRow> rows = new ArrayList<>(count);
 		for (int i = 0; i < count; i++) {

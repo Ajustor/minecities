@@ -224,6 +224,37 @@ def house_plaque(status=None):
     return img
 
 
+def annex_board():
+    """Le panneau de la mairie annexe : une affiche sur du bois, avec le plan du quartier."""
+    rng = random.Random(7)
+    img = Image.new("RGBA", (16, 16))
+    planks(rng, img)
+    paper = hexc("#e9dcb5")
+    ink = hexc("#3b2a1a")
+    road = hexc("#b89a6a")
+    roof = hexc("#a3402e")
+    green = hexc("#6f8f45")
+    # L'affiche (dans la partie visible du panneau : x 1 à 14, y 1 à 7).
+    for y in range(2, 8):
+        for x in range(2, 14):
+            img.putpixel((x, y), jitter(rng, paper, 0.03))
+    # Une route en croix, des maisons aux toits rouges, un arbre.
+    for x in range(2, 14):
+        img.putpixel((x, 5), road)
+    for y in range(2, 8):
+        img.putpixel((8, y), road)
+    for x, y in ((4, 3), (5, 3), (10, 3), (11, 6), (4, 7), (12, 3)):
+        img.putpixel((x, y), roof)
+    img.putpixel((6, 7), green)
+    img.putpixel((13, 6), green)
+    # Le titre, une ligne d'encre, et deux punaises.
+    for x in range(3, 8):
+        img.putpixel((x, 2), ink)
+    img.putpixel((2, 2), hexc("#c3261d"))
+    img.putpixel((13, 2), hexc("#c3261d"))
+    return img
+
+
 def spawn_egg():
     img = Image.new("RGBA", (16, 16), (0, 0, 0, 0))
     base, spot = hexc("#7b5536"), hexc("#3f6fb5")
@@ -286,6 +317,7 @@ def main():
     save(house_plaque("invalid"), TEXTURES / "block/house_plaque_invalid.png")
     save(spawn_egg(), TEXTURES / "item/citizen_spawn_egg.png")
     save(hats(), TEXTURES / "entity/citizen/hats.png")
+    save(annex_board(), TEXTURES / "block/annex_board.png")
 
 
 if __name__ == "__main__":

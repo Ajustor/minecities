@@ -178,6 +178,14 @@ public class TownHallScreen extends Screen {
 				town.meals() > 0 ? INK : BAD);
 		y += 14;
 		TownSnapshot.Life life = town.life();
+		line(graphics, Component.translatable("screen.minecities.treasury", life.treasury(), life.earnedToday()), y,
+				ACCENT);
+		y += 14;
+		if (life.maxAnnexes() > 0) {
+			line(graphics, Component.translatable("screen.minecities.annexes", life.annexes(), life.maxAnnexes()), y,
+					INK);
+			y += 14;
+		}
 		if (life.mood() >= 0) {
 			double mood = life.mood() / 10.0;
 			line(graphics, Component.translatable("screen.minecities.mood", String.format("%.1f", mood)), y,
@@ -264,7 +272,8 @@ public class TownHallScreen extends Screen {
 					if (!jobs.getSiblings().isEmpty()) {
 						jobs.append(", ");
 					}
-					jobs.append(Component.translatable(job));
+					jobs.append(job.startsWith("!") ? Component.translatable("screen.minecities.job_locked",
+							Component.translatable(job.substring(1))) : Component.translatable(job));
 				}
 				graphics.text(font, jobs, left + 22, y + 10, ACCENT, false);
 			}

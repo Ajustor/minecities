@@ -9,13 +9,16 @@ import java.util.List;
 
 /**
  * La chronique de la ville : ce qui s'y est passé et pèse sur le moral de ses citoyens (les morts
- * récentes, la dernière fête) et l'alerte en cours (la cloche).
+ * récentes, la dernière fête), l'alerte en cours (la cloche), et les gains du marché.
  */
 public final class Chronicle {
 	public static final MapCodec<Chronicle> CODEC = RecordCodecBuilder.mapCodec(i -> i.group(
 			Codec.LONG.listOf().optionalFieldOf("deaths", List.of()).forGetter(c -> List.copyOf(c.deaths)),
 			Codec.LONG.optionalFieldOf("festival_at", 0L).forGetter(c -> c.festivalAt),
-			Codec.LONG.optionalFieldOf("alarm_until", 0L).forGetter(c -> c.alarmUntil)
+			Codec.LONG.optionalFieldOf("alarm_until", 0L).forGetter(c -> c.alarmUntil),
+			Codec.LONG.optionalFieldOf("market_day", 0L).forGetter(c -> c.marketDay),
+			Codec.INT.optionalFieldOf("earned_today", 0).forGetter(c -> c.earnedToday),
+			Codec.LONG.optionalFieldOf("earned_total", 0L).forGetter(c -> c.earnedTotal)
 	).apply(i, Chronicle::new));
 
 	/** Une mort pèse sur la ville pendant un jour. */
@@ -30,15 +33,43 @@ public final class Chronicle {
 	private final List<Long> deaths;
 	private long festivalAt;
 	private long alarmUntil;
+	/** Le jour (temps de jeu / 24000) des gains du marché comptés dans {@link #earnedToday}. */
+	private long marketDay;
+	private int earnedToday;
+	private long earnedTotal;
 
-	private Chronicle(List<Long> deaths, long festivalAt, long alarmUntil) {
+	private Chronicle(List<Long> deaths, long festivalAt, long alarmUntil, long marketDay, int earnedToday,
+			long earnedTotal) {
 		this.deaths = new ArrayList<>(deaths);
 		this.festivalAt = festivalAt;
 		this.alarmUntil = alarmUntil;
+		this.marketDay = marketDay;
+		this.earnedToday = earnedToday;
+		this.earnedTotal = earnedTotal;
 	}
 
 	public static Chronicle empty() {
-		return new Chronicle(List.of(), 0L, 0L);
+		return new Chronicle(List.of(), 0L, 0L, 0L, 0, 0L);
+	}
+
+	/** Les émeraudes que le marché a rapportées aujourd'hui. */
+	public int earnedToday(long now) {
+		return now / 24000L == marketDay ? earnedToday : 0;
+	}
+
+	/** Les émeraudes que le marché a rapportées depuis la fondation. */
+	public long earnedTotal() {
+		return earnedTotal;
+	}
+
+	/** Le marché vient de rapporter tant d'émeraudes. */
+	public void earn(long now, int emeralds) {
+		if (now / 24000L != marketDay) {
+			marketDay = now / 24000L;
+			earnedToday = 0;
+		}
+		earnedToday += emeralds;
+		earnedTotal += emeralds;
 	}
 
 	/** Un citoyen est mort. */

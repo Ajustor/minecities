@@ -43,6 +43,15 @@ public enum TownTier {
 		return "tier.minecities." + serializedName;
 	}
 
+	/** Combien de mairies annexes la ville peut poser (brief 03) : dès la grande ville. */
+	public int annexes() {
+		return switch (this) {
+			case VILLAGE, TOWN -> 0;
+			case CITY -> 2;
+			case MEGALOPOLIS -> 4;
+		};
+	}
+
 	/** Le palier suivant, ou {@code null} pour la mégalopole. */
 	public TownTier next() {
 		return ordinal() + 1 < values().length ? values()[ordinal() + 1] : null;

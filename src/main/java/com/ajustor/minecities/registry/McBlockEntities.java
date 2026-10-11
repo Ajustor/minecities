@@ -1,6 +1,7 @@
 package com.ajustor.minecities.registry;
 
 import com.ajustor.minecities.MineCities;
+import com.ajustor.minecities.block.TownAnnexBlockEntity;
 import com.ajustor.minecities.block.TownHallBlockEntity;
 import net.fabricmc.fabric.api.object.builder.v1.block.entity.FabricBlockEntityTypeBuilder;
 import net.minecraft.core.Registry;
@@ -12,6 +13,11 @@ public final class McBlockEntities {
 			BuiltInRegistries.BLOCK_ENTITY_TYPE,
 			MineCities.id("town_hall"),
 			FabricBlockEntityTypeBuilder.create(TownHallBlockEntity::new, McBlocks.TOWN_HALL).build());
+
+	public static final BlockEntityType<TownAnnexBlockEntity> TOWN_ANNEX = Registry.register(
+			BuiltInRegistries.BLOCK_ENTITY_TYPE,
+			MineCities.id("town_annex"),
+			FabricBlockEntityTypeBuilder.create(TownAnnexBlockEntity::new, McBlocks.TOWN_ANNEX).build());
 
 	private McBlockEntities() {
 	}

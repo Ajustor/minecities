@@ -11,6 +11,18 @@ les bâtiments, et débloque des choses.
 `TownTier` : Village (0 citoyen), Ville (10 citoyens, 4 maisons), Grande ville (30, 12),
 Mégalopole (75, 30). Rayon 48 → 80 → 128 → 224. Annonce à tous les joueurs à la montée.
 
+## État (v0.7)
+
+- `Job.minTier()` : un poste dont le métier n'est pas ouvert attend (le marchand à la ville) ;
+  l'écran le montre « verrouillé ». Les schémas ont un champ `tier` (le marché à la ville).
+- Montée de palier : feux d'artifice, titre à l'écran, et la liste de ce qui s'ouvre (métiers,
+  schémas, annexes, rayon).
+- **Mairies annexes** (`block/TownAnnexBlock`) : 2 en grande ville, 4 en mégalopole ; posées par le
+  maire sur le territoire, à 40 blocs au moins de l'hôtel de ville et des autres ; elles étendent le
+  territoire de 48 blocs et gardent un grenier de quartier. Si le palier baisse, les dernières posées
+  ne servent plus.
+- `/ville admin tier <palier>|auto` impose un palier (serveurs, essais).
+
 ## Ce que chaque palier pourrait débloquer
 
 | Palier | Débloque |
