@@ -197,6 +197,17 @@ public class CitizenEntity extends PathfinderMob {
 		goalSelector.addGoal(4, new CookGoal(this, Job.BAKER));
 		goalSelector.addGoal(4, new SmithGoal(this));
 		goalSelector.addGoal(4, new MinerGoal(this));
+		goalSelector.addGoal(4, new BeekeeperGoal(this));
+		goalSelector.addGoal(4, new CraftGoal(this, Job.JEWELER, Crafts.JEWELER, 60, Action.BUILD,
+				net.minecraft.sounds.SoundEvents.AMETHYST_BLOCK_CHIME));
+		goalSelector.addGoal(4, new CraftGoal(this, Job.MASON, Crafts.MASON, 25, Action.BUILD,
+				net.minecraft.sounds.SoundEvents.UI_STONECUTTER_TAKE_RESULT));
+		goalSelector.addGoal(4, new CraftGoal(this, Job.GLASSBLOWER, Crafts.GLASSBLOWER, 30, Action.COOK,
+				net.minecraft.sounds.SoundEvents.FURNACE_FIRE_CRACKLE, net.minecraft.core.particles.ParticleTypes.FLAME));
+		goalSelector.addGoal(4, new CraftGoal(this, Job.WEAVER, Crafts.WEAVER, 40, Action.COOK,
+				net.minecraft.sounds.SoundEvents.UI_LOOM_TAKE_RESULT));
+		goalSelector.addGoal(4, new CraftGoal(this, Job.LIBRARIAN, Crafts.LIBRARIAN, 50, Action.TALK,
+				net.minecraft.sounds.SoundEvents.BOOK_PAGE_TURN, net.minecraft.core.particles.ParticleTypes.ENCHANT));
 		goalSelector.addGoal(4, new LumberjackGoal(this));
 		goalSelector.addGoal(4, new BreederGoal(this));
 		goalSelector.addGoal(4, new FishermanGoal(this));
@@ -557,7 +568,8 @@ public class CitizenEntity extends PathfinderMob {
 		Happiness.Factors factors = new Happiness.Factors(hunger, diet.meals().size(), diet.variety(),
 				diet.hadDish(), Happiness.expectedVariety(town.get().tier().ordinal()), r.hasHome(), r.isChild(),
 				r.job().isPresent(), hasNeed("tool"), r.spouse().isPresent(), getHealth() < getMaxHealth() / 2,
-				town.get().chronicle().recentDeaths(now), danger, town.get().chronicle().rejoicing(now));
+				town.get().chronicle().recentDeaths(now), danger, town.get().chronicle().rejoicing(now),
+				town.get().workers(Job.LIBRARIAN) > 0);
 		mood = Happiness.of(factors);
 		entityData.set(MOOD, mood.score());
 		town.get().setMood(getUUID(), mood.score());

@@ -92,6 +92,23 @@ class MerchantGoal extends WorkGoal {
 		long now = level().getGameTime();
 		int cap = Market.dailyEarnings() * Math.max(1, town().workers(Job.MERCHANT));
 		if (town().chronicle().earnedToday(now) < cap) {
+			// Les bijoux d'abord, à la pièce : ils rapportent le plus.
+			for (int i = 0; i < c.getContainerSize(); i++) {
+				ItemStack stack = c.getItem(i);
+				Optional<Integer> value = Market.value(stack.getItem());
+				if (!stack.isEmpty() && value.isPresent()) {
+					Item item = stack.getItem();
+					int pieces = Math.max(1, Math.min(stack.getCount(),
+							(cap - town().chronicle().earnedToday(now)) / value.get()));
+					ItemStack taken = Stock.take(c, s -> s.is(item), pieces);
+					buying = null;
+					selling = item;
+					sellingCount = taken.getCount();
+					citizen.carry(taken);
+					phase = Phase.CARRY_TO_STALL;
+					return;
+				}
+			}
 			for (int i = 0; i < c.getContainerSize(); i++) {
 				ItemStack stack = c.getItem(i);
 				Optional<Integer> rate = Market.rate(stack.getItem());
@@ -172,7 +189,8 @@ class MerchantGoal extends WorkGoal {
 			citizen.say("bought", Component.translatable("speech.minecities.bought",
 					Component.translatable(buying.item().getDescriptionId())));
 		} else if (selling != null) {
-			int emeralds = Market.emeralds(sellingCount, Market.rate(selling).orElse(sellingCount + 1));
+			int emeralds = Market.value(selling).map(v -> v * sellingCount)
+					.orElseGet(() -> Market.emeralds(sellingCount, Market.rate(selling).orElse(sellingCount + 1)));
 			citizen.carry(new ItemStack(Items.EMERALD, emeralds));
 			town().chronicle().earn(level().getGameTime(), emeralds);
 			citizen.say("sold", Component.translatable("speech.minecities.sold", sellingCount,

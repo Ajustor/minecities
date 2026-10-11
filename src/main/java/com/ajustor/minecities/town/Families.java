@@ -37,6 +37,11 @@ public final class Families {
 	private static final int AFFINITY_GAIN = 3;
 	/** Un enfant devient adulte en trois jours de jeu. */
 	public static final long CHILDHOOD = 3 * 24000L;
+	/** L'enfance : trois jours, deux si la ville a une bibliothèque (l'école du bibliothécaire). */
+	public static long childhood(Town town) {
+		return town.workers(Job.LIBRARIAN) > 0 ? CHILDHOOD * 2 / 3 : CHILDHOOD;
+	}
+
 	/** Un couple n'a pas plus d'un enfant par jour. */
 	private static final long BIRTH_SPACING = 24000L;
 	/** Chaque relevé de nuit (toutes les 5 secondes), une chance sur 200 : un peu moins d'une naissance par nuit. */
@@ -175,7 +180,7 @@ public final class Families {
 		child.joinTown(town, name);
 		child.setChild(true);
 		level.addFreshEntity(child);
-		town.born(child.getUUID(), name, first, second, now, now + CHILDHOOD);
+		town.born(child.getUUID(), name, first, second, now, now + childhood(town));
 		level.sendParticles(ParticleTypes.HEART, child.getX(), child.getY() + 1, child.getZ(), 8, 0.4, 0.4, 0.4, 0);
 		mother.act(com.ajustor.minecities.citizen.Action.CHEER, 60);
 		father.act(com.ajustor.minecities.citizen.Action.CHEER, 60);

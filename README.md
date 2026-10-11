@@ -7,9 +7,8 @@ vanilla : pas de plans imposés ni de huttes préfabriquées. Vous bâtissez com
 reconnaît vos maisons, et des citoyens viennent y vivre. Le village devient ville, puis grande
 ville, puis mégalopole.
 
-> État : **v0.9** (villes, maisons, familles, seize métiers dont le bâtisseur, les gardes,
-> l'inventeur, le médecin, le marchand, le mineur, le forgeron et le boulanger, bâtiments à quatre
-> niveaux, bonheur et repas variés, marché et trésor, paliers qui
+> État : **v1.0** (villes, maisons, familles, vingt-deux métiers et leurs filières, de la mine au
+> bijou et du blé au pain, bâtiments à quatre niveaux, bonheur et repas variés, marché et trésor, paliers qui
 > débloquent, mairies annexes, fêtes, cloche d'alarme, raids de pillards, écran de l'hôtel de ville,
 > configuration et protections pour les serveurs). La suite est décrite dans [BRIEF.md](BRIEF.md) et [docs/briefs](docs/briefs).
 
@@ -93,6 +92,17 @@ ville, puis mégalopole.
      mine : un escalier jusqu'à la profondeur des minerais, puis des couloirs ; il suit les filons,
      pose des torches (charbon trouvé et bâtons du grenier), garde un peu de pierre et rapporte les
      minerais. Il ne perce jamais dans l'eau ni la lave, ni sous les maisons, ni hors du territoire.
+   - **Établi de joaillier → joaillier** (dès la ville) : broches d'améthyste (cuivre), bagues
+     (or et lapis), diadèmes (or et diamant) ; le marchand les vend 2, 5 et 12 émeraudes pièce.
+   - **Tailleur de pierre → maçon** : briques (argile), pierre taillée (pierre), andésite polie,
+     pour les bâtisses et les demeures.
+   - **Four de verrier → verrier** : verre (sable), vitres, vitraux blancs (avec de la teinture).
+   - **Métier à tisser → tisserand** : laine (ficelle) et lits (laine et planches).
+   - **Ruche → apiculteur** (avec des **cisailles**) : il récolte les ruches pleines du territoire, en
+     fioles de miel s'il en a, sinon en rayons.
+   - **Bibliothèque ciselée → bibliothécaire** (dès la ville) : des livres (papier et cuir, papier de
+     canne à sucre) ; avec une bibliothèque, toute la ville est plus heureuse et les enfants grandissent
+     en deux jours au lieu de trois.
    - **Table de forge → inventeur** : quand la ville est attaquée, il assemble devant l'hôtel de ville
      un **golem de fer** (4 blocs de fer et une citrouille sculptée, pris au grenier) ou, à défaut, un
      **golem de neige** (2 blocs de neige et une citrouille).
@@ -114,8 +124,9 @@ ville, puis mégalopole.
    chaque atelier (ferme avec son champ, cuisine, scierie, étable avec son enclos, pêcherie avec son
    bassin, atelier du bâtisseur) → son grand atelier, à deux postes. Pour la défense : la **caserne**
    (deux lits, deux meules ; agrandie, trois), la **tour de garde** (une table d'archerie, un poste
-   tout en haut), l'**atelier de l'inventeur**, l'**infirmerie** (un alambic ; agrandie, deux) et,
-   dès la ville, le **marché** (un pupitre, des tonneaux ; agrandi, deux pupitres). Les datapacks peuvent ajouter
+   tout en haut), l'**atelier de l'inventeur**, l'**infirmerie**, la **mine**, la **forge**, la
+   **boulangerie**, la **taillerie de pierre**, la **verrerie**, le **tissage**, le **rucher** et, dès la
+   ville, le **marché**, la **joaillerie** et la **bibliothèque** ; chacun a ses quatre niveaux. Les datapacks peuvent ajouter
    des schémas (`data/<ns>/blueprint/*.json`).
 8. **Grandir** : la ville monte de palier avec ses citoyens et ses maisons (feux d'artifice, et la
    liste de ce qui s'ouvre) ; son territoire s'étend. La **ville** ouvre le marché et le marchand ;
@@ -166,6 +177,8 @@ ville, puis mégalopole.
 - **Plaque de maison** (×2) : une dalle de bois, une pépite de fer, une teinture noire.
 - **Mairie annexe** : planche, carte, planche ; planche, tonneau, planche ; trois bûches.
 - **Treuil de mine** : bûche, ficelle, bûche ; bûche, rien, bûche ; planche, chaîne, planche.
+- **Établi de joaillier** : vitre, éclat d'améthyste, lingot de fer ; trois planches ; bûche, rien, bûche.
+- **Four de verrier** : brique, rien, brique ; brique, fourneau, brique ; brique, sable, brique.
 
 ### Le maire
 
@@ -200,7 +213,7 @@ Java 25 est requis (Loom 1.18.3, Minecraft 26.2).
 ./gradlew build                 # compile, tests unitaires, jar dans build/libs
 ./gradlew runClient             # lance le jeu avec le mod
 ./gradlew runClientGameTest     # scènes en jeu vérifiées et photographiées (build/run/clientGameTest/screenshots)
-./gradlew runClientGameTest -PminecitiesGametest=work   # une scène (city, work, countryside, village, build, family, raid, life, market, robust, industry)
+./gradlew runClientGameTest -PminecitiesGametest=work   # une scène (city, work, countryside, village, build, family, raid, life, market, robust, industry, crafts)
 python tools/textures/generate.py   # régénère les textures (peaux des citoyens, plaque, œuf)
 python tools/models/town_hall.py    # régénère le modèle de l'hôtel de ville
 python tools/blueprints/generate.py # régénère les schémas du bâtisseur

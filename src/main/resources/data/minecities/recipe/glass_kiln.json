@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "B B",
+    "BFB",
+    "BSB"
+  ],
+  "key": {
+    "B": "minecraft:bricks",
+    "F": "minecraft:furnace",
+    "S": "#minecraft:smelts_to_glass"
+  },
+  "result": {
+    "id": "minecities:glass_kiln",
+    "count": 1
+  }
+}

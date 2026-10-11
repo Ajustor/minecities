@@ -58,8 +58,12 @@ class MinerGoal extends WorkGoal {
 
 	@Override
 	public void tick() {
-		if (!stationStands() || !ensureTool()) {
+		if (!stationStands()) {
 			rest(IDLE_SHORT);
+			return;
+		}
+		// Sans outil, il va le chercher (ou attend qu'on en mette un : ensureTool s'en charge).
+		if (!ensureTool()) {
 			return;
 		}
 		// Les poches pleines, ou le soir venu : il remonte livrer.

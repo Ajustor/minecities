@@ -10,6 +10,7 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.Rarity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.SpawnEggItem;
 
@@ -24,6 +25,17 @@ public final class McItems {
 			new Item.Properties().stacksTo(16).useBlockDescriptionPrefix());
 	public static final Item MINE_WINCH = register("mine_winch", p -> new BlockItem(McBlocks.MINE_WINCH, p),
 			new Item.Properties().useBlockDescriptionPrefix());
+	public static final Item JEWELER_BENCH = register("jeweler_bench", p -> new BlockItem(McBlocks.JEWELER_BENCH, p),
+			new Item.Properties().useBlockDescriptionPrefix());
+	public static final Item GLASS_KILN = register("glass_kiln", p -> new BlockItem(McBlocks.GLASS_KILN, p),
+			new Item.Properties().useBlockDescriptionPrefix());
+	/** Les bijoux du joaillier : ils se vendent cher au marché. */
+	public static final Item AMETHYST_BROOCH = register("amethyst_brooch", Item::new,
+			new Item.Properties().stacksTo(16).rarity(Rarity.UNCOMMON));
+	public static final Item GOLD_RING = register("gold_ring", Item::new,
+			new Item.Properties().stacksTo(16).rarity(Rarity.UNCOMMON));
+	public static final Item DIADEM = register("diadem", Item::new,
+			new Item.Properties().stacksTo(16).rarity(Rarity.RARE));
 	public static final Item CITIZEN_SPAWN_EGG = register("citizen_spawn_egg", SpawnEggItem::new,
 			new Item.Properties().spawnEgg(McEntities.CITIZEN));
 
@@ -47,6 +59,11 @@ public final class McItems {
 					output.accept(HOUSE_PLAQUE);
 					output.accept(TOWN_ANNEX);
 					output.accept(MINE_WINCH);
+					output.accept(JEWELER_BENCH);
+					output.accept(GLASS_KILN);
+					output.accept(AMETHYST_BROOCH);
+					output.accept(GOLD_RING);
+					output.accept(DIADEM);
 					output.accept(CITIZEN_SPAWN_EGG);
 				})
 				.build());
