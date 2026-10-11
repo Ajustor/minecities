@@ -42,7 +42,8 @@ class BlueprintTest {
 				JsonParser.parseString(Files.readString(blueprints().resolve("house_small.json"))).getAsJsonObject());
 		assertEquals(Identifier.fromNamespaceAndPath("minecities", "house_large"), small.upgrade().orElseThrow());
 		assertEquals(7, small.width());
-		assertEquals(7, small.depth());
+		// Sept de profondeur, plus le perron.
+		assertEquals(8, small.depth());
 		assertEquals(6, small.height());
 	}
 
@@ -52,7 +53,7 @@ class BlueprintTest {
 		assertEquals("minecraft:sandstone", BuildStyle.DESERT.resolve("{foundation}"));
 		for (BuildStyle style : BuildStyle.values()) {
 			for (String token : new String[]{"foundation", "floor", "wall", "frame", "roof", "roof_slab", "window",
-					"door", "bed", "fence", "fence_gate", "stripped_log"}) {
+					"door", "bed", "fence", "fence_gate", "stripped_log", "roof_stairs", "fine_foundation", "steps"}) {
 				assertFalse(style.resolve("{" + token + "}").contains("{"), style + " : " + token);
 			}
 		}

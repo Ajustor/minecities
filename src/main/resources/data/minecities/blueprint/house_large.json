@@ -2,6 +2,7 @@
  "kind": "house",
  "layers": [
   [
+   "...^.....",
    "FFFFFFFFF",
    "FfffffffF",
    "FfffffffF",
@@ -11,6 +12,7 @@
    "FFFFFFFFF"
   ],
   [
+   "... .....",
    "PWWDWWWWP",
    "Wt     CW",
    "W       W",
@@ -20,6 +22,7 @@
    "PWWWWWWWP"
   ],
   [
+   ".........",
    "PWWdWWWWP",
    "W L     W",
    "W       W",
@@ -29,6 +32,7 @@
    "PWGWGWGWP"
   ],
   [
+   ".........",
    "PWWWWWWWP",
    "W       W",
    "W       W",
@@ -38,6 +42,7 @@
    "PWWWWWWWP"
   ],
   [
+   ".........",
    "RRRRRRRRR",
    "RRRRRRRRR",
    "RRRRRRRRR",
@@ -47,6 +52,7 @@
    "RRRRRRRRR"
   ],
   [
+   ".........",
    ".........",
    ".SSSSSSS.",
    ".SSSSSSS.",
@@ -68,9 +74,11 @@
   "R": "{roof}",
   "S": "{roof_slab}[type=bottom]",
   "W": "{wall}",
+  "^": "{steps}[facing=south,half=bottom,shape=straight]",
   "b": "{bed}[facing=south,part=foot]",
   "d": "{door}[facing=north,half=upper,hinge=left]",
   "f": "{floor}",
   "t": "minecraft:torch"
- }
+ },
+ "upgrade": "minecities:manor"
 }

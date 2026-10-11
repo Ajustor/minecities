@@ -6,7 +6,8 @@ import java.util.Optional;
 /**
  * Les styles de construction, à la manière des villages vanilla : un même schéma se décline en
  * plaines, taïga, désert ou savane, en remplaçant ses jetons ({wall}, {roof}, {door}…) par les
- * blocs du style.
+ * blocs du style. Les bâtiments améliorés y prennent des matériaux plus nobles : fondation de pierre
+ * taillée ({fine_foundation}) et toit d'escaliers ({roof_stairs}).
  */
 public enum BuildStyle {
 	PLAINS("plains", Map.ofEntries(
@@ -21,7 +22,10 @@ public enum BuildStyle {
 			Map.entry("bed", "minecraft:red_bed"),
 			Map.entry("fence", "minecraft:oak_fence"),
 			Map.entry("fence_gate", "minecraft:oak_fence_gate"),
-			Map.entry("stripped_log", "minecraft:stripped_oak_log"))),
+			Map.entry("stripped_log", "minecraft:stripped_oak_log"),
+			Map.entry("roof_stairs", "minecraft:spruce_stairs"),
+			Map.entry("steps", "minecraft:cobblestone_stairs"),
+			Map.entry("fine_foundation", "minecraft:stone_bricks"))),
 	TAIGA("taiga", Map.ofEntries(
 			Map.entry("foundation", "minecraft:cobblestone"),
 			Map.entry("floor", "minecraft:spruce_planks"),
@@ -34,7 +38,10 @@ public enum BuildStyle {
 			Map.entry("bed", "minecraft:brown_bed"),
 			Map.entry("fence", "minecraft:spruce_fence"),
 			Map.entry("fence_gate", "minecraft:spruce_fence_gate"),
-			Map.entry("stripped_log", "minecraft:stripped_spruce_log"))),
+			Map.entry("stripped_log", "minecraft:stripped_spruce_log"),
+			Map.entry("roof_stairs", "minecraft:dark_oak_stairs"),
+			Map.entry("steps", "minecraft:cobblestone_stairs"),
+			Map.entry("fine_foundation", "minecraft:mossy_stone_bricks"))),
 	DESERT("desert", Map.ofEntries(
 			Map.entry("foundation", "minecraft:sandstone"),
 			Map.entry("floor", "minecraft:smooth_sandstone"),
@@ -47,7 +54,10 @@ public enum BuildStyle {
 			Map.entry("bed", "minecraft:yellow_bed"),
 			Map.entry("fence", "minecraft:jungle_fence"),
 			Map.entry("fence_gate", "minecraft:jungle_fence_gate"),
-			Map.entry("stripped_log", "minecraft:stripped_jungle_log"))),
+			Map.entry("stripped_log", "minecraft:stripped_jungle_log"),
+			Map.entry("roof_stairs", "minecraft:smooth_sandstone_stairs"),
+			Map.entry("steps", "minecraft:sandstone_stairs"),
+			Map.entry("fine_foundation", "minecraft:chiseled_sandstone"))),
 	SAVANNA("savanna", Map.ofEntries(
 			Map.entry("foundation", "minecraft:cobblestone"),
 			Map.entry("floor", "minecraft:acacia_planks"),
@@ -60,7 +70,10 @@ public enum BuildStyle {
 			Map.entry("bed", "minecraft:orange_bed"),
 			Map.entry("fence", "minecraft:acacia_fence"),
 			Map.entry("fence_gate", "minecraft:acacia_fence_gate"),
-			Map.entry("stripped_log", "minecraft:stripped_acacia_log")));
+			Map.entry("stripped_log", "minecraft:stripped_acacia_log"),
+			Map.entry("roof_stairs", "minecraft:acacia_stairs"),
+			Map.entry("steps", "minecraft:cobblestone_stairs"),
+			Map.entry("fine_foundation", "minecraft:stone_bricks")));
 
 	private final String serializedName;
 	private final Map<String, String> tokens;

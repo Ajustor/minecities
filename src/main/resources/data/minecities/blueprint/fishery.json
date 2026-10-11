@@ -2,6 +2,7 @@
  "kind": "workshop",
  "layers": [
   [
+   "...^.........",
    "FFFFFFF.OOOOO",
    "FfffffF.O~~~O",
    "FfffffF.O~~~O",
@@ -11,6 +12,7 @@
    "FFFFFFF.OOOOO"
   ],
   [
+   "... .........",
    "PWWDWWP      ",
    "W    CW      ",
    "W     W      ",
@@ -20,6 +22,7 @@
    "PWWWWWP      "
   ],
   [
+   ".............",
    "PWWdWWP......",
    "W L   W......",
    "W     W......",
@@ -29,6 +32,7 @@
    "PWWGWWP......"
   ],
   [
+   ".............",
    "PWWWWWP......",
    "W     W......",
    "W     W......",
@@ -38,6 +42,7 @@
    "PWWWWWP......"
   ],
   [
+   ".............",
    "RRRRRRR......",
    "RRRRRRR......",
    "RRRRRRR......",
@@ -47,6 +52,7 @@
    "RRRRRRR......"
   ],
   [
+   ".............",
    ".............",
    ".SSSSS.......",
    ".SSSSS.......",
@@ -68,10 +74,12 @@
   "R": "{roof}",
   "S": "{roof_slab}[type=bottom]",
   "W": "{wall}",
+  "^": "{steps}[facing=south,half=bottom,shape=straight]",
   "d": "{door}[facing=north,half=upper,hinge=left]",
   "f": "{floor}",
   "r": "minecraft:barrel[facing=up]",
   "t": "minecraft:torch",
   "~": "minecraft:water"
- }
+ },
+ "upgrade": "minecities:fishery_large"
 }
