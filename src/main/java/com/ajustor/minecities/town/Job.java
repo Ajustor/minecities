@@ -40,7 +40,18 @@ public enum Job {
 	/** Bâtit les chantiers que commande le maire, d'après les schémas ; à la table d'artisan. */
 	BUILDER("builder", (level, pos, state) -> state.is(Blocks.CRAFTER), null),
 	/** Porte aux bâtisseurs les matériaux qu'ils réclament ; à la table de cartographie. */
-	COURIER("courier", (level, pos, state) -> state.is(Blocks.CARTOGRAPHY_TABLE), null);
+	COURIER("courier", (level, pos, state) -> state.is(Blocks.CARTOGRAPHY_TABLE), null),
+	/** Garde la ville, jour et nuit, à l'épée : rondes, et combat contre ce qui l'attaque ; à la meule. */
+	GUARD("guard", (level, pos, state) -> state.is(Blocks.GRINDSTONE), s -> s.is(ItemTags.SWORDS)),
+	/** Tire à l'arc du haut d'une tour de garde, jour et nuit ; à la table d'archerie. */
+	ARCHER("archer", (level, pos, state) -> state.is(Blocks.FLETCHING_TABLE), s -> s.is(Items.BOW)),
+	/** Assemble des golems quand la ville est attaquée, avec le fer, la neige et les citrouilles du grenier ; à la table de forge. */
+	INVENTOR("inventor", (level, pos, state) -> state.is(Blocks.SMITHING_TABLE), null);
+
+	/** Les défenseurs veillent la nuit, ne fuient pas, et se battent. */
+	public boolean defends() {
+		return this == GUARD || this == ARCHER;
+	}
 
 	/** Un bloc, à sa place, est-il ce poste de travail ? */
 	@FunctionalInterface

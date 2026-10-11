@@ -23,5 +23,7 @@ public enum Action {
 	/** Parle en gesticulant. */
 	TALK,
 	/** Lève les bras de joie (mariage, naissance). */
-	CHEER
+	CHEER,
+	/** Bande son arc, les deux bras tendus. */
+	AIM
 }

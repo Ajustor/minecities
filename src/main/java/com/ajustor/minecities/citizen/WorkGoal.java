@@ -49,7 +49,7 @@ abstract class WorkGoal extends Goal {
 
 	private boolean onDuty() {
 		return citizen.job().filter(j -> j.job() == job).isPresent() && citizen.town().isPresent()
-				&& !SleepInBedGoal.isNight(citizen.level()) && !citizen.isSleeping()
+				&& (job.defends() || !SleepInBedGoal.isNight(citizen.level())) && !citizen.isSleeping()
 				&& citizen.hunger() >= Hunger.HUNGRY && citizen.level() instanceof ServerLevel;
 	}
 

@@ -306,6 +306,7 @@ public final class TownService {
 			settle(level, town);
 			// Plus d'immigration : sous 5 habitants des nouveaux venus arrivent, au-delà on naît.
 			Families.tick(level, town);
+			Raids.consider(level, town);
 			towns.changed();
 		}
 	}

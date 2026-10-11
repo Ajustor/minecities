@@ -1,0 +1,113 @@
+{
+ "kind": "workshop",
+ "layers": [
+  [
+   "..^..",
+   "QQQQQ",
+   "QfffQ",
+   "QfffQ",
+   "QfffQ",
+   "QQQQQ"
+  ],
+  [
+   ".. ..",
+   "QQDQQ",
+   "Q   Q",
+   "Q   Q",
+   "QC aQ",
+   "QQQQQ"
+  ],
+  [
+   ".....",
+   "QQdQQ",
+   "QL  Q",
+   "G   G",
+   "Q   Q",
+   "QQQQQ"
+  ],
+  [
+   ".....",
+   "QQQQQ",
+   "Q   Q",
+   "Q   Q",
+   "Q   Q",
+   "QQQQQ"
+  ],
+  [
+   ".....",
+   "QQQQQ",
+   "QQQQQ",
+   "QQQQQ",
+   "QQQQQ",
+   "QQQQQ"
+  ],
+  [
+   ".....",
+   "QQQQQ",
+   "Q   Q",
+   "Q   Q",
+   "Q   Q",
+   "QQQQQ"
+  ],
+  [
+   ".....",
+   "QQQQQ",
+   "Q   Q",
+   "Q   Q",
+   "Q   Q",
+   "QQQQQ"
+  ],
+  [
+   ".....",
+   "QQQQQ",
+   "Q   Q",
+   "Q   Q",
+   "Q   Q",
+   "QQQQQ"
+  ],
+  [
+   ".....",
+   "QQQQQ",
+   "Q   Q",
+   "Q   Q",
+   "Q   Q",
+   "QQQQQ"
+  ],
+  [
+   ".....",
+   "QQQQQ",
+   "QQQQQ",
+   "QQQQQ",
+   "QQQQQ",
+   "QQQQQ"
+  ],
+  [
+   ".....",
+   "Q Q Q",
+   "     ",
+   "Q   Q",
+   "     ",
+   "Q Q Q"
+  ],
+  [
+   ".....",
+   "     ",
+   "     ",
+   "     ",
+   "     ",
+   "     "
+  ]
+ ],
+ "key": {
+  " ": "minecraft:air",
+  "C": "minecraft:chest[facing=south]",
+  "D": "{door}[facing=north,half=lower,hinge=left]",
+  "G": "{window}",
+  "L": "minecities:house_plaque[facing=south]",
+  "Q": "{fine_foundation}",
+  "^": "{steps}[facing=south,half=bottom,shape=straight]",
+  "a": "minecraft:fletching_table",
+  "d": "{door}[facing=north,half=upper,hinge=left]",
+  "f": "{floor}"
+ }
+}
