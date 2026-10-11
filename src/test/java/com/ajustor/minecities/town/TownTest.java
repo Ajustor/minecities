@@ -239,6 +239,15 @@ class TownTest {
 	}
 
 	@Test
+	void biggerTownsDrawMoreRaidWaves() {
+		assertEquals(1, Raids.waves(5, 2));
+		assertEquals(3, Raids.waves(10, 4));
+		assertEquals(Raids.MAX_WAVES, Raids.waves(200, 100));
+		assertTrue(Raids.waveSize(3, 40) > Raids.waveSize(1, 8));
+		assertEquals(12, Raids.waveSize(7, 500));
+	}
+
+	@Test
 	void theMayorManagesWithDeputies() {
 		UUID mayor = UUID.randomUUID();
 		Town town = Town.found("Valombre", Level.OVERWORLD, HALL, mayor, "Maire", 0);
