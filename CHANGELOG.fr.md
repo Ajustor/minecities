@@ -1,5 +1,15 @@
 # Journal des modifications
 
+## 0.6.0 — 2026-10-11
+
+### Nouveautés
+
+- Bonheur des citoyens (0 à 10) : faim, variété des repas, logis, métier, famille, santé, sécurité, fêtes
+- Les citoyens se lassent de manger toujours la même chose ; le cuisinier prépare soupes, ragoûts, tartes et biscuits
+- Nouveau métier : médecin (alambic), et le schéma de l'infirmerie
+- Fêtes offertes par le maire, avec danse et feux d'artifice ; la cloche d'alarme met la ville à l'abri
+- Titre d'entrée sur le territoire, contour en particules, plaques vertes ou rouges, icônes au-dessus des citoyens
+- Un couvre-chef par métier, et l'onglet Bâtiments de l'écran de l'hôtel de ville
 ## 0.5.0 — 2026-10-11
 
 ### Nouveautés

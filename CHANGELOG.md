@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.6.0 — 2026-10-11
+
+### New features
+
+- Citizen happiness (0 to 10): hunger, varied meals, housing, job, family, health, safety, festivals
+- Citizens tire of eating the same food; the cook makes soups, stews, pies and cookies
+- New job: doctor (brewing stand), and the infirmary blueprint
+- Festivals held by the mayor, with dancing and fireworks; the alarm bell sends the town to shelter
+- Territory welcome title, particle border, green or red plaques, icons above citizens
+- A hat for each job, and the Buildings tab of the town hall screen
 ## 0.5.0 — 2026-10-11
 
 ### New features
