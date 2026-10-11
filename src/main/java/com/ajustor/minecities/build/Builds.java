@@ -64,6 +64,12 @@ public final class Builds {
 		Map<Item, Integer> needs = BuildPlan.materials(plan);
 		player.sendSystemMessage(Component.translatable("message.minecities.build.materials")
 				.withStyle(ChatFormatting.GRAY));
+		int height = plan.stream().mapToInt(p -> p.pos().getY()).max().orElse(0)
+				- plan.stream().mapToInt(p -> p.pos().getY()).min().orElse(0);
+		if (height > 4) {
+			player.sendSystemMessage(Component.translatable("message.minecities.build.scaffolding", height - 2)
+					.withStyle(ChatFormatting.GRAY));
+		}
 		TownService.granary(level, town).ifPresent(granary -> needs.forEach((item, count) -> {
 			int stocked = Stock.count(granary, s -> s.is(item));
 			player.sendSystemMessage(Component.translatable("message.minecities.build.material", count,

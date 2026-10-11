@@ -264,9 +264,15 @@ public final class TownService {
 		for (UUID citizen : town.residents().keySet()) {
 			town.house(citizen);
 		}
-		town.assignJobs().forEach((citizen, job) -> notify(level.getServer(), town, Component.translatable(
-				"message.minecities.citizen.hired", town.resident(citizen).map(Resident::name).orElse("?"),
-				Component.translatable(job.job().translationKey()))));
+		town.assignJobs().forEach((citizen, job) -> {
+			notify(level.getServer(), town, Component.translatable("message.minecities.citizen.hired",
+					town.resident(citizen).map(Resident::name).orElse("?"),
+					Component.translatable(job.job().translationKey())));
+			if (level.getEntity(citizen) instanceof CitizenEntity entity) {
+				entity.say("hired", Component.translatable("speech.minecities.hired",
+						Component.translatable(job.job().translationKey())));
+			}
+		});
 		town.updateTier().ifPresent(before -> announceTier(level, town, before));
 	}
 

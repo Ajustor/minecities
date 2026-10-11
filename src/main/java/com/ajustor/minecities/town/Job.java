@@ -38,7 +38,9 @@ public enum Job {
 	FISHERMAN("fisherman", (level, pos, state) -> state.is(Blocks.BARREL) && nearWater(level, pos),
 			s -> s.is(Items.FISHING_ROD)),
 	/** Bâtit les chantiers que commande le maire, d'après les schémas ; à la table d'artisan. */
-	BUILDER("builder", (level, pos, state) -> state.is(Blocks.CRAFTER), null);
+	BUILDER("builder", (level, pos, state) -> state.is(Blocks.CRAFTER), null),
+	/** Porte aux bâtisseurs les matériaux qu'ils réclament ; à la table de cartographie. */
+	COURIER("courier", (level, pos, state) -> state.is(Blocks.CARTOGRAPHY_TABLE), null);
 
 	/** Un bloc, à sa place, est-il ce poste de travail ? */
 	@FunctionalInterface

@@ -4,6 +4,7 @@ import com.ajustor.minecities.town.Resident;
 import com.ajustor.minecities.town.Town;
 import com.ajustor.minecities.town.TownService;
 import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.ai.goal.Goal;
@@ -52,6 +53,7 @@ public class EatGoal extends Goal {
 		List<BlockPos> pantries = TownService.pantries(level, town.get(), resident.get());
 		if (pantries.isEmpty()) {
 			cooldown = NOTHING_COOLDOWN;
+			citizen.need("hungry", Component.translatable("speech.minecities.hungry"));
 			return false;
 		}
 		pantry = pantries.getFirst();

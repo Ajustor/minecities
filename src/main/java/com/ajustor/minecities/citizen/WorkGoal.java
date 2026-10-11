@@ -83,6 +83,11 @@ abstract class WorkGoal extends Goal {
 		return true;
 	}
 
+	/** L'allure du travailleur entre deux tâches (le bâtisseur presse le pas). */
+	protected double speed() {
+		return 0.6;
+	}
+
 	/** Met le travail en pause pour {@code ticks} ticks. */
 	protected void rest(int ticks) {
 		idleUntil = citizen.level().getGameTime() + ticks;
@@ -113,7 +118,7 @@ abstract class WorkGoal extends Goal {
 		if (!target.equals(errand) || --repath <= 0 || citizen.getNavigation().isDone()) {
 			errand = target;
 			repath = 40;
-			citizen.walkTo(target, 0.6);
+			citizen.walkTo(target, speed());
 		}
 		return false;
 	}
@@ -144,6 +149,7 @@ abstract class WorkGoal extends Goal {
 	protected boolean ensureTool() {
 		Optional<Predicate<ItemStack>> tool = job.tool();
 		if (tool.isEmpty() || tool.get().test(citizen.getMainHandItem())) {
+			citizen.satisfied("tool");
 			return true;
 		}
 		Predicate<ItemStack> isTool = tool.get();
@@ -151,7 +157,9 @@ abstract class WorkGoal extends Goal {
 		if (source.isEmpty()) {
 			citizen.complain("tool", Component.translatable("message.minecities.citizen.needs_tool",
 					citizen.getName(), Component.translatable(job.translationKey()),
-					Component.translatable("tool.minecities." + job.serializedName())));
+					Component.translatable("tool.minecities." + job.serializedName())),
+					Component.translatable("speech.minecities.needs_tool",
+							Component.translatable("tool.minecities." + job.serializedName())));
 			rest(IDLE_TOOL);
 			return false;
 		}

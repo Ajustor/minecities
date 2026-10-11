@@ -7,6 +7,12 @@ import net.minecraft.core.UUIDUtil;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.block.Rotation;
 
+import java.util.ArrayList;
+import java.util.BitSet;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -24,9 +30,11 @@ public final class Construction {
 			BlockPos.CODEC.fieldOf("min").forGetter(c -> c.min),
 			BlockPos.CODEC.fieldOf("max").forGetter(c -> c.max),
 			Codec.INT.optionalFieldOf("step", 0).forGetter(c -> c.step),
-			Codec.BOOL.optionalFieldOf("done", false).forGetter(c -> c.done)
-	).apply(i, (id, blueprint, style, origin, rotation, min, max, step, done) -> new Construction(id, blueprint,
-			BuildStyle.fromSerializedName(style).orElse(BuildStyle.PLAINS), origin, rotation, min, max, step, done)));
+			Codec.BOOL.optionalFieldOf("done", false).forGetter(c -> c.done),
+			BlockPos.CODEC.listOf().optionalFieldOf("scaffolding", List.of()).forGetter(c -> List.copyOf(c.scaffolding))
+	).apply(i, (id, blueprint, style, origin, rotation, min, max, step, done, scaffolding) -> new Construction(id,
+			blueprint, BuildStyle.fromSerializedName(style).orElse(BuildStyle.PLAINS), origin, rotation, min, max, step,
+			done, scaffolding)));
 
 	private final UUID id;
 	private final Identifier blueprint;
@@ -37,9 +45,15 @@ public final class Construction {
 	private final BlockPos max;
 	private int step;
 	private boolean done;
+	/** Les échafaudages que le bâtisseur a montés, à démonter avant de finir. */
+	private final List<BlockPos> scaffolding;
+	/** Les blocs du plan déjà faits au-delà de {@code step} (non sauvegardé : on les revoit au besoin). */
+	private final BitSet placed = new BitSet();
+	/** Qui travaille à quel bloc du plan, pour que plusieurs bâtisseurs ne se gênent pas. */
+	private final Map<Integer, UUID> claims = new HashMap<>();
 
 	private Construction(UUID id, Identifier blueprint, BuildStyle style, BlockPos origin, Rotation rotation,
-			BlockPos min, BlockPos max, int step, boolean done) {
+			BlockPos min, BlockPos max, int step, boolean done, List<BlockPos> scaffolding) {
 		this.id = id;
 		this.blueprint = blueprint;
 		this.style = style;
@@ -49,12 +63,13 @@ public final class Construction {
 		this.max = max;
 		this.step = step;
 		this.done = done;
+		this.scaffolding = new ArrayList<>(scaffolding);
 	}
 
 	public static Construction order(Blueprint blueprint, BuildStyle style, BlockPos origin, Rotation rotation) {
 		BlockPos[] bounds = BuildPlan.bounds(blueprint, origin, rotation);
 		return new Construction(UUID.randomUUID(), blueprint.id(), style, origin, rotation, bounds[0], bounds[1], 0,
-				false);
+				false, List.of());
 	}
 
 	public UUID id() {
@@ -90,7 +105,36 @@ public final class Construction {
 	}
 
 	public void advance() {
-		step++;
+		markPlaced(step);
+	}
+
+	public boolean isPlaced(int index) {
+		return index < step || placed.get(index);
+	}
+
+	/** Ce bloc est fait ; l'avancement passe tous les blocs faits qui se suivent. */
+	public void markPlaced(int index) {
+		placed.set(index);
+		claims.remove(index);
+		while (placed.get(step)) {
+			placed.clear(step);
+			step++;
+		}
+	}
+
+	/** Le bâtisseur qui a réservé ce bloc, s'il y en a un. */
+	public Optional<UUID> claimant(int index) {
+		return Optional.ofNullable(claims.get(index));
+	}
+
+	/** Réserve ce bloc pour ce bâtisseur (et libère ce qu'il avait réservé avant). */
+	public void claim(int index, UUID builder) {
+		release(builder);
+		claims.put(index, builder);
+	}
+
+	public void release(UUID builder) {
+		claims.values().removeIf(builder::equals);
 	}
 
 	public boolean done() {
@@ -99,6 +143,10 @@ public final class Construction {
 
 	public void finish() {
 		done = true;
+	}
+
+	public List<BlockPos> scaffolding() {
+		return scaffolding;
 	}
 
 	public boolean contains(BlockPos pos) {
