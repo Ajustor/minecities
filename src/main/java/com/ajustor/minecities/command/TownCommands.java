@@ -9,6 +9,7 @@ import com.ajustor.minecities.build.Construction;
 import com.ajustor.minecities.citizen.CitizenEntity;
 import com.ajustor.minecities.town.Families;
 import com.ajustor.minecities.town.Job;
+import com.ajustor.minecities.town.Raids;
 import com.ajustor.minecities.citizen.Hunger;
 import com.ajustor.minecities.town.Resident;
 import com.ajustor.minecities.town.Town;
@@ -114,6 +115,15 @@ public final class TownCommands {
 				.then(Commands.literal("admin")
 						.requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
 						.then(Commands.literal("immigrate").executes(TownCommands::immigrate))
+						.then(Commands.literal("raid").executes(c -> {
+							Town town = here(c);
+							ServerLevel level = c.getSource().getServer().getLevel(town.dimension());
+							return level != null && Raids.start(level, town) ? 1 : 0;
+						}))
+						.then(Commands.literal("raid_stop").executes(c -> {
+							Raids.stop(c.getSource().getServer(), here(c).id());
+							return 1;
+						}))
 						.then(Commands.literal("feed").executes(TownCommands::feed))
 						.then(Commands.literal("starve").executes(TownCommands::starve)));
 	}

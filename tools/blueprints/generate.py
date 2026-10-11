@@ -47,6 +47,10 @@ KEY = {
     "O": "{foundation}",
     "Q": "{fine_foundation}",
     "^": "{steps}[facing=south,half=bottom,shape=straight]",
+    "m": "minecraft:grindstone[face=floor,facing=north]",
+    "a": "minecraft:fletching_table",
+    "i": "minecraft:smithing_table",
+    "n": "minecraft:anvil[facing=east]",
     "<": "{roof_stairs}[facing=east,half=bottom,shape=straight]",
     ">": "{roof_stairs}[facing=west,half=bottom,shape=straight]",
 }
@@ -154,8 +158,8 @@ def porch(layers, door_x=3):
     return out
 
 
-def blueprint(name, kind, layers, upgrade=None):
-    layers = porch(layers)
+def blueprint(name, kind, layers, upgrade=None, door_x=3):
+    layers = porch(layers, door_x)
     used = {ch for layer in layers for row in layer for ch in row}
     data = {
         "kind": kind,
@@ -165,6 +169,50 @@ def blueprint(name, kind, layers, upgrade=None):
     if upgrade:
         data["upgrade"] = upgrade
     return name, data
+
+
+def tower():
+    """
+    La tour de garde : 5 x 5, en pierre taillée. En bas, une salle (la table d'archerie, un coffre pour
+    les flèches) ; un fût plein ; en haut, une plateforme crénelée où l'archer prend son poste.
+    """
+    w = d = 5
+    layers = []
+    floor = grid(w, d, "Q")
+    for z in range(1, d - 1):
+        for x in range(1, w - 1):
+            floor[z][x] = "f"
+    layers.append(floor)
+    for y in (1, 2, 3):
+        layer = grid(w, d, " ")
+        for x in range(w):
+            layer[0][x] = layer[d - 1][x] = "Q"
+        for z in range(d):
+            layer[z][0] = layer[z][w - 1] = "Q"
+        if y == 1:
+            layer[0][2] = "D"
+            layer[3][3] = "a"
+            layer[3][1] = "C"
+        elif y == 2:
+            layer[0][2] = "d"
+            layer[1][1] = "L"
+            layer[2][0] = layer[2][w - 1] = "G"
+        layers.append(layer)
+    layers.append(grid(w, d, "Q"))  # le plafond de la salle
+    for _ in range(4):  # le fût
+        layer = grid(w, d, " ")
+        for x in range(w):
+            layer[0][x] = layer[d - 1][x] = "Q"
+        for z in range(d):
+            layer[z][0] = layer[z][w - 1] = "Q"
+        layers.append(layer)
+    layers.append(grid(w, d, "Q"))  # la plateforme
+    crenels = grid(w, d, " ")
+    for x, z in ((0, 0), (2, 0), (4, 0), (0, 2), (4, 2), (0, 4), (2, 4), (4, 4)):
+        crenels[z][x] = "Q"
+    layers.append(crenels)
+    layers.append(grid(w, d, " "))  # de l'air pour l'archer debout
+    return layers
 
 
 def workshop(extras, fine=False):
@@ -225,6 +273,16 @@ def main():
             large_rows = extend(large, 9, 7, width, outside(9))
         prints.append(blueprint(name, "workshop", small_rows, upgrade=f"minecities:{name}_large"))
         prints.append(blueprint(f"{name}_large", "workshop", large_rows))
+
+    # La caserne : des lits pour les gardes, deux meules (deux gardes), un coffre pour les armes.
+    prints.append(blueprint("barracks", "workshop", rows(shell(9, 7, 3, beds=[(1, 4), (3, 4)],
+            extras={(7, 1, 1): "C", (6, 1, 5): "m", (7, 1, 4): "m", (1, 1, 1): "t"})),
+            upgrade="minecities:barracks_large"))
+    prints.append(blueprint("barracks_large", "workshop", rows(shell(9, 7, 3, beds=[(1, 4), (3, 4), (5, 4)],
+            extras={(7, 1, 1): "C", (7, 1, 3): "m", (7, 1, 4): "m", (7, 1, 5): "m", (1, 1, 1): "t"}, fine=True))))
+    prints.append(blueprint("guard_tower", "workshop", rows(tower()), door_x=2))
+    # L'atelier de l'inventeur : une table de forge, une enclume, un coffre pour le fer et les citrouilles.
+    prints.append(blueprint("inventor_workshop", "workshop", rows(workshop({(5, 1, 5): "i", (5, 1, 3): "n"}))))
 
     OUT.mkdir(parents=True, exist_ok=True)
     for name, data in prints:

@@ -30,9 +30,17 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.PathfinderMob;
+import net.minecraft.resources.Identifier;
+import net.minecraft.world.entity.ai.attributes.AttributeInstance;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.AvoidEntityGoal;
+import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
+import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
+import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
+import net.minecraft.world.entity.monster.Creeper;
+import net.minecraft.world.entity.monster.Enemy;
 import net.minecraft.world.entity.ai.goal.FloatGoal;
 import net.minecraft.world.entity.ai.goal.InteractGoal;
 import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
@@ -118,7 +126,8 @@ public class CitizenEntity extends PathfinderMob {
 		return Mob.createMobAttributes()
 				.add(Attributes.MAX_HEALTH, 20)
 				.add(Attributes.MOVEMENT_SPEED, 0.5)
-				.add(Attributes.FOLLOW_RANGE, 48);
+				.add(Attributes.FOLLOW_RANGE, 48)
+				.add(Attributes.ATTACK_DAMAGE, 1.0);
 	}
 
 	@Override
@@ -134,8 +143,31 @@ public class CitizenEntity extends PathfinderMob {
 	protected void registerGoals() {
 		goalSelector.addGoal(0, new FloatGoal(this));
 		goalSelector.addGoal(0, new StepAsideGoal(this));
-		goalSelector.addGoal(1, new PanicGoal(this, 0.75));
-		goalSelector.addGoal(1, new AvoidEntityGoal<>(this, Monster.class, 8.0f, 0.6, 0.75));
+		// Les défenseurs se battent ; les autres fuient et, pendant un raid, se mettent à l'abri.
+		goalSelector.addGoal(1, new MeleeAttackGoal(this, 0.9, true) {
+			@Override
+			public boolean canUse() {
+				return isGuard() && super.canUse();
+			}
+
+			@Override
+			public boolean canContinueToUse() {
+				return isGuard() && super.canContinueToUse();
+			}
+		});
+		goalSelector.addGoal(1, new PanicGoal(this, 0.75) {
+			@Override
+			public boolean canUse() {
+				return !isDefender() && super.canUse();
+			}
+		});
+		goalSelector.addGoal(1, new AvoidEntityGoal<>(this, Monster.class, 8.0f, 0.6, 0.75) {
+			@Override
+			public boolean canUse() {
+				return !isDefender() && super.canUse();
+			}
+		});
+		goalSelector.addGoal(2, new ShelterGoal(this));
 		goalSelector.addGoal(2, new SleepInBedGoal(this));
 		goalSelector.addGoal(3, new EatGoal(this));
 		goalSelector.addGoal(4, new FarmerGoal(this));
@@ -145,6 +177,19 @@ public class CitizenEntity extends PathfinderMob {
 		goalSelector.addGoal(4, new FishermanGoal(this));
 		goalSelector.addGoal(4, new BuilderGoal(this));
 		goalSelector.addGoal(4, new CourierGoal(this));
+		goalSelector.addGoal(4, new GuardGoal(this));
+		goalSelector.addGoal(4, new ArcherGoal(this));
+		goalSelector.addGoal(4, new InventorGoal(this));
+		// Les défenseurs prennent pour cible tout ce qui est hostile sur le territoire, et qui les frappe.
+		targetSelector.addGoal(1, new HurtByTargetGoal(this) {
+			@Override
+			public boolean canUse() {
+				return isDefender() && super.canUse();
+			}
+		});
+		targetSelector.addGoal(2, new NearestAttackableTargetGoal<>(this, Mob.class, 10, true, false,
+				(target, level) -> isDefender() && target instanceof Enemy && !(isGuard() && target instanceof Creeper)
+						&& town().filter(t -> t.contains(level.dimension(), target.blockPosition())).isPresent()));
 		goalSelector.addGoal(5, new MoveTowardsRestrictionGoal(this, 0.6));
 		goalSelector.addGoal(6, new WaterAvoidingRandomStrollGoal(this, 0.5));
 		goalSelector.addGoal(7, new InteractGoal(this, CitizenEntity.class, 6.0f, 0.03f));
@@ -215,6 +260,15 @@ public class CitizenEntity extends PathfinderMob {
 	public void clearRequest() {
 		wanted = null;
 		wantedCount = 0;
+	}
+
+	/** Un garde ou un archer : il se bat, veille la nuit, ne fuit pas. */
+	public boolean isDefender() {
+		return job().filter(j -> j.job().defends()).isPresent();
+	}
+
+	public boolean isGuard() {
+		return job().filter(j -> j.job() == com.ajustor.minecities.town.Job.GUARD).isPresent();
 	}
 
 	/** Son emploi, s'il en a un. */
@@ -397,6 +451,7 @@ public class CitizenEntity extends PathfinderMob {
 			// Un vagabond (venu d'un œuf, ou d'une ville disparue) : il n'a pas faim de nos règles.
 			return;
 		}
+		drill();
 		// Un enfant mange deux fois moins.
 		setHunger(Hunger.decay(hunger, isChild() ? 10 : 20));
 		if (hunger <= 0) {
@@ -406,6 +461,38 @@ public class CitizenEntity extends PathfinderMob {
 			if (hunger >= Hunger.WELL_FED && tickCount % 100 == 0 && getHealth() < getMaxHealth()) {
 				heal(1);
 			}
+		}
+	}
+
+	/** L'entraînement des défenseurs : plus de vie, une peau plus dure, des coups plus lourds. */
+	private static final Identifier DRILL = Identifier.fromNamespaceAndPath("minecities", "drill");
+
+	private void drill() {
+		boolean defender = isDefender();
+		AttributeInstance health = getAttribute(Attributes.MAX_HEALTH);
+		boolean recruit = defender && health != null && !health.hasModifier(DRILL);
+		drill(Attributes.MAX_HEALTH, defender, 20);
+		if (recruit) {
+			// Une recrue prend son poste en pleine forme.
+			setHealth(getMaxHealth());
+		}
+		drill(Attributes.ARMOR, defender, 6);
+		drill(Attributes.ATTACK_DAMAGE, defender, 2);
+		if (getHealth() > getMaxHealth()) {
+			setHealth(getMaxHealth());
+		}
+	}
+
+	private void drill(net.minecraft.core.Holder<net.minecraft.world.entity.ai.attributes.Attribute> attribute,
+			boolean on, double amount) {
+		AttributeInstance instance = getAttribute(attribute);
+		if (instance == null || instance.hasModifier(DRILL) == on) {
+			return;
+		}
+		if (on) {
+			instance.addPermanentModifier(new AttributeModifier(DRILL, amount, AttributeModifier.Operation.ADD_VALUE));
+		} else {
+			instance.removeModifier(DRILL);
 		}
 	}
 

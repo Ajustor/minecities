@@ -75,6 +75,13 @@ public class CitizenModel extends HumanoidModel<CitizenRenderer.State> {
 				rightArm.zRot = 0.35f;
 				leftArm.zRot = -0.35f;
 			}
+			case AIM -> {
+				// Bande son arc : les deux bras tendus vers la cible, comme un squelette.
+				rightArm.xRot = -1.57f + head.xRot;
+				rightArm.yRot = -0.1f + head.yRot;
+				leftArm.xRot = -1.57f + head.xRot;
+				leftArm.yRot = 0.5f + head.yRot;
+			}
 			case NONE -> {
 			}
 		}

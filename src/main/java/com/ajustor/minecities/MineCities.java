@@ -7,6 +7,7 @@ import com.ajustor.minecities.registry.McBlockEntities;
 import com.ajustor.minecities.registry.McBlocks;
 import com.ajustor.minecities.registry.McEntities;
 import com.ajustor.minecities.registry.McItems;
+import com.ajustor.minecities.town.Raids;
 import com.ajustor.minecities.town.TownService;
 import net.fabricmc.api.ModInitializer;
 import net.minecraft.resources.Identifier;
@@ -31,6 +32,7 @@ public class MineCities implements ModInitializer {
 		McItems.register();
 		TownService.register();
 		Blueprints.register();
+		Raids.register();
 		TownCommands.register();
 		TownNetwork.register();
 	}
