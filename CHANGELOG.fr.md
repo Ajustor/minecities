@@ -1,5 +1,12 @@
 # Journal des modifications
 
+## 0.4.0 — 2026-10-11
+
+### Nouveautés
+
+- Familles : cinq premiers habitants, puis la ville grandit par les naissances ; les citoyens qui s'entendent demandent au maire de les marier, les couples emménagent ensemble et ont des enfants qui grandissent
+- L'hôtel de ville ouvre un écran : résumé, citoyens, registre des mariages (accepter ou refuser) et grenier
+- Les citoyens ont un geste pour chaque action (manger, houe, hache, pêche, bâtir, cuisiner, nourrir, parler, se réjouir)
 ## 0.3.0 — 2026-10-11
 
 ### Nouveautés

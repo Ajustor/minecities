@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.4.0 — 2026-10-11
+
+### New features
+
+- Families: five first inhabitants, then the town grows through births; citizens who get along ask the mayor to marry them, couples move in together and have children who grow up
+- The town hall opens a screen: summary, citizens, marriage registry (accept or refuse) and granary
+- Citizens have a gesture for each action (eating, hoe, axe, fishing, building, cooking, feeding, talking, cheering)
 ## 0.3.0 — 2026-10-11
 
 ### New features
