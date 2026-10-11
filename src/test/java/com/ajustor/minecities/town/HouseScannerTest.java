@@ -58,6 +58,19 @@ class HouseScannerTest {
 	private static final HouseScanner.Pos PLAQUE = new HouseScanner.Pos(1, 1, 1);
 
 	@Test
+	void theSurveyKnowsTheExtentOfTheInterior() {
+		HouseScanner.Result result = HouseScanner.scan(furnishedRoom(), PLAQUE);
+		assertTrue(result.valid());
+		assertEquals(new HouseScanner.Pos(0, 0, 0), result.min());
+		assertEquals(new HouseScanner.Pos(4, 2, 4), result.max());
+		// Murs compris, la maison protège ses blocs, pas ceux d'à côté.
+		House house = new House(net.minecraft.core.BlockPos.ZERO, java.util.List.of(), java.util.List.of(), 30)
+				.within(new net.minecraft.core.BlockPos(-1, -1, -1), new net.minecraft.core.BlockPos(5, 3, 5));
+		assertTrue(house.encloses(new net.minecraft.core.BlockPos(5, 0, 2)));
+		assertTrue(!house.encloses(new net.minecraft.core.BlockPos(6, 0, 2)));
+	}
+
+	@Test
 	void aClosedRoomWithADoorAndABedIsAHouse() {
 		HouseScanner.Result result = HouseScanner.scan(furnishedRoom(), PLAQUE);
 		assertEquals(HouseScanner.Status.VALID, result.status());

@@ -31,9 +31,9 @@ class MarketTest {
 		int rate = Market.rate(Items.WHEAT).orElseThrow();
 		assertEquals(20, rate);
 		// La réserve reste au grenier, et l'on ne vend que par émeraude entière.
-		assertEquals(0, Market.saleable(Market.RESERVE, rate));
-		assertEquals(0, Market.saleable(Market.RESERVE + 19, rate));
-		assertEquals(40, Market.saleable(Market.RESERVE + 45, rate));
+		assertEquals(0, Market.saleable(Market.reserve(), rate));
+		assertEquals(0, Market.saleable(Market.reserve() + 19, rate));
+		assertEquals(40, Market.saleable(Market.reserve() + 45, rate));
 		assertEquals(2, Market.emeralds(40, rate));
 		assertTrue(Market.rate(Items.DIAMOND).isEmpty());
 	}
