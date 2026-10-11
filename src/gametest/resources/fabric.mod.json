@@ -15,7 +15,8 @@
 			"com.ajustor.minecities.gametest.RaidScenes",
 			"com.ajustor.minecities.gametest.LifeScenes",
 			"com.ajustor.minecities.gametest.MarketScenes",
-			"com.ajustor.minecities.gametest.RobustScenes"
+			"com.ajustor.minecities.gametest.RobustScenes",
+			"com.ajustor.minecities.gametest.IndustryScenes"
 		]
 	},
 	"depends": {
