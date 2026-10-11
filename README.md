@@ -7,9 +7,10 @@ vanilla : pas de plans imposés ni de huttes préfabriquées. Vous bâtissez com
 reconnaît vos maisons, et des citoyens viennent y vivre. Le village devient ville, puis grande
 ville, puis mégalopole.
 
-> État : **v0.7** (villes, maisons, familles, treize métiers dont le bâtisseur, les gardes,
+> État : **v0.8** (villes, maisons, familles, treize métiers dont le bâtisseur, les gardes,
 > l'inventeur, le médecin et le marchand, bonheur et repas variés, marché et trésor, paliers qui
-> débloquent, mairies annexes, fêtes, cloche d'alarme, raids de pillards, écran de l'hôtel de ville). La suite est décrite dans [BRIEF.md](BRIEF.md) et [docs/briefs](docs/briefs).
+> débloquent, mairies annexes, fêtes, cloche d'alarme, raids de pillards, écran de l'hôtel de ville,
+> configuration et protections pour les serveurs). La suite est décrite dans [BRIEF.md](BRIEF.md) et [docs/briefs](docs/briefs).
 
 ## Jouer
 
@@ -126,6 +127,22 @@ ville, puis mégalopole.
 | Grande ville | 30 | 12 | 128 |
 | Mégalopole | 75 | 30 | 224 |
 
+### Configuration
+
+`config/minecities.json`, créé au premier lancement (une clé absente reprend sa valeur par défaut) :
+
+| Réglage | Défaut | Effet |
+|---|---|---|
+| `newcomer_minimum`, `newcomer_delay` | 5, 400 | sous ce nombre d'habitants, un nouveau venu tous les tant de ticks |
+| `hunger_day_ticks` | 24000 | la faim se vide en tant de ticks |
+| `miserable_citizens_leave` | vrai | les citoyens au plus mal pendant un jour s'en vont |
+| `raids`, `raid_min_population`, `raid_odds`, `raid_spacing_days` | vrai, 8, 3, 3 | les raids de pillards |
+| `festival_cost` | 4 | le prix d'une fête, en émeraudes |
+| `market_reserve`, `market_daily_earnings` | 32, 32 | ce que le grenier garde, ce qu'un marchand gagne par jour |
+| `protect_buildings` | faux | seuls le maire et ses adjoints (et les opérateurs) cassent les blocs des bâtiments déclarés |
+| `hall_grace_minutes` | 10 | un hôtel de ville détruit (explosion…) : le maire a tant de minutes pour le reposer au même endroit, sinon la ville disparaît |
+| `missing_citizen_minutes` | 60 | un citoyen jamais revu depuis tant de minutes, sa maison chargée, est rayé (0 : jamais) |
+
 ### Recettes
 
 - **Hôtel de ville** : cloche au centre du haut, entre deux émeraudes ; pupitre au centre, entouré
@@ -166,7 +183,7 @@ Java 25 est requis (Loom 1.18.3, Minecraft 26.2).
 ./gradlew build                 # compile, tests unitaires, jar dans build/libs
 ./gradlew runClient             # lance le jeu avec le mod
 ./gradlew runClientGameTest     # scènes en jeu vérifiées et photographiées (build/run/clientGameTest/screenshots)
-./gradlew runClientGameTest -PminecitiesGametest=work   # une scène (city, work, countryside, village, build, family, raid, life, market)
+./gradlew runClientGameTest -PminecitiesGametest=work   # une scène (city, work, countryside, village, build, family, raid, life, market, robust)
 python tools/textures/generate.py   # régénère les textures (peaux des citoyens, plaque, œuf)
 python tools/models/town_hall.py    # régénère le modèle de l'hôtel de ville
 python tools/blueprints/generate.py # régénère les schémas du bâtisseur
