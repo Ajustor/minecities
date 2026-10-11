@@ -1,5 +1,12 @@
 # Journal des modifications
 
+## 0.5.0 — 2026-10-11
+
+### Nouveautés
+
+- Nouveaux métiers de défense : garde (meule), archer (table d'archerie) et inventeur (table de forge) qui fabrique des golems
+- Schémas de la caserne, de la tour de garde et de l'atelier de l'inventeur
+- Raids de pillards par vagues sur les villes d'au moins 8 habitants, plus nombreuses quand la ville grandit
 ## 0.4.0 — 2026-10-11
 
 ### Nouveautés

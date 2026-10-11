@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.5.0 — 2026-10-11
+
+### New features
+
+- New defence jobs: guard (grindstone), archer (fletching table) and inventor (smithing table) who builds golems
+- Blueprints for the barracks, the guard tower and the inventor's workshop
+- Pillager raids in waves on towns of 8 inhabitants or more, with more waves as the town grows
 ## 0.4.0 — 2026-10-11
 
 ### New features
