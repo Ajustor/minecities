@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.0.0 — 2026-10-11
+
+### New features
+
+- New jobs: jeweler (jeweler's bench), mason (stonecutter), glassblower (glass kiln), weaver (loom), beekeeper (beehive) and librarian (chiseled bookshelf)
+- Jewelry (amethyst brooch, gold ring, diadem), sold dear at the market
+- A library makes the town happier and children grow up in two days
+- Four-level blueprints for the jeweler's workshop, masonry, glassworks, weavery, apiary and library
+
+### Fixes
+
+- The miner and the beekeeper fetch their tool from the granary without stopping on the way
 ## 0.9.0 — 2026-10-11
 
 ### New features

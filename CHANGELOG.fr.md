@@ -1,5 +1,17 @@
 # Journal des modifications
 
+## 1.0.0 — 2026-10-11
+
+### Nouveautés
+
+- Nouveaux métiers : joaillier (établi de joaillier), maçon (tailleur de pierre), verrier (four de verrier), tisserand (métier à tisser), apiculteur (ruche) et bibliothécaire (bibliothèque ciselée)
+- Bijoux (broche d'améthyste, bague en or, diadème), vendus cher au marché
+- Une bibliothèque rend la ville plus heureuse et les enfants grandissent en deux jours
+- Schémas à quatre niveaux de la joaillerie, de la taillerie, de la verrerie, du tissage, du rucher et de la bibliothèque
+
+### Corrections
+
+- Le mineur et l'apiculteur vont chercher leur outil au grenier sans s'arrêter en chemin
 ## 0.9.0 — 2026-10-11
 
 ### Nouveautés
