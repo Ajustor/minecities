@@ -1,5 +1,18 @@
 # Journal des modifications
 
+## 0.8.0 — 2026-10-11
+
+### Nouveautés
+
+- Fichier de configuration config/minecities.json (nouveaux venus, faim, raids, fêtes, marché…)
+- Protection facultative des bâtiments déclarés : seuls le maire, ses adjoints et les opérateurs y cassent des blocs
+- Un hôtel de ville détruit par une explosion peut être reposé au même endroit : la ville l'attend dix minutes
+- Les citoyens disparus sans mourir (commande, autre mod) sont rayés au bout d'une heure
+- Les relevés des bâtiments s'étalent dans le temps dans les grandes villes
+
+### Corrections
+
+- Les citoyens coincés à une porte pendant une alerte rejoignent tout de même leur abri
 ## 0.7.0 — 2026-10-11
 
 ### Nouveautés

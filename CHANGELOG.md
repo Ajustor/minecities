@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.8.0 — 2026-10-11
+
+### New features
+
+- Configuration file config/minecities.json (newcomers, hunger, raids, festivals, market…)
+- Optional protection of declared buildings: only the mayor, deputies and operators may break their blocks
+- A town hall destroyed by an explosion can be placed back at the same spot: the town waits ten minutes
+- Citizens who vanish without dying (command, other mod) are struck off after an hour
+- Building surveys are spread out over time in big towns
+
+### Fixes
+
+- Citizens stuck at a door during an alarm still reach their shelter
 ## 0.7.0 — 2026-10-11
 
 ### New features
