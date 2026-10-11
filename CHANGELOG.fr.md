@@ -1,5 +1,10 @@
 # Journal des modifications
 
+## 1.2.0 — 2026-10-11
+
+### Nouveautés
+
+- Bâtiments habillés : débord de toit, volets, pignons à poutre et lucarne, cheminée qui fume, tapis et pots de fleurs
 ## 1.1.0 — 2026-10-11
 
 ### Nouveautés

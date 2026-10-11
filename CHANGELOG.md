@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.2.0 — 2026-10-11
+
+### New features
+
+- Dressed buildings: eaves, shutters, beamed gables with dormer windows, smoking chimneys, carpets and flower pots
 ## 1.1.0 — 2026-10-11
 
 ### New features
