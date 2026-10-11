@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.7.0 — 2026-10-11
+
+### New features
+
+- New job: merchant (lectern, from Town on), who buys missing tools and sells the granary surplus
+- The treasury (granary emeralds) and market earnings on the town hall screen
+- Each tier unlocks jobs and blueprints (the market at Town), announced with a title and fireworks
+- Town hall annexes for cities: an extended territory and a district granary
+- Admin command to force a town's tier
 ## 0.6.0 — 2026-10-11
 
 ### New features

@@ -1,5 +1,14 @@
 # Journal des modifications
 
+## 0.7.0 — 2026-10-11
+
+### Nouveautés
+
+- Nouveau métier : marchand (pupitre, dès la ville), qui achète les outils manquants et vend le surplus du grenier
+- Le trésor (les émeraudes du grenier) et les gains du marché à l'écran de l'hôtel de ville
+- Chaque palier débloque des métiers et des schémas (le marché à la ville), annoncés avec un titre et des feux d'artifice
+- Mairies annexes pour les grandes villes : un territoire étendu et un grenier de quartier
+- Commande d'administration pour imposer un palier à une ville
 ## 0.6.0 — 2026-10-11
 
 ### Nouveautés
