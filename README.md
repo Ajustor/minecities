@@ -7,8 +7,8 @@ vanilla : pas de plans imposés ni de huttes préfabriquées. Vous bâtissez com
 reconnaît vos maisons, et des citoyens viennent y vivre. Le village devient ville, puis grande
 ville, puis mégalopole.
 
-> État : **v0.3** (villes, maisons, citoyens, sept métiers dont le bâtisseur, villages repris). La
-> suite est décrite dans [BRIEF.md](BRIEF.md) et [docs/briefs](docs/briefs).
+> État : **v0.4** (villes, maisons, familles, huit métiers dont le bâtisseur et le livreur, écran de
+> l'hôtel de ville). La suite est décrite dans [BRIEF.md](BRIEF.md) et [docs/briefs](docs/briefs).
 
 ## Jouer
 
@@ -21,15 +21,23 @@ ville, puis mégalopole.
    moins une **porte** et au moins un **lit**. Chaque lit loge un citoyen. Accrochez une
    **plaque de maison** sur un mur intérieur : la maison est relevée et enregistrée, et un message
    dit ce qui manque si elle n'est pas reconnue. Un clic sur la plaque la relève à nouveau.
-3. **Nourrir la ville** : ouvrez l'hôtel de ville, c'est le **grenier** commun. Tant qu'il y a des
-   lits libres et de quoi manger au grenier, un nouveau citoyen arrive toutes les 2 minutes.
-4. **Les citoyens** se promènent sur le territoire le jour, rentrent dormir dans leur lit la nuit,
+3. **L'hôtel de ville** : un clic ouvre son **écran** : le résumé de la ville, la liste des citoyens
+   (métier, faim, famille, ce qui leur manque), le **registre** des demandes de mariage, et le
+   **grenier** commun où les citoyens mangent. Accroupi, un clic donne l'état de la ville dans le chat.
+4. **La population** : la ville reçoit ses **cinq premiers habitants** ; en dessous de cinq, des
+   nouveaux venus arrivent. Au-delà, elle ne grandit que par les **naissances** : les citoyens qui
+   vivent et travaillent ensemble s'apprécient, ceux qui s'entendent demandent au maire de les
+   **marier** (onglet Registre, ou `/ville marriages` et `/ville marry accept|refuse <n>`). Mariés, ils
+   emménagent ensemble ; bien nourris, avec un lit libre chez eux, ils peuvent avoir un **enfant**,
+   qui grandit en trois jours. Il faut donc de grandes maisons et un grenier garni.
+5. **Les citoyens** se promènent sur le territoire le jour, rentrent dormir dans leur lit la nuit,
    et mangent quand ils ont faim : d'abord dans les coffres et tonneaux de leur maison, sinon au
    grenier. Affamés, ils dépérissent et peuvent mourir de faim. On peut aussi les nourrir à la
    main. Ils **parlent** : une bulle au-dessus de la tête et une ligne dans le chat des joueurs
    proches (outil ou matériau qui manque, faim, « laissez-moi la place »…). Un clic droit sur un
-   citoyen donne son état et répète ce qui lui manque encore.
-5. **Des métiers** : un bâtiment déclaré qui contient un poste de travail vanilla est un atelier,
+   citoyen donne son état et répète ce qui lui manque encore. Chacun a son geste quand il travaille
+   (houe, hache, canne, pose de blocs, brassage…), mange, parle ou se réjouit.
+6. **Des métiers** : un bâtiment déclaré qui contient un poste de travail vanilla est un atelier,
    et chaque poste emploie un citoyen.
    - **Composteur → fermier** : il lui faut une **houe** (dans un coffre de l'atelier ou au
      grenier). Il récolte les cultures mûres à 16 blocs du composteur, replante, et porte la
@@ -50,7 +58,7 @@ ville, puis mégalopole.
    - **Table de cartographie → livreur** : il porte aux bâtisseurs les matériaux qu'ils réclament,
      pour qu'ils ne quittent pas leur chantier.
    Deux postes dans un même atelier font deux travailleurs : les ateliers agrandis en ont deux.
-6. **Faire bâtir** : le maire (ou un adjoint) commande un bâtiment d'après un **schéma**, dans un
+7. **Faire bâtir** : le maire (ou un adjoint) commande un bâtiment d'après un **schéma**, dans un
    **style** (plaines, taïga, désert, savane) : `/ville build minecities:house_small taiga`. Le
    bâtiment se place devant lui, porte vers lui ; le bâtisseur dégage le terrain et pose les blocs
    en prenant les matériaux au grenier (le maire est prévenu de ce qui manque), et le bâtiment se
@@ -61,7 +69,7 @@ ville, puis mégalopole.
    chaque atelier (ferme avec son champ, cuisine, scierie, étable avec son enclos, pêcherie avec son
    bassin, atelier du bâtisseur) → son grand atelier, à deux postes. Les datapacks peuvent ajouter
    des schémas (`data/<ns>/blueprint/*.json`).
-7. **Grandir** : la ville monte de palier avec ses citoyens et ses maisons, et son territoire
+8. **Grandir** : la ville monte de palier avec ses citoyens et ses maisons, et son territoire
    s'étend.
 
 | Palier | Population (citoyens + villageois) | Maisons | Rayon du territoire |

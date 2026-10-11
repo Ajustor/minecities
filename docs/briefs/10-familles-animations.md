@@ -5,6 +5,15 @@ n'apparaissent pas par magie, ils doivent naître d'union entre deux autres vill
 villageois qui s'entendent peuvent demander à se marier au maire via l'interface d'admin de la
 cité ; ajouter aussi des animations aux villageois pour les diverses actions. »
 
+## État (v0.4)
+
+Fait : minimum de 5 (`town/Families`), affinités par proximité, demandes de mariage, écran de
+l'hôtel de ville avec le registre (accepter/refuser), cérémonie (cloche, cœurs), emménagement
+commun, naissances (couple logé ensemble, repu, lit libre, une par jour au plus), enfants plus
+petits qui grandissent en 3 jours, animations par action. Reste : affinité qui baisse avec la
+faim et le malheur (brief 04), enfants qui suivent leurs parents, démarche d'enfant, scène de
+mariage où les deux se rendent à l'hôtel de ville.
+
 ## Décisions (validées)
 
 - **Moins de 5 habitants : de nouvelles personnes apparaissent** pour revenir à 5 ; au-delà, la

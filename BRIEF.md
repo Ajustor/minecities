@@ -17,7 +17,7 @@ Un mod de villes « à la MineColonies », mais **vanilla-friendly** :
 - **Le maire** : celui qui fonde la ville la dirige, avec ses adjoints ; plus tard, élections,
   budget et décrets.
 
-## Ce que contient la version actuelle (v0.3)
+## Ce que contient la version actuelle (v0.4)
 
 | Élément | Où |
 |---|---|
@@ -29,6 +29,9 @@ Un mod de villes « à la MineColonies », mais **vanilla-friendly** :
 | Métiers : poste de travail vanilla = emploi ; fermier, cuisinier, bûcheron, éleveur, pêcheur, bâtisseur | `town/Job`, `citizen/*Goal` |
 | Bâtisseur : schémas JSON (datapacks), 4 styles, chantiers commandés, agrandissements | `build/*`, `citizen/BuilderGoal` |
 | Villages vanilla repris : villageois comptés, maisons reprises, villageois sans métier naturalisés | `TownService.census` |
+| Familles : 5 fondateurs, plus d'immigration au-delà, affinités, mariages acceptés par le maire, naissances, enfants qui grandissent | `town/Families`, `town/MarriageRequest` |
+| Écran de l'hôtel de ville : résumé, citoyens, registre des mariages, grenier | `network/*`, `client/screen/TownHallScreen` |
+| Animations : un geste par action (manger, houe, hache, pêche, bâtir, cuisiner, nourrir, parler, liesse) | `citizen/Action`, `client/render/CitizenModel` |
 | Hôtel de ville en bâtiment miniature (modèle conçu dans Blockbench, textures vanilla) | `tools/models/town_hall.py` |
 | Commandes `/minecities` (alias `/ville`) | `command/TownCommands` |
 | Tests unitaires (relevé des bâtiments, ville, emplois, faim, langues) et scènes en jeu vérifiées (`city`, `work`, `countryside`, `village`, `build`) | `src/test`, `src/gametest` |
@@ -59,8 +62,12 @@ Un mod de villes « à la MineColonies », mais **vanilla-friendly** :
 - **Parole** : les citoyens disent ce qui leur arrive (bulle et chat à 16 blocs) ; leurs besoins
   non satisfaits sont répétés à qui clique sur eux.
 - **Sommeil** : pas de sommeil là où les lits explosent (Nether, End).
-- **Immigration** : toutes les 2 minutes au plus, s'il reste un lit libre et que le grenier
-  contient de la nourriture saine (ni chair putréfiée, ni œil d'araignée…).
+- **Population** : sous 5 habitants, un nouveau venu toutes les 20 secondes ; au-delà, pas
+  d'immigration. Deux citoyens à moins de 5 blocs gagnent 3 points d'affinité toutes les
+  5 secondes ; à 70, ils demandent à se marier (une demande à la fois). Marié, un couple emménage
+  dans une maison qui a deux lits pour lui. La nuit, un couple logé ensemble, repu (faim ≥ 16),
+  avec un lit libre chez lui et pas de naissance depuis un jour, a une chance sur 200 par relevé
+  d'avoir un enfant ; l'enfant est adulte en 3 jours, ne travaille pas, mange moitié moins.
 - **Faim** : 0 à 20, la barre se vide en une journée de jeu. Sous 12, le citoyen va manger
   (coffres de sa maison, puis grenier) jusqu'à 18. À 0, il ralentit et perd un cœur toutes les
   30 secondes, jusqu'à en mourir. Repu (≥ 16), il se soigne.
@@ -110,8 +117,8 @@ puis un tag `vX.Y.0` qui publie la release.
 
 **Ordre retenu** (les briefs « dans l'ordre logique ») :
 
-1. **v0.4** — brief 10 (familles, mariages, naissances, animations) avec l'écran de l'hôtel de
-   ville du brief 05, nécessaire pour accepter les mariages.
+1. **v0.4** (fait) — brief 10 (familles, mariages, naissances, animations) avec l'écran de
+   l'hôtel de ville du brief 05.
 2. **v0.5** — brief 04 (faim variée, bonheur), dont dépendent les naissances, les votes et
    l'immigration ; et le reste du brief 05 (HUD, indications en jeu).
 3. **v0.6** — brief 06 (garde, défense, cloche, raids, fêtes).
