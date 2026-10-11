@@ -1,5 +1,14 @@
 # Journal des modifications
 
+## 1.1.0 — 2026-10-11
+
+### Nouveautés
+
+- Décrets du maire : rationnement, heures supplémentaires, jour férié, et l'onglet Mairie de l'écran
+- Commerce entre villes : accords signés par les deux maires, caravanes payées en émeraudes
+- Outillage du maître au niveau 4 : fortune pour le fermier et le mineur, chance de la mer pour le pêcheur, armure complète des gardes
+- Nouveau métier : tanneur, au séchoir à peaux (nouveau bloc)
+- L'armure des citoyens se voit, et un casque cache le couvre-chef
 ## 1.0.0 — 2026-10-11
 
 ### Nouveautés

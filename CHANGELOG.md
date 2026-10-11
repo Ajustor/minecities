@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.1.0 — 2026-10-11
+
+### New features
+
+- Mayor's decrees: rationing, overtime, holiday, and the Council tab of the screen
+- Trade between towns: agreements signed by both mayors, caravans paid in emeralds
+- Master's tools at level 4: fortune for farmer and miner, luck of the sea for the fisherman, full armour for guards
+- New job: tanner, at the tanning rack (new block)
+- Citizens' armour is now visible, and a helmet hides the job hat
 ## 1.0.0 — 2026-10-11
 
 ### New features
