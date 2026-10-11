@@ -1,7 +1,6 @@
 package com.ajustor.minecities.citizen;
 
 import com.ajustor.minecities.town.Job;
-import com.ajustor.minecities.town.Stock;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
@@ -15,9 +14,7 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.CropBlock;
 import net.minecraft.world.level.block.state.BlockState;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Le fermier, au composteur. Il travaille les champs autour de son atelier : récolte ce qui est
@@ -33,8 +30,6 @@ class FarmerGoal extends WorkGoal {
 	private static final int SEEDS_KEPT = 16;
 	/** Au-delà de tant d'objets récoltés, il va les déposer. */
 	private static final int LOAD = 48;
-	/** En fin d'après-midi, il rentre déposer sa récolte. */
-	private static final long EVENING = 11000;
 
 	private BlockPos target;
 	private boolean delivering;
@@ -160,55 +155,19 @@ class FarmerGoal extends WorkGoal {
 		return stack.getItem() instanceof BlockItem item && item.getBlock() instanceof CropBlock;
 	}
 
-	/** Ce qu'il porte au-delà de ses semences de réserve. */
 	private int produce() {
-		Map<net.minecraft.world.item.Item, Integer> seeds = new HashMap<>();
-		int produce = 0;
-		for (ItemStack stack : citizen.inventory()) {
-			if (stack.isEmpty()) {
-				continue;
-			}
-			if (isSeed(stack)) {
-				int kept = seeds.merge(stack.getItem(), stack.getCount(), Integer::sum);
-				produce += Math.max(0, Math.min(stack.getCount(), kept - SEEDS_KEPT));
-			} else {
-				produce += stack.getCount();
-			}
-		}
-		return produce;
+		return produce(FarmerGoal::isSeed, SEEDS_KEPT);
 	}
 
 	private boolean shouldDeliver() {
-		long time = Math.floorMod(level().getOverworldClockTime(), 24000L);
 		int produce = produce();
-		return produce >= LOAD || citizen.inventoryFull() && produce > 0 || time >= EVENING && produce > 0;
+		return produce >= LOAD || citizen.inventoryFull() && produce > 0 || evening() && produce > 0;
 	}
 
 	/** Porte la récolte au grenier, en gardant ses semences de réserve. */
 	private void deliver() {
-		BlockPos granary = town().hall();
-		if (!goTo(granary)) {
-			return;
+		if (deliver(FarmerGoal::isSeed, SEEDS_KEPT)) {
+			delivering = false;
 		}
-		container(granary).ifPresent(container -> {
-			Map<net.minecraft.world.item.Item, Integer> kept = new HashMap<>();
-			List<ItemStack> inventory = citizen.inventory();
-			for (int i = 0; i < inventory.size(); i++) {
-				ItemStack stack = inventory.get(i);
-				if (stack.isEmpty()) {
-					continue;
-				}
-				int keep = 0;
-				if (isSeed(stack)) {
-					int already = kept.getOrDefault(stack.getItem(), 0);
-					keep = Math.min(stack.getCount(), SEEDS_KEPT - already);
-					kept.put(stack.getItem(), already + keep);
-				}
-				ItemStack given = stack.copyWithCount(stack.getCount() - keep);
-				ItemStack rest = Stock.insert(container, given);
-				stack.setCount(keep + rest.getCount());
-			}
-		});
-		delivering = false;
 	}
 }

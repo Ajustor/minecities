@@ -1,6 +1,13 @@
 package com.ajustor.minecities.command;
 
+import com.ajustor.minecities.build.Blueprint;
+import com.ajustor.minecities.build.Blueprints;
+import com.ajustor.minecities.build.BuildPlan;
+import com.ajustor.minecities.build.BuildStyle;
+import com.ajustor.minecities.build.Builds;
+import com.ajustor.minecities.build.Construction;
 import com.ajustor.minecities.citizen.CitizenEntity;
+import com.ajustor.minecities.town.Job;
 import com.ajustor.minecities.citizen.Hunger;
 import com.ajustor.minecities.town.Resident;
 import com.ajustor.minecities.town.Town;
@@ -16,7 +23,12 @@ import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
+import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.commands.arguments.EntityArgument;
+import net.minecraft.commands.arguments.IdentifierArgument;
+import net.minecraft.core.BlockPos;
+import net.minecraft.resources.Identifier;
+import net.minecraft.world.level.block.Rotation;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -39,6 +51,10 @@ public final class TownCommands {
 			Component.translatable("command.minecities.not_mayor"));
 	private static final SimpleCommandExceptionType WHICH_TOWN = new SimpleCommandExceptionType(
 			Component.translatable("command.minecities.which_town"));
+	private static final SimpleCommandExceptionType NOT_MANAGER = new SimpleCommandExceptionType(
+			Component.translatable("command.minecities.not_manager"));
+	private static final SimpleCommandExceptionType NO_BLUEPRINT = new SimpleCommandExceptionType(
+			Component.translatable("command.minecities.no_blueprint"));
 
 	private TownCommands() {
 	}
@@ -69,6 +85,23 @@ public final class TownCommands {
 						.then(Commands.literal("remove")
 								.then(Commands.argument("player", EntityArgument.player())
 										.executes(c -> deputy(c, false)))))
+				.then(Commands.literal("blueprints").executes(TownCommands::blueprints))
+				.then(Commands.literal("build")
+						.then(Commands.literal("cancel").executes(TownCommands::cancelBuild))
+						.then(Commands.argument("blueprint", IdentifierArgument.id())
+								.suggests((c, b) -> SharedSuggestionProvider.suggestResource(
+										Blueprints.all(c.getSource().getServer()).keySet(), b))
+								.executes(c -> build(c, BuildStyle.PLAINS))
+								.then(Commands.argument("style", StringArgumentType.word())
+										.suggests((c, b) -> {
+											for (BuildStyle style : BuildStyle.values()) {
+												b.suggest(style.serializedName());
+											}
+											return b.buildFuture();
+										})
+										.executes(c -> build(c, BuildStyle.fromSerializedName(
+												StringArgumentType.getString(c, "style")).orElse(BuildStyle.PLAINS))))))
+				.then(Commands.literal("upgrade").executes(TownCommands::upgrade))
 				.then(Commands.literal("admin")
 						.requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
 						.then(Commands.literal("immigrate").executes(TownCommands::immigrate))
@@ -193,6 +226,82 @@ public final class TownCommands {
 		context.getSource().sendSuccess(() -> Component.translatable(key, target.getDisplayName(), town.name()), true);
 		target.sendSystemMessage(Component.translatable(key, target.getDisplayName(), town.name())
 				.withStyle(ChatFormatting.GOLD));
+		return Command.SINGLE_SUCCESS;
+	}
+
+	/** La ville que le joueur gère (maire ou adjoint) et où il se trouve. */
+	private static Town managedHere(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
+		ServerPlayer player = context.getSource().getPlayerOrException();
+		Town town = Towns.get(context.getSource().getServer()).at(context.getSource().getLevel().dimension(),
+				player.blockPosition()).orElseThrow(NO_TOWN::create);
+		if (!town.canManage(player.getUUID())) {
+			throw NOT_MANAGER.create();
+		}
+		return town;
+	}
+
+	private static int blueprints(CommandContext<CommandSourceStack> context) {
+		var all = Blueprints.all(context.getSource().getServer());
+		context.getSource().sendSuccess(() -> Component.translatable("command.minecities.blueprints", all.size())
+				.withStyle(ChatFormatting.GOLD), false);
+		for (Blueprint blueprint : all.values()) {
+			context.getSource().sendSuccess(() -> Component.translatable("command.minecities.blueprints.entry",
+					Component.translatable(blueprint.translationKey()), blueprint.id().toString(),
+					blueprint.width(), blueprint.depth(), blueprint.height(),
+					Component.translatable("blueprint.minecities.kind." + blueprint.kind())), false);
+		}
+		return all.size();
+	}
+
+	private static int build(CommandContext<CommandSourceStack> context, BuildStyle style) throws CommandSyntaxException {
+		Town town = managedHere(context);
+		ServerPlayer player = context.getSource().getPlayerOrException();
+		ServerLevel level = context.getSource().getLevel();
+		Identifier id = IdentifierArgument.getId(context, "blueprint");
+		Blueprint blueprint = Blueprints.get(context.getSource().getServer(), id).orElseThrow(NO_BLUEPRINT::create);
+		Rotation rotation = BuildPlan.facing(player.getDirection().getOpposite());
+		BlockPos origin = BuildPlan.originFacing(blueprint, player.blockPosition(), rotation);
+		Optional<Component> refusal = Builds.order(level, town, blueprint, style, origin, rotation);
+		if (refusal.isPresent()) {
+			context.getSource().sendFailure(refusal.get());
+			return 0;
+		}
+		BlockPos[] bounds = BuildPlan.bounds(blueprint, origin, rotation);
+		Builds.outline(level, player, bounds[0], bounds[1]);
+		context.getSource().sendSuccess(() -> Component.translatable("command.minecities.build.ordered",
+				Component.translatable(blueprint.translationKey()), Component.translatable(style.translationKey()),
+				town.name()).withStyle(ChatFormatting.GOLD), false);
+		Builds.describeMaterials(level, town, BuildPlan.of(blueprint, style, origin, rotation), player);
+		if (town.workers(Job.BUILDER) == 0) {
+			context.getSource().sendSuccess(() -> Component.translatable("command.minecities.build.no_builder")
+					.withStyle(ChatFormatting.YELLOW), false);
+		}
+		return Command.SINGLE_SUCCESS;
+	}
+
+	private static int cancelBuild(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
+		Town town = managedHere(context);
+		Optional<Construction> active = town.activeConstruction();
+		if (active.isEmpty()) {
+			context.getSource().sendFailure(Component.translatable("command.minecities.build.none"));
+			return 0;
+		}
+		town.cancel(active.get());
+		Towns.get(context.getSource().getServer()).changed();
+		context.getSource().sendSuccess(() -> Component.translatable("command.minecities.build.cancelled"), false);
+		return Command.SINGLE_SUCCESS;
+	}
+
+	private static int upgrade(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
+		Town town = managedHere(context);
+		ServerPlayer player = context.getSource().getPlayerOrException();
+		Optional<Component> refusal = Builds.upgrade(context.getSource().getLevel(), town, player.blockPosition());
+		if (refusal.isPresent()) {
+			context.getSource().sendFailure(refusal.get());
+			return 0;
+		}
+		context.getSource().sendSuccess(() -> Component.translatable("command.minecities.build.upgrade")
+				.withStyle(ChatFormatting.GOLD), false);
 		return Command.SINGLE_SUCCESS;
 	}
 

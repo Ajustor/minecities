@@ -143,29 +143,34 @@ public class CityScenes implements FabricClientGameTest {
 			for (int i = 0; i < 3; i++) {
 				command(sp, "summon minecraft:villager %d %d -6".formatted(-4 + i * 3, Y));
 			}
-			waitOrExplain(sp, server -> town(server).villagers() == 3, 400, "les villageois n'ont pas été recensés");
-			check(sp.getServer().computeOnServer(server -> town(server).population() == 5
-					&& town(server).citizens() == 2 ? null : "population mal comptée : " + town(server).population()));
+			// (Sans métier, ils peuvent aussi devenir citoyens : la population reste la même.)
+			waitOrExplain(sp, server -> town(server).population() == 5, 400, "les villageois n'ont pas été recensés",
+					server -> "population " + town(server).population() + ", villageois " + town(server).villagers() + ".");
 		}
 	}
 
 	/** Attend la condition ; sinon échoue en décrivant chaque citoyen (faim, position, sommeil). */
 	static void waitOrExplain(TestSingleplayerContext sp, java.util.function.Predicate<MinecraftServer> done,
 			int ticks, String what) {
+		waitOrExplain(sp, done, ticks, what, server -> "");
+	}
+
+	/** Comme l'autre, avec un détail de plus calculé au moment de l'échec. */
+	static void waitOrExplain(TestSingleplayerContext sp, java.util.function.Predicate<MinecraftServer> done,
+			int ticks, String what, java.util.function.Function<MinecraftServer, String> detail) {
 		try {
 			sp.getServer().waitFor(done, ticks);
 		} catch (AssertionError e) {
-			String state = sp.getServer().computeOnServer(server -> citizens(server).stream()
-					.map(CityScenes::describe)
-					.reduce((x, y) -> x + " ; " + y).orElse("aucun citoyen"));
+			String state = sp.getServer().computeOnServer(server -> detail.apply(server) + " " + census(server));
 			throw new AssertionError(what + " : " + state, e);
 		}
 	}
 
 	static String describe(CitizenEntity c) {
-		return "%s faim=%.1f pv=%.0f pos=%s pose=%s métier=%s main=%s".formatted(c.getName().getString(), c.hunger(),
-				c.getHealth(), c.blockPosition().toShortString(), c.getPose(),
-				c.job().map(j -> j.job().serializedName()).orElse("-"), c.getMainHandItem());
+		return "%s faim=%.1f pv=%.0f pos=%s pose=%s métier=%s main=%s poches=%s".formatted(c.getName().getString(),
+				c.hunger(), c.getHealth(), c.blockPosition().toShortString(), c.getPose(),
+				c.job().map(j -> j.job().serializedName()).orElse("-"), c.getMainHandItem(),
+				c.inventory().stream().filter(st -> !st.isEmpty()).toList());
 	}
 
 	static String census(MinecraftServer server) {

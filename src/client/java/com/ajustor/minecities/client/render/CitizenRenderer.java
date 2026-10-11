@@ -9,6 +9,8 @@ import net.minecraft.client.model.player.PlayerModel;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.HumanoidMobRenderer;
 import net.minecraft.client.renderer.entity.state.HumanoidRenderState;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 
 /** Les citoyens, sur le squelette du joueur (avec sa surcouche), dans l'une de leurs tenues. */
@@ -39,6 +41,17 @@ public class CitizenRenderer extends HumanoidMobRenderer<CitizenEntity, CitizenR
 	public void extractRenderState(CitizenEntity entity, State state, float partialTicks) {
 		super.extractRenderState(entity, state, partialTicks);
 		state.variant = entity.variant();
+	}
+
+	@Override
+	protected boolean shouldShowName(CitizenEntity entity, double distanceSqr) {
+		return entity.speech().isPresent() && distanceSqr < 32 * 32 || super.shouldShowName(entity, distanceSqr);
+	}
+
+	@Override
+	protected Component getNameTag(CitizenEntity entity) {
+		return entity.speech().<Component>map(line -> Component.literal("« ").append(line).append(" »")
+				.withStyle(ChatFormatting.WHITE)).orElseGet(() -> super.getNameTag(entity));
 	}
 
 	@Override

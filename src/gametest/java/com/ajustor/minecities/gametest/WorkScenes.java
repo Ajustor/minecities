@@ -168,7 +168,7 @@ public class WorkScenes implements FabricClientGameTest {
 	}
 
 	/** Une pièce close de planches, porte au nord, intérieur [x0, x1] x [Y, Y + 2] x [z0, z1]. */
-	private static void room(ServerLevel level, int x0, int z0, int x1, int z1, int doorX) {
+	static void room(ServerLevel level, int x0, int z0, int x1, int z1, int doorX) {
 		for (int x = x0 - 1; x <= x1 + 1; x++) {
 			for (int z = z0 - 1; z <= z1 + 1; z++) {
 				for (int y = Y - 1; y <= Y + 3; y++) {

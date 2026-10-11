@@ -1,0 +1,125 @@
+{
+ "kind": "workshop",
+ "layers": [
+  [
+   "...^...........",
+   "QQQQQQQQQ.OOOOO",
+   "QfffffffQ.O~~~O",
+   "QfffffffQ.O~~~O",
+   "QfffffffQ.O~~~O",
+   "QfffffffQ.O~~~O",
+   "QfffffffQ.O~~~O",
+   "QQQQQQQQQ.OOOOO"
+  ],
+  [
+   "... ...........",
+   "PWWDWWWWP      ",
+   "W      CW      ",
+   "W       W      ",
+   "W       W      ",
+   "W       W      ",
+   "Wt   r rW      ",
+   "PWWWWWWWP      "
+  ],
+  [
+   "...............",
+   "PWWdWWWWP......",
+   "W L     W......",
+   "W       W......",
+   "G       G......",
+   "W       W......",
+   "W       W......",
+   "PWGWGWGWP......"
+  ],
+  [
+   "...............",
+   "PWWWWWWWP......",
+   "W       W......",
+   "W       W......",
+   "W       W......",
+   "W       W......",
+   "W       W......",
+   "PWWWWWWWP......"
+  ],
+  [
+   "...............",
+   "RRRRRRRRR......",
+   "RRRRRRRRR......",
+   "RRRRRRRRR......",
+   "RRRRRRRRR......",
+   "RRRRRRRRR......",
+   "RRRRRRRRR......",
+   "RRRRRRRRR......"
+  ],
+  [
+   "...............",
+   "<WWWWWWW>......",
+   "<       >......",
+   "<       >......",
+   "<       >......",
+   "<       >......",
+   "<       >......",
+   "<WWWWWWW>......"
+  ],
+  [
+   "...............",
+   " <WWWWW> ......",
+   " <     > ......",
+   " <     > ......",
+   " <     > ......",
+   " <     > ......",
+   " <     > ......",
+   " <WWWWW> ......"
+  ],
+  [
+   "...............",
+   "  <WWW>  ......",
+   "  <   >  ......",
+   "  <   >  ......",
+   "  <   >  ......",
+   "  <   >  ......",
+   "  <   >  ......",
+   "  <WWW>  ......"
+  ],
+  [
+   "...............",
+   "   <W>   ......",
+   "   < >   ......",
+   "   < >   ......",
+   "   < >   ......",
+   "   < >   ......",
+   "   < >   ......",
+   "   <W>   ......"
+  ],
+  [
+   "...............",
+   "    R    ......",
+   "    R    ......",
+   "    R    ......",
+   "    R    ......",
+   "    R    ......",
+   "    R    ......",
+   "    R    ......"
+  ]
+ ],
+ "key": {
+  " ": "minecraft:air",
+  "<": "{roof_stairs}[facing=east,half=bottom,shape=straight]",
+  ">": "{roof_stairs}[facing=west,half=bottom,shape=straight]",
+  "C": "minecraft:chest[facing=south]",
+  "D": "{door}[facing=north,half=lower,hinge=left]",
+  "G": "{window}",
+  "L": "minecities:house_plaque[facing=south]",
+  "O": "{foundation}",
+  "P": "{frame}[axis=y]",
+  "Q": "{fine_foundation}",
+  "R": "{roof}",
+  "W": "{wall}",
+  "^": "{steps}[facing=south,half=bottom,shape=straight]",
+  "d": "{door}[facing=north,half=upper,hinge=left]",
+  "f": "{floor}",
+  "r": "minecraft:barrel[facing=up]",
+  "t": "minecraft:torch",
+  "~": "minecraft:water"
+ }
+}

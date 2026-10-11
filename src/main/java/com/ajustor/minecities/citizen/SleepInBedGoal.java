@@ -1,6 +1,7 @@
 package com.ajustor.minecities.citizen;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.attribute.EnvironmentAttributes;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.BedBlock;
@@ -9,7 +10,10 @@ import net.minecraft.world.level.block.state.BlockState;
 import java.util.EnumSet;
 import java.util.Optional;
 
-/** La nuit, le citoyen rentre chez lui et se couche dans son lit ; il se lève au matin. */
+/**
+ * La nuit, le citoyen rentre chez lui et se couche dans son lit ; il se lève au matin. Dans les
+ * dimensions où les lits explosent, il ne dort pas.
+ */
 public class SleepInBedGoal extends Goal {
 	private final CitizenEntity citizen;
 	private BlockPos bed;
@@ -20,6 +24,14 @@ public class SleepInBedGoal extends Goal {
 		setFlags(EnumSet.of(Flag.MOVE, Flag.LOOK, Flag.JUMP));
 	}
 
+	/**
+	 * Là où les lits explosent (le Nether, l'End), les citoyens ne dorment pas, et ne s'en portent
+	 * pas plus mal.
+	 */
+	public static boolean bedsWork(Level level, BlockPos pos) {
+		return !level.environmentAttributes().getValue(EnvironmentAttributes.BED_RULE, pos).explodes();
+	}
+
 	/** Entre le coucher du soleil (12 500) et l'aube (23 500). */
 	public static boolean isNight(Level level) {
 		long time = Math.floorMod(level.getOverworldClockTime(), 24000L);
@@ -27,6 +39,9 @@ public class SleepInBedGoal extends Goal {
 	}
 
 	private boolean bedAvailable(BlockPos pos) {
+		if (!bedsWork(citizen.level(), pos)) {
+			return false;
+		}
 		BlockState state = citizen.level().getBlockState(pos);
 		return state.getBlock() instanceof BedBlock
 				&& (!state.getValue(BedBlock.OCCUPIED) || citizen.getSleepingPos().filter(pos::equals).isPresent());

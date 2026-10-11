@@ -1,5 +1,6 @@
 package com.ajustor.minecities.town;
 
+import com.ajustor.minecities.build.Construction;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.core.BlockPos;
@@ -39,7 +40,9 @@ public final class Town {
 			Codec.STRING.optionalFieldOf("tier", TownTier.VILLAGE.serializedName())
 					.forGetter(t -> t.tier.serializedName()),
 			Codec.LONG.optionalFieldOf("last_arrival", 0L).forGetter(t -> t.lastArrival),
-			Codec.INT.optionalFieldOf("villagers", 0).forGetter(t -> t.villagers)
+			Codec.INT.optionalFieldOf("villagers", 0).forGetter(t -> t.villagers),
+			Construction.CODEC.listOf().optionalFieldOf("constructions", List.of())
+					.forGetter(t -> List.copyOf(t.constructions))
 	).apply(i, Town::new));
 
 	private final UUID id;
@@ -56,10 +59,14 @@ public final class Town {
 	private long lastArrival;
 	/** Les villageois vanilla qui vivent sur le territoire : ils comptent dans la population. */
 	private int villagers;
+	/** Les lits où dorment ces villageois : on n'y loge pas de citoyen (non sauvegardé). */
+	private Set<BlockPos> reservedBeds = Set.of();
+	/** Les chantiers commandés par le maire, en cours puis finis, dans l'ordre de commande. */
+	private final List<Construction> constructions;
 
 	private Town(UUID id, String name, ResourceKey<Level> dimension, BlockPos hall, UUID mayor, String mayorName,
 			List<UUID> deputies, long founded, List<House> houses, Map<UUID, Resident> residents, String tier,
-			long lastArrival, int villagers) {
+			long lastArrival, int villagers, List<Construction> constructions) {
 		this.id = id;
 		this.name = name;
 		this.dimension = dimension;
@@ -73,12 +80,13 @@ public final class Town {
 		this.tier = TownTier.fromSerializedName(tier);
 		this.lastArrival = lastArrival;
 		this.villagers = villagers;
+		this.constructions = new ArrayList<>(constructions);
 	}
 
 	public static Town found(String name, ResourceKey<Level> dimension, BlockPos hall, UUID mayor, String mayorName,
 			long now) {
 		return new Town(UUID.randomUUID(), name, dimension, hall, mayor, mayorName, List.of(), now, List.of(),
-				Map.of(), TownTier.VILLAGE.serializedName(), now, 0);
+				Map.of(), TownTier.VILLAGE.serializedName(), now, 0, List.of());
 	}
 
 	public UUID id() {
@@ -175,6 +183,11 @@ public final class Town {
 		return Optional.ofNullable(houses.get(plaque));
 	}
 
+	/** Une maison de la ville (n'importe laquelle) a-t-elle ce lit ? */
+	public boolean hasBed(BlockPos bed) {
+		return houses.values().stream().anyMatch(h -> h.beds().contains(bed));
+	}
+
 	/** Une autre maison de la ville a-t-elle déjà ce lit ? */
 	public boolean bedClaimedElsewhere(BlockPos bed, BlockPos plaque) {
 		return houses.values().stream().anyMatch(h -> !h.plaque().equals(plaque) && h.beds().contains(bed));
@@ -252,6 +265,11 @@ public final class Town {
 		return hired;
 	}
 
+	/** Combien de citoyens exercent ce métier. */
+	public int workers(Job job) {
+		return (int) residents.values().stream().filter(r -> r.job().filter(j -> j.job() == job).isPresent()).count();
+	}
+
 	/** Les postes de travail de la ville, et combien sont occupés. */
 	public int workstations() {
 		return houses.values().stream().mapToInt(h -> h.workstations().size()).sum();
@@ -262,12 +280,19 @@ public final class Town {
 	}
 
 	public int freeBeds() {
-		return capacity() - (int) residents.values().stream().filter(Resident::hasHome).count();
+		Set<BlockPos> taken = new HashSet<>(reservedBeds);
+		residents.values().forEach(r -> r.bed().ifPresent(taken::add));
+		return (int) houses.values().stream().flatMap(h -> h.beds().stream()).filter(b -> !taken.contains(b)).count();
+	}
+
+	/** Les lits des villageois vanilla du territoire, qu'aucun citoyen ne prendra. */
+	public void reserveBeds(Set<BlockPos> beds) {
+		reservedBeds = Set.copyOf(beds);
 	}
 
 	/** Un lit libre, et la maison où il se trouve. */
 	public Optional<Map.Entry<House, BlockPos>> findFreeBed() {
-		Set<BlockPos> taken = new HashSet<>();
+		Set<BlockPos> taken = new HashSet<>(reservedBeds);
 		residents.values().forEach(r -> r.bed().ifPresent(taken::add));
 		for (House house : houses.values()) {
 			for (BlockPos bed : house.beds()) {
@@ -336,6 +361,30 @@ public final class Town {
 
 	public void farewell(UUID citizen) {
 		residents.remove(citizen);
+	}
+
+	// Chantiers
+
+	public List<Construction> constructions() {
+		return List.copyOf(constructions);
+	}
+
+	/** Le chantier en cours : le premier commandé qui n'est pas fini. */
+	public Optional<Construction> activeConstruction() {
+		return constructions.stream().filter(c -> !c.done()).findFirst();
+	}
+
+	public void order(Construction construction) {
+		constructions.add(construction);
+	}
+
+	public boolean cancel(Construction construction) {
+		return constructions.remove(construction);
+	}
+
+	/** Le bâtiment bâti par la ville à cet endroit, s'il y en a un. */
+	public Optional<Construction> builtAt(BlockPos pos) {
+		return constructions.stream().filter(c -> c.done() && c.contains(pos)).reduce((a, b) -> b);
 	}
 
 	/** Recalcule le palier ; renvoie l'ancien s'il a changé. */

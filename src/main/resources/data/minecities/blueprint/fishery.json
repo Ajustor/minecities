@@ -1,0 +1,85 @@
+{
+ "kind": "workshop",
+ "layers": [
+  [
+   "...^.........",
+   "FFFFFFF.OOOOO",
+   "FfffffF.O~~~O",
+   "FfffffF.O~~~O",
+   "FfffffF.O~~~O",
+   "FfffffF.O~~~O",
+   "FfffffF.O~~~O",
+   "FFFFFFF.OOOOO"
+  ],
+  [
+   "... .........",
+   "PWWDWWP      ",
+   "W    CW      ",
+   "W     W      ",
+   "W     W      ",
+   "W     W      ",
+   "Wt   rW      ",
+   "PWWWWWP      "
+  ],
+  [
+   ".............",
+   "PWWdWWP......",
+   "W L   W......",
+   "W     W......",
+   "G     G......",
+   "W     W......",
+   "W     W......",
+   "PWWGWWP......"
+  ],
+  [
+   ".............",
+   "PWWWWWP......",
+   "W     W......",
+   "W     W......",
+   "W     W......",
+   "W     W......",
+   "W     W......",
+   "PWWWWWP......"
+  ],
+  [
+   ".............",
+   "RRRRRRR......",
+   "RRRRRRR......",
+   "RRRRRRR......",
+   "RRRRRRR......",
+   "RRRRRRR......",
+   "RRRRRRR......",
+   "RRRRRRR......"
+  ],
+  [
+   ".............",
+   ".............",
+   ".SSSSS.......",
+   ".SSSSS.......",
+   ".SSSSS.......",
+   ".SSSSS.......",
+   ".SSSSS.......",
+   "............."
+  ]
+ ],
+ "key": {
+  " ": "minecraft:air",
+  "C": "minecraft:chest[facing=south]",
+  "D": "{door}[facing=north,half=lower,hinge=left]",
+  "F": "{foundation}",
+  "G": "{window}",
+  "L": "minecities:house_plaque[facing=south]",
+  "O": "{foundation}",
+  "P": "{frame}[axis=y]",
+  "R": "{roof}",
+  "S": "{roof_slab}[type=bottom]",
+  "W": "{wall}",
+  "^": "{steps}[facing=south,half=bottom,shape=straight]",
+  "d": "{door}[facing=north,half=upper,hinge=left]",
+  "f": "{floor}",
+  "r": "minecraft:barrel[facing=up]",
+  "t": "minecraft:torch",
+  "~": "minecraft:water"
+ },
+ "upgrade": "minecities:fishery_large"
+}

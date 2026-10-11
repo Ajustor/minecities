@@ -43,6 +43,7 @@ import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.food.FoodProperties;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.storage.ValueInput;
@@ -62,6 +63,14 @@ public class CitizenEntity extends PathfinderMob {
 	public static final int VARIANTS = 8;
 	private static final EntityDataAccessor<Integer> VARIANT = SynchedEntityData.defineId(CitizenEntity.class,
 			EntityDataSerializers.INT);
+	/** Ce qu'il dit en ce moment : affiché en bulle au-dessus de sa tête. */
+	private static final EntityDataAccessor<Optional<Component>> SPEECH = SynchedEntityData.defineId(
+			CitizenEntity.class, EntityDataSerializers.OPTIONAL_COMPONENT);
+	/** Une réplique reste affichée 4 secondes ; on l'entend (dans le chat) à 16 blocs. */
+	private static final int SPEECH_TICKS = 80;
+	private static final double EARSHOT = 16;
+	/** Il ne répète pas la même chose avant 30 secondes. */
+	private static final int REPEAT_DELAY = 600;
 	/** Le citoyen relit ce que la ville sait de lui toutes les 5 secondes. */
 	private static final int SYNC_INTERVAL = 100;
 	public static final int INVENTORY_SIZE = 9;
@@ -72,10 +81,23 @@ public class CitizenEntity extends PathfinderMob {
 	/** Ce que la ville sait de lui, relu régulièrement (vide s'il n'a pas de ville). */
 	private Optional<Resident> resident = Optional.empty();
 	private final DoorKeeper doors = new DoorKeeper(this);
+	/** Là où un bâtisseur lui a demandé d'aller, pour lui laisser la place. */
+	private BlockPos stepAside;
+	private int stepAsideUntil;
 	/** Ce qu'il porte : récoltes, ingrédients, semences. */
 	private final NonNullList<ItemStack> inventory = NonNullList.withSize(INVENTORY_SIZE, ItemStack.EMPTY);
 	/** Quand il s'est plaint pour la dernière fois, par motif : une fois par jour au plus. */
 	private final java.util.Map<String, Long> complaints = new java.util.HashMap<>();
+	/** Quand il a dit quoi pour la dernière fois, par réplique. */
+	private final java.util.Map<String, Long> said = new java.util.HashMap<>();
+	/** Ses besoins pas encore satisfaits, par motif. */
+	private final java.util.Map<String, Need> needs = new java.util.LinkedHashMap<>();
+	/** Un besoin non redit depuis une minute et quart est oublié (il a été satisfait). */
+	private static final int NEED_MEMORY = 1500;
+	private int speechTicks;
+	/** Ce qu'il attend d'un livreur (un bâtisseur à court d'un matériau), et combien. */
+	private Item wanted;
+	private int wantedCount;
 
 	public CitizenEntity(EntityType<? extends PathfinderMob> type, Level level) {
 		super(type, level);
@@ -96,17 +118,24 @@ public class CitizenEntity extends PathfinderMob {
 	protected void defineSynchedData(SynchedEntityData.Builder builder) {
 		super.defineSynchedData(builder);
 		builder.define(VARIANT, 0);
+		builder.define(SPEECH, Optional.empty());
 	}
 
 	@Override
 	protected void registerGoals() {
 		goalSelector.addGoal(0, new FloatGoal(this));
+		goalSelector.addGoal(0, new StepAsideGoal(this));
 		goalSelector.addGoal(1, new PanicGoal(this, 0.75));
 		goalSelector.addGoal(1, new AvoidEntityGoal<>(this, Monster.class, 8.0f, 0.6, 0.75));
 		goalSelector.addGoal(2, new SleepInBedGoal(this));
 		goalSelector.addGoal(3, new EatGoal(this));
 		goalSelector.addGoal(4, new FarmerGoal(this));
 		goalSelector.addGoal(4, new CookGoal(this));
+		goalSelector.addGoal(4, new LumberjackGoal(this));
+		goalSelector.addGoal(4, new BreederGoal(this));
+		goalSelector.addGoal(4, new FishermanGoal(this));
+		goalSelector.addGoal(4, new BuilderGoal(this));
+		goalSelector.addGoal(4, new CourierGoal(this));
 		goalSelector.addGoal(5, new MoveTowardsRestrictionGoal(this, 0.6));
 		goalSelector.addGoal(6, new WaterAvoidingRandomStrollGoal(this, 0.5));
 		goalSelector.addGoal(7, new InteractGoal(this, CitizenEntity.class, 6.0f, 0.03f));
@@ -141,6 +170,42 @@ public class CitizenEntity extends PathfinderMob {
 
 	public Optional<Resident> resident() {
 		return resident;
+	}
+
+	/** Un bâtisseur lui demande de laisser la place : il va là, au plus pendant 10 secondes. */
+	public void stepAside(BlockPos target) {
+		stepAside = target;
+		stepAsideUntil = tickCount + 200;
+	}
+
+	public Optional<BlockPos> stepAsideTarget() {
+		if (stepAside != null && tickCount > stepAsideUntil) {
+			stepAside = null;
+		}
+		return Optional.ofNullable(stepAside);
+	}
+
+	public void clearStepAside() {
+		stepAside = null;
+	}
+
+	/** Il attend qu'un livreur lui apporte ce matériau. */
+	public void request(Item item, int count) {
+		wanted = item;
+		wantedCount = count;
+	}
+
+	public Optional<Item> wanted() {
+		return Optional.ofNullable(wanted);
+	}
+
+	public int wantedCount() {
+		return wantedCount;
+	}
+
+	public void clearRequest() {
+		wanted = null;
+		wantedCount = 0;
 	}
 
 	/** Son emploi, s'il en a un. */
@@ -191,6 +256,43 @@ public class CitizenEntity extends PathfinderMob {
 		return distanceToSqr(target.getX() + 0.5, target.getY() + 0.5, target.getZ() + 0.5) <= 3.0 * 3.0;
 	}
 
+	/** Ce qu'il dit en ce moment, pour la bulle. */
+	public Optional<Component> speech() {
+		return entityData.get(SPEECH);
+	}
+
+	/**
+	 * Il le dit tout haut : une bulle au-dessus de sa tête, et une ligne dans le chat des joueurs à
+	 * portée de voix. Une même réplique (même clé) n'est pas répétée avant 30 secondes.
+	 */
+	public void say(String key, Component line) {
+		if (!(level() instanceof ServerLevel serverLevel)) {
+			return;
+		}
+		Long last = said.get(key);
+		if (last != null && serverLevel.getGameTime() - last < REPEAT_DELAY) {
+			return;
+		}
+		said.put(key, serverLevel.getGameTime());
+		entityData.set(SPEECH, Optional.of(line));
+		speechTicks = SPEECH_TICKS;
+		Component chat = Component.translatable("chat.minecities.say", getName(), line).withStyle(ChatFormatting.GRAY);
+		for (ServerPlayer player : serverLevel.players()) {
+			if (player.distanceToSqr(this) <= EARSHOT * EARSHOT) {
+				player.sendSystemMessage(chat);
+			}
+		}
+	}
+
+	/**
+	 * Un souci (un outil, un matériau qui manque) : il le dit à qui est là, et le maire en est
+	 * prévenu une fois par jour et par motif.
+	 */
+	public void complain(String key, Component message, Component line) {
+		need(key, line);
+		complain(key, message);
+	}
+
 	/** Prévient le maire d'un souci (un outil manquant…), une fois par jour et par motif. */
 	public void complain(String key, Component message) {
 		if (!(level() instanceof ServerLevel serverLevel) || townId == null) {
@@ -220,6 +322,7 @@ public class CitizenEntity extends PathfinderMob {
 			return;
 		}
 		setHunger(Hunger.eat(hunger, properties.nutrition()));
+		satisfied("hungry");
 		starvingTicks = 0;
 		swing(InteractionHand.MAIN_HAND);
 		playSound(SoundEvents.GENERIC_EAT.value(), 0.6f, 0.9f + getRandom().nextFloat() * 0.2f);
@@ -236,6 +339,9 @@ public class CitizenEntity extends PathfinderMob {
 			return;
 		}
 		doors.tick();
+		if (speechTicks > 0 && --speechTicks == 0) {
+			entityData.set(SPEECH, Optional.empty());
+		}
 		if (tickCount % 20 != 0) {
 			return;
 		}
@@ -347,6 +453,40 @@ public class CitizenEntity extends PathfinderMob {
 				.orElse(Component.translatable("citizen.minecities.jobless"));
 		player.sendSystemMessage(Component.translatable("citizen.minecities.status", getName(), town, job,
 				Component.translatable(Hunger.state(hunger).translationKey()), home).withStyle(ChatFormatting.AQUA));
+		// Ce qui lui manque encore, il le redit à qui vient le voir.
+		long now = level().getGameTime();
+		needs.values().removeIf(n -> now - n.since() > NEED_MEMORY);
+		Component last = null;
+		for (Need need : needs.values()) {
+			player.sendSystemMessage(Component.translatable("chat.minecities.say", getName(), need.line())
+					.withStyle(ChatFormatting.YELLOW));
+			last = need.line();
+		}
+		if (last != null) {
+			entityData.set(SPEECH, Optional.of(last));
+			speechTicks = SPEECH_TICKS;
+		}
+	}
+
+	/** Un besoin qu'il a exprimé, et quand il l'a redit pour la dernière fois. */
+	private record Need(Component line, long since) {
+	}
+
+	/**
+	 * Un besoin pas encore satisfait (un outil, un matériau, à manger) : il le dit, et il s'en
+	 * souvient pour le redire à qui viendra le voir. Un besoin qu'il ne redit plus depuis plus d'une
+	 * minute est tenu pour satisfait.
+	 */
+	public void need(String key, Component line) {
+		if (level() instanceof ServerLevel serverLevel) {
+			needs.put(key, new Need(line, serverLevel.getGameTime()));
+		}
+		say(key, line);
+	}
+
+	/** Ce besoin-là est satisfait. */
+	public void satisfied(String key) {
+		needs.remove(key);
 	}
 
 	public Optional<BlockPos> bed() {
