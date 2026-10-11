@@ -39,6 +39,9 @@ class TownSaveTest {
 		town.chronicle().celebrate(4000);
 		town.chronicle().earn(4000, 7);
 		town.chronicle().death(3000);
+		town.toggle(Decree.OVERTIME);
+		UUID partner = UUID.randomUUID();
+		town.addPartner(partner);
 
 		JsonElement json = Town.CODEC.encodeStart(JsonOps.INSTANCE, town).getOrThrow();
 		Town read = Town.CODEC.parse(JsonOps.INSTANCE, json).getOrThrow();
@@ -53,6 +56,8 @@ class TownSaveTest {
 		assertEquals(7, read.chronicle().earnedToday(4000));
 		assertEquals(4000, read.chronicle().festivalAt());
 		assertEquals(1, read.chronicle().recentDeaths(4000));
+		assertTrue(read.decreed(Decree.OVERTIME));
+		assertTrue(read.partners().contains(partner));
 	}
 
 	@Test
