@@ -10,7 +10,9 @@ import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.HumanoidMobRenderer;
 import net.minecraft.client.renderer.entity.state.HumanoidRenderState;
 import net.minecraft.ChatFormatting;
+import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.Identifier;
 
 /**
@@ -29,11 +31,14 @@ public class CitizenRenderer extends HumanoidMobRenderer<CitizenEntity, CitizenR
 	public static class State extends HumanoidRenderState {
 		public int variant;
 		public Action action = Action.NONE;
+		/** Son métier (rang dans {@link com.ajustor.minecities.town.Job}), ou -1 : son couvre-chef. */
+		public int job = -1;
 	}
 
 	public CitizenRenderer(EntityRendererProvider.Context context) {
 		super(context, new CitizenModel(LayerDefinition.create(PlayerModel.createMesh(CubeDeformation.NONE, false),
 				64, 64).bakeRoot()), 0.5f);
+		addLayer(new CitizenHatLayer(this));
 	}
 
 	@Override
@@ -46,17 +51,41 @@ public class CitizenRenderer extends HumanoidMobRenderer<CitizenEntity, CitizenR
 		super.extractRenderState(entity, state, partialTicks);
 		state.variant = entity.variant();
 		state.action = entity.action();
+		state.job = entity.jobIndex();
 	}
 
 	@Override
 	protected boolean shouldShowName(CitizenEntity entity, double distanceSqr) {
-		return entity.speech().isPresent() && distanceSqr < 32 * 32 || super.shouldShowName(entity, distanceSqr);
+		return entity.speech().isPresent() && distanceSqr < 32 * 32
+				|| entity.trouble() != 0 && distanceSqr < 16 * 16 || super.shouldShowName(entity, distanceSqr);
 	}
 
+	/**
+	 * Au-dessus de sa tête : ce qu'il dit ; sinon, s'il va mal, de quoi il souffre (faim, sans logis,
+	 * malheureux, blessé) ; son nom quand on le regarde.
+	 */
 	@Override
 	protected Component getNameTag(CitizenEntity entity) {
-		return entity.speech().<Component>map(line -> Component.literal("« ").append(line).append(" »")
-				.withStyle(ChatFormatting.WHITE)).orElseGet(() -> super.getNameTag(entity));
+		if (entity.speech().isPresent()) {
+			return Component.literal("« ").append(entity.speech().get()).append(" »").withStyle(ChatFormatting.WHITE);
+		}
+		Component name = super.getNameTag(entity);
+		int trouble = entity.trouble();
+		if (trouble == 0) {
+			return name;
+		}
+		MutableComponent icons = Component.empty();
+		for (int bit : new int[]{CitizenEntity.Trouble.HUNGRY, CitizenEntity.Trouble.HOMELESS,
+				CitizenEntity.Trouble.UNHAPPY, CitizenEntity.Trouble.HURT}) {
+			if ((trouble & bit) != 0) {
+				if (!icons.getSiblings().isEmpty()) {
+					icons.append(" ");
+				}
+				icons.append(Component.translatable("hud.minecities.trouble." + bit).withStyle(ChatFormatting.RED));
+			}
+		}
+		boolean looked = Minecraft.getInstance().crosshairPickEntity == entity;
+		return looked && name != null ? Component.empty().append(name).append(" ").append(icons) : icons;
 	}
 
 	@Override

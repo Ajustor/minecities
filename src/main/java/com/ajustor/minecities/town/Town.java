@@ -2,6 +2,7 @@ package com.ajustor.minecities.town;
 
 import com.ajustor.minecities.build.Construction;
 import com.mojang.serialization.Codec;
+import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.UUIDUtil;
@@ -26,15 +27,24 @@ import java.util.UUID;
  * apparence).
  */
 public final class Town {
+	/** L'état civil de la ville (à part : un codec ne prend que 16 champs à la fois). */
+	private record Head(UUID id, String name, ResourceKey<Level> dimension, BlockPos hall, UUID mayor,
+			String mayorName, List<UUID> deputies, long founded) {
+		static final MapCodec<Head> CODEC = RecordCodecBuilder.mapCodec(i -> i.group(
+				UUIDUtil.CODEC.fieldOf("id").forGetter(Head::id),
+				Codec.STRING.fieldOf("name").forGetter(Head::name),
+				Level.RESOURCE_KEY_CODEC.fieldOf("dimension").forGetter(Head::dimension),
+				BlockPos.CODEC.fieldOf("hall").forGetter(Head::hall),
+				UUIDUtil.CODEC.fieldOf("mayor").forGetter(Head::mayor),
+				Codec.STRING.optionalFieldOf("mayor_name", "").forGetter(Head::mayorName),
+				UUIDUtil.CODEC.listOf().optionalFieldOf("deputies", List.of()).forGetter(Head::deputies),
+				Codec.LONG.optionalFieldOf("founded", 0L).forGetter(Head::founded)
+		).apply(i, Head::new));
+	}
+
 	public static final Codec<Town> CODEC = RecordCodecBuilder.create(i -> i.group(
-			UUIDUtil.CODEC.fieldOf("id").forGetter(t -> t.id),
-			Codec.STRING.fieldOf("name").forGetter(t -> t.name),
-			Level.RESOURCE_KEY_CODEC.fieldOf("dimension").forGetter(t -> t.dimension),
-			BlockPos.CODEC.fieldOf("hall").forGetter(t -> t.hall),
-			UUIDUtil.CODEC.fieldOf("mayor").forGetter(t -> t.mayor),
-			Codec.STRING.optionalFieldOf("mayor_name", "").forGetter(t -> t.mayorName),
-			UUIDUtil.CODEC.listOf().optionalFieldOf("deputies", List.of()).forGetter(t -> List.copyOf(t.deputies)),
-			Codec.LONG.optionalFieldOf("founded", 0L).forGetter(t -> t.founded),
+			Head.CODEC.forGetter(t -> new Head(t.id, t.name, t.dimension, t.hall, t.mayor, t.mayorName,
+					List.copyOf(t.deputies), t.founded)),
 			House.CODEC.listOf().optionalFieldOf("houses", List.of()).forGetter(t -> List.copyOf(t.houses.values())),
 			Codec.unboundedMap(UUIDUtil.STRING_CODEC, Resident.CODEC).optionalFieldOf("residents", Map.of())
 					.forGetter(t -> t.residents),
@@ -47,8 +57,12 @@ public final class Town {
 			Codec.unboundedMap(Codec.STRING, Codec.INT).optionalFieldOf("affinities", Map.of())
 					.forGetter(t -> t.affinities),
 			MarriageRequest.CODEC.listOf().optionalFieldOf("marriage_requests", List.of())
-					.forGetter(t -> List.copyOf(t.marriageRequests))
-	).apply(i, Town::new));
+					.forGetter(t -> List.copyOf(t.marriageRequests)),
+			Chronicle.CODEC.forGetter(t -> t.chronicle)
+	).apply(i, (head, houses, residents, tier, lastArrival, villagers, constructions, affinities, requests,
+			chronicle) -> new Town(head.id(), head.name(), head.dimension(), head.hall(), head.mayor(),
+			head.mayorName(), head.deputies(), head.founded(), houses, residents, tier, lastArrival, villagers,
+			constructions, affinities, requests, chronicle)));
 
 	/** Au-delà de cette affinité, deux citoyens s'entendent. */
 	public static final int FRIENDS = 70;
@@ -75,11 +89,15 @@ public final class Town {
 	private final List<MarriageRequest> marriageRequests;
 	/** Les chantiers commandés par le maire, en cours puis finis, dans l'ordre de commande. */
 	private final List<Construction> constructions;
+	/** Ce qui s'est passé dans la ville : morts, fêtes, alerte. */
+	private final Chronicle chronicle;
+	/** L'humeur de chaque citoyen, à son dernier calcul (non sauvegardé : l'entité la recalcule). */
+	private final Map<UUID, Integer> moods = new HashMap<>();
 
 	private Town(UUID id, String name, ResourceKey<Level> dimension, BlockPos hall, UUID mayor, String mayorName,
 			List<UUID> deputies, long founded, List<House> houses, Map<UUID, Resident> residents, String tier,
 			long lastArrival, int villagers, List<Construction> constructions, Map<String, Integer> affinities,
-			List<MarriageRequest> marriageRequests) {
+			List<MarriageRequest> marriageRequests, Chronicle chronicle) {
 		this.id = id;
 		this.name = name;
 		this.dimension = dimension;
@@ -96,12 +114,13 @@ public final class Town {
 		this.constructions = new ArrayList<>(constructions);
 		this.affinities = new HashMap<>(affinities);
 		this.marriageRequests = new ArrayList<>(marriageRequests);
+		this.chronicle = chronicle;
 	}
 
 	public static Town found(String name, ResourceKey<Level> dimension, BlockPos hall, UUID mayor, String mayorName,
 			long now) {
 		return new Town(UUID.randomUUID(), name, dimension, hall, mayor, mayorName, List.of(), now, List.of(),
-				Map.of(), TownTier.VILLAGE.serializedName(), now, 0, List.of(), Map.of(), List.of());
+				Map.of(), TownTier.VILLAGE.serializedName(), now, 0, List.of(), Map.of(), List.of(), Chronicle.empty());
 	}
 
 	public UUID id() {
@@ -376,12 +395,36 @@ public final class Town {
 	}
 
 	public void farewell(UUID citizen) {
+		moods.remove(citizen);
 		Resident gone = residents.remove(citizen);
 		if (gone != null) {
 			gone.spouse().ifPresent(s -> residents.computeIfPresent(s, (id, r) -> r.widowed()));
 		}
 		marriageRequests.removeIf(r -> r.concerns(citizen));
 		affinities.keySet().removeIf(k -> k.contains(citizen.toString()));
+	}
+
+	// Humeur
+
+	public Chronicle chronicle() {
+		return chronicle;
+	}
+
+	/** Note l'humeur d'un citoyen (son entité la recalcule régulièrement). */
+	public void setMood(UUID citizen, int mood) {
+		if (residents.containsKey(citizen)) {
+			moods.put(citizen, mood);
+		}
+	}
+
+	public Optional<Integer> mood(UUID citizen) {
+		return Optional.ofNullable(moods.get(citizen));
+	}
+
+	/** Le bonheur moyen de la ville, sur les citoyens dont on connaît l'humeur ; vide si aucun. */
+	public Optional<Double> averageMood() {
+		return moods.isEmpty() ? Optional.empty()
+				: Optional.of(moods.values().stream().mapToInt(Integer::intValue).average().orElse(0));
 	}
 
 	// Familles

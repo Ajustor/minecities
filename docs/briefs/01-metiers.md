@@ -29,6 +29,7 @@ jour) et le travail attend.
 | Garde | meule (*grindstone*) | épée (armure prise au grenier) | ronde de jour comme de nuit, combat les monstres du territoire, accourt à l'hôtel de ville pendant un raid | **fait (v0.5)** |
 | Archer | table d'archerie | arc et flèches | se poste au point le plus haut près de sa table (tour de garde), tire jusqu'à 24 blocs | **fait (v0.5)** |
 | Inventeur | table de forge | — | en cas d'attaque, assemble un golem de fer (4 blocs de fer + citrouille sculptée) ou de neige (2 blocs de neige + citrouille) devant l'hôtel de ville | **fait (v0.5)** |
+| Médecin | alambic | — | soigne les blessés et les empoisonnés, nourrit les affamés avec le grenier | **fait (v0.6)** |
 | Livreur | table de cartographie | — | porte aux bâtisseurs les matériaux qu'ils réclament | **fait (v0.3)** |
 | Bâtisseur | table d'artisan (*crafter*) | — | construit d'après des schémas (brief 09) | **fait (v0.3)** |
 | Mineur | ? | pioche | creuse dans une zone marquée | plus tard |

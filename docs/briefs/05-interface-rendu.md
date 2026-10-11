@@ -5,6 +5,18 @@
 La v0.1 parle par le chat et un écran de coffre. Il faut un vrai tableau de bord pour le maire,
 et un rendu qui donne envie (modèles Blockbench, citoyens plus variés).
 
+## État (v0.6)
+
+- Écran de l'hôtel de ville : Résumé (bonheur moyen, fête, alerte, bouton de fête), Citoyens (humeur,
+  bouton « Où ? » qui fait luire le citoyen), Bâtiments, Registre, Grenier.
+- HUD : titre de bienvenue en entrant sur un territoire, mot en le quittant, contour en particules
+  quand on tient un hôtel de ville ou une plaque (`town/Borders`).
+- Plaque : propriété `status` (none, valid, invalid), porte verte ou rouge.
+- Icônes au-dessus des têtes (faim, sans logis, malheureux, blessé) et couvre-chef de chaque métier
+  (`client/render/CitizenHatModel`, texture générée `hats.png`).
+
+Suite : carte du territoire, onglet Mairie (brief 02).
+
 ## Écran de l'hôtel de ville
 
 Ouvert par clic sur l'hôtel de ville (le grenier devient un onglet), dans l'esprit des écrans

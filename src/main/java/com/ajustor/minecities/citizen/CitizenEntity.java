@@ -1,6 +1,7 @@
 package com.ajustor.minecities.citizen;
 
 import com.ajustor.minecities.town.Names;
+import com.ajustor.minecities.town.Raids;
 import com.ajustor.minecities.town.Resident;
 import com.ajustor.minecities.town.Stock;
 import com.ajustor.minecities.town.Town;
@@ -14,6 +15,7 @@ import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.particles.ItemParticleOption;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
@@ -80,6 +82,15 @@ public class CitizenEntity extends PathfinderMob {
 	/** Ce qu'il dit en ce moment : affiché en bulle au-dessus de sa tête. */
 	private static final EntityDataAccessor<Optional<Component>> SPEECH = SynchedEntityData.defineId(
 			CitizenEntity.class, EntityDataSerializers.OPTIONAL_COMPONENT);
+	/** Son métier (rang dans {@link com.ajustor.minecities.town.Job}, -1 sans) : le client lui met son couvre-chef. */
+	private static final EntityDataAccessor<Integer> JOB = SynchedEntityData.defineId(CitizenEntity.class,
+			EntityDataSerializers.INT);
+	/** Son humeur, de 0 à 10 ({@link Happiness}). */
+	private static final EntityDataAccessor<Integer> MOOD = SynchedEntityData.defineId(CitizenEntity.class,
+			EntityDataSerializers.INT);
+	/** Ce qui ne va pas (voir {@link Trouble}) : une petite icône au-dessus de sa tête. */
+	private static final EntityDataAccessor<Integer> TROUBLE = SynchedEntityData.defineId(CitizenEntity.class,
+			EntityDataSerializers.INT);
 	/** Une réplique reste affichée 4 secondes ; on l'entend (dans le chat) à 16 blocs. */
 	private static final int SPEECH_TICKS = 80;
 	private static final double EARSHOT = 16;
@@ -92,6 +103,12 @@ public class CitizenEntity extends PathfinderMob {
 	private UUID townId;
 	private float hunger = Hunger.SATED;
 	private int starvingTicks;
+	/** Ses derniers repas. */
+	private Diet diet = new Diet();
+	/** Son humeur au dernier calcul, et ce qui l'explique. */
+	private Happiness.Mood mood = new Happiness.Mood(Happiness.BASE, java.util.List.of());
+	/** Depuis combien de temps il est au plus mal : au bout d'un jour, il s'en va. */
+	private int miserableTicks;
 	/** Ce que la ville sait de lui, relu régulièrement (vide s'il n'a pas de ville). */
 	private Optional<Resident> resident = Optional.empty();
 	private final DoorKeeper doors = new DoorKeeper(this);
@@ -137,6 +154,9 @@ public class CitizenEntity extends PathfinderMob {
 		builder.define(SPEECH, Optional.empty());
 		builder.define(CHILD, false);
 		builder.define(ACTION, 0);
+		builder.define(MOOD, Happiness.BASE);
+		builder.define(JOB, -1);
+		builder.define(TROUBLE, 0);
 	}
 
 	@Override
@@ -170,6 +190,7 @@ public class CitizenEntity extends PathfinderMob {
 		goalSelector.addGoal(2, new ShelterGoal(this));
 		goalSelector.addGoal(2, new SleepInBedGoal(this));
 		goalSelector.addGoal(3, new EatGoal(this));
+		goalSelector.addGoal(3, new FestivalGoal(this));
 		goalSelector.addGoal(4, new FarmerGoal(this));
 		goalSelector.addGoal(4, new CookGoal(this));
 		goalSelector.addGoal(4, new LumberjackGoal(this));
@@ -180,6 +201,7 @@ public class CitizenEntity extends PathfinderMob {
 		goalSelector.addGoal(4, new GuardGoal(this));
 		goalSelector.addGoal(4, new ArcherGoal(this));
 		goalSelector.addGoal(4, new InventorGoal(this));
+		goalSelector.addGoal(4, new DoctorGoal(this));
 		// Les défenseurs prennent pour cible tout ce qui est hostile sur le territoire, et qui les frappe.
 		targetSelector.addGoal(1, new HurtByTargetGoal(this) {
 			@Override
@@ -416,7 +438,10 @@ public class CitizenEntity extends PathfinderMob {
 		if (properties == null) {
 			return;
 		}
-		setHunger(Hunger.eat(hunger, properties.nutrition()));
+		String id = net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(food.getItem()).toString();
+		// Toujours la même chose nourrit moins.
+		setHunger(Hunger.eat(hunger, diet.nutrition(id, properties.nutrition())));
+		diet.eaten(id);
 		act(Action.EAT, 20);
 		satisfied("hungry");
 		starvingTicks = 0;
@@ -452,6 +477,9 @@ public class CitizenEntity extends PathfinderMob {
 			return;
 		}
 		drill();
+		if (tickCount % 100 == 0) {
+			updateMood(serverLevel);
+		}
 		// Un enfant mange deux fois moins.
 		setHunger(Hunger.decay(hunger, isChild() ? 10 : 20));
 		if (hunger <= 0) {
@@ -461,6 +489,97 @@ public class CitizenEntity extends PathfinderMob {
 			if (hunger >= Hunger.WELL_FED && tickCount % 100 == 0 && getHealth() < getMaxHealth()) {
 				heal(1);
 			}
+		}
+	}
+
+	/** Ce qui ne va pas chez lui, en bits, pour l'icône au-dessus de sa tête. */
+	public static final class Trouble {
+		public static final int HUNGRY = 1;
+		public static final int HOMELESS = 2;
+		public static final int UNHAPPY = 4;
+		public static final int HURT = 8;
+
+		private Trouble() {
+		}
+	}
+
+	/** Sa ville est attaquée (un raid) ou a sonné l'alerte (la cloche). */
+	public boolean alarmed() {
+		return town().filter(t -> Raids.underAttack(t.id()) || t.chronicle().alarmed(level().getGameTime()))
+				.isPresent();
+	}
+
+	/** Son métier, côté client : son rang, ou -1. */
+	public int jobIndex() {
+		return entityData.get(JOB);
+	}
+
+	/** Son humeur, de 0 à 10. */
+	public int mood() {
+		return entityData.get(MOOD);
+	}
+
+	/** Son humeur et ce qui l'explique, au dernier calcul (côté serveur). */
+	public Happiness.Mood moodDetail() {
+		return mood;
+	}
+
+	public Diet diet() {
+		return diet;
+	}
+
+	public int trouble() {
+		return entityData.get(TROUBLE);
+	}
+
+	/** A-t-il un besoin en souffrance dont la clé commence ainsi ? */
+	public boolean hasNeed(String prefix) {
+		long now = level().getGameTime();
+		return needs.entrySet().stream().anyMatch(e -> e.getKey().startsWith(prefix)
+				&& now - e.getValue().since() <= NEED_MEMORY);
+	}
+
+	/** Recalcule son humeur, la dit à la ville, et s'en va s'il est au plus mal depuis un jour. */
+	private void updateMood(ServerLevel level) {
+		Optional<Town> town = town();
+		if (town.isEmpty() || resident.isEmpty()) {
+			return;
+		}
+		long now = level.getGameTime();
+		Resident r = resident.get();
+		boolean danger = alarmed() || !level.getEntitiesOfClass(Mob.class, getBoundingBox().inflate(12, 4, 12),
+				m -> m instanceof Enemy && m.isAlive()).isEmpty();
+		Happiness.Factors factors = new Happiness.Factors(hunger, diet.meals().size(), diet.variety(),
+				diet.hadDish(), Happiness.expectedVariety(town.get().tier().ordinal()), r.hasHome(), r.isChild(),
+				r.job().isPresent(), hasNeed("tool"), r.spouse().isPresent(), getHealth() < getMaxHealth() / 2,
+				town.get().chronicle().recentDeaths(now), danger, town.get().chronicle().rejoicing(now));
+		mood = Happiness.of(factors);
+		entityData.set(MOOD, mood.score());
+		town.get().setMood(getUUID(), mood.score());
+		int trouble = 0;
+		if (hunger < Hunger.HUNGRY) {
+			trouble |= Trouble.HUNGRY;
+		}
+		if (!r.hasHome()) {
+			trouble |= Trouble.HOMELESS;
+		}
+		if (mood.score() <= Happiness.UNHAPPY) {
+			trouble |= Trouble.UNHAPPY;
+		}
+		if (getHealth() < getMaxHealth() / 2) {
+			trouble |= Trouble.HURT;
+		}
+		entityData.set(TROUBLE, trouble);
+		if (mood.score() <= Happiness.MISERABLE) {
+			miserableTicks += 100;
+			if (miserableTicks == 100) {
+				say("miserable", Component.translatable("speech.minecities.miserable"));
+			}
+			if (miserableTicks >= 24000) {
+				leaveTown(level, Component.translatable("message.minecities.citizen.left_unhappy", getName()));
+			}
+		} else {
+			miserableTicks = 0;
 		}
 	}
 
@@ -533,6 +652,7 @@ public class CitizenEntity extends PathfinderMob {
 			return false;
 		}
 		resident = record;
+		entityData.set(JOB, record.get().job().map(j -> j.job().ordinal()).orElse(-1));
 		setHomeTo(town.get().hall(), town.get().radius());
 		return true;
 	}
@@ -555,6 +675,8 @@ public class CitizenEntity extends PathfinderMob {
 			inventory.clear();
 		}
 		if (level() instanceof ServerLevel serverLevel && townId != null) {
+			// Une mort pèse sur toute la ville pendant un jour.
+			town().ifPresent(t -> t.chronicle().death(serverLevel.getGameTime()));
 			TownService.farewell(serverLevel, townId, getUUID(),
 					Component.translatable("message.minecities.citizen.died", getName()));
 		}
@@ -586,6 +708,17 @@ public class CitizenEntity extends PathfinderMob {
 				.orElse(Component.translatable("citizen.minecities.jobless"));
 		player.sendSystemMessage(Component.translatable("citizen.minecities.status", getName(), town, job,
 				Component.translatable(Hunger.state(hunger).translationKey()), home).withStyle(ChatFormatting.AQUA));
+		// Son humeur, et ce qui la fait.
+		MutableComponent why = Component.empty();
+		for (Happiness.Factor factor : mood.factors()) {
+			if (!why.getSiblings().isEmpty()) {
+				why.append(", ");
+			}
+			why.append(Component.translatable(factor.translationKey()).withStyle(factor.delta() > 0
+					? ChatFormatting.GREEN : ChatFormatting.RED));
+		}
+		player.sendSystemMessage(Component.translatable("citizen.minecities.mood", mood(), why)
+				.withStyle(ChatFormatting.AQUA));
 		// Ce qui lui manque encore, il le redit à qui vient le voir.
 		long now = level().getGameTime();
 		needs.values().removeIf(n -> now - n.since() > NEED_MEMORY);
@@ -648,6 +781,9 @@ public class CitizenEntity extends PathfinderMob {
 		output.putInt("starving", starvingTicks);
 		output.putInt("variant", variant());
 		output.putBoolean("child", isChild());
+		output.store("diet", com.mojang.serialization.Codec.STRING.listOf(), diet.meals());
+		output.putInt("miserable", miserableTicks);
+		output.putInt("mood", mood());
 		ContainerHelper.saveAllItems(output.child("inventory"), inventory);
 	}
 
@@ -659,6 +795,9 @@ public class CitizenEntity extends PathfinderMob {
 		starvingTicks = input.getIntOr("starving", 0);
 		setVariant(input.getIntOr("variant", 0));
 		setChild(input.getBooleanOr("child", false));
+		diet = new Diet(input.read("diet", com.mojang.serialization.Codec.STRING.listOf()).orElse(java.util.List.of()));
+		miserableTicks = input.getIntOr("miserable", 0);
+		entityData.set(MOOD, input.getIntOr("mood", Happiness.BASE));
 		inventory.clear();
 		ContainerHelper.loadAllItems(input.childOrEmpty("inventory"), inventory);
 	}

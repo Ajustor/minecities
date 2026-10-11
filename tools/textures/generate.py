@@ -193,7 +193,8 @@ def frame(img, color):
 
 
 
-def house_plaque():
+def house_plaque(status=None):
+    """La plaque ; une fois relevée, sa porte est verte (bâtiment enregistré) ou rouge (refusé)."""
     rng = random.Random(4)
     img = Image.new("RGBA", (16, 16))
     planks(rng, img)
@@ -213,6 +214,13 @@ def house_plaque():
         for i, ch in enumerate(row):
             if ch == "#":
                 img.putpixel((3 + i, 4 + j), ink)
+    if status:
+        door = hexc("#3fae4a") if status == "valid" else hexc("#c3261d")
+        light = hexc("#f6d76b") if status == "valid" else hexc("#5a2a22")
+        for x, y in ((6, 10), (7, 10), (6, 11), (7, 11)):
+            img.putpixel((x, y), shade(door, 1.15) if y == 10 else door)
+        for x, y in ((9, 10), (10, 10)):
+            img.putpixel((x, y), light)
     return img
 
 
@@ -239,6 +247,31 @@ def spawn_egg():
     return img
 
 
+# Les couleurs des chapeaux de métier, dans l'ordre de CitizenHatModel.Tile.
+HAT_TILES = ["#d8b45a", "#8a6a2c", "#f2f0ea", "#b3312c", "#6b4a2b", "#4e6a8a", "#e07b24", "#2f4f9e",
+             "#a9adb3", "#3f7a33", "#9fd4e8", "#5a3b22", "#26262b", "#e8c13a"]
+
+
+def hats():
+    """La texture des chapeaux : 256 x 256, des pavés de 64 x 32, chacun d'une couleur (un peu bruitée)."""
+    rng = random.Random(6)
+    img = Image.new("RGBA", (256, 256), (0, 0, 0, 0))
+    for i, color in enumerate(HAT_TILES):
+        x0, y0 = (i % 4) * 64, (i // 4) * 32
+        base = hexc(color)
+        for y in range(32):
+            for x in range(64):
+                c = jitter(rng, base, 0.06)
+                # La paille est tressée : des rangs plus sombres.
+                if i == 0 and (x + y) % 4 == 0:
+                    c = shade(c, 0.85)
+                # Le verre des lunettes : un reflet.
+                if i == 10 and (x + y) % 5 == 0:
+                    c = shade(c, 1.2)
+                img.putpixel((x0 + x, y0 + y), c)
+    return img
+
+
 def save(img, path):
     path.parent.mkdir(parents=True, exist_ok=True)
     img.save(path)
@@ -249,7 +282,10 @@ def main():
     for i in range(len(OUTFITS)):
         save(citizen_skin(i), TEXTURES / f"entity/citizen/citizen_{i}.png")
     save(house_plaque(), TEXTURES / "block/house_plaque.png")
+    save(house_plaque("valid"), TEXTURES / "block/house_plaque_valid.png")
+    save(house_plaque("invalid"), TEXTURES / "block/house_plaque_invalid.png")
     save(spawn_egg(), TEXTURES / "item/citizen_spawn_egg.png")
+    save(hats(), TEXTURES / "entity/citizen/hats.png")
 
 
 if __name__ == "__main__":

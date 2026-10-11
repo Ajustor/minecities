@@ -33,8 +33,13 @@ Les citoyens fuient les monstres (`AvoidEntityGoal`) et paniquent quand on les f
   pille le grenier ; la victoire y dépose `vagues × 2` émeraudes et fait la fête ; un raid
   abandonné au bout d'un jour. `/ville admin raid|raid_stop` pour les tests.
 
-Suite : cloche d'alarme, raids déclenchés par *Bad Omen*, montures et ravageurs dans les grosses
-vagues, fêtes et marchés.
+En v0.6 : la **cloche d'alarme** (`town/Alarms`) : une cloche sonnée sur le territoire donne
+l'alerte deux minutes (civils à l'abri, gardes à l'hôtel de ville, inventeur aux golems, monstres
+luisants à 48 blocs) ; sonnée à nouveau, elle la lève. Les **fêtes** (`town/Festivals`) : 4 émeraudes
+du grenier, une tous les trois jours, deux minutes de danse et de feux d'artifice devant l'hôtel de
+ville, +2 de bonheur pendant un jour ; une victoire sur les pillards se fête d'elle-même.
+
+Suite : raids déclenchés par *Bad Omen*, ravageurs dans les grosses vagues, marché, catastrophes.
 
 ## Défense (pistes d'origine)
 

@@ -2,7 +2,6 @@ package com.ajustor.minecities.citizen;
 
 import com.ajustor.minecities.town.House;
 import com.ajustor.minecities.town.Job;
-import com.ajustor.minecities.town.Raids;
 import com.ajustor.minecities.town.Stock;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponents;
@@ -43,7 +42,7 @@ class GuardGoal extends WorkGoal {
 		if (!ensureTool() || !ensureArmor()) {
 			return;
 		}
-		if (Raids.underAttack(town().id())) {
+		if (citizen.alarmed()) {
 			goTo(town().hall());
 			return;
 		}

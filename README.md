@@ -7,8 +7,9 @@ vanilla : pas de plans imposés ni de huttes préfabriquées. Vous bâtissez com
 reconnaît vos maisons, et des citoyens viennent y vivre. Le village devient ville, puis grande
 ville, puis mégalopole.
 
-> État : **v0.5** (villes, maisons, familles, onze métiers dont le bâtisseur, le livreur, les
-> gardes et l'inventeur, écran de l'hôtel de ville, raids de pillards). La suite est décrite dans [BRIEF.md](BRIEF.md) et [docs/briefs](docs/briefs).
+> État : **v0.6** (villes, maisons, familles, douze métiers dont le bâtisseur, les gardes,
+> l'inventeur et le médecin, bonheur et repas variés, fêtes, cloche d'alarme, raids de pillards,
+> écran de l'hôtel de ville). La suite est décrite dans [BRIEF.md](BRIEF.md) et [docs/briefs](docs/briefs).
 
 ## Jouer
 
@@ -21,9 +22,13 @@ ville, puis mégalopole.
    moins une **porte** et au moins un **lit**. Chaque lit loge un citoyen. Accrochez une
    **plaque de maison** sur un mur intérieur : la maison est relevée et enregistrée, et un message
    dit ce qui manque si elle n'est pas reconnue. Un clic sur la plaque la relève à nouveau.
-3. **L'hôtel de ville** : un clic ouvre son **écran** : le résumé de la ville, la liste des citoyens
-   (métier, faim, famille, ce qui leur manque), le **registre** des demandes de mariage, et le
-   **grenier** commun où les citoyens mangent. Accroupi, un clic donne l'état de la ville dans le chat.
+3. **L'hôtel de ville** : un clic ouvre son **écran** : le résumé de la ville (et son bonheur moyen),
+   la liste des citoyens (métier, faim, humeur, famille, ce qui leur manque ; « Où ? » les fait luire),
+   les **bâtiments**, le **registre** des demandes de mariage, et le **grenier** commun où les citoyens
+   mangent. Accroupi, un clic donne l'état de la ville dans le chat. En entrant sur un territoire, un
+   titre vous souhaite la bienvenue ; un hôtel de ville ou une plaque en main, son contour se dessine
+   en particules. Une plaque montre le dernier relevé : porte **verte** si le bâtiment est enregistré,
+   **rouge** sinon.
 4. **La population** : la ville reçoit ses **cinq premiers habitants** ; en dessous de cinq, des
    nouveaux venus arrivent. Au-delà, elle ne grandit que par les **naissances** : les citoyens qui
    vivent et travaillent ensemble s'apprécient, ceux qui s'entendent demandent au maire de les
@@ -36,14 +41,24 @@ ville, puis mégalopole.
    main. Ils **parlent** : une bulle au-dessus de la tête et une ligne dans le chat des joueurs
    proches (outil ou matériau qui manque, faim, « laissez-moi la place »…). Un clic droit sur un
    citoyen donne son état et répète ce qui lui manque encore. Chacun a son geste quand il travaille
-   (houe, hache, canne, pose de blocs, brassage…), mange, parle ou se réjouit.
+   (houe, hache, canne, pose de blocs, brassage…), mange, parle, danse ou se réjouit, et le
+   couvre-chef de son métier (chapeau de paille, toque, bonnet, chapeau de fer, lunettes…). Au-dessus
+   de la tête d'un citoyen qui va mal, une petite icône dit pourquoi (faim, sans logis, malheureux,
+   blessé).
+   - **Le bonheur**, de 0 à 10 : repu, logé, employé, marié, il est content ; affamé, sans logis,
+     sans outil, blessé, en deuil ou en danger, il l'est moins. Il retient ses **5 derniers repas** :
+     manger toujours la même chose nourrit moins et lasse, un régime varié (et un bon plat : soupe,
+     ragoût, tarte, biscuits) rend heureux ; plus la ville grandit, plus on attend de variété.
+     Heureux, il travaille plus vite et peut avoir des enfants ; malheureux, il traîne ; au plus mal
+     pendant un jour, il quitte la ville. Une ville heureuse attire plus vite les villageois.
 6. **Des métiers** : un bâtiment déclaré qui contient un poste de travail vanilla est un atelier,
    et chaque poste emploie un citoyen.
    - **Composteur → fermier** : il lui faut une **houe** (dans un coffre de l'atelier ou au
      grenier). Il récolte les cultures mûres à 16 blocs du composteur, replante, et porte la
      récolte au grenier.
-   - **Fumoir → cuisinier** : il cuit la viande, le poisson et les pommes de terre du grenier, et
-     fait du pain avec le blé (3 blés = 1 pain).
+   - **Fumoir → cuisinier** : il cuit la viande, le poisson et les pommes de terre du grenier, fait
+     du pain (3 blés), des biscuits (blé et cacao), des soupes (champignons, betteraves), le ragoût de
+     lapin et la tarte à la citrouille quand le grenier a ce qu'il faut (et des bols).
    - **Bûche écorcée posée seule au sol (billot) → bûcheron** : avec une **hache**, il abat les
      arbres à 16 blocs, replante et ramasse pousses, pommes et bâtons.
    - **Botte de foin posée seule → éleveur** : il fait naître des petits (avec la nourriture du
@@ -61,6 +76,8 @@ ville, puis mégalopole.
      veille la nuit et se bat contre les monstres du territoire.
    - **Table d'archerie → archer** : avec un **arc** et des flèches, il monte au point le plus haut
      près de sa table (le haut d'une tour de garde) et tire sur les monstres jusqu'à 24 blocs.
+   - **Alambic → médecin** : il soigne les blessés (et les empoisonnés) et porte à manger, pris au
+     grenier, à ceux qui meurent de faim.
    - **Table de forge → inventeur** : quand la ville est attaquée, il assemble devant l'hôtel de ville
      un **golem de fer** (4 blocs de fer et une citrouille sculptée, pris au grenier) ou, à défaut, un
      **golem de neige** (2 blocs de neige et une citrouille).
@@ -76,7 +93,7 @@ ville, puis mégalopole.
    chaque atelier (ferme avec son champ, cuisine, scierie, étable avec son enclos, pêcherie avec son
    bassin, atelier du bâtisseur) → son grand atelier, à deux postes. Pour la défense : la **caserne**
    (deux lits, deux meules ; agrandie, trois), la **tour de garde** (une table d'archerie, un poste
-   tout en haut) et l'**atelier de l'inventeur**. Les datapacks peuvent ajouter
+   tout en haut), l'**atelier de l'inventeur** et l'**infirmerie** (un alambic ; agrandie, deux). Les datapacks peuvent ajouter
    des schémas (`data/<ns>/blueprint/*.json`).
 8. **Grandir** : la ville monte de palier avec ses citoyens et ses maisons, et son territoire
    s'étend.
@@ -86,7 +103,13 @@ ville, puis mégalopole.
    Plus la ville a d'habitants et de maisons, plus il y a de vagues (jusqu'à 7) et de pillards par
    vague. Les civils se mettent à l'abri, les gardes accourent à l'hôtel de ville, les archers
    tirent de leurs tours et l'inventeur fait des golems. Les pillards qui atteignent l'hôtel de ville
-   pillent le grenier ; une victoire y dépose des émeraudes.
+   pillent le grenier ; une victoire y dépose des émeraudes, et la ville fait la fête.
+10. **La cloche d'alarme** : sonner une cloche sur le territoire donne l'alerte pour deux minutes :
+   les civils rentrent chez eux, les gardes accourent, l'inventeur fait ses golems, et les monstres
+   alentour luisent. Sonnée à nouveau, elle lève l'alerte.
+11. **Les fêtes** : le maire offre une fête (`/ville festival` ou le bouton de l'écran) contre
+   4 émeraudes du grenier, une tous les trois jours au plus. Les citoyens dansent devant l'hôtel de
+   ville sous les feux d'artifice, et sont plus heureux pendant un jour.
 
 | Palier | Population (citoyens + villageois) | Maisons | Rayon du territoire |
 |---|---|---|---|
@@ -120,8 +143,10 @@ commandes du maire s'appliquent à la ville où il se trouve.
 | `build <schéma> [style]` | maire, adjoints | commande un chantier devant soi |
 | `build cancel` | maire, adjoints | annule le chantier en cours |
 | `upgrade` | maire, adjoints | agrandit le bâtiment où l'on se trouve |
+| `festival` | maire, adjoints | offre une fête (4 émeraudes du grenier) |
 | `admin immigrate\|feed\|starve` | opérateurs | tests : faire venir un citoyen, rassasier ou affamer la ville |
 | `admin raid\|raid_stop` | opérateurs | tests : lancer ou arrêter un raid |
+| `admin festival` | opérateurs | tests : une fête, gratuite |
 
 ## Développer
 
@@ -131,7 +156,7 @@ Java 25 est requis (Loom 1.18.3, Minecraft 26.2).
 ./gradlew build                 # compile, tests unitaires, jar dans build/libs
 ./gradlew runClient             # lance le jeu avec le mod
 ./gradlew runClientGameTest     # scènes en jeu vérifiées et photographiées (build/run/clientGameTest/screenshots)
-./gradlew runClientGameTest -PminecitiesGametest=work   # une scène (city, work, countryside, village, build, family, raid)
+./gradlew runClientGameTest -PminecitiesGametest=work   # une scène (city, work, countryside, village, build, family, raid, life)
 python tools/textures/generate.py   # régénère les textures (peaux des citoyens, plaque, œuf)
 python tools/models/town_hall.py    # régénère le modèle de l'hôtel de ville
 python tools/blueprints/generate.py # régénère les schémas du bâtisseur

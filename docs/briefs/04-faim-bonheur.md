@@ -12,7 +12,27 @@ de la maison puis au grenier, l'aliment le plus nourrissant d'abord ; ralentisse
 légers à 0 ; départ après une journée affamé ; soin quand il est repu. Nourriture « malsaine »
 refusée (`TownService.UNHEALTHY`).
 
-## À faire
+## État (v0.6)
+
+- `citizen/Diet` : les 5 derniers repas ; un aliment mangé 2 fois nourrit aux trois quarts, 3 fois
+  et plus à moitié. Au garde-manger, le citoyen choisit ce qu'il n'a pas mangé dernièrement
+  (`TownService.takeFood(container, diet)`), et préfère les plats.
+- Le cuisinier prépare pain, biscuits, soupes de champignons et de betteraves, ragoût de lapin et
+  tarte à la citrouille (`citizen/Cooking.RECIPES`).
+- `citizen/Happiness` : note de 0 à 10, base 5 ; faim (−3 à +1), variété attendue `2 + palier`
+  (−1 à +2), plat (+1), logis (+1 / −2), métier (+1, ou −1 sans outil), mariage (+1), blessure (−1),
+  deuil (−1 par mort récente, −2 au plus), danger (raid, alerte, monstre à 12 blocs : −1), fête (+2).
+  Effets : rythme de travail (`workPace` : ×0,65 à ×1,75 sur les pauses), naissances (5 au moins),
+  naturalisation des villageois (deux fois plus vite au-dessus de 7, jamais à 3 ou moins), départ
+  après un jour à 1 ou moins.
+- Le médecin (alambic) soigne et nourrit (`citizen/DoctorGoal`), l'infirmerie a son schéma.
+- Affichage : humeur au clic droit (avec ses facteurs), dans l'écran, et une icône au-dessus de la
+  tête d'un citoyen qui va mal.
+
+Suite : maladies légères (si la nourriture manque), décrets du maire (brief 02) qui pèsent sur le
+bonheur, lumière et surpeuplement des maisons.
+
+## Pistes d'origine
 
 ### Variété (inspiré de MineColonies 1.20+)
 - Chaque citoyen retient ses **5 derniers repas**. Manger toujours la même chose réduit la

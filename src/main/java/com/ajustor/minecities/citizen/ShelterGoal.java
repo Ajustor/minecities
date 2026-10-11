@@ -1,6 +1,5 @@
 package com.ajustor.minecities.citizen;
 
-import com.ajustor.minecities.town.Raids;
 import com.ajustor.minecities.town.Resident;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
@@ -10,8 +9,9 @@ import java.util.EnumSet;
 import java.util.Optional;
 
 /**
- * Pendant un raid, les citoyens qui ne se battent pas se mettent à l'abri : chez eux, près de leur
- * lit ; sans logis, à l'hôtel de ville. Ils y restent jusqu'à la fin du raid.
+ * Pendant un raid ou quand la cloche sonne l'alerte, les citoyens qui ne se battent pas se mettent à
+ * l'abri : chez eux, près de leur lit ; sans logis, à l'hôtel de ville. Ils y restent jusqu'à la fin
+ * du raid ou de l'alerte.
  */
 class ShelterGoal extends Goal {
 	private final CitizenEntity citizen;
@@ -23,7 +23,7 @@ class ShelterGoal extends Goal {
 	}
 
 	private boolean raid() {
-		return !citizen.isDefender() && citizen.townId().filter(Raids::underAttack).isPresent();
+		return !citizen.isDefender() && citizen.alarmed();
 	}
 
 	@Override

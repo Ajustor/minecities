@@ -16,8 +16,8 @@ import java.util.List;
 
 /**
  * Le cuisinier, au fumoir. Il prend au grenier ce qui est cru (viandes, poissons, pommes de terre)
- * et le blé, le cuit au fumoir (trois blés font un pain), puis rapporte le tout au grenier : la
- * même récolte nourrit mieux.
+ * et les ingrédients de ses plats (pain, soupes, ragoûts, tarte, biscuits), cuisine au fumoir, puis
+ * rapporte le tout au grenier : la même récolte nourrit mieux, et plus varié.
  */
 class CookGoal extends WorkGoal {
 	/** Il emporte jusqu'à tant d'ingrédients par fournée. */
@@ -65,23 +65,26 @@ class CookGoal extends WorkGoal {
 			return;
 		}
 		container(granary).ifPresent(c -> {
-			for (int i = 0; i < 4 && !citizen.inventoryFull(); i++) {
+			for (int i = 0; i < 6 && !citizen.inventoryFull(); i++) {
 				ItemStack taken = Stock.take(c, Cooking::isIngredient, BATCH);
 				if (taken.isEmpty()) {
 					break;
 				}
 				citizen.carry(taken);
 			}
+			if (!Cooking.canCook(citizen.inventory())) {
+				// De quoi rien faire (un bol sans soupe, deux blés) : il repose tout, et attend.
+				List<ItemStack> inventory = citizen.inventory();
+				for (int i = 0; i < inventory.size(); i++) {
+					inventory.set(i, Stock.insert(c, inventory.get(i)));
+				}
+			}
 		});
 		if (Cooking.canCook(citizen.inventory())) {
 			phase = Phase.COOK;
 		} else {
-			// Rien à cuire (ou du blé en trop petite quantité) : on rapporte ce qu'on a, et on attend.
-			phase = Phase.DELIVER;
-			if (citizen.inventory().stream().allMatch(ItemStack::isEmpty)) {
-				phase = Phase.FETCH;
-				rest(IDLE_LONG);
-			}
+			phase = citizen.inventory().stream().allMatch(ItemStack::isEmpty) ? Phase.FETCH : Phase.DELIVER;
+			rest(IDLE_LONG);
 		}
 	}
 

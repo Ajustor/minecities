@@ -121,8 +121,8 @@ puis un tag `vX.Y.0` qui publie la release.
    l'hôtel de ville du brief 05.
 2. **v0.5** (fait) — brief 06, première partie : caserne, tour de garde, gardes, archers, inventeur
    et golems, raids de pillards par vagues.
-3. **v0.6** — brief 04 (faim variée, bonheur), dont dépendent les naissances, les votes et
-   l'immigration ; le reste du brief 05 (HUD, indications en jeu) et du brief 06 (cloche, fêtes).
+3. **v0.6** (fait) — brief 04 (repas variés, bonheur, médecin), le reste du brief 05 (HUD,
+   bâtiments à l'écran, plaques colorées, couvre-chefs des métiers) et du brief 06 (cloche, fêtes).
 4. **v0.7** — brief 07 (trésor, marché, commerce) puis brief 03 (déblocages par palier).
 5. **v0.8** — brief 08 (configuration, permissions, protections, performances, compatibilité).
 6. **v1.x** — suites du brief 09 (aperçu fantôme, plans, structures enregistrées) et du brief 01
@@ -134,9 +134,9 @@ puis un tag `vX.Y.0` qui publie la release.
 | 01 | [Métiers et bâtiments de travail](docs/briefs/01-metiers.md) | Six métiers faits ; suite : garde, mineur, forgeron, bibliothécaire |
 | 02 | [Le maire et la vie politique](docs/briefs/02-maire-politique.md) | Rangs et habitants joueurs, décrets, budget ; élections en v2 |
 | 03 | [Croissance et paliers](docs/briefs/03-croissance.md) | Ce que débloque chaque palier, adopter un village vanilla, quartiers de la mégalopole |
-| 04 | [Faim, santé et bonheur](docs/briefs/04-faim-bonheur.md) | Variété des repas, bonheur, maladies, naissances |
-| 05 | [Interface et rendu](docs/briefs/05-interface-rendu.md) | Écran de l'hôtel de ville, carte du territoire, modèles Blockbench, noms au-dessus des têtes |
-| 06 | [Défense et événements](docs/briefs/06-defense-evenements.md) | Gardes, archers, inventeur et raids faits en v0.5 ; suite : cloche d'alarme, fêtes et marchés |
+| 04 | [Faim, santé et bonheur](docs/briefs/04-faim-bonheur.md) | Fait en v0.6 : repas variés, bonheur, médecin ; suite : maladies |
+| 05 | [Interface et rendu](docs/briefs/05-interface-rendu.md) | Fait en v0.4–0.6 : écran, HUD, plaques, couvre-chefs ; suite : carte du territoire |
+| 06 | [Défense et événements](docs/briefs/06-defense-evenements.md) | Gardes, archers, inventeur, raids (v0.5), cloche et fêtes (v0.6) ; suite : marché, catastrophes |
 | 07 | [Économie et commerce](docs/briefs/07-economie.md) | Trésor, marché, échanges avec les villageois et entre villes |
 | 08 | [Robustesse et multijoueur](docs/briefs/08-robustesse.md) | Permissions, protections, configuration, performance, compatibilité |
 | 10 | [Familles, mariages, naissances et animations](docs/briefs/10-familles-animations.md) | Fait en v0.4 : 5 fondateurs, mariages acceptés par le maire, naissances, animations |

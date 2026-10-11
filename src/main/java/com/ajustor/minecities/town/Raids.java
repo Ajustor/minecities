@@ -269,6 +269,8 @@ public final class Raids {
 				citizen.say("victory", Component.translatable("speech.minecities.victory"));
 			}
 		}
+		// La victoire se fête.
+		Festivals.celebrate(level, town, "message.minecities.festival.victory");
 		LAST.put(town.id(), level.getGameTime());
 		raid.bar.removeAllPlayers();
 		ACTIVE.remove(town.id());
