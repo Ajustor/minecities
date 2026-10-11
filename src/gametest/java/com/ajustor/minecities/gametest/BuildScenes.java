@@ -62,6 +62,8 @@ public class BuildScenes implements FabricClientGameTest {
 		}
 		try (TestSingleplayerContext sp = context.worldBuilder()
 				.adjustSettings(c -> c.setGameMode(WorldCreationUiState.SelectedGameMode.CREATIVE)).create()) {
+			// Cette scène compte ses citoyens : pas de nouveaux venus pour atteindre le minimum.
+			com.ajustor.minecities.town.Families.setMinimum(0);
 			command(sp, "time set 1000");
 			command(sp, "gamerule doDaylightCycle false");
 			command(sp, "gamerule doMobSpawning false");
@@ -90,8 +92,10 @@ public class BuildScenes implements FabricClientGameTest {
 						.map(c -> "commande refusée : " + c.getString()).orElse(null);
 			}));
 			look(sp, -16, Y + 9, -2, -11, Y + 1, 9);
-			context.waitTicks(600);
-			context.takeScreenshot("build_0_in_progress");
+			context.waitTicks(40);
+			// Le chantier filmé : une image par seconde de jeu.
+			CityScenes.film(context, sp, "petite_maison", 240, 20,
+					server -> town(server).constructions().stream().allMatch(Construction::done));
 			waitOrExplain(sp, server -> town(server).constructions().stream().allMatch(Construction::done), 9000,
 					"la petite maison n'a pas été bâtie", BuildScenes::progress);
 			check(sp.getServer().computeOnServer(server -> homeBeds(server) == 2 ? null
@@ -119,6 +123,9 @@ public class BuildScenes implements FabricClientGameTest {
 				return Builds.upgrade(server.overworld(), town(server), ORIGIN.offset(3, 1, 3))
 						.map(c -> "manoir refusé : " + c.getString()).orElse(null);
 			}));
+			look(sp, -19, Y + 8, -3, -10, Y + 3, 9);
+			CityScenes.film(context, sp, "manoir", 300, 20,
+					server -> town(server).constructions().stream().allMatch(Construction::done));
 			waitOrExplain(sp, server -> town(server).constructions().stream().allMatch(Construction::done), 12000,
 					"le manoir n'a pas été bâti", BuildScenes::progress);
 			check(sp.getServer().computeOnServer(server -> homeBeds(server) == 4

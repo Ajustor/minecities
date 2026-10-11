@@ -1,8 +1,8 @@
 package com.ajustor.minecities.client.render;
 
 import com.ajustor.minecities.MineCities;
+import com.ajustor.minecities.citizen.Action;
 import com.ajustor.minecities.citizen.CitizenEntity;
-import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.model.geom.builders.CubeDeformation;
 import net.minecraft.client.model.geom.builders.LayerDefinition;
 import net.minecraft.client.model.player.PlayerModel;
@@ -13,8 +13,11 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 
-/** Les citoyens, sur le squelette du joueur (avec sa surcouche), dans l'une de leurs tenues. */
-public class CitizenRenderer extends HumanoidMobRenderer<CitizenEntity, CitizenRenderer.State, HumanoidModel<CitizenRenderer.State>> {
+/**
+ * Les citoyens, sur le squelette du joueur (avec sa surcouche), dans l'une de leurs tenues, avec le
+ * geste de ce qu'ils font ({@link CitizenModel}) ; les enfants sont plus petits (attribut d'échelle).
+ */
+public class CitizenRenderer extends HumanoidMobRenderer<CitizenEntity, CitizenRenderer.State, CitizenModel> {
 	private static final Identifier[] TEXTURES = new Identifier[CitizenEntity.VARIANTS];
 
 	static {
@@ -25,10 +28,11 @@ public class CitizenRenderer extends HumanoidMobRenderer<CitizenEntity, CitizenR
 
 	public static class State extends HumanoidRenderState {
 		public int variant;
+		public Action action = Action.NONE;
 	}
 
 	public CitizenRenderer(EntityRendererProvider.Context context) {
-		super(context, new HumanoidModel<>(LayerDefinition.create(PlayerModel.createMesh(CubeDeformation.NONE, false),
+		super(context, new CitizenModel(LayerDefinition.create(PlayerModel.createMesh(CubeDeformation.NONE, false),
 				64, 64).bakeRoot()), 0.5f);
 	}
 
@@ -41,6 +45,7 @@ public class CitizenRenderer extends HumanoidMobRenderer<CitizenEntity, CitizenR
 	public void extractRenderState(CitizenEntity entity, State state, float partialTicks) {
 		super.extractRenderState(entity, state, partialTicks);
 		state.variant = entity.variant();
+		state.action = entity.action();
 	}
 
 	@Override

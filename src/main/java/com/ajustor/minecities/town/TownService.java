@@ -304,10 +304,8 @@ public final class TownService {
 			}
 			census(level, town);
 			settle(level, town);
-			if (now - town.lastArrival() >= IMMIGRATION_DELAY && town.freeBeds() > 0
-					&& granary(level, town).map(TownService::hasFood).orElse(false)) {
-				immigrate(level, town);
-			}
+			// Plus d'immigration : sous 5 habitants des nouveaux venus arrivent, au-delà on naît.
+			Families.tick(level, town);
 			towns.changed();
 		}
 	}

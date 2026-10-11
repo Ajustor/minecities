@@ -60,6 +60,8 @@ public class WorkScenes implements FabricClientGameTest {
 		}
 		try (TestSingleplayerContext sp = context.worldBuilder()
 				.adjustSettings(c -> c.setGameMode(WorldCreationUiState.SelectedGameMode.CREATIVE)).create()) {
+			// Cette scène compte ses citoyens : pas de nouveaux venus pour atteindre le minimum.
+			com.ajustor.minecities.town.Families.setMinimum(0);
 			command(sp, "time set 1000");
 			command(sp, "gamerule doDaylightCycle false");
 			command(sp, "gamerule doMobSpawning false");

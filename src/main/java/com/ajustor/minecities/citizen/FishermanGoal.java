@@ -72,6 +72,7 @@ class FishermanGoal extends WorkGoal {
 			return;
 		}
 		citizen.getLookControl().setLookAt(water.getX() + 0.5, water.getY() + 0.5, water.getZ() + 0.5);
+		citizen.act(Action.FISH, 10);
 		if (citizen.tickCount % 60 == 0) {
 			level().sendParticles(ParticleTypes.FISHING, water.getX() + 0.5, water.getY() + 1, water.getZ() + 0.5, 2,
 					0.1, 0, 0.1, 0);

@@ -1,6 +1,9 @@
 package com.ajustor.minecities.block;
 
+import com.ajustor.minecities.network.TownNetwork;
+import com.ajustor.minecities.town.Town;
 import com.ajustor.minecities.town.TownService;
+import com.ajustor.minecities.town.Towns;
 import com.mojang.serialization.MapCodec;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -22,10 +25,13 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.phys.BlockHitResult;
 
+import java.util.Optional;
+
 /**
  * L'hôtel de ville. Le poser fonde une ville dont on devient le maire (renommé à l'enclume, il donne
- * son nom à la ville) ; l'ouvrir donne accès au grenier commun où les citoyens viennent manger ;
- * accroupi, on lit l'état de la ville. Seul le maire peut le casser, et la ville disparaît avec lui.
+ * son nom à la ville) ; l'ouvrir montre l'écran de la ville (résumé, citoyens, registre des mariages)
+ * et donne accès au grenier commun où les citoyens viennent manger ; accroupi, on lit l'état de la
+ * ville dans le chat. Seul le maire peut le casser, et la ville disparaît avec lui.
  */
 public class TownHallBlock extends BaseEntityBlock {
 	public static final MapCodec<TownHallBlock> CODEC = simpleCodec(TownHallBlock::new);
@@ -79,8 +85,12 @@ public class TownHallBlock extends BaseEntityBlock {
 	protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player,
 			BlockHitResult hit) {
 		if (level instanceof ServerLevel serverLevel && player instanceof ServerPlayer serverPlayer) {
+			Optional<Town> town = Towns.get(serverLevel.getServer()).byHall(level.dimension(), pos);
 			if (player.isShiftKeyDown()) {
 				TownService.describeHall(serverLevel, pos, serverPlayer);
+			} else if (town.isPresent()) {
+				// L'écran de l'hôtel de ville : résumé, citoyens, registre, et le grenier.
+				TownNetwork.open(serverLevel, town.get(), serverPlayer);
 			} else if (level.getBlockEntity(pos) instanceof TownHallBlockEntity hall) {
 				player.openMenu(hall);
 			}

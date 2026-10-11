@@ -63,6 +63,12 @@ public class CitizenEntity extends PathfinderMob {
 	public static final int VARIANTS = 8;
 	private static final EntityDataAccessor<Integer> VARIANT = SynchedEntityData.defineId(CitizenEntity.class,
 			EntityDataSerializers.INT);
+	/** Un enfant : plus petit, il ne travaille pas et mange moins. */
+	private static final EntityDataAccessor<Boolean> CHILD = SynchedEntityData.defineId(CitizenEntity.class,
+			EntityDataSerializers.BOOLEAN);
+	/** Ce qu'il fait (voir {@link Action}) : le client l'anime en conséquence. */
+	private static final EntityDataAccessor<Integer> ACTION = SynchedEntityData.defineId(CitizenEntity.class,
+			EntityDataSerializers.INT);
 	/** Ce qu'il dit en ce moment : affiché en bulle au-dessus de sa tête. */
 	private static final EntityDataAccessor<Optional<Component>> SPEECH = SynchedEntityData.defineId(
 			CitizenEntity.class, EntityDataSerializers.OPTIONAL_COMPONENT);
@@ -95,6 +101,7 @@ public class CitizenEntity extends PathfinderMob {
 	/** Un besoin non redit depuis une minute et quart est oublié (il a été satisfait). */
 	private static final int NEED_MEMORY = 1500;
 	private int speechTicks;
+	private int actionTicks;
 	/** Ce qu'il attend d'un livreur (un bâtisseur à court d'un matériau), et combien. */
 	private Item wanted;
 	private int wantedCount;
@@ -119,6 +126,8 @@ public class CitizenEntity extends PathfinderMob {
 		super.defineSynchedData(builder);
 		builder.define(VARIANT, 0);
 		builder.define(SPEECH, Optional.empty());
+		builder.define(CHILD, false);
+		builder.define(ACTION, 0);
 	}
 
 	@Override
@@ -256,6 +265,35 @@ public class CitizenEntity extends PathfinderMob {
 		return distanceToSqr(target.getX() + 0.5, target.getY() + 0.5, target.getZ() + 0.5) <= 3.0 * 3.0;
 	}
 
+	public boolean isChild() {
+		return entityData.get(CHILD);
+	}
+
+	@Override
+	public boolean isBaby() {
+		return isChild();
+	}
+
+	/** Enfant (à moitié de la taille d'un adulte) ou adulte. */
+	public void setChild(boolean child) {
+		entityData.set(CHILD, child);
+		var scale = getAttribute(Attributes.SCALE);
+		if (scale != null) {
+			scale.setBaseValue(child ? 0.55 : 1.0);
+		}
+	}
+
+	/** Ce qu'il fait en ce moment, pour l'animation. */
+	public Action action() {
+		return Action.values()[Math.floorMod(entityData.get(ACTION), Action.values().length)];
+	}
+
+	/** Annonce ce qu'il fait ; l'animation dure tant qu'on ne l'arrête pas (ou le temps donné). */
+	public void act(Action action, int ticks) {
+		entityData.set(ACTION, action.ordinal());
+		actionTicks = ticks;
+	}
+
 	/** Ce qu'il dit en ce moment, pour la bulle. */
 	public Optional<Component> speech() {
 		return entityData.get(SPEECH);
@@ -276,6 +314,9 @@ public class CitizenEntity extends PathfinderMob {
 		said.put(key, serverLevel.getGameTime());
 		entityData.set(SPEECH, Optional.of(line));
 		speechTicks = SPEECH_TICKS;
+		if (action() == Action.NONE) {
+			act(Action.TALK, 40);
+		}
 		Component chat = Component.translatable("chat.minecities.say", getName(), line).withStyle(ChatFormatting.GRAY);
 		for (ServerPlayer player : serverLevel.players()) {
 			if (player.distanceToSqr(this) <= EARSHOT * EARSHOT) {
@@ -322,6 +363,7 @@ public class CitizenEntity extends PathfinderMob {
 			return;
 		}
 		setHunger(Hunger.eat(hunger, properties.nutrition()));
+		act(Action.EAT, 20);
 		satisfied("hungry");
 		starvingTicks = 0;
 		swing(InteractionHand.MAIN_HAND);
@@ -342,6 +384,9 @@ public class CitizenEntity extends PathfinderMob {
 		if (speechTicks > 0 && --speechTicks == 0) {
 			entityData.set(SPEECH, Optional.empty());
 		}
+		if (actionTicks > 0 && --actionTicks == 0) {
+			entityData.set(ACTION, Action.NONE.ordinal());
+		}
 		if (tickCount % 20 != 0) {
 			return;
 		}
@@ -352,7 +397,8 @@ public class CitizenEntity extends PathfinderMob {
 			// Un vagabond (venu d'un œuf, ou d'une ville disparue) : il n'a pas faim de nos règles.
 			return;
 		}
-		setHunger(Hunger.decay(hunger, 20));
+		// Un enfant mange deux fois moins.
+		setHunger(Hunger.decay(hunger, isChild() ? 10 : 20));
 		if (hunger <= 0) {
 			starve(serverLevel);
 		} else {
@@ -484,6 +530,13 @@ public class CitizenEntity extends PathfinderMob {
 		say(key, line);
 	}
 
+	/** Le dernier besoin qu'il a exprimé et qui n'est pas encore satisfait. */
+	public Optional<Component> lastNeed() {
+		long now = level().getGameTime();
+		return needs.values().stream().filter(n -> now - n.since() <= NEED_MEMORY)
+				.max(java.util.Comparator.comparingLong(Need::since)).map(Need::line);
+	}
+
 	/** Ce besoin-là est satisfait. */
 	public void satisfied(String key) {
 		needs.remove(key);
@@ -507,6 +560,7 @@ public class CitizenEntity extends PathfinderMob {
 		output.putFloat("hunger", hunger);
 		output.putInt("starving", starvingTicks);
 		output.putInt("variant", variant());
+		output.putBoolean("child", isChild());
 		ContainerHelper.saveAllItems(output.child("inventory"), inventory);
 	}
 
@@ -517,6 +571,7 @@ public class CitizenEntity extends PathfinderMob {
 		hunger = input.getFloatOr("hunger", Hunger.SATED);
 		starvingTicks = input.getIntOr("starving", 0);
 		setVariant(input.getIntOr("variant", 0));
+		setChild(input.getBooleanOr("child", false));
 		inventory.clear();
 		ContainerHelper.loadAllItems(input.childOrEmpty("inventory"), inventory);
 	}

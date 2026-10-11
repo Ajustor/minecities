@@ -49,7 +49,7 @@ __pycache__/
 
 # captures en jeu (tests de rendu)
 
-captures/
+/captures/
 
 # outils locaux (Claude Code, MCP Blockbench)
 

@@ -16,7 +16,13 @@ whole mod is translated into French and English.
 2. **Build a house** with any blocks: an enclosed room, at least one **door** and one **bed** (one
    citizen per bed). Hang a **house plaque** on an inside wall: the house is surveyed and
    registered, or a message tells you what is missing.
-3. **Feed the town**: the town hall is the shared **granary**.
+3. **The town hall** opens a **screen**: town summary, citizens (job, hunger, family, needs), the
+   **registry** of marriage requests, and the shared **granary**.
+   **Population**: the town gets its **five first inhabitants**; below five, newcomers arrive. Beyond,
+   it only grows through **births**: citizens who live and work together grow fond of each other,
+   those who get along ask the mayor to **marry** them; married couples move in together and, well
+   fed with a free bed at home, may have a **child** who grows up in three days. Citizens have a
+   gesture for each action (hoe, axe, rod, building, cooking, talking, cheering).
 4. **Citizens** stroll by day, sleep in their bed at night (not where beds explode), eat when hungry
    (chests of their house first, then the granary) and can starve to death. They speak: a speech
    bubble above their head, and a line in the chat of nearby players (missing tools or materials,
@@ -39,7 +45,8 @@ whole mod is translated into French and English.
 ## Commands (`/minecities` or `/ville`)
 
 `info`, `list`, `citizens`, `rename <name>`, `mayor <player>`, `deputy add|remove <player>`,
-`blueprints`, `build <blueprint> [style]`, `build cancel`, `upgrade`; operators: `admin
+`blueprints`, `build <blueprint> [style]`, `build cancel`, `upgrade`, `marriages`,
+`marry accept|refuse <n>`; operators: `admin
 immigrate|feed|starve`.
 
 ## Development

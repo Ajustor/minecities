@@ -157,6 +157,88 @@ class TownTest {
 	}
 
 	@Test
+	void friendsAskToMarryAndMoveInTogether() {
+		Town town = town();
+		BlockPos other = new BlockPos(30, 64, 30);
+		town.putHouse(new House(PLAQUE, List.of(BED_A), List.of(), 30));
+		town.putHouse(new House(other, List.of(other.east(), other.west()), List.of(), 30));
+		UUID alice = UUID.randomUUID();
+		UUID bob = UUID.randomUUID();
+		town.welcome(alice, "Alice Martin", 0);
+		town.welcome(bob, "Bob Dubois", 0);
+		// Pas encore assez proches.
+		assertFalse(town.canAskToMarry(alice, bob));
+		town.addAffinity(alice, bob, 50);
+		assertEquals(50, town.affinity(bob, alice));
+		assertTrue(town.askToMarry(alice, bob, 10).isEmpty());
+		town.addAffinity(alice, bob, 30);
+		MarriageRequest request = town.askToMarry(alice, bob, 10).orElseThrow();
+		// Une seule demande à la fois pour chacun.
+		assertTrue(town.askToMarry(bob, alice, 11).isEmpty());
+		assertTrue(town.marry(request));
+		assertEquals(bob, town.resident(alice).orElseThrow().spouse().orElseThrow());
+		assertEquals(alice, town.resident(bob).orElseThrow().spouse().orElseThrow());
+		// Mariés, ils vivent dans la maison qui a deux lits pour eux.
+		assertEquals(other, town.resident(alice).orElseThrow().home().orElseThrow());
+		assertEquals(other, town.resident(bob).orElseThrow().home().orElseThrow());
+		assertTrue(town.marriageRequests().isEmpty());
+		assertEquals(1, town.couples().size());
+	}
+
+	@Test
+	void aRefusedRequestCoolsThingsDown() {
+		Town town = town();
+		UUID alice = UUID.randomUUID();
+		UUID bob = UUID.randomUUID();
+		town.welcome(alice, "Alice", 0);
+		town.welcome(bob, "Bob", 0);
+		town.addAffinity(alice, bob, 100);
+		town.refuse(town.askToMarry(alice, bob, 0).orElseThrow());
+		assertEquals(80, town.affinity(alice, bob));
+		assertTrue(town.resident(alice).orElseThrow().spouse().isEmpty());
+	}
+
+	@Test
+	void childrenAreBornHomeAndGrowUp() {
+		Town town = town();
+		town.putHouse(new House(PLAQUE, List.of(BED_A, BED_B, PLAQUE.north()), List.of(), 40));
+		UUID alice = UUID.randomUUID();
+		UUID bob = UUID.randomUUID();
+		town.welcome(alice, "Alice Martin", 0);
+		town.welcome(bob, "Bob Dubois", 0);
+		town.addAffinity(alice, bob, 100);
+		town.marry(town.askToMarry(alice, bob, 0).orElseThrow());
+		UUID baby = UUID.randomUUID();
+		Resident child = town.born(baby, "Léon Martin", alice, bob, 100, 100 + 72000);
+		assertTrue(child.isChild());
+		assertEquals(PLAQUE, child.home().orElseThrow());
+		assertEquals("Martin", town.resident(alice).orElseThrow().surname());
+		assertEquals(100, town.resident(alice).orElseThrow().lastBirth());
+		// Un enfant ne travaille pas.
+		BlockPos workshop = new BlockPos(40, 64, 40);
+		town.putHouse(new House(workshop, List.of(), List.of(), List.of(new House.Workstation(workshop.east(), Job.FARMER),
+				new House.Workstation(workshop.west(), Job.COOK), new House.Workstation(workshop.south(), Job.LUMBERJACK)), 20));
+		town.assignJobs();
+		assertTrue(town.resident(baby).orElseThrow().job().isEmpty());
+		assertTrue(town.growUp(1000).isEmpty());
+		assertEquals(List.of(baby), town.growUp(100 + 72000));
+		assertFalse(town.resident(baby).orElseThrow().isChild());
+	}
+
+	@Test
+	void aWidowLosesTheirSpouse() {
+		Town town = town();
+		UUID alice = UUID.randomUUID();
+		UUID bob = UUID.randomUUID();
+		town.welcome(alice, "Alice", 0);
+		town.welcome(bob, "Bob", 0);
+		town.addAffinity(alice, bob, 100);
+		town.marry(town.askToMarry(alice, bob, 0).orElseThrow());
+		town.farewell(bob);
+		assertTrue(town.resident(alice).orElseThrow().spouse().isEmpty());
+	}
+
+	@Test
 	void theMayorManagesWithDeputies() {
 		UUID mayor = UUID.randomUUID();
 		Town town = Town.found("Valombre", Level.OVERWORLD, HALL, mayor, "Maire", 0);

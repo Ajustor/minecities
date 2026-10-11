@@ -168,6 +168,7 @@ class LumberjackGoal extends WorkGoal {
 		}
 		Block species = level.getBlockState(base).getBlock();
 		citizen.swing(InteractionHand.MAIN_HAND);
+		citizen.act(Action.CHOP, 30);
 		level.playSound(null, base, SoundEvents.AXE_STRIP, SoundSource.BLOCKS, 1.0f, 0.8f);
 		for (BlockPos pos : logs) {
 			ItemStack axe = citizen.getMainHandItem();

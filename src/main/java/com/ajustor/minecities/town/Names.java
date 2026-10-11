@@ -32,6 +32,10 @@ public final class Names {
 		return prefix + suffix;
 	}
 
+	public static String firstName(IntUnaryOperator random) {
+		return FIRST_NAMES.get(random.applyAsInt(FIRST_NAMES.size()));
+	}
+
 	public static String citizen(IntUnaryOperator random) {
 		return FIRST_NAMES.get(random.applyAsInt(FIRST_NAMES.size())) + " "
 				+ LAST_NAMES.get(random.applyAsInt(LAST_NAMES.size()));
