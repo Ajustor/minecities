@@ -91,6 +91,7 @@ class CookGoal extends WorkGoal {
 			return;
 		}
 		light(true);
+		citizen.act(Action.COOK, 10);
 		if (++timer < COOK_TIME) {
 			if (timer % 10 == 0) {
 				level().sendParticles(ParticleTypes.SMOKE, station.getX() + 0.5, station.getY() + 1.1,

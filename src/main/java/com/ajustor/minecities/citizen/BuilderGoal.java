@@ -264,6 +264,7 @@ class BuilderGoal extends WorkGoal {
 		citizen.getLookControl().setLookAt(p.pos().getX() + 0.5, p.pos().getY() + 0.5, p.pos().getZ() + 0.5);
 		cooldown = PACE;
 		citizen.swing(InteractionHand.MAIN_HAND);
+		citizen.act(Action.BUILD, 10);
 		if (clearing) {
 			// Dégager : ce qui était là va au grenier (par ses poches).
 			ItemStack held = tool.isPresent() ? citizen.getMainHandItem() : ItemStack.EMPTY;

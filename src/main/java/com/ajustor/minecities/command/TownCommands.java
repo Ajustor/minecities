@@ -7,6 +7,7 @@ import com.ajustor.minecities.build.BuildStyle;
 import com.ajustor.minecities.build.Builds;
 import com.ajustor.minecities.build.Construction;
 import com.ajustor.minecities.citizen.CitizenEntity;
+import com.ajustor.minecities.town.Families;
 import com.ajustor.minecities.town.Job;
 import com.ajustor.minecities.citizen.Hunger;
 import com.ajustor.minecities.town.Resident;
@@ -102,6 +103,14 @@ public final class TownCommands {
 										.executes(c -> build(c, BuildStyle.fromSerializedName(
 												StringArgumentType.getString(c, "style")).orElse(BuildStyle.PLAINS))))))
 				.then(Commands.literal("upgrade").executes(TownCommands::upgrade))
+				.then(Commands.literal("marriages").executes(TownCommands::marriages))
+				.then(Commands.literal("marry")
+						.then(Commands.literal("accept").then(Commands.argument("number",
+								com.mojang.brigadier.arguments.IntegerArgumentType.integer(1))
+								.executes(c -> marry(c, true))))
+						.then(Commands.literal("refuse").then(Commands.argument("number",
+								com.mojang.brigadier.arguments.IntegerArgumentType.integer(1))
+								.executes(c -> marry(c, false)))))
 				.then(Commands.literal("admin")
 						.requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
 						.then(Commands.literal("immigrate").executes(TownCommands::immigrate))
@@ -302,6 +311,42 @@ public final class TownCommands {
 		}
 		context.getSource().sendSuccess(() -> Component.translatable("command.minecities.build.upgrade")
 				.withStyle(ChatFormatting.GOLD), false);
+		return Command.SINGLE_SUCCESS;
+	}
+
+	private static int marriages(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
+		Town town = here(context);
+		List<com.ajustor.minecities.town.MarriageRequest> requests = town.marriageRequests();
+		if (requests.isEmpty()) {
+			context.getSource().sendSuccess(() -> Component.translatable("command.minecities.marriages.none"), false);
+			return 0;
+		}
+		context.getSource().sendSuccess(() -> Component.translatable("command.minecities.marriages", town.name())
+				.withStyle(ChatFormatting.GOLD), false);
+		for (int i = 0; i < requests.size(); i++) {
+			var request = requests.get(i);
+			int number = i + 1;
+			context.getSource().sendSuccess(() -> Component.translatable("command.minecities.marriages.entry", number,
+					town.resident(request.first()).map(Resident::name).orElse("?"),
+					town.resident(request.second()).map(Resident::name).orElse("?")), false);
+		}
+		return requests.size();
+	}
+
+	private static int marry(CommandContext<CommandSourceStack> context, boolean accept) throws CommandSyntaxException {
+		Town town = managedHere(context);
+		int number = com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(context, "number");
+		List<com.ajustor.minecities.town.MarriageRequest> requests = town.marriageRequests();
+		if (number > requests.size()) {
+			context.getSource().sendFailure(Component.translatable("command.minecities.marriages.unknown", number));
+			return 0;
+		}
+		var request = requests.get(number - 1);
+		if (accept) {
+			Families.accept(context.getSource().getLevel(), town, request);
+		} else {
+			Families.refuse(context.getSource().getLevel(), town, request);
+		}
 		return Command.SINGLE_SUCCESS;
 	}
 

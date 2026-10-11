@@ -9,6 +9,7 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.Level;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -42,8 +43,15 @@ public final class Town {
 			Codec.LONG.optionalFieldOf("last_arrival", 0L).forGetter(t -> t.lastArrival),
 			Codec.INT.optionalFieldOf("villagers", 0).forGetter(t -> t.villagers),
 			Construction.CODEC.listOf().optionalFieldOf("constructions", List.of())
-					.forGetter(t -> List.copyOf(t.constructions))
+					.forGetter(t -> List.copyOf(t.constructions)),
+			Codec.unboundedMap(Codec.STRING, Codec.INT).optionalFieldOf("affinities", Map.of())
+					.forGetter(t -> t.affinities),
+			MarriageRequest.CODEC.listOf().optionalFieldOf("marriage_requests", List.of())
+					.forGetter(t -> List.copyOf(t.marriageRequests))
 	).apply(i, Town::new));
+
+	/** Au-delà de cette affinité, deux citoyens s'entendent. */
+	public static final int FRIENDS = 70;
 
 	private final UUID id;
 	private String name;
@@ -61,12 +69,17 @@ public final class Town {
 	private int villagers;
 	/** Les lits où dorment ces villageois : on n'y loge pas de citoyen (non sauvegardé). */
 	private Set<BlockPos> reservedBeds = Set.of();
+	/** L'affinité de chaque paire de citoyens (clé : les deux UUID, dans l'ordre), de 0 à 100. */
+	private final Map<String, Integer> affinities;
+	/** Les demandes de mariage en attente de la décision du maire. */
+	private final List<MarriageRequest> marriageRequests;
 	/** Les chantiers commandés par le maire, en cours puis finis, dans l'ordre de commande. */
 	private final List<Construction> constructions;
 
 	private Town(UUID id, String name, ResourceKey<Level> dimension, BlockPos hall, UUID mayor, String mayorName,
 			List<UUID> deputies, long founded, List<House> houses, Map<UUID, Resident> residents, String tier,
-			long lastArrival, int villagers, List<Construction> constructions) {
+			long lastArrival, int villagers, List<Construction> constructions, Map<String, Integer> affinities,
+			List<MarriageRequest> marriageRequests) {
 		this.id = id;
 		this.name = name;
 		this.dimension = dimension;
@@ -81,12 +94,14 @@ public final class Town {
 		this.lastArrival = lastArrival;
 		this.villagers = villagers;
 		this.constructions = new ArrayList<>(constructions);
+		this.affinities = new HashMap<>(affinities);
+		this.marriageRequests = new ArrayList<>(marriageRequests);
 	}
 
 	public static Town found(String name, ResourceKey<Level> dimension, BlockPos hall, UUID mayor, String mayorName,
 			long now) {
 		return new Town(UUID.randomUUID(), name, dimension, hall, mayor, mayorName, List.of(), now, List.of(),
-				Map.of(), TownTier.VILLAGE.serializedName(), now, 0, List.of());
+				Map.of(), TownTier.VILLAGE.serializedName(), now, 0, List.of(), Map.of(), List.of());
 	}
 
 	public UUID id() {
@@ -251,7 +266,8 @@ public final class Town {
 				if (taken.contains(station.pos())) {
 					continue;
 				}
-				Optional<UUID> jobless = residents.entrySet().stream().filter(e -> e.getValue().job().isEmpty())
+				Optional<UUID> jobless = residents.entrySet().stream()
+						.filter(e -> e.getValue().job().isEmpty() && !e.getValue().isChild())
 						.map(Map.Entry::getKey).findFirst();
 				if (jobless.isEmpty()) {
 					return hired;
@@ -360,7 +376,144 @@ public final class Town {
 	}
 
 	public void farewell(UUID citizen) {
-		residents.remove(citizen);
+		Resident gone = residents.remove(citizen);
+		if (gone != null) {
+			gone.spouse().ifPresent(s -> residents.computeIfPresent(s, (id, r) -> r.widowed()));
+		}
+		marriageRequests.removeIf(r -> r.concerns(citizen));
+		affinities.keySet().removeIf(k -> k.contains(citizen.toString()));
+	}
+
+	// Familles
+
+	private static String pair(UUID a, UUID b) {
+		return a.compareTo(b) < 0 ? a + "|" + b : b + "|" + a;
+	}
+
+	public int affinity(UUID a, UUID b) {
+		return affinities.getOrDefault(pair(a, b), 0);
+	}
+
+	/** Fait varier l'affinité de deux citoyens ; renvoie la nouvelle valeur. */
+	public int addAffinity(UUID a, UUID b, int delta) {
+		int value = Math.clamp(affinity(a, b) + delta, 0, 100);
+		affinities.put(pair(a, b), value);
+		return value;
+	}
+
+	public List<MarriageRequest> marriageRequests() {
+		return List.copyOf(marriageRequests);
+	}
+
+	/** Peuvent-ils demander à se marier : adultes, célibataires, qui s'entendent, sans demande en cours ? */
+	public boolean canAskToMarry(UUID a, UUID b) {
+		Resident ra = residents.get(a);
+		Resident rb = residents.get(b);
+		return ra != null && rb != null && !a.equals(b) && !ra.isChild() && !rb.isChild()
+				&& ra.spouse().isEmpty() && rb.spouse().isEmpty() && affinity(a, b) >= FRIENDS
+				&& marriageRequests.stream().noneMatch(r -> r.concerns(a) || r.concerns(b));
+	}
+
+	public Optional<MarriageRequest> askToMarry(UUID a, UUID b, long now) {
+		if (!canAskToMarry(a, b)) {
+			return Optional.empty();
+		}
+		MarriageRequest request = new MarriageRequest(UUID.randomUUID(), a, b, now);
+		marriageRequests.add(request);
+		return Optional.of(request);
+	}
+
+	public Optional<MarriageRequest> marriageRequest(UUID id) {
+		return marriageRequests.stream().filter(r -> r.id().equals(id)).findFirst();
+	}
+
+	/** Le maire refuse : la demande tombe, et leur affinité baisse un peu. */
+	public void refuse(MarriageRequest request) {
+		marriageRequests.remove(request);
+		addAffinity(request.first(), request.second(), -20);
+	}
+
+	/**
+	 * Le maire accepte : ils sont mariés, et emménagent ensemble si une maison a deux lits pour eux.
+	 * Renvoie faux si l'un d'eux n'est plus là.
+	 */
+	public boolean marry(MarriageRequest request) {
+		marriageRequests.remove(request);
+		Resident a = residents.get(request.first());
+		Resident b = residents.get(request.second());
+		if (a == null || b == null) {
+			return false;
+		}
+		residents.put(request.first(), a.married(request.second()));
+		residents.put(request.second(), b.married(request.first()));
+		moveInTogether(request.first(), request.second());
+		return true;
+	}
+
+	/** Les deux conjoints dans une même maison, s'il y en a une avec deux lits pour eux. */
+	public boolean moveInTogether(UUID a, UUID b) {
+		Resident ra = residents.get(a);
+		Resident rb = residents.get(b);
+		if (ra.home().isPresent() && ra.home().equals(rb.home())) {
+			return true;
+		}
+		Set<BlockPos> taken = new HashSet<>(reservedBeds);
+		residents.forEach((id, r) -> {
+			if (!id.equals(a) && !id.equals(b)) {
+				r.bed().ifPresent(taken::add);
+			}
+		});
+		for (House house : houses.values()) {
+			List<BlockPos> free = house.beds().stream().filter(bed -> !taken.contains(bed)).toList();
+			if (free.size() >= 2) {
+				residents.put(a, ra.housed(house.plaque(), free.get(0)));
+				residents.put(b, rb.housed(house.plaque(), free.get(1)));
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/** Les couples mariés, une fois chacun. */
+	public List<UUID[]> couples() {
+		List<UUID[]> couples = new ArrayList<>();
+		residents.forEach((id, r) -> r.spouse().filter(s -> id.compareTo(s) < 0 && residents.containsKey(s))
+				.ifPresent(s -> couples.add(new UUID[]{id, s})));
+		return couples;
+	}
+
+	/** Un lit libre dans cette maison. */
+	public Optional<BlockPos> freeBedIn(BlockPos home) {
+		Set<BlockPos> taken = new HashSet<>(reservedBeds);
+		residents.values().forEach(r -> r.bed().ifPresent(taken::add));
+		return house(home).flatMap(h -> h.beds().stream().filter(bed -> !taken.contains(bed)).findFirst());
+	}
+
+	/** Un enfant naît d'un couple : il habite la maison de ses parents, et grandit. */
+	public Resident born(UUID child, String name, UUID parentA, UUID parentB, long now, long grownUpAt) {
+		Resident a = residents.get(parentA);
+		Resident baby = Resident.child(name, grownUpAt);
+		if (a != null && a.home().isPresent()) {
+			BlockPos home = a.home().get();
+			baby = freeBedIn(home).map(bed -> Resident.child(name, grownUpAt).housed(home, bed)).orElse(baby);
+		}
+		residents.put(child, baby);
+		residents.computeIfPresent(parentA, (id, r) -> r.gaveBirth(now));
+		residents.computeIfPresent(parentB, (id, r) -> r.gaveBirth(now));
+		return baby;
+	}
+
+	/** Les enfants arrivés à l'âge adulte le deviennent ; renvoie leurs UUID. */
+	public List<UUID> growUp(long now) {
+		List<UUID> grown = new ArrayList<>();
+		residents.replaceAll((id, r) -> {
+			if (r.grownUpAt().filter(t -> t <= now).isPresent()) {
+				grown.add(id);
+				return r.grownUp();
+			}
+			return r;
+		});
+		return grown;
 	}
 
 	// Chantiers

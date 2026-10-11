@@ -2,6 +2,7 @@ package com.ajustor.minecities;
 
 import com.ajustor.minecities.build.Blueprints;
 import com.ajustor.minecities.command.TownCommands;
+import com.ajustor.minecities.network.TownNetwork;
 import com.ajustor.minecities.registry.McBlockEntities;
 import com.ajustor.minecities.registry.McBlocks;
 import com.ajustor.minecities.registry.McEntities;
@@ -31,6 +32,7 @@ public class MineCities implements ModInitializer {
 		TownService.register();
 		Blueprints.register();
 		TownCommands.register();
+		TownNetwork.register();
 	}
 
 	public static Identifier id(String path) {

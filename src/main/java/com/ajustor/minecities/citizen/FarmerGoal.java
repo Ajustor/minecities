@@ -112,6 +112,7 @@ class FarmerGoal extends WorkGoal {
 		ServerLevel level = level();
 		BlockState state = level.getBlockState(pos);
 		citizen.swing(InteractionHand.MAIN_HAND);
+		citizen.act(Action.HOE, 15);
 		if (state.getBlock() instanceof CropBlock crop && crop.isMaxAge(state)) {
 			ItemStack hoe = citizen.getMainHandItem();
 			List<ItemStack> drops = Block.getDrops(state, level, pos, null, citizen, hoe);

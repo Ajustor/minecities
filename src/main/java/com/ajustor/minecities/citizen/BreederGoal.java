@@ -153,8 +153,7 @@ class BreederGoal extends WorkGoal {
 
 	private void feed() {
 		if (target == null || !target.isAlive() || !target.canFallInLove() || target.isBaby()) {
-			target = herd().stream().filter(a -> a.getType() == species && !a.isBaby() && a.canFallInLove()
-					&& a.getAge() == 0).min(Comparator.comparingDouble(citizen::distanceToSqr)).orElse(null);
+			target = nextToFeed();
 			if (target == null || carriesFoodFor(target) == 0) {
 				task = Task.NONE;
 				target = null;
@@ -174,6 +173,7 @@ class BreederGoal extends WorkGoal {
 			}
 		}
 		citizen.swing(InteractionHand.MAIN_HAND);
+		citizen.act(Action.FEED, 20);
 		target.setInLove(null);
 		level().sendParticles(ParticleTypes.HEART, target.getX(), target.getY() + target.getBbHeight(), target.getZ(),
 				3, 0.3, 0.2, 0.3, 0);
@@ -186,6 +186,30 @@ class BreederGoal extends WorkGoal {
 			repath = 20;
 			citizen.getNavigation().moveTo(animal, 0.7);
 		}
+	}
+
+	/**
+	 * La bête à nourrir : la compagne d'une bête déjà en amour s'il y en a une (qu'elles se trouvent
+	 * avant que l'amour passe), sinon la bête prête la plus proche d'une autre bête prête.
+	 */
+	private Animal nextToFeed() {
+		List<Animal> herd = herd().stream().filter(a -> a.getType() == species && !a.isBaby()).toList();
+		List<Animal> ready = herd.stream().filter(a -> a.canFallInLove() && a.getAge() == 0).toList();
+		Optional<Animal> inLove = herd.stream().filter(Animal::isInLove).findFirst();
+		if (inLove.isPresent()) {
+			return ready.stream().min(Comparator.comparingDouble(inLove.get()::distanceToSqr)).orElse(null);
+		}
+		Animal best = null;
+		double closest = Double.MAX_VALUE;
+		for (Animal a : ready) {
+			for (Animal b : ready) {
+				if (a != b && a.distanceToSqr(b) < closest) {
+					closest = a.distanceToSqr(b);
+					best = citizen.distanceToSqr(a) <= citizen.distanceToSqr(b) ? a : b;
+				}
+			}
+		}
+		return best;
 	}
 
 	private void cull() {
