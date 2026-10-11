@@ -7,9 +7,9 @@ vanilla : pas de plans imposés ni de huttes préfabriquées. Vous bâtissez com
 reconnaît vos maisons, et des citoyens viennent y vivre. Le village devient ville, puis grande
 ville, puis mégalopole.
 
-> État : **v1.1** (villes, maisons, familles, vingt-trois métiers et leurs filières, de la mine au
+> État : **v1.2** (villes, maisons, familles, vingt-trois métiers et leurs filières, de la mine au
 > bijou et du blé au pain, bâtiments à quatre niveaux et maîtrise du niveau 4, décrets du maire,
-> commerce entre villes, bonheur et repas variés, marché et trésor, paliers qui
+> commerce entre villes, bâtiments décorés, bonheur et repas variés, marché et trésor, paliers qui
 > débloquent, mairies annexes, fêtes, cloche d'alarme, raids de pillards, écran de l'hôtel de ville,
 > configuration et protections pour les serveurs). La suite est décrite dans [BRIEF.md](BRIEF.md) et [docs/briefs](docs/briefs).
 
@@ -114,7 +114,10 @@ ville, puis mégalopole.
    bâtiment a **quatre niveaux**, de plus en plus chers et utiles : 1 **cabane** (rondins, terre
    battue, toit plat), 2 **maison** (planches, pierre, vitres, toit à deux pans), 3 **bâtisse** (pierre
    taillée, briques, fer, lanternes ; dès la ville), 4 **demeure** (pierre polie, quartz, vitraux,
-   cuivre, or ; dès la grande ville). Une maison gagne deux lits par niveau (2 à 8), un atelier un poste
+   cuivre, or ; dès la grande ville). Chaque bâtiment est habillé : débord de toit, volets ouverts aux
+   fenêtres, poutre et lucarne aux pignons, cheminée de pierre ou de briques où fume un feu de camp,
+   pot de fleurs, et dans les maisons un tapis de l'entrée au fond (et une bibliothèque dès le niveau
+   3). Une maison gagne deux lits par niveau (2 à 8), un atelier un poste
    (1 à 4), et ses travailleurs vont plus vite (un dixième par niveau). `/ville upgrade` passe au niveau
    suivant. Au niveau 4, les travailleurs ont l'**outillage du maître** : le fermier et le mineur
    récoltent comme avec une Fortune II, le pêcheur pêche comme avec une Chance de la mer III, et le
@@ -228,7 +231,7 @@ Java 25 est requis (Loom 1.18.3, Minecraft 26.2).
 ./gradlew runClient             # lance le jeu avec le mod
 ./gradlew runClientGameTest     # scènes en jeu vérifiées et photographiées (build/run/clientGameTest/screenshots)
 ./gradlew runClientGameTest -PminecitiesGametest=work   # une scène (city, work, countryside, village, build, family, raid, life, market, robust, industry, crafts,
-council)
+council, styles)
 python tools/textures/generate.py   # régénère les textures (peaux des citoyens, plaque, œuf)
 python tools/models/town_hall.py    # régénère le modèle de l'hôtel de ville
 python tools/blueprints/generate.py # régénère les schémas du bâtisseur
