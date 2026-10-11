@@ -60,14 +60,16 @@ public final class Town {
 					.forGetter(t -> List.copyOf(t.marriageRequests)),
 			Chronicle.CODEC.forGetter(t -> t.chronicle),
 			BlockPos.CODEC.listOf().optionalFieldOf("annexes", List.of()).forGetter(t -> List.copyOf(t.annexes)),
-			Codec.STRING.optionalFieldOf("forced_tier").forGetter(t -> t.forcedTier.map(TownTier::serializedName))
+			Codec.STRING.optionalFieldOf("forced_tier").forGetter(t -> t.forcedTier.map(TownTier::serializedName)),
+			Codec.LONG.optionalFieldOf("orphaned_at").forGetter(t -> t.orphanedAt)
 	).apply(i, (head, houses, residents, tier, lastArrival, villagers, constructions, affinities, requests,
-			chronicle, annexes, forced) -> {
+			chronicle, annexes, forced, orphaned) -> {
 		Town town = new Town(head.id(), head.name(), head.dimension(), head.hall(), head.mayor(),
 				head.mayorName(), head.deputies(), head.founded(), houses, residents, tier, lastArrival, villagers,
 				constructions, affinities, requests, chronicle);
 		town.annexes.addAll(annexes);
 		town.forcedTier = forced.map(TownTier::fromSerializedName);
+		town.orphanedAt = orphaned;
 		return town;
 	}));
 
@@ -101,6 +103,10 @@ public final class Town {
 	private final List<MarriageRequest> marriageRequests;
 	/** Les chantiers commandés par le maire, en cours puis finis, dans l'ordre de commande. */
 	private final List<Construction> constructions;
+	/** Depuis quand la ville a perdu son hôtel de ville (détruit), s'il faut en reposer un. */
+	private Optional<Long> orphanedAt = Optional.empty();
+	/** Quand chaque citoyen a été vu pour la dernière fois (non sauvegardé). */
+	private final Map<UUID, Long> seen = new HashMap<>();
 	/** Le palier imposé par un opérateur (serveurs, essais), au lieu de celui de la population. */
 	private Optional<TownTier> forcedTier = Optional.empty();
 	/** Les mairies annexes : elles étendent le territoire et servent de greniers secondaires. */
@@ -462,6 +468,7 @@ public final class Town {
 
 	public void farewell(UUID citizen) {
 		moods.remove(citizen);
+		seen.remove(citizen);
 		Resident gone = residents.remove(citizen);
 		if (gone != null) {
 			gone.spouse().ifPresent(s -> residents.computeIfPresent(s, (id, r) -> r.widowed()));
@@ -647,6 +654,25 @@ public final class Town {
 	/** Le bâtiment bâti par la ville à cet endroit, s'il y en a un. */
 	public Optional<Construction> builtAt(BlockPos pos) {
 		return constructions.stream().filter(c -> c.done() && c.contains(pos)).reduce((a, b) -> b);
+	}
+
+	public Optional<Long> orphanedAt() {
+		return orphanedAt;
+	}
+
+	/** L'hôtel de ville a été détruit (ou reposé : vide). */
+	public void orphan(Optional<Long> since) {
+		orphanedAt = since;
+	}
+
+	/** Ce citoyen a été vu à l'instant. */
+	public void seen(UUID citizen, long now) {
+		seen.put(citizen, now);
+	}
+
+	/** Quand ce citoyen a été vu pour la dernière fois (à défaut : maintenant, et l'on s'en souvient). */
+	public long lastSeen(UUID citizen, long now) {
+		return seen.computeIfAbsent(citizen, id -> now);
 	}
 
 	/** Impose un palier (vide : le palier suit à nouveau la population). */

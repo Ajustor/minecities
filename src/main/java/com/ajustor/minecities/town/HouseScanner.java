@@ -84,9 +84,9 @@ public final class HouseScanner {
 	 * autres plaques trouvées dedans. Les listes sont dans l'ordre de découverte.
 	 */
 	public record Result(Status status, int volume, List<Pos> beds, List<Pos> containers, List<Pos> workstations,
-			int doors, List<Pos> plaques) {
+			int doors, List<Pos> plaques, Pos min, Pos max) {
 		public Result withStatus(Status status) {
-			return new Result(status, volume, beds, containers, workstations, doors, plaques);
+			return new Result(status, volume, beds, containers, workstations, doors, plaques, min, max);
 		}
 
 		public boolean valid() {
@@ -160,10 +160,11 @@ public final class HouseScanner {
 			status = Status.VALID;
 		}
 		return new Result(status, interior.size(), List.copyOf(beds), List.copyOf(containers),
-				List.copyOf(workstations), doors, List.copyOf(plaques));
+				List.copyOf(workstations), doors, List.copyOf(plaques), new Pos(minX, minY, minZ), new Pos(maxX, maxY, maxZ));
 	}
 
 	private static Result leak(int volume) {
-		return new Result(Status.NOT_ENCLOSED, volume, List.of(), List.of(), List.of(), 0, List.of());
+		Pos none = new Pos(0, 0, 0);
+		return new Result(Status.NOT_ENCLOSED, volume, List.of(), List.of(), List.of(), 0, List.of(), none, none);
 	}
 }

@@ -28,8 +28,10 @@ import java.util.UUID;
 public final class Families {
 	/** Le minimum d'habitants : en dessous, des nouveaux venus arrivent. */
 	public static final int MINIMUM = 5;
-	/** Un nouveau venu toutes les 20 secondes au plus, tant qu'on est sous le minimum. */
-	public static final int NEWCOMER_DELAY = 400;
+	/** Un nouveau venu toutes les 20 secondes au plus, tant qu'on est sous le minimum (réglable). */
+	public static int newcomerDelay() {
+		return com.ajustor.minecities.McConfig.get().newcomerDelay;
+	}
 	/** À moins de 5 blocs l'un de l'autre, deux citoyens s'apprécient un peu plus à chaque relevé. */
 	private static final double CLOSE = 5;
 	private static final int AFFINITY_GAIN = 3;
@@ -41,7 +43,7 @@ public final class Families {
 	private static final int BIRTH_ODDS = 200;
 
 	/** Le minimum d'habitants appliqué (les scènes de test le baissent pour compter les leurs). */
-	private static int minimum = MINIMUM;
+	private static int minimum = -1;
 
 	private Families() {
 	}
@@ -53,7 +55,8 @@ public final class Families {
 	/** Toutes les 5 secondes, pour une ville chargée. */
 	static void tick(ServerLevel level, Town town) {
 		long now = level.getGameTime();
-		if (town.population() < minimum && now - town.lastArrival() >= NEWCOMER_DELAY) {
+		int min = minimum >= 0 ? minimum : com.ajustor.minecities.McConfig.get().newcomerMinimum;
+		if (town.population() < min && now - town.lastArrival() >= newcomerDelay()) {
 			TownService.immigrate(level, town);
 		}
 		List<CitizenEntity> here = new ArrayList<>();

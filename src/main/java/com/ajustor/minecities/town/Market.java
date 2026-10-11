@@ -15,10 +15,15 @@ import java.util.Optional;
  * (les outils des métiers, des flèches, du pain) au prix des villageois.
  */
 public final class Market {
-	/** Le grenier garde toujours tant de chaque marchandise : seul le reste se vend. */
-	public static final int RESERVE = 32;
-	/** Un marchand ne gagne pas plus de tant d'émeraudes par jour. */
-	public static final int DAILY_EARNINGS = 32;
+	/** Le grenier garde toujours tant de chaque marchandise : seul le reste se vend (réglable). */
+	public static int reserve() {
+		return com.ajustor.minecities.McConfig.get().marketReserve;
+	}
+
+	/** Un marchand ne gagne pas plus de tant d'émeraudes par jour (réglable). */
+	public static int dailyEarnings() {
+		return com.ajustor.minecities.McConfig.get().marketDailyEarnings;
+	}
 
 	/** Ce qui se vend, et combien il en faut pour une émeraude (les cours des villageois). */
 	private static final Map<Item, Integer> SELL = new LinkedHashMap<>();
@@ -93,7 +98,7 @@ public final class Market {
 
 	/** Ce qu'on peut vendre d'un stock, sans entamer la réserve : un multiple du cours. */
 	public static int saleable(int stock, int rate) {
-		int surplus = Math.max(0, stock - RESERVE);
+		int surplus = Math.max(0, stock - reserve());
 		return surplus / rate * rate;
 	}
 
