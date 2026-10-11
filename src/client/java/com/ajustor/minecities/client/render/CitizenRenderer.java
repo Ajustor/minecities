@@ -6,7 +6,11 @@ import com.ajustor.minecities.citizen.CitizenEntity;
 import net.minecraft.client.model.geom.builders.CubeDeformation;
 import net.minecraft.client.model.geom.builders.LayerDefinition;
 import net.minecraft.client.model.player.PlayerModel;
+import net.minecraft.client.model.HumanoidModel;
+import net.minecraft.client.model.geom.ModelLayers;
+import net.minecraft.client.renderer.entity.ArmorModelSet;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
+import net.minecraft.client.renderer.entity.layers.HumanoidArmorLayer;
 import net.minecraft.client.renderer.entity.HumanoidMobRenderer;
 import net.minecraft.client.renderer.entity.state.HumanoidRenderState;
 import net.minecraft.ChatFormatting;
@@ -38,6 +42,9 @@ public class CitizenRenderer extends HumanoidMobRenderer<CitizenEntity, CitizenR
 	public CitizenRenderer(EntityRendererProvider.Context context) {
 		super(context, new CitizenModel(LayerDefinition.create(PlayerModel.createMesh(CubeDeformation.NONE, false),
 				64, 64).bakeRoot()), 0.5f);
+		// L'armure qu'il porte (les gardes), puis le couvre-chef de son métier.
+		addLayer(new HumanoidArmorLayer<>(this, ArmorModelSet.bake(ModelLayers.PLAYER_ARMOR, context.getModelSet(),
+				part -> new HumanoidModel<State>(part)), context.getEquipmentRenderer()));
 		addLayer(new CitizenHatLayer(this));
 	}
 

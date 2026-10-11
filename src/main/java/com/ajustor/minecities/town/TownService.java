@@ -659,6 +659,20 @@ public final class TownService {
 		}
 	}
 
+	/** Prend ou lève un décret, et l'annonce à la ville. */
+	public static void decree(ServerLevel level, Town town, Decree decree) {
+		boolean on = town.toggle(decree);
+		Component message = Component.translatable(on ? "message.minecities.decree.on" : "message.minecities.decree.off",
+				town.name(), Component.translatable(decree.translationKey()));
+		for (ServerPlayer player : level.getServer().getPlayerList().getPlayers()) {
+			if (town.canManage(player.getUUID()) || town.contains(player.level().dimension(), player.blockPosition())) {
+				player.sendSystemMessage(message.copy().withStyle(ChatFormatting.GOLD));
+			}
+		}
+		level.playSound(null, town.hall(), SoundEvents.BELL_BLOCK, SoundSource.BLOCKS, 1.0f, 0.8f);
+		Towns.get(level.getServer()).changed();
+	}
+
 	/** Prévient le maire et ses adjoints connectés. */
 	public static void notify(MinecraftServer server, Town town, Component message) {
 		for (ServerPlayer player : server.getPlayerList().getPlayers()) {

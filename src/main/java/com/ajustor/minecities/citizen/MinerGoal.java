@@ -223,7 +223,8 @@ class MinerGoal extends WorkGoal {
 			return;
 		}
 		ItemStack tool = citizen.getMainHandItem();
-		List<ItemStack> drops = Block.getDrops(state, level(), pos, level().getBlockEntity(pos), citizen, tool);
+		List<ItemStack> drops = Block.getDrops(state, level(), pos, level().getBlockEntity(pos), citizen,
+				masterTool(tool, net.minecraft.world.item.enchantment.Enchantments.FORTUNE, 2));
 		level().levelEvent(2001, pos, Block.getId(state));
 		level().removeBlock(pos, false);
 		tool.hurtAndBreak(1, citizen, EquipmentSlot.MAINHAND);

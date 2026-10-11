@@ -203,6 +203,13 @@ public class CitizenHatModel extends CitizenModel {
 				hat.addOrReplaceChild("tassel", cube(Tile.GOLD).addBox(4.5f, -10.5f, -0.5f, 0.5f, 3, 0.5f),
 						PartPose.ZERO);
 			}
+			case TANNER -> {
+				// Chapeau de cuir à bord rabattu.
+				hat.addOrReplaceChild("crown", cube(Tile.LEATHER).addBox(-4.5f, -10.5f, -4.5f, 9, 2.5f, 9),
+						PartPose.ZERO);
+				hat.addOrReplaceChild("brim", cube(Tile.BROWN).addBox(-6, -8.3f, -6, 12, 0.5f, 12),
+						PartPose.rotation(0.12f, 0, 0));
+			}
 			case DOCTOR -> {
 				// Bandeau blanc à croix rouge.
 				hat.addOrReplaceChild("band", cube(Tile.WHITE).addBox(-4.4f, -8, -4.4f, 8.8f, 1.5f, 8.8f),

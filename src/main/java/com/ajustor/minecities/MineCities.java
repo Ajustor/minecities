@@ -11,6 +11,7 @@ import com.ajustor.minecities.town.Alarms;
 import com.ajustor.minecities.town.Borders;
 import com.ajustor.minecities.town.Festivals;
 import com.ajustor.minecities.town.Raids;
+import com.ajustor.minecities.town.Trade;
 import com.ajustor.minecities.town.TownService;
 import net.fabricmc.api.ModInitializer;
 import net.minecraft.resources.Identifier;
@@ -40,6 +41,7 @@ public class MineCities implements ModInitializer {
 		Festivals.register();
 		Alarms.register();
 		Borders.register();
+		Trade.register();
 		TownCommands.register();
 		TownNetwork.register();
 	}

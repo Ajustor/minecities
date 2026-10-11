@@ -61,6 +61,14 @@ public final class McBlocks {
 					.noOcclusion()
 					.sound(SoundType.WOOD));
 
+	/** Le séchoir à peaux : le poste du tanneur. */
+	public static final Block TANNING_RACK = register("tanning_rack", WorkstationBlock::new,
+			BlockBehaviour.Properties.of()
+					.mapColor(MapColor.WOOD)
+					.strength(2.0f)
+					.noOcclusion()
+					.sound(SoundType.WOOD));
+
 	/** Le four du verrier : le poste du verrier. */
 	public static final Block GLASS_KILN = register("glass_kiln", WorkstationBlock::new,
 			BlockBehaviour.Properties.of()

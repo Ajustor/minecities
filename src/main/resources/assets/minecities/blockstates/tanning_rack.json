@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "minecities:block/tanning_rack"
+    },
+    "facing=east": {
+      "model": "minecities:block/tanning_rack",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "minecities:block/tanning_rack",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "minecities:block/tanning_rack",
+      "y": 270
+    }
+  }
+}

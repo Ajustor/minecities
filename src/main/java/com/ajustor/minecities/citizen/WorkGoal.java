@@ -48,9 +48,23 @@ abstract class WorkGoal extends Goal {
 	}
 
 	private boolean onDuty() {
-		return citizen.job().filter(j -> j.job() == job).isPresent() && citizen.town().isPresent()
-				&& (job.defends() || !SleepInBedGoal.isNight(citizen.level())) && !citizen.isSleeping()
-				&& citizen.hunger() >= Hunger.HUNGRY && citizen.level() instanceof ServerLevel;
+		Optional<Town> town = citizen.town();
+		if (citizen.job().filter(j -> j.job() == job).isEmpty() || town.isEmpty() || citizen.isSleeping()
+				|| citizen.hunger() < Hunger.HUNGRY || !(citizen.level() instanceof ServerLevel)) {
+			return false;
+		}
+		if (job.defends()) {
+			return true;
+		}
+		// Jour férié : on ne travaille pas. Heures supplémentaires : de l'aube jusqu'à la nuit noire.
+		if (town.get().decreed(com.ajustor.minecities.town.Decree.HOLIDAY)) {
+			return false;
+		}
+		if (town.get().decreed(com.ajustor.minecities.town.Decree.OVERTIME)) {
+			long time = Math.floorMod(citizen.level().getOverworldClockTime(), 24000L);
+			return time < 13500 || time >= 23000;
+		}
+		return !SleepInBedGoal.isNight(citizen.level());
 	}
 
 	@Override
@@ -275,6 +289,27 @@ abstract class WorkGoal extends Goal {
 		}
 		goTo(litter.blockPosition());
 		return true;
+	}
+
+	/** Un atelier de niveau 4 (une demeure) : ses travailleurs y ont l'outillage du maître (brief 11). */
+	protected boolean master() {
+		return citizen.job().map(j -> town().buildingLevel(j.workshop())).orElse(1) >= 4;
+	}
+
+	/**
+	 * L'outil tel que le manie un maître : au niveau 4, comme enchanté (fortune pour le fermier et le
+	 * mineur, chance de la mer pour le pêcheur). Ailleurs, l'outil tel quel. L'outil lui-même n'est pas
+	 * touché : c'est le savoir-faire qui compte.
+	 */
+	protected ItemStack masterTool(ItemStack tool, net.minecraft.resources.ResourceKey<net.minecraft.world.item.enchantment.Enchantment> enchantment,
+			int level) {
+		if (!master() || tool.isEmpty()) {
+			return tool;
+		}
+		ItemStack copy = tool.copy();
+		copy.enchant(level().registryAccess().lookupOrThrow(net.minecraft.core.registries.Registries.ENCHANTMENT)
+				.getOrThrow(enchantment), level);
+		return copy;
 	}
 
 	/** Le poste de travail est-il toujours là ? */

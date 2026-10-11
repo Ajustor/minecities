@@ -74,6 +74,9 @@ class SmithGoal extends WorkGoal {
 			case "rod" -> List.of(new Forging(Items.FISHING_ROD, of(Items.STICK, 3, Items.STRING, 2)));
 			case "bow" -> List.of(new Forging(Items.BOW, of(Items.STICK, 3, Items.STRING, 3)));
 			case "chestplate" -> List.of(new Forging(Items.IRON_CHESTPLATE, of(Items.IRON_INGOT, 8)));
+			case "helmet" -> List.of(new Forging(Items.IRON_HELMET, of(Items.IRON_INGOT, 5)));
+			case "leggings" -> List.of(new Forging(Items.IRON_LEGGINGS, of(Items.IRON_INGOT, 7)));
+			case "boots" -> List.of(new Forging(Items.IRON_BOOTS, of(Items.IRON_INGOT, 4)));
 			default -> List.of();
 		};
 	}
@@ -177,6 +180,16 @@ class SmithGoal extends WorkGoal {
 			if (job == Job.GUARD && worker.getItemBySlot(EquipmentSlot.CHEST).isEmpty()
 					&& Stock.count(granary, s -> s.is(Items.IRON_CHESTPLATE)) == 0) {
 				wanted.add("chestplate");
+			}
+			// Le forgeron d'une demeure habille les gardes de pied en cap.
+			if (job == Job.GUARD && master()) {
+				for (Object[] piece : new Object[][]{{EquipmentSlot.HEAD, Items.IRON_HELMET, "helmet"},
+						{EquipmentSlot.LEGS, Items.IRON_LEGGINGS, "leggings"}, {EquipmentSlot.FEET, Items.IRON_BOOTS, "boots"}}) {
+					if (worker.getItemBySlot((EquipmentSlot) piece[0]).isEmpty()
+							&& Stock.count(granary, s -> s.is((Item) piece[1])) == 0) {
+						wanted.add((String) piece[2]);
+					}
+				}
 			}
 			tool.filter(t -> forgings(t).stream().noneMatch(f -> Stock.count(granary, s -> s.is(f.result())) > 0))
 					.ifPresent(wanted::add);

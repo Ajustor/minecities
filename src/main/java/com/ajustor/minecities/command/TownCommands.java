@@ -9,7 +9,9 @@ import com.ajustor.minecities.build.Construction;
 import com.ajustor.minecities.citizen.CitizenEntity;
 import com.ajustor.minecities.town.Families;
 import com.ajustor.minecities.town.Job;
+import com.ajustor.minecities.town.Decree;
 import com.ajustor.minecities.town.Festivals;
+import com.ajustor.minecities.town.Trade;
 import com.ajustor.minecities.town.TownTier;
 import com.ajustor.minecities.town.Raids;
 import com.ajustor.minecities.citizen.Hunger;
@@ -59,6 +61,8 @@ public final class TownCommands {
 			Component.translatable("command.minecities.not_manager"));
 	private static final SimpleCommandExceptionType NO_BLUEPRINT = new SimpleCommandExceptionType(
 			Component.translatable("command.minecities.no_blueprint"));
+	private static final SimpleCommandExceptionType NO_DECREE = new SimpleCommandExceptionType(
+			Component.translatable("command.minecities.no_decree"));
 
 	private TownCommands() {
 	}
@@ -109,6 +113,25 @@ public final class TownCommands {
 				.then(Commands.literal("upgrade").executes(TownCommands::upgrade))
 				.then(Commands.literal("marriages").executes(TownCommands::marriages))
 				.then(Commands.literal("festival").executes(TownCommands::festival))
+				.then(Commands.literal("decree")
+						.then(Commands.argument("decree", StringArgumentType.word())
+								.suggests((c, b) -> {
+									for (Decree d : Decree.values()) {
+										b.suggest(d.serializedName());
+									}
+									return b.buildFuture();
+								})
+								.executes(TownCommands::decree)))
+				.then(Commands.literal("trade")
+						.executes(TownCommands::tradeList)
+						.then(Commands.argument("town", StringArgumentType.greedyString())
+								.suggests((c, b) -> {
+									for (Town t : Towns.get(c.getSource().getServer()).all()) {
+										b.suggest(t.name());
+									}
+									return b.buildFuture();
+								})
+								.executes(TownCommands::trade)))
 				.then(Commands.literal("marry")
 						.then(Commands.literal("accept").then(Commands.argument("number",
 								com.mojang.brigadier.arguments.IntegerArgumentType.integer(1))
@@ -205,6 +228,57 @@ public final class TownCommands {
 			TownService.retier(level, town);
 		}
 		Towns.get(context.getSource().getServer()).changed();
+		return Command.SINGLE_SUCCESS;
+	}
+
+	/** Le maire (ou un adjoint) prend ou lève un décret. */
+	private static int decree(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
+		Town town = managedHere(context);
+		Decree decree = Decree.fromSerializedName(StringArgumentType.getString(context, "decree"))
+				.orElseThrow(NO_DECREE::create);
+		ServerLevel level = context.getSource().getServer().getLevel(town.dimension());
+		TownService.decree(level != null ? level : context.getSource().getLevel(), town, decree);
+		return Command.SINGLE_SUCCESS;
+	}
+
+	/** Le maire signe (ou dénonce) un accord de commerce avec une autre ville. */
+	private static int trade(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
+		Town town = managedHere(context);
+		Towns towns = Towns.get(context.getSource().getServer());
+		Town other = towns.byName(StringArgumentType.getString(context, "town"))
+				.filter(t -> !t.id().equals(town.id())).orElseThrow(NO_TOWN::create);
+		if (town.partners().contains(other.id())) {
+			town.removePartner(other.id());
+			TownService.notify(context.getSource().getServer(), town, Component.translatable(
+					"message.minecities.trade.ended", town.name(), other.name()));
+			TownService.notify(context.getSource().getServer(), other, Component.translatable(
+					"message.minecities.trade.ended", town.name(), other.name()));
+		} else {
+			town.addPartner(other.id());
+			String key = Trade.trading(town, other) ? "message.minecities.trade.open" : "message.minecities.trade.offered";
+			TownService.notify(context.getSource().getServer(), town, Component.translatable(key, town.name(), other.name()));
+			TownService.notify(context.getSource().getServer(), other, Component.translatable(key, town.name(),
+					other.name()));
+		}
+		towns.changed();
+		return Command.SINGLE_SUCCESS;
+	}
+
+	/** Les accords de commerce de la ville. */
+	private static int tradeList(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
+		Town town = here(context);
+		Towns towns = Towns.get(context.getSource().getServer());
+		context.getSource().sendSuccess(() -> Component.translatable("command.minecities.trade", town.name())
+				.withStyle(ChatFormatting.GOLD), false);
+		for (Town other : towns.all()) {
+			boolean ours = town.partners().contains(other.id());
+			boolean theirs = other.partners().contains(town.id());
+			if (ours || theirs) {
+				String key = ours && theirs ? "command.minecities.trade.open" : ours ? "command.minecities.trade.waiting"
+						: "command.minecities.trade.offer";
+				context.getSource().sendSuccess(() -> Component.translatable(key, other.name()), false);
+			}
+		}
 		return Command.SINGLE_SUCCESS;
 	}
 

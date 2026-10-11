@@ -20,7 +20,8 @@ public class CitizenHatLayer extends RenderLayer<CitizenRenderer.State, CitizenM
 	@Override
 	public void submit(PoseStack poseStack, SubmitNodeCollector collector, int light, CitizenRenderer.State state,
 			float yRot, float xRot) {
-		if (state.job < 0 || state.isInvisible) {
+		// Un casque cache le couvre-chef.
+		if (state.job < 0 || state.isInvisible || !state.headEquipment.isEmpty()) {
 			return;
 		}
 		renderColoredCutoutModel(model, TEXTURE, poseStack, collector, light, state, -1, 1);

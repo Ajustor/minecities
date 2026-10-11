@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "SSS",
+    "SLS",
+    "S S"
+  ],
+  "key": {
+    "S": "minecraft:stick",
+    "L": "minecraft:leather"
+  },
+  "result": {
+    "id": "minecities:tanning_rack",
+    "count": 1
+  }
+}

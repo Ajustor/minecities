@@ -117,7 +117,8 @@ class FishermanGoal extends WorkGoal {
 		citizen.swing(InteractionHand.MAIN_HAND);
 		LootParams params = new LootParams.Builder(level())
 				.withParameter(LootContextParams.ORIGIN, Vec3.atCenterOf(water))
-				.withParameter(LootContextParams.TOOL, rod)
+				.withParameter(LootContextParams.TOOL,
+						masterTool(rod, net.minecraft.world.item.enchantment.Enchantments.LUCK_OF_THE_SEA, 3))
 				.withOptionalParameter(LootContextParams.THIS_ENTITY, citizen)
 				.create(LootContextParamSets.FISHING);
 		LootTable table = level().getServer().reloadableRegistries().getLootTable(BuiltInLootTables.FISHING);

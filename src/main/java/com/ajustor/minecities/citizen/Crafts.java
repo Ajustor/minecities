@@ -46,6 +46,11 @@ final class Crafts {
 					new ItemStack(Items.BED.white()), 8),
 			new Craft(List.of(of(Items.STRING, 4)), new ItemStack(Items.WOOL.white()), 32));
 
+	/** Le tanneur : du cuir (des peaux de lapin), et des tuniques de cuir pour les gardes qui n'ont rien. */
+	static final List<Craft> TANNER = List.of(
+			new Craft(List.of(of(Items.RABBIT_HIDE, 4)), new ItemStack(Items.LEATHER), 32),
+			new Craft(List.of(of(Items.LEATHER, 8)), new ItemStack(Items.LEATHER_CHESTPLATE), 2));
+
 	/** Le bibliothécaire : des livres, pour la bibliothèque et l'école. */
 	static final List<Craft> LIBRARIAN = List.of(
 			new Craft(List.of(of(Items.PAPER, 3), of(Items.LEATHER, 1)), new ItemStack(Items.BOOK), 16),

@@ -62,7 +62,13 @@ public class EatGoal extends Goal {
 
 	@Override
 	public boolean canContinueToUse() {
-		return pantry != null && elapsed < GIVE_UP && citizen.hunger() < Hunger.SATED && !citizen.isSleeping();
+		return pantry != null && elapsed < GIVE_UP && citizen.hunger() < sated() && !citizen.isSleeping();
+	}
+
+	/** Il mange jusque-là : rassasié, ou à moitié sous le rationnement. */
+	private float sated() {
+		return citizen.town().filter(t -> t.decreed(com.ajustor.minecities.town.Decree.RATIONING)).isPresent()
+				? Hunger.HUNGRY + 2 : Hunger.SATED;
 	}
 
 	@Override
