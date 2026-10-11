@@ -81,5 +81,6 @@
   "t": "minecraft:torch",
   "~": "minecraft:water"
  },
- "upgrade": "minecities:fishery_large"
+ "upgrade": "minecities:fishery_2",
+ "legacy": true
 }

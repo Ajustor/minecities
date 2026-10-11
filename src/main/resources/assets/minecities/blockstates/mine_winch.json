@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "minecities:block/mine_winch"
+    },
+    "facing=east": {
+      "model": "minecities:block/mine_winch",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "minecities:block/mine_winch",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "minecities:block/mine_winch",
+      "y": 270
+    }
+  }
+}

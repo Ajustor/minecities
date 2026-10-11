@@ -80,6 +80,7 @@
   "t": "minecraft:torch",
   "y": "minecraft:barrel[facing=north]"
  },
- "upgrade": "minecities:market_large",
- "tier": "town"
+ "upgrade": "minecities:market_2",
+ "tier": "town",
+ "legacy": true
 }

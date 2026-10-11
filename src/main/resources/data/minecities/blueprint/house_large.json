@@ -80,5 +80,6 @@
   "f": "{floor}",
   "t": "minecraft:torch"
  },
- "upgrade": "minecities:manor"
+ "upgrade": "minecities:house_3",
+ "legacy": true
 }

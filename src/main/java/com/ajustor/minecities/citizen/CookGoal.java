@@ -15,9 +15,11 @@ import net.minecraft.world.level.block.state.BlockState;
 import java.util.List;
 
 /**
- * Le cuisinier, au fumoir. Il prend au grenier ce qui est cru (viandes, poissons, pommes de terre)
- * et les ingrédients de ses plats (pain, soupes, ragoûts, tarte, biscuits), cuisine au fumoir, puis
- * rapporte le tout au grenier : la même récolte nourrit mieux, et plus varié.
+ * Le cuisinier, au fumoir, et le boulanger, au four. Le cuisinier prend au grenier ce qui est cru
+ * (viandes, poissons, pommes de terre) et les ingrédients de ses plats (soupes, ragoûts, et pain,
+ * biscuits, tartes tant qu'il n'y a pas de boulanger) ; le boulanger, le blé, le cacao, les citrouilles,
+ * le sucre et les œufs. Ils cuisinent à leur poste, puis rapportent le tout au grenier : la même
+ * récolte nourrit mieux, et plus varié.
  */
 class CookGoal extends WorkGoal {
 	/** Il emporte jusqu'à tant d'ingrédients par fournée. */
@@ -30,14 +32,26 @@ class CookGoal extends WorkGoal {
 	private Phase phase = Phase.FETCH;
 	private int timer;
 
-	CookGoal(CitizenEntity citizen) {
-		super(citizen, Job.COOK);
+	private final Job job;
+
+	CookGoal(CitizenEntity citizen, Job job) {
+		super(citizen, job);
+		this.job = job;
+	}
+
+	/** Ses recettes : le boulanger les siennes ; le cuisinier lui laisse les siennes s'il y en a un. */
+	private Cooking kitchen() {
+		if (job == Job.BAKER) {
+			return Cooking.BAKER;
+		}
+		return citizen.town().filter(t -> t.workers(Job.BAKER) > 0).isPresent() ? Cooking.COOK_WITH_BAKER
+				: Cooking.COOK;
 	}
 
 	@Override
 	public void start() {
 		super.start();
-		phase = Cooking.canCook(citizen.inventory()) ? Phase.COOK
+		phase = kitchen().canCook(citizen.inventory()) ? Phase.COOK
 				: citizen.inventory().stream().anyMatch(s -> !s.isEmpty()) ? Phase.DELIVER : Phase.FETCH;
 	}
 
@@ -66,13 +80,13 @@ class CookGoal extends WorkGoal {
 		}
 		container(granary).ifPresent(c -> {
 			for (int i = 0; i < 6 && !citizen.inventoryFull(); i++) {
-				ItemStack taken = Stock.take(c, Cooking::isIngredient, BATCH);
+				ItemStack taken = Stock.take(c, kitchen()::isIngredient, BATCH);
 				if (taken.isEmpty()) {
 					break;
 				}
 				citizen.carry(taken);
 			}
-			if (!Cooking.canCook(citizen.inventory())) {
+			if (!kitchen().canCook(citizen.inventory())) {
 				// De quoi rien faire (un bol sans soupe, deux blés) : il repose tout, et attend.
 				List<ItemStack> inventory = citizen.inventory();
 				for (int i = 0; i < inventory.size(); i++) {
@@ -80,7 +94,7 @@ class CookGoal extends WorkGoal {
 				}
 			}
 		});
-		if (Cooking.canCook(citizen.inventory())) {
+		if (kitchen().canCook(citizen.inventory())) {
 			phase = Phase.COOK;
 		} else {
 			phase = citizen.inventory().stream().allMatch(ItemStack::isEmpty) ? Phase.FETCH : Phase.DELIVER;
@@ -103,14 +117,15 @@ class CookGoal extends WorkGoal {
 			return;
 		}
 		timer = 0;
-		ItemStack dish = Cooking.cookOne(citizen.inventory());
+		ItemStack dish = kitchen().cookOne(citizen.inventory());
 		if (dish.isEmpty()) {
 			light(false);
 			phase = Phase.DELIVER;
 			return;
 		}
 		citizen.swing(InteractionHand.MAIN_HAND);
-		level().playSound(null, station, SoundEvents.SMOKER_SMOKE, SoundSource.BLOCKS, 1.0f, 1.0f);
+		level().playSound(null, station, job == Job.BAKER ? SoundEvents.FURNACE_FIRE_CRACKLE : SoundEvents.SMOKER_SMOKE,
+				SoundSource.BLOCKS, 1.0f, 1.0f);
 		citizen.carry(dish);
 	}
 
@@ -128,7 +143,7 @@ class CookGoal extends WorkGoal {
 		phase = Phase.FETCH;
 	}
 
-	/** Allume ou éteint le fumoir pendant qu'il cuisine. */
+	/** Allume ou éteint le fumoir (ou le four) pendant qu'il cuisine. */
 	private void light(boolean lit) {
 		if (citizen.job().isEmpty() || !(citizen.level() instanceof net.minecraft.server.level.ServerLevel level)) {
 			return;

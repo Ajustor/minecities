@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "LSL",
+    "L L",
+    "PCP"
+  ],
+  "key": {
+    "L": "#minecraft:logs",
+    "S": "minecraft:string",
+    "P": "#minecraft:planks",
+    "C": "minecraft:iron_chain"
+  },
+  "result": {
+    "id": "minecities:mine_winch",
+    "count": 1
+  }
+}

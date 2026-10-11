@@ -120,5 +120,7 @@
   "f": "{floor}",
   "t": "minecraft:torch",
   "u": "minecraft:cauldron"
- }
+ },
+ "upgrade": "minecities:infirmary_3",
+ "legacy": true
 }

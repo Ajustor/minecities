@@ -1,0 +1,72 @@
+{
+ "kind": "workshop",
+ "layers": [
+  [
+   "...^...",
+   "PPPPPPP",
+   "P_____P",
+   "P_____P",
+   "P_____P",
+   "P_____P",
+   "P_____P",
+   "PPPPPPP"
+  ],
+  [
+   "... ...",
+   "PPPDPPP",
+   "Pt   CP",
+   "Pb b  P",
+   "PB B  P",
+   "P     P",
+   "P    mP",
+   "PPPPPPP"
+  ],
+  [
+   ".......",
+   "PPPdPPP",
+   "P L   P",
+   "P     P",
+   "E     E",
+   "P     P",
+   "P     P",
+   "PPEPPPP"
+  ],
+  [
+   ".......",
+   "PPPPPPP",
+   "P     P",
+   "P     P",
+   "P     P",
+   "P     P",
+   "P     P",
+   "PPPPPPP"
+  ],
+  [
+   ".......",
+   "SSSSSSS",
+   "SSSSSSS",
+   "SSSSSSS",
+   "SSSSSSS",
+   "SSSSSSS",
+   "SSSSSSS",
+   "SSSSSSS"
+  ]
+ ],
+ "key": {
+  " ": "minecraft:air",
+  "B": "{bed}[facing=south,part=head]",
+  "C": "minecraft:chest[facing=south]",
+  "D": "{door}[facing=north,half=lower,hinge=left]",
+  "E": "{fence}",
+  "L": "minecities:house_plaque[facing=south]",
+  "P": "{frame}[axis=y]",
+  "S": "{roof_slab}[type=bottom]",
+  "^": "{steps}[facing=south,half=bottom,shape=straight]",
+  "_": "minecraft:coarse_dirt",
+  "b": "{bed}[facing=south,part=foot]",
+  "d": "{door}[facing=north,half=upper,hinge=left]",
+  "m": "minecraft:grindstone[face=floor,facing=north]",
+  "t": "minecraft:torch"
+ },
+ "upgrade": "minecities:barracks_2"
+}

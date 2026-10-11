@@ -638,7 +638,7 @@ public final class TownService {
 				}
 			}
 			com.ajustor.minecities.build.Blueprints.all(level.getServer()).values().stream()
-					.filter(b -> b.tier() == town.tier())
+					.filter(b -> b.tier() == town.tier() && !b.legacy())
 					.forEach(b -> unlocked.add(Component.translatable(b.translationKey())));
 			if (town.tier().annexes() > 0) {
 				unlocked.add(Component.translatable("message.minecities.tier.annexes", town.tier().annexes()));

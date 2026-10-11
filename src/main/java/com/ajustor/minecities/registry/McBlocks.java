@@ -2,6 +2,7 @@ package com.ajustor.minecities.registry;
 
 import com.ajustor.minecities.MineCities;
 import com.ajustor.minecities.block.HousePlaqueBlock;
+import com.ajustor.minecities.block.MineWinchBlock;
 import com.ajustor.minecities.block.TownAnnexBlock;
 import com.ajustor.minecities.block.TownHallBlock;
 import net.minecraft.core.registries.Registries;
@@ -42,6 +43,14 @@ public final class McBlocks {
 					.noOcclusion()
 					.sound(SoundType.WOOD)
 					.pushReaction(PushReaction.BLOCK));
+
+	/** Le treuil de mine : le poste du mineur. */
+	public static final Block MINE_WINCH = register("mine_winch", MineWinchBlock::new,
+			BlockBehaviour.Properties.of()
+					.mapColor(MapColor.WOOD)
+					.strength(2.0f)
+					.noOcclusion()
+					.sound(SoundType.WOOD));
 
 	private McBlocks() {
 	}

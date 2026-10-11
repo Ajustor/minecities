@@ -81,5 +81,6 @@
   "m": "minecraft:grindstone[face=floor,facing=north]",
   "t": "minecraft:torch"
  },
- "upgrade": "minecities:barracks_large"
+ "upgrade": "minecities:barracks_2",
+ "legacy": true
 }

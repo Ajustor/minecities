@@ -119,5 +119,7 @@
   "f": "{floor}",
   "l": "{stripped_log}[axis=y]",
   "t": "minecraft:torch"
- }
+ },
+ "upgrade": "minecities:sawmill_3",
+ "legacy": true
 }

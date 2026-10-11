@@ -81,5 +81,6 @@
   "h": "minecraft:hay_block[axis=y]",
   "t": "minecraft:torch"
  },
- "upgrade": "minecities:barn_large"
+ "upgrade": "minecities:barn_2",
+ "legacy": true
 }
