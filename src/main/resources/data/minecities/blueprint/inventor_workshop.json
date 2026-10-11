@@ -79,5 +79,7 @@
   "i": "minecraft:smithing_table",
   "n": "minecraft:anvil[facing=east]",
   "t": "minecraft:torch"
- }
+ },
+ "upgrade": "minecities:inventor_workshop_2",
+ "legacy": true
 }

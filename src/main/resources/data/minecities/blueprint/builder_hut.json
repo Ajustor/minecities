@@ -79,5 +79,6 @@
   "f": "{floor}",
   "t": "minecraft:torch"
  },
- "upgrade": "minecities:builder_hut_large"
+ "upgrade": "minecities:builder_hut_2",
+ "legacy": true
 }

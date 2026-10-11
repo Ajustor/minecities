@@ -54,6 +54,22 @@ KEY = {
     "e": "minecraft:brewing_stand",
     "u": "minecraft:cauldron",
     "p": "minecraft:lectern[facing=north]",
+    # Les matériaux des quatre niveaux (brief 11).
+    "_": "minecraft:coarse_dirt",
+    "K": "minecraft:bricks",
+    "Z": "minecraft:stone_bricks",
+    "I": "minecraft:iron_bars",
+    "J": "minecraft:lantern[hanging=true]",
+    "X": "minecraft:polished_andesite",
+    "V": "minecraft:quartz_pillar[axis=y]",
+    "H": "minecraft:white_stained_glass_pane",
+    "$": "minecraft:gold_block",
+    "{": "minecraft:waxed_cut_copper_stairs[facing=east,half=bottom,shape=straight]",
+    "}": "minecraft:waxed_cut_copper_stairs[facing=west,half=bottom,shape=straight]",
+    "Y": "minecraft:waxed_cut_copper",
+    "o": "minecraft:furnace[facing=north]",
+    "%": "minecraft:blast_furnace[facing=north]",
+    "&": "minecities:mine_winch[facing=north]",
     "y": "minecraft:barrel[facing=north]",
     "<": "{roof_stairs}[facing=east,half=bottom,shape=straight]",
     ">": "{roof_stairs}[facing=west,half=bottom,shape=straight]",
@@ -222,6 +238,131 @@ def tower():
     return layers
 
 
+# Les quatre niveaux (brief 11) : ce qui change d'un niveau à l'autre.
+LEVELS = {
+    # Cabane : rondins bruts, terre battue, fenêtres à barreaux de bois, toit plat de dalles.
+    1: dict(base="P", floor="_", wall="P", corner="P", low="P", window="E", ceiling="S", light="t",
+            roof=None, tier=None),
+    # Maison : planches, fondation de pierre, vitres, toit à deux pans.
+    2: dict(base="F", floor="f", wall="W", corner="P", low="W", window="G", ceiling="R", light="t",
+            roof=("<", ">", "R"), tier=None),
+    # Bâtisse : pierre taillée, soubassement de briques, barreaux de fer, lanternes.
+    3: dict(base="Q", floor="f", wall="W", corner="Z", low="K", window="I", ceiling="R", light="J",
+            roof=("<", ">", "R"), tier="town"),
+    # Demeure : pierre polie, colonnes de quartz, vitraux, toit de cuivre, or au fronton.
+    4: dict(base="X", floor="f", wall="W", corner="V", low="W", window="H", ceiling="R", light="J",
+            roof=("{", "}", "Y"), tier="city"),
+}
+
+
+def levelled(level, w, d, door_x=3, beds=(), extras=None):
+    """
+    Un bâtiment de niveau 1 à 4 : une pièce de w x d (murs compris), trois blocs sous plafond, porte au
+    nord, dans les matériaux de son niveau.
+    """
+    m = LEVELS[level]
+    extras = extras or {}
+    layers = []
+    floor = grid(w, d, m["floor"])
+    for x in range(w):
+        floor[0][x] = floor[d - 1][x] = m["base"]
+    for z in range(d):
+        floor[z][0] = floor[z][w - 1] = m["base"]
+    layers.append(floor)
+    for y in (1, 2, 3):
+        layer = grid(w, d, " ")
+        material = m["low"] if y == 1 else m["wall"]
+        for x in range(w):
+            layer[0][x] = layer[d - 1][x] = material
+        for z in range(d):
+            layer[z][0] = layer[z][w - 1] = material
+        for x, z in ((0, 0), (w - 1, 0), (0, d - 1), (w - 1, d - 1)):
+            layer[z][x] = m["corner"]
+        if y == 1:
+            layer[0][door_x] = "D"
+        elif y == 2:
+            layer[0][door_x] = "d"
+            layer[d // 2][0] = layer[d // 2][w - 1] = m["window"]
+            for x in range(2, w - 2, 3):
+                layer[d - 1][x] = m["window"]
+            layer[1][door_x - 1] = "L"
+        layers.append(layer)
+    for (x, z) in beds:
+        layers[1][z][x] = "b"
+        layers[1][z + 1][x] = "B"
+    # La lumière : une torche au sol, ou des lanternes pendues au plafond.
+    lights = [(1, 1), (w - 2, d - 2)] if w > 8 else [(1, 1)]
+    for x, z in lights:
+        y = 3 if m["light"] == "J" else 1
+        if layers[y][z][x] == " " and (y == 3 or layers[1][z][x] == " "):
+            layers[y][z][x] = m["light"]
+    for (x, y, z), ch in extras.items():
+        layers[y][z][x] = ch
+    ceiling = grid(w, d, m["ceiling"])
+    if level == 4:
+        ceiling[0][door_x] = "$"
+    layers.append(ceiling)
+    if m["roof"] is None:
+        return layers
+    # Deux pans d'escaliers vers un faîte nord-sud, pignons dans la matière des murs.
+    east, west, ridge = m["roof"]
+    k = 0
+    while k <= w - 1 - k:
+        layer = grid(w, d, " ")
+        left, right = k, w - 1 - k
+        for z in range(d):
+            if left == right:
+                layer[z][left] = ridge
+            else:
+                layer[z][left] = east
+                layer[z][right] = west
+        for x in range(left + 1, right):
+            layer[0][x] = layer[d - 1][x] = m["wall"]
+        layers.append(layer)
+        k += 1
+    return layers
+
+
+# La taille de chaque niveau : une maison gagne deux lits, un atelier un poste.
+HOUSE_SIZES = {1: (7, 7), 2: (9, 7), 3: (11, 7), 4: (11, 9)}
+WORKSHOP_SIZES = {1: (7, 7), 2: (9, 7), 3: (11, 7), 4: (13, 7)}
+
+
+def house_level(level):
+    w, d = HOUSE_SIZES[level]
+    # Deux lits de plus à chaque niveau : 2, 4, 6 (une rangée), puis 8 (deux rangées).
+    beds = {1: [(1, 4), (5, 4)],
+            2: [(1, 4), (3, 4), (5, 4), (7, 4)],
+            3: [(1, 4), (2, 4), (4, 4), (5, 4), (7, 4), (8, 4)],
+            4: [(x, 3) for x in (1, 3, 7, 9)] + [(x, 6) for x in (1, 3, 7, 9)]}[level]
+    return levelled(level, w, d, beds=beds, extras={(w - 2, 1, 1): "C"})
+
+
+def workshop_level(level, station, beds=(), more=None):
+    """Un atelier : un poste par niveau, le long du mur du fond ; un coffre près de la porte."""
+    w, d = WORKSHOP_SIZES[level]
+    extras = {(w - 2, 1, 1): "C"}
+    for i in range(level):
+        extras[(5 + 2 * i, 1, d - 2)] = station
+    extras.update(more or {})
+    return levelled(level, w, d, beds=beds, extras=extras)
+
+
+def series(prints, name, make, outside=None, ext_width=8, min_tier=None):
+    """Les quatre niveaux d'un bâtiment : nom_1 … nom_4, chacun s'améliore en le suivant."""
+    for level in range(1, 5):
+        layers = make(level)
+        w = len(layers[0][0])
+        d = len(layers[0])
+        body = extend(layers, w, d, ext_width, outside(w)) if outside else rows(layers)
+        tier = LEVELS[level]["tier"]
+        if min_tier == "town" and tier is None:
+            tier = "town"
+        upgrade = f"minecities:{name}_{level + 1}" if level < 4 else None
+        prints.append(blueprint(f"{name}_{level}", "house" if name == "house" else "workshop", body,
+                                upgrade=upgrade, tier=tier))
+
+
 def workshop(extras, fine=False):
     """Un atelier : 7 x 7, ou 9 x 7 amélioré (deux postes, deux travailleurs)."""
     if fine:
@@ -256,6 +397,23 @@ def pond(y, x, z):
 
 def main():
     prints = []
+    # Les quatre niveaux de chaque bâtiment (brief 11).
+    series(prints, "house", house_level)
+    stations = {"kitchen": "s", "sawmill": "l", "builder_hut": "c", "bakery": "o", "smithy": "%",
+                "infirmary": "e", "inventor_workshop": "i"}
+    for name, station in stations.items():
+        series(prints, name, lambda level, s=station: workshop_level(level, s))
+    series(prints, "farm", lambda level: workshop_level(level, "k"), outside=field)
+    series(prints, "barn", lambda level: workshop_level(level, "h"), outside=lambda w: pen)
+    series(prints, "fishery", lambda level: workshop_level(level, "r"), outside=lambda w: pond, ext_width=6)
+    series(prints, "market", lambda level: workshop_level(level, "p", more={(1, 1, 4): "y", (2, 1, 4): "y"}),
+           min_tier="town")
+    series(prints, "barracks", lambda level: workshop_level(level, "m",
+                                                            beds=[(x, 2) for x in (1, 3, 5, 7)][:level + 1]))
+    # La mine : le treuil, au-dessus du puits que le mineur creuse à l'est du bâtiment.
+    series(prints, "mine", lambda level: workshop_level(level, "&"))
+
+    # Les anciens schémas (avant la v0.9) restent pour les chantiers en cours ; ils mènent aux nouveaux.
     # Les maisons : petite, grande, puis le manoir (toit à deux pans, fondation de pierre taillée).
     prints.append(blueprint("house_small", "house", rows(shell(7, 7, 3, beds=[(1, 4), (5, 4)],
             extras={(5, 1, 1): "C", (3, 1, 5): "t"})), upgrade="minecities:house_large"))
@@ -304,6 +462,25 @@ def main():
     prints.append(blueprint("market_large", "workshop", rows(shell(9, 7, 3, extras={(3, 1, 4): "p", (5, 1, 4): "p",
             (1, 1, 5): "y", (2, 1, 5): "y", (7, 1, 5): "y", (6, 1, 5): "y", (7, 1, 1): "C", (1, 1, 1): "t"},
             fine=True)), tier="town"))
+
+    upgrades = {"house_small": "house_2", "house_large": "house_3", "manor": "house_4",
+                "barracks": "barracks_2", "barracks_large": "barracks_3", "infirmary": "infirmary_2",
+                "infirmary_large": "infirmary_3", "market": "market_2", "market_large": "market_3",
+                "inventor_workshop": "inventor_workshop_2"}
+    for name in ("kitchen", "sawmill", "builder_hut", "farm", "barn", "fishery"):
+        upgrades[name] = f"{name}_2"
+        upgrades[f"{name}_large"] = f"{name}_3"
+    kept = []
+    names = set()
+    for name, data in prints:
+        if name in names:
+            continue
+        names.add(name)
+        if name in upgrades:
+            data["upgrade"] = "minecities:" + upgrades[name]
+            data["legacy"] = True
+        kept.append((name, data))
+    prints = kept
 
     OUT.mkdir(parents=True, exist_ok=True)
     for name, data in prints:

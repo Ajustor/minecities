@@ -94,7 +94,8 @@ public final class TownCommands {
 						.then(Commands.literal("cancel").executes(TownCommands::cancelBuild))
 						.then(Commands.argument("blueprint", IdentifierArgument.id())
 								.suggests((c, b) -> SharedSuggestionProvider.suggestResource(
-										Blueprints.all(c.getSource().getServer()).keySet(), b))
+										Blueprints.all(c.getSource().getServer()).values().stream()
+												.filter(p -> !p.legacy()).map(Blueprint::id), b))
 								.executes(c -> build(c, BuildStyle.PLAINS))
 								.then(Commands.argument("style", StringArgumentType.word())
 										.suggests((c, b) -> {
@@ -323,8 +324,12 @@ public final class TownCommands {
 		return town;
 	}
 
+	/** Les bâtiments qu'on peut commander, chacun à son premier niveau (les suivants s'y greffent). */
 	private static int blueprints(CommandContext<CommandSourceStack> context) {
-		var all = Blueprints.all(context.getSource().getServer());
+		var all = Blueprints.all(context.getSource().getServer()).values().stream()
+				.filter(b -> !b.legacy() && b.level() == 1)
+				.collect(java.util.stream.Collectors.toMap(Blueprint::id, b -> b, (a, b) -> a,
+						java.util.LinkedHashMap::new));
 		context.getSource().sendSuccess(() -> Component.translatable("command.minecities.blueprints", all.size())
 				.withStyle(ChatFormatting.GOLD), false);
 		for (Blueprint blueprint : all.values()) {

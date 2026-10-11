@@ -119,5 +119,7 @@
   "f": "{floor}",
   "s": "minecraft:smoker[facing=north]",
   "t": "minecraft:torch"
- }
+ },
+ "upgrade": "minecities:kitchen_3",
+ "legacy": true
 }

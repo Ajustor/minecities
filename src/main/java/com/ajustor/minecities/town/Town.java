@@ -61,15 +61,17 @@ public final class Town {
 			Chronicle.CODEC.forGetter(t -> t.chronicle),
 			BlockPos.CODEC.listOf().optionalFieldOf("annexes", List.of()).forGetter(t -> List.copyOf(t.annexes)),
 			Codec.STRING.optionalFieldOf("forced_tier").forGetter(t -> t.forcedTier.map(TownTier::serializedName)),
-			Codec.LONG.optionalFieldOf("orphaned_at").forGetter(t -> t.orphanedAt)
+			Codec.LONG.optionalFieldOf("orphaned_at").forGetter(t -> t.orphanedAt),
+			Mine.CODEC.listOf().optionalFieldOf("mines", List.of()).forGetter(t -> List.copyOf(t.mines.values()))
 	).apply(i, (head, houses, residents, tier, lastArrival, villagers, constructions, affinities, requests,
-			chronicle, annexes, forced, orphaned) -> {
+			chronicle, annexes, forced, orphaned, mines) -> {
 		Town town = new Town(head.id(), head.name(), head.dimension(), head.hall(), head.mayor(),
 				head.mayorName(), head.deputies(), head.founded(), houses, residents, tier, lastArrival, villagers,
 				constructions, affinities, requests, chronicle);
 		town.annexes.addAll(annexes);
 		town.forcedTier = forced.map(TownTier::fromSerializedName);
 		town.orphanedAt = orphaned;
+		mines.forEach(m -> town.mines.put(m.station(), m));
 		return town;
 	}));
 
@@ -103,6 +105,8 @@ public final class Town {
 	private final List<MarriageRequest> marriageRequests;
 	/** Les chantiers commandés par le maire, en cours puis finis, dans l'ordre de commande. */
 	private final List<Construction> constructions;
+	/** Les galeries des mineurs, par treuil. */
+	private final Map<BlockPos, Mine> mines = new LinkedHashMap<>();
 	/** Depuis quand la ville a perdu son hôtel de ville (détruit), s'il faut en reposer un. */
 	private Optional<Long> orphanedAt = Optional.empty();
 	/** Quand chaque citoyen a été vu pour la dernière fois (non sauvegardé). */
@@ -656,6 +660,15 @@ public final class Town {
 		return constructions.stream().filter(c -> c.done() && c.contains(pos)).reduce((a, b) -> b);
 	}
 
+	/** La galerie creusée depuis ce treuil, s'il y en a une. */
+	public Optional<Mine> mine(BlockPos station) {
+		return Optional.ofNullable(mines.get(station));
+	}
+
+	public void putMine(Mine mine) {
+		mines.put(mine.station(), mine);
+	}
+
 	public Optional<Long> orphanedAt() {
 		return orphanedAt;
 	}
@@ -682,6 +695,14 @@ public final class Town {
 
 	public Optional<TownTier> forcedTier() {
 		return forcedTier;
+	}
+
+	/**
+	 * Le niveau du bâtiment de cette plaque (brief 11) : celui du schéma d'après lequel la ville l'a
+	 * bâti ; un bâtiment bâti à la main vaut le niveau 1.
+	 */
+	public int buildingLevel(BlockPos plaque) {
+		return builtAt(plaque).map(c -> com.ajustor.minecities.build.Blueprint.level(c.blueprint())).orElse(1);
 	}
 
 	/** Recalcule le palier ; renvoie l'ancien s'il a changé. */

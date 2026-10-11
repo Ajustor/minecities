@@ -121,5 +121,7 @@
   "t": "minecraft:torch",
   "y": "minecraft:barrel[facing=north]"
  },
- "tier": "town"
+ "tier": "town",
+ "upgrade": "minecities:market_3",
+ "legacy": true
 }

@@ -16,9 +16,12 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
 
-/** Le grenier de l'hôtel de ville : 27 cases, comme un coffre, où la ville met ses vivres en commun. */
+/**
+ * Le grenier de l'hôtel de ville : 54 cases, comme un grand coffre, où la ville met en commun ses
+ * vivres, son trésor et les matériaux de ses chantiers.
+ */
 public class TownHallBlockEntity extends BaseContainerBlockEntity {
-	public static final int SIZE = 27;
+	public static final int SIZE = 54;
 
 	private NonNullList<ItemStack> items = NonNullList.withSize(SIZE, ItemStack.EMPTY);
 
@@ -51,7 +54,7 @@ public class TownHallBlockEntity extends BaseContainerBlockEntity {
 
 	@Override
 	protected AbstractContainerMenu createMenu(int containerId, Inventory inventory) {
-		return ChestMenu.threeRows(containerId, inventory, this);
+		return ChestMenu.sixRows(containerId, inventory, this);
 	}
 
 	@Override

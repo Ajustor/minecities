@@ -81,5 +81,6 @@
   "t": "minecraft:torch",
   "~": "minecraft:water"
  },
- "upgrade": "minecities:farm_large"
+ "upgrade": "minecities:farm_2",
+ "legacy": true
 }

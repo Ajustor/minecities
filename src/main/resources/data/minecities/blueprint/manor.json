@@ -120,5 +120,7 @@
   "d": "{door}[facing=north,half=upper,hinge=left]",
   "f": "{floor}",
   "t": "minecraft:torch"
- }
+ },
+ "upgrade": "minecities:house_4",
+ "legacy": true
 }

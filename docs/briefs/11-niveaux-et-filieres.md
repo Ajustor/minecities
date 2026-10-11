@@ -10,6 +10,21 @@ Deux chantiers liés : chaque bâtiment se bâtit puis s'améliore en **quatre n
 plus coûteux ; et de **nouveaux métiers** ferment les filières (de la mine au bijou, du blé au
 pain), pour que la ville produise elle-même ce que coûtent ses améliorations.
 
+## État (v0.9)
+
+- Le générateur (`tools/blueprints/generate.py`, `levelled()`) bâtit chaque série `nom_1` … `nom_4`
+  : maison, cuisine, scierie, atelier du bâtisseur, boulangerie, forge, infirmerie, atelier de
+  l'inventeur, ferme, étable, pêcherie, marché, caserne, mine. Les anciens schémas restent (marqués
+  `legacy`, cachés) et mènent au niveau suivant de la nouvelle série.
+- `Blueprint.level()` et `Town.buildingLevel(plaque)` : un atelier bâti au niveau N fait gagner un
+  dixième de temps par niveau (`WorkGoal.rest`).
+- Métiers : **boulanger** (four ; `Cooking.BAKER`, le cuisinier lui laisse alors le pain, les
+  biscuits et les tartes), **forgeron** (haut fourneau, dès la ville ; `SmithGoal` : outils réclamés,
+  en fer ou en pierre, plastron des gardes, fonte des minerais bruts), **mineur** (treuil de mine,
+  bloc du mod et son modèle ; `MinerGoal` et `town/Mine` : escalier puis couloirs, filons, torches,
+  sécurité eau/lave/maisons/territoire, galerie sauvegardée).
+- Couvre-chefs du marchand, du boulanger, du forgeron et du mineur.
+
 ## Quatre niveaux par bâtiment
 
 | Niveau | Matériaux | Ce que le niveau apporte |

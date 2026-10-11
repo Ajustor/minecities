@@ -121,5 +121,7 @@
   "k": "minecraft:composter",
   "t": "minecraft:torch",
   "~": "minecraft:water"
- }
+ },
+ "upgrade": "minecities:farm_3",
+ "legacy": true
 }

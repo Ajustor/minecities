@@ -121,5 +121,7 @@
   "g": "{fence_gate}[facing=north]",
   "h": "minecraft:hay_block[axis=y]",
   "t": "minecraft:torch"
- }
+ },
+ "upgrade": "minecities:barn_3",
+ "legacy": true
 }

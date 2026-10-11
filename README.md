@@ -7,8 +7,9 @@ vanilla : pas de plans imposés ni de huttes préfabriquées. Vous bâtissez com
 reconnaît vos maisons, et des citoyens viennent y vivre. Le village devient ville, puis grande
 ville, puis mégalopole.
 
-> État : **v0.8** (villes, maisons, familles, treize métiers dont le bâtisseur, les gardes,
-> l'inventeur, le médecin et le marchand, bonheur et repas variés, marché et trésor, paliers qui
+> État : **v0.9** (villes, maisons, familles, seize métiers dont le bâtisseur, les gardes,
+> l'inventeur, le médecin, le marchand, le mineur, le forgeron et le boulanger, bâtiments à quatre
+> niveaux, bonheur et repas variés, marché et trésor, paliers qui
 > débloquent, mairies annexes, fêtes, cloche d'alarme, raids de pillards, écran de l'hôtel de ville,
 > configuration et protections pour les serveurs). La suite est décrite dans [BRIEF.md](BRIEF.md) et [docs/briefs](docs/briefs).
 
@@ -83,12 +84,27 @@ ville, puis mégalopole.
      travailleur réclame (houe, hache, pioche, pelle, canne, épée, arc), des flèches, du pain si le
      grenier est vide ; sinon il vend au cours des villageois ce que le grenier a en trop (au-delà de
      32 de chaque), 32 émeraudes par jour au plus.
+   - **Four → boulanger** : pain, biscuits et tartes ; le cuisinier lui laisse alors la boulangerie et
+     garde viandes, poissons, soupes et ragoûts.
+   - **Haut fourneau → forgeron** (dès la ville) : il forge l'outil qu'un travailleur réclame (en fer
+     s'il y a des lingots, sinon en pierre), un plastron de fer pour le garde qui n'en a pas, et fond
+     en lingots le fer, l'or et le cuivre bruts.
+   - **Treuil de mine → mineur** (avec une **pioche**) : il creuse une vraie galerie, à l'est de la
+     mine : un escalier jusqu'à la profondeur des minerais, puis des couloirs ; il suit les filons,
+     pose des torches (charbon trouvé et bâtons du grenier), garde un peu de pierre et rapporte les
+     minerais. Il ne perce jamais dans l'eau ni la lave, ni sous les maisons, ni hors du territoire.
    - **Table de forge → inventeur** : quand la ville est attaquée, il assemble devant l'hôtel de ville
      un **golem de fer** (4 blocs de fer et une citrouille sculptée, pris au grenier) ou, à défaut, un
      **golem de neige** (2 blocs de neige et une citrouille).
    Deux postes dans un même atelier font deux travailleurs : les ateliers agrandis en ont deux.
 7. **Faire bâtir** : le maire (ou un adjoint) commande un bâtiment d'après un **schéma**, dans un
-   **style** (plaines, taïga, désert, savane) : `/ville build minecities:house_small taiga`. Le
+   **style** (plaines, taïga, désert, savane) : `/ville build minecities:house_1 taiga`. Chaque
+   bâtiment a **quatre niveaux**, de plus en plus chers et utiles : 1 **cabane** (rondins, terre
+   battue, toit plat), 2 **maison** (planches, pierre, vitres, toit à deux pans), 3 **bâtisse** (pierre
+   taillée, briques, fer, lanternes ; dès la ville), 4 **demeure** (pierre polie, quartz, vitraux,
+   cuivre, or ; dès la grande ville). Une maison gagne deux lits par niveau (2 à 8), un atelier un poste
+   (1 à 4), et ses travailleurs vont plus vite (un dixième par niveau). `/ville upgrade` passe au niveau
+   suivant. Le
    bâtiment se place devant lui, porte vers lui ; le bâtisseur dégage le terrain et pose les blocs
    en prenant les matériaux au grenier (le maire est prévenu de ce qui manque), et le bâtiment se
    déclare tout seul une fois fini. `/ville upgrade`, dans un bâtiment bâti par la ville,
@@ -149,6 +165,7 @@ ville, puis mégalopole.
   de planches ; coffre en bas au centre, entouré de planches.
 - **Plaque de maison** (×2) : une dalle de bois, une pépite de fer, une teinture noire.
 - **Mairie annexe** : planche, carte, planche ; planche, tonneau, planche ; trois bûches.
+- **Treuil de mine** : bûche, ficelle, bûche ; bûche, rien, bûche ; planche, chaîne, planche.
 
 ### Le maire
 
@@ -183,7 +200,7 @@ Java 25 est requis (Loom 1.18.3, Minecraft 26.2).
 ./gradlew build                 # compile, tests unitaires, jar dans build/libs
 ./gradlew runClient             # lance le jeu avec le mod
 ./gradlew runClientGameTest     # scènes en jeu vérifiées et photographiées (build/run/clientGameTest/screenshots)
-./gradlew runClientGameTest -PminecitiesGametest=work   # une scène (city, work, countryside, village, build, family, raid, life, market, robust)
+./gradlew runClientGameTest -PminecitiesGametest=work   # une scène (city, work, countryside, village, build, family, raid, life, market, robust, industry)
 python tools/textures/generate.py   # régénère les textures (peaux des citoyens, plaque, œuf)
 python tools/models/town_hall.py    # régénère le modèle de l'hôtel de ville
 python tools/blueprints/generate.py # régénère les schémas du bâtisseur

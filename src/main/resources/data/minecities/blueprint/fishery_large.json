@@ -121,5 +121,7 @@
   "r": "minecraft:barrel[facing=up]",
   "t": "minecraft:torch",
   "~": "minecraft:water"
- }
+ },
+ "upgrade": "minecities:fishery_3",
+ "legacy": true
 }

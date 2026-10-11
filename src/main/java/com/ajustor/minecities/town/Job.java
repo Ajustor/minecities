@@ -50,11 +50,18 @@ public enum Job {
 	/** Soigne les blessés et nourrit les affamés de la ville ; à l'alambic. */
 	DOCTOR("doctor", (level, pos, state) -> state.is(Blocks.BREWING_STAND), null),
 	/** Vend le surplus du grenier et achète ce qui manque aux travailleurs ; au pupitre. Dès la ville. */
-	MERCHANT("merchant", (level, pos, state) -> state.is(Blocks.LECTERN), null);
+	MERCHANT("merchant", (level, pos, state) -> state.is(Blocks.LECTERN), null),
+	/** Cuit le pain, les biscuits et les tartes ; au four (brief 11). */
+	BAKER("baker", (level, pos, state) -> state.is(Blocks.FURNACE), null),
+	/** Fond les minerais en lingots, forge les outils et les armures ; au haut fourneau. Dès la ville. */
+	SMITH("smith", (level, pos, state) -> state.is(Blocks.BLAST_FURNACE), null),
+	/** Creuse une vraie galerie sous le territoire et en rapporte pierre et minerais ; au treuil de mine. */
+	MINER("miner", (level, pos, state) -> BuiltInRegistries.BLOCK.getKey(state.getBlock()).toString()
+			.equals("minecities:mine_winch"), s -> s.is(ItemTags.PICKAXES));
 
-	/** Le palier où ce métier s'ouvre (brief 03) : le marché attend que le village soit une ville. */
+	/** Le palier où ce métier s'ouvre (brief 03) : le marché et la forge attendent que le village soit une ville. */
 	public TownTier minTier() {
-		return this == MERCHANT ? TownTier.TOWN : TownTier.VILLAGE;
+		return this == MERCHANT || this == SMITH ? TownTier.TOWN : TownTier.VILLAGE;
 	}
 
 	/** Ce métier est-il ouvert à ce palier ? */

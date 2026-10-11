@@ -1,5 +1,6 @@
 package com.ajustor.minecities.citizen;
 
+import com.ajustor.minecities.town.Job;
 import com.ajustor.minecities.town.Names;
 import com.ajustor.minecities.town.Raids;
 import com.ajustor.minecities.town.Resident;
@@ -192,7 +193,10 @@ public class CitizenEntity extends PathfinderMob {
 		goalSelector.addGoal(3, new EatGoal(this));
 		goalSelector.addGoal(3, new FestivalGoal(this));
 		goalSelector.addGoal(4, new FarmerGoal(this));
-		goalSelector.addGoal(4, new CookGoal(this));
+		goalSelector.addGoal(4, new CookGoal(this, Job.COOK));
+		goalSelector.addGoal(4, new CookGoal(this, Job.BAKER));
+		goalSelector.addGoal(4, new SmithGoal(this));
+		goalSelector.addGoal(4, new MinerGoal(this));
 		goalSelector.addGoal(4, new LumberjackGoal(this));
 		goalSelector.addGoal(4, new BreederGoal(this));
 		goalSelector.addGoal(4, new FishermanGoal(this));

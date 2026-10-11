@@ -22,6 +22,8 @@ public final class McItems {
 			new Item.Properties().useBlockDescriptionPrefix());
 	public static final Item TOWN_ANNEX = register("town_annex", p -> new BlockItem(McBlocks.TOWN_ANNEX, p),
 			new Item.Properties().stacksTo(16).useBlockDescriptionPrefix());
+	public static final Item MINE_WINCH = register("mine_winch", p -> new BlockItem(McBlocks.MINE_WINCH, p),
+			new Item.Properties().useBlockDescriptionPrefix());
 	public static final Item CITIZEN_SPAWN_EGG = register("citizen_spawn_egg", SpawnEggItem::new,
 			new Item.Properties().spawnEgg(McEntities.CITIZEN));
 
@@ -44,6 +46,7 @@ public final class McItems {
 					output.accept(TOWN_HALL);
 					output.accept(HOUSE_PLAQUE);
 					output.accept(TOWN_ANNEX);
+					output.accept(MINE_WINCH);
 					output.accept(CITIZEN_SPAWN_EGG);
 				})
 				.build());

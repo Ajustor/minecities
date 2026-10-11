@@ -51,9 +51,10 @@ public class BuildScenes implements FabricClientGameTest {
 	private static final BlockPos HUT_PLAQUE = new BlockPos(5, Y + 1, 4);
 	/** Le coin nord-ouest de la maison commandée. */
 	private static final BlockPos ORIGIN = new BlockPos(-14, Y, 6);
-	private static final Identifier SMALL = Identifier.fromNamespaceAndPath("minecities", "house_small");
-	private static final Identifier LARGE = Identifier.fromNamespaceAndPath("minecities", "house_large");
-	private static final Identifier MANOR = Identifier.fromNamespaceAndPath("minecities", "manor");
+	/** La maison, de niveau en niveau (brief 11) : cabane, maison, bâtisse. */
+	private static final Identifier SMALL = Identifier.fromNamespaceAndPath("minecities", "house_1");
+	private static final Identifier LARGE = Identifier.fromNamespaceAndPath("minecities", "house_2");
+	private static final Identifier MANOR = Identifier.fromNamespaceAndPath("minecities", "house_3");
 
 	@Override
 	public void runTest(ClientGameTestContext context) {
@@ -117,21 +118,24 @@ public class BuildScenes implements FabricClientGameTest {
 			context.waitTicks(20);
 			context.takeScreenshot("build_2_large_house");
 
-			// Puis le manoir : un toit à deux pans en escaliers, une fondation de pierre taillée.
+			// Puis la bâtisse (niveau 3, dès la ville) : pierre taillée, briques, fer, six lits.
 			check(sp.getServer().computeOnServer(server -> {
+				town(server).forceTier(java.util.Optional.of(com.ajustor.minecities.town.TownTier.TOWN));
+				town(server).updateTier();
 				stock(server, MANOR);
 				return Builds.upgrade(server.overworld(), town(server), ORIGIN.offset(3, 1, 3))
-						.map(c -> "manoir refusé : " + c.getString()).orElse(null);
+						.map(c -> "bâtisse refusée : " + c.getString()).orElse(null);
 			}));
 			look(sp, -19, Y + 8, -3, -10, Y + 3, 9);
 			CityScenes.film(context, sp, "manoir", 300, 20,
 					server -> town(server).constructions().stream().allMatch(Construction::done));
-			waitOrExplain(sp, server -> town(server).constructions().stream().allMatch(Construction::done), 12000,
-					"le manoir n'a pas été bâti", BuildScenes::progress);
-			check(sp.getServer().computeOnServer(server -> homeBeds(server) == 4
+			waitOrExplain(sp, server -> town(server).constructions().stream().allMatch(Construction::done), 15000,
+					"la bâtisse n'a pas été bâtie", BuildScenes::progress);
+			check(sp.getServer().computeOnServer(server -> homeBeds(server) == 6
 					&& server.overworld().getBlockState(ORIGIN.offset(0, 0, 1)).is(Blocks.STONE_BRICKS)
+					&& server.overworld().getBlockState(ORIGIN.offset(1, 1, 1)).is(Blocks.BRICKS)
 					&& server.overworld().getBlockState(ORIGIN.offset(3, 0, 0)).is(Blocks.COBBLESTONE_STAIRS) ? null
-					: "le manoir n'est pas conforme : " + town(server).houses()));
+					: "la bâtisse n'est pas conforme : " + town(server).houses()));
 			look(sp, -18, Y + 7, -3, -10, Y + 3, 9);
 			context.waitTicks(20);
 			context.takeScreenshot("build_3_manor");

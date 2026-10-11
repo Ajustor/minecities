@@ -1,5 +1,6 @@
 package com.ajustor.minecities.build;
 
+import com.ajustor.minecities.town.TownTier;
 import com.google.gson.JsonParser;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -10,6 +11,8 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -36,15 +39,53 @@ class BlueprintTest {
 		}
 	}
 
+	private static Blueprint read(String name) throws IOException {
+		return Blueprint.parse(Identifier.fromNamespaceAndPath("minecities", name),
+				JsonParser.parseString(Files.readString(blueprints().resolve(name + ".json"))).getAsJsonObject());
+	}
+
 	@Test
-	void theSmallHouseGrowsIntoTheLargeOne() throws IOException {
-		Blueprint small = Blueprint.parse(Identifier.fromNamespaceAndPath("minecities", "house_small"),
-				JsonParser.parseString(Files.readString(blueprints().resolve("house_small.json"))).getAsJsonObject());
-		assertEquals(Identifier.fromNamespaceAndPath("minecities", "house_large"), small.upgrade().orElseThrow());
-		assertEquals(7, small.width());
-		// Sept de profondeur, plus le perron.
-		assertEquals(8, small.depth());
-		assertEquals(6, small.height());
+	void everyBuildingGrowsThroughFourLevels() throws IOException {
+		for (String family : List.of("house", "kitchen", "farm", "barracks", "market", "mine", "bakery", "smithy")) {
+			for (int level = 1; level <= Blueprint.LEVELS; level++) {
+				Blueprint blueprint = read(family + "_" + level);
+				assertEquals(level, blueprint.level());
+				assertEquals(family, blueprint.family());
+				assertEquals(level < Blueprint.LEVELS
+						? Optional.of(Identifier.fromNamespaceAndPath("minecities", family + "_" + (level + 1)))
+						: Optional.empty(), blueprint.upgrade());
+			}
+		}
+		// Les niveaux 3 et 4 attendent la ville, puis la grande ville ; le marché, la ville dès le début.
+		assertEquals(TownTier.VILLAGE, read("house_2").tier());
+		assertEquals(TownTier.TOWN, read("house_3").tier());
+		assertEquals(TownTier.CITY, read("house_4").tier());
+		assertEquals(TownTier.TOWN, read("market_1").tier());
+	}
+
+	@Test
+	void eachLevelHousesMoreAndCostsMore() throws IOException {
+		int beds = 0;
+		for (int level = 1; level <= Blueprint.LEVELS; level++) {
+			Blueprint house = read("house_" + level);
+			long here = house.cells().stream().filter(c -> c.template().contains("part=head")).count();
+			assertEquals(2 * level, here);
+			assertTrue(here > beds);
+			beds = (int) here;
+		}
+		assertTrue(read("house_1").cells().stream().noneMatch(c -> c.template().contains("bricks")));
+		assertTrue(read("house_3").cells().stream().anyMatch(c -> c.template().equals("minecraft:bricks")));
+		assertTrue(read("house_4").cells().stream().anyMatch(c -> c.template().equals("minecraft:gold_block")));
+	}
+
+	@Test
+	void oldBlueprintsLeadToTheNewLevels() throws IOException {
+		Blueprint small = read("house_small");
+		assertTrue(small.legacy());
+		assertEquals(Identifier.fromNamespaceAndPath("minecities", "house_2"), small.upgrade().orElseThrow());
+		assertEquals(3, read("manor").level());
+		assertEquals(2, read("kitchen_large").level());
+		assertFalse(read("house_1").legacy());
 	}
 
 	@Test

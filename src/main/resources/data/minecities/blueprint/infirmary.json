@@ -80,5 +80,6 @@
   "t": "minecraft:torch",
   "u": "minecraft:cauldron"
  },
- "upgrade": "minecities:infirmary_large"
+ "upgrade": "minecities:infirmary_2",
+ "legacy": true
 }

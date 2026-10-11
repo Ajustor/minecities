@@ -17,7 +17,8 @@ import java.util.Map;
  * Le couvre-chef de chaque métier, posé sur la tête du citoyen : chapeau de paille du fermier, toque
  * du cuisinier, bonnet du bûcheron, casquette de l'éleveur, bob du pêcheur, calot du bâtisseur,
  * casquette à visière du livreur, chapeau de fer du garde, chapeau à plume de l'archer, lunettes de
- * l'inventeur, bandeau à croix du médecin.
+ * l'inventeur, bandeau à croix du médecin, calot du boulanger, calotte du forgeron, casque à lampe du
+ * mineur…
  *
  * <p>Même squelette que le citoyen (il en suit les gestes) ; seuls les chapeaux, enfants de la tête,
  * ont des cubes. La texture (textures/entity/citizen/hats.png, générée par tools/textures/generate.py)
@@ -134,6 +135,33 @@ public class CitizenHatModel extends CitizenModel {
 						PartPose.ZERO);
 				hat.addOrReplaceChild("left", cube(Tile.GLASS).addBox(-3.5f, -8, -5, 3, 2, 1), PartPose.ZERO);
 				hat.addOrReplaceChild("right", cube(Tile.GLASS).addBox(0.5f, -8, -5, 3, 2, 1), PartPose.ZERO);
+			}
+			case MERCHANT -> {
+				// Haut chapeau de feutre à ruban doré.
+				hat.addOrReplaceChild("crown", cube(Tile.BLUE).addBox(-4, -13, -4, 8, 5, 8), PartPose.ZERO);
+				hat.addOrReplaceChild("ribbon", cube(Tile.GOLD).addBox(-4.2f, -9.5f, -4.2f, 8.4f, 1, 8.4f),
+						PartPose.ZERO);
+				hat.addOrReplaceChild("brim", cube(Tile.BLUE).addBox(-6, -8.5f, -6, 12, 0.5f, 12), PartPose.ZERO);
+			}
+			case BAKER -> {
+				// Calot blanc de boulanger, un peu de farine en dessus.
+				hat.addOrReplaceChild("band", cube(Tile.WHITE).addBox(-4.5f, -10, -4.5f, 9, 2, 9), PartPose.ZERO);
+				hat.addOrReplaceChild("top", cube(Tile.WHITE).addBox(-5, -11, -5, 10, 1, 10),
+						PartPose.rotation(0.08f, 0, 0.05f));
+			}
+			case SMITH -> {
+				// Calotte de cuir et bandeau noirci par la forge.
+				hat.addOrReplaceChild("cap", cube(Tile.LEATHER).addBox(-4.5f, -10, -4.5f, 9, 2.5f, 9), PartPose.ZERO);
+				hat.addOrReplaceChild("band", cube(Tile.BLACK).addBox(-4.7f, -8.2f, -4.7f, 9.4f, 1, 9.4f),
+						PartPose.ZERO);
+			}
+			case MINER -> {
+				// Casque de cuir à bord, une lampe sur le front.
+				hat.addOrReplaceChild("cap", cube(Tile.BROWN).addBox(-4.5f, -10.5f, -4.5f, 9, 2.5f, 9),
+						PartPose.ZERO);
+				hat.addOrReplaceChild("brim", cube(Tile.BROWN).addBox(-5.5f, -8.3f, -5.5f, 11, 0.5f, 11),
+						PartPose.ZERO);
+				hat.addOrReplaceChild("lamp", cube(Tile.GOLD).addBox(-1, -10, -5.2f, 2, 2, 1), PartPose.ZERO);
 			}
 			case DOCTOR -> {
 				// Bandeau blanc à croix rouge.

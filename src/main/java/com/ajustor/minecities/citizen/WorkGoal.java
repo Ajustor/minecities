@@ -90,8 +90,11 @@ abstract class WorkGoal extends Goal {
 
 	/** Met le travail en pause pour {@code ticks} ticks. */
 	protected void rest(int ticks) {
-		// Heureux, il reprend plus vite ; malheureux, il traîne.
-		idleUntil = citizen.level().getGameTime() + Math.round(ticks * Happiness.workPace(citizen.mood()));
+		// Heureux, il reprend plus vite ; malheureux, il traîne. Un atelier de haut niveau, mieux outillé,
+		// fait gagner du temps (un dixième par niveau).
+		float level = citizen.job().map(j -> town().buildingLevel(j.workshop())).orElse(1);
+		float workshop = Math.max(0.6f, 1.1f - 0.1f * level);
+		idleUntil = citizen.level().getGameTime() + Math.round(ticks * Happiness.workPace(citizen.mood()) * workshop);
 	}
 
 	protected ServerLevel level() {

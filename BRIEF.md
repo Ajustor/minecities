@@ -127,8 +127,8 @@ puis un tag `vX.Y.0` qui publie la release.
    mairies annexes).
 5. **v0.8** (fait) — brief 08 (configuration, protections, hôtel de ville détruit, ménage des
    citoyens disparus, relevés étalés).
-6. **v0.9** — brief 11 : les **quatre niveaux** de chaque bâtiment, de plus en plus chers ; le
-   boulanger, le mineur, le forgeron.
+6. **v0.9** (fait) — brief 11 : les **quatre niveaux** de chaque bâtiment, de plus en plus chers ; le
+   boulanger, le mineur (et son treuil), le forgeron.
 7. **v1.0** — brief 11 : joaillier, maçon, verrier, tisserand, tanneur, bibliothécaire, apiculteur,
    leurs postes (modèles propres au besoin) ; spécialités de niveau 4 ; finitions.
 8. **v1.x** — suites du brief 09 (aperçu fantôme, plans, structures enregistrées).
