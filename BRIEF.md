@@ -119,9 +119,10 @@ puis un tag `vX.Y.0` qui publie la release.
 
 1. **v0.4** (fait) — brief 10 (familles, mariages, naissances, animations) avec l'écran de
    l'hôtel de ville du brief 05.
-2. **v0.5** — brief 04 (faim variée, bonheur), dont dépendent les naissances, les votes et
-   l'immigration ; et le reste du brief 05 (HUD, indications en jeu).
-3. **v0.6** — brief 06 (garde, défense, cloche, raids, fêtes).
+2. **v0.5** (fait) — brief 06, première partie : caserne, tour de garde, gardes, archers, inventeur
+   et golems, raids de pillards par vagues.
+3. **v0.6** — brief 04 (faim variée, bonheur), dont dépendent les naissances, les votes et
+   l'immigration ; le reste du brief 05 (HUD, indications en jeu) et du brief 06 (cloche, fêtes).
 4. **v0.7** — brief 07 (trésor, marché, commerce) puis brief 03 (déblocages par palier).
 5. **v0.8** — brief 08 (configuration, permissions, protections, performances, compatibilité).
 6. **v1.x** — suites du brief 09 (aperçu fantôme, plans, structures enregistrées) et du brief 01
@@ -135,8 +136,8 @@ puis un tag `vX.Y.0` qui publie la release.
 | 03 | [Croissance et paliers](docs/briefs/03-croissance.md) | Ce que débloque chaque palier, adopter un village vanilla, quartiers de la mégalopole |
 | 04 | [Faim, santé et bonheur](docs/briefs/04-faim-bonheur.md) | Variété des repas, bonheur, maladies, naissances |
 | 05 | [Interface et rendu](docs/briefs/05-interface-rendu.md) | Écran de l'hôtel de ville, carte du territoire, modèles Blockbench, noms au-dessus des têtes |
-| 06 | [Défense et événements](docs/briefs/06-defense-evenements.md) | Gardes, raids, cloche d'alarme, fêtes et marchés |
+| 06 | [Défense et événements](docs/briefs/06-defense-evenements.md) | Gardes, archers, inventeur et raids faits en v0.5 ; suite : cloche d'alarme, fêtes et marchés |
 | 07 | [Économie et commerce](docs/briefs/07-economie.md) | Trésor, marché, échanges avec les villageois et entre villes |
 | 08 | [Robustesse et multijoueur](docs/briefs/08-robustesse.md) | Permissions, protections, configuration, performance, compatibilité |
-| 10 | [Familles, mariages, naissances et animations](docs/briefs/10-familles-animations.md) | **Prochaine étape (v0.4)** : 5 fondateurs, plus d'immigration magique, mariages acceptés par le maire, naissances, animations |
+| 10 | [Familles, mariages, naissances et animations](docs/briefs/10-familles-animations.md) | Fait en v0.4 : 5 fondateurs, mariages acceptés par le maire, naissances, animations |
 | 09 | [Bâtisseur et schémas](docs/briefs/09-batisseur-schemas.md) | Fait en v0.3 ; suite : aperçu fantôme, objet plan, schémas enregistrés au bloc de structure |

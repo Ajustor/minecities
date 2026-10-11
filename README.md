@@ -7,8 +7,8 @@ vanilla : pas de plans imposés ni de huttes préfabriquées. Vous bâtissez com
 reconnaît vos maisons, et des citoyens viennent y vivre. Le village devient ville, puis grande
 ville, puis mégalopole.
 
-> État : **v0.4** (villes, maisons, familles, huit métiers dont le bâtisseur et le livreur, écran de
-> l'hôtel de ville). La suite est décrite dans [BRIEF.md](BRIEF.md) et [docs/briefs](docs/briefs).
+> État : **v0.5** (villes, maisons, familles, onze métiers dont le bâtisseur, le livreur, les
+> gardes et l'inventeur, écran de l'hôtel de ville, raids de pillards). La suite est décrite dans [BRIEF.md](BRIEF.md) et [docs/briefs](docs/briefs).
 
 ## Jouer
 
@@ -57,6 +57,13 @@ ville, puis mégalopole.
      chantier, chacun son bloc.
    - **Table de cartographie → livreur** : il porte aux bâtisseurs les matériaux qu'ils réclament,
      pour qu'ils ne quittent pas leur chantier.
+   - **Meule → garde** : avec une **épée** (et l'armure qu'il trouve au grenier), il fait sa ronde,
+     veille la nuit et se bat contre les monstres du territoire.
+   - **Table d'archerie → archer** : avec un **arc** et des flèches, il monte au point le plus haut
+     près de sa table (le haut d'une tour de garde) et tire sur les monstres jusqu'à 24 blocs.
+   - **Table de forge → inventeur** : quand la ville est attaquée, il assemble devant l'hôtel de ville
+     un **golem de fer** (4 blocs de fer et une citrouille sculptée, pris au grenier) ou, à défaut, un
+     **golem de neige** (2 blocs de neige et une citrouille).
    Deux postes dans un même atelier font deux travailleurs : les ateliers agrandis en ont deux.
 7. **Faire bâtir** : le maire (ou un adjoint) commande un bâtiment d'après un **schéma**, dans un
    **style** (plaines, taïga, désert, savane) : `/ville build minecities:house_small taiga`. Le
@@ -67,10 +74,19 @@ ville, puis mégalopole.
    pans en escaliers et une fondation de pierre taillée. Chaque bâtiment a un perron (une marche
    devant la porte), et il faut des échafaudages au grenier pour les toits. Petite maison → grande maison → manoir ;
    chaque atelier (ferme avec son champ, cuisine, scierie, étable avec son enclos, pêcherie avec son
-   bassin, atelier du bâtisseur) → son grand atelier, à deux postes. Les datapacks peuvent ajouter
+   bassin, atelier du bâtisseur) → son grand atelier, à deux postes. Pour la défense : la **caserne**
+   (deux lits, deux meules ; agrandie, trois), la **tour de garde** (une table d'archerie, un poste
+   tout en haut) et l'**atelier de l'inventeur**. Les datapacks peuvent ajouter
    des schémas (`data/<ns>/blueprint/*.json`).
 8. **Grandir** : la ville monte de palier avec ses citoyens et ses maisons, et son territoire
    s'étend.
+9. **Les raids** : une ville d'au moins 8 habitants attire les pillards. Au crépuscule, une fois tous
+   les trois jours au plus, un raid peut partir du bord du territoire, comme un raid vanilla : une
+   barre de boss, plusieurs vagues de pillards et de vindicateurs qui marchent sur l'hôtel de ville.
+   Plus la ville a d'habitants et de maisons, plus il y a de vagues (jusqu'à 7) et de pillards par
+   vague. Les civils se mettent à l'abri, les gardes accourent à l'hôtel de ville, les archers
+   tirent de leurs tours et l'inventeur fait des golems. Les pillards qui atteignent l'hôtel de ville
+   pillent le grenier ; une victoire y dépose des émeraudes.
 
 | Palier | Population (citoyens + villageois) | Maisons | Rayon du territoire |
 |---|---|---|---|
@@ -105,6 +121,7 @@ commandes du maire s'appliquent à la ville où il se trouve.
 | `build cancel` | maire, adjoints | annule le chantier en cours |
 | `upgrade` | maire, adjoints | agrandit le bâtiment où l'on se trouve |
 | `admin immigrate\|feed\|starve` | opérateurs | tests : faire venir un citoyen, rassasier ou affamer la ville |
+| `admin raid\|raid_stop` | opérateurs | tests : lancer ou arrêter un raid |
 
 ## Développer
 
@@ -114,7 +131,7 @@ Java 25 est requis (Loom 1.18.3, Minecraft 26.2).
 ./gradlew build                 # compile, tests unitaires, jar dans build/libs
 ./gradlew runClient             # lance le jeu avec le mod
 ./gradlew runClientGameTest     # scènes en jeu vérifiées et photographiées (build/run/clientGameTest/screenshots)
-./gradlew runClientGameTest -PminecitiesGametest=work   # une scène (city, work, countryside, village, build)
+./gradlew runClientGameTest -PminecitiesGametest=work   # une scène (city, work, countryside, village, build, family, raid)
 python tools/textures/generate.py   # régénère les textures (peaux des citoyens, plaque, œuf)
 python tools/models/town_hall.py    # régénère le modèle de l'hôtel de ville
 python tools/blueprints/generate.py # régénère les schémas du bâtisseur
