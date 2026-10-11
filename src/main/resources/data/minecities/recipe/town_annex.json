@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "PMP",
+    "PBP",
+    "LLL"
+  ],
+  "key": {
+    "P": "#minecraft:planks",
+    "M": "minecraft:map",
+    "B": "minecraft:barrel",
+    "L": "#minecraft:logs"
+  },
+  "result": {
+    "id": "minecities:town_annex",
+    "count": 1
+  }
+}

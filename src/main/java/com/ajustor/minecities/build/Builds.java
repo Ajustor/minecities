@@ -29,6 +29,10 @@ public final class Builds {
 	 */
 	public static Optional<Component> order(ServerLevel level, Town town, Blueprint blueprint, BuildStyle style,
 			BlockPos origin, Rotation rotation) {
+		if (town.tier().ordinal() < blueprint.tier().ordinal()) {
+			return Optional.of(Component.translatable("message.minecities.build.locked",
+					Component.translatable(blueprint.translationKey()), Component.translatable(blueprint.tier().translationKey())));
+		}
 		BlockPos[] bounds = BuildPlan.bounds(blueprint, origin, rotation);
 		for (BlockPos corner : new BlockPos[]{bounds[0], bounds[1], new BlockPos(bounds[0].getX(), 0, bounds[1].getZ()),
 				new BlockPos(bounds[1].getX(), 0, bounds[0].getZ())}) {

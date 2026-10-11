@@ -1,0 +1,85 @@
+{
+ "kind": "workshop",
+ "layers": [
+  [
+   "...^.....",
+   "FFFFFFFFF",
+   "FfffffffF",
+   "FfffffffF",
+   "FfffffffF",
+   "FfffffffF",
+   "FfffffffF",
+   "FFFFFFFFF"
+  ],
+  [
+   "... .....",
+   "PWWDWWWWP",
+   "Wt     CW",
+   "W       W",
+   "W       W",
+   "W   p   W",
+   "Wyy    yW",
+   "PWWWWWWWP"
+  ],
+  [
+   ".........",
+   "PWWdWWWWP",
+   "W L     W",
+   "W       W",
+   "G       G",
+   "W       W",
+   "W       W",
+   "PWGWGWGWP"
+  ],
+  [
+   ".........",
+   "PWWWWWWWP",
+   "W       W",
+   "W       W",
+   "W       W",
+   "W       W",
+   "W       W",
+   "PWWWWWWWP"
+  ],
+  [
+   ".........",
+   "RRRRRRRRR",
+   "RRRRRRRRR",
+   "RRRRRRRRR",
+   "RRRRRRRRR",
+   "RRRRRRRRR",
+   "RRRRRRRRR",
+   "RRRRRRRRR"
+  ],
+  [
+   ".........",
+   ".........",
+   ".SSSSSSS.",
+   ".SSSSSSS.",
+   ".SSSSSSS.",
+   ".SSSSSSS.",
+   ".SSSSSSS.",
+   "........."
+  ]
+ ],
+ "key": {
+  " ": "minecraft:air",
+  "C": "minecraft:chest[facing=south]",
+  "D": "{door}[facing=north,half=lower,hinge=left]",
+  "F": "{foundation}",
+  "G": "{window}",
+  "L": "minecities:house_plaque[facing=south]",
+  "P": "{frame}[axis=y]",
+  "R": "{roof}",
+  "S": "{roof_slab}[type=bottom]",
+  "W": "{wall}",
+  "^": "{steps}[facing=south,half=bottom,shape=straight]",
+  "d": "{door}[facing=north,half=upper,hinge=left]",
+  "f": "{floor}",
+  "p": "minecraft:lectern[facing=north]",
+  "t": "minecraft:torch",
+  "y": "minecraft:barrel[facing=north]"
+ },
+ "upgrade": "minecities:market_large",
+ "tier": "town"
+}

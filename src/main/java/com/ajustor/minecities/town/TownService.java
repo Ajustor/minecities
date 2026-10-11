@@ -135,6 +135,44 @@ public final class TownService {
 		});
 	}
 
+	// Annexes
+
+	/** Une mairie annexe est posée : la ville l'accepte, ou le joueur la récupère avec la raison. */
+	public static void placeAnnex(ServerLevel level, BlockPos pos, ServerPlayer player, ItemStack stack) {
+		Towns towns = Towns.get(level.getServer());
+		Optional<Town> found = towns.at(level.dimension(), pos);
+		Optional<String> refusal = found.isEmpty() ? Optional.of("outside")
+				: found.get().canManage(player.getUUID()) ? found.get().annexRefusal(level.dimension(), pos)
+				: Optional.of("not_mayor");
+		if (refusal.isPresent()) {
+			player.sendSystemMessage(Component.translatable("message.minecities.annex.refused." + refusal.get(),
+					Component.translatable(TownTier.CITY.translationKey()), Town.ANNEX_SPACING)
+					.withStyle(ChatFormatting.RED));
+			level.removeBlock(pos, false);
+			if (!player.isCreative()) {
+				player.getInventory().placeItemBackInInventory(stack.copyWithCount(1));
+			}
+			return;
+		}
+		Town town = found.get();
+		town.addAnnex(pos);
+		towns.changed();
+		notify(level.getServer(), town, Component.translatable("message.minecities.annex.placed", pos.toShortString(),
+				Town.ANNEX_RADIUS));
+		level.playSound(null, pos, SoundEvents.BELL_BLOCK, SoundSource.BLOCKS, 1.0f, 1.4f);
+	}
+
+	public static void annexRemoved(ServerLevel level, BlockPos pos) {
+		Towns towns = Towns.get(level.getServer());
+		for (Town town : towns.all()) {
+			if (town.dimension().equals(level.dimension()) && town.removeAnnex(pos)) {
+				notify(level.getServer(), town, Component.translatable("message.minecities.annex.removed",
+						pos.toShortString()));
+				towns.changed();
+			}
+		}
+	}
+
 	// Maisons
 
 	/** Relève la maison de cette plaque, l'enregistre (ou l'oublie) et en informe le joueur. */
@@ -458,6 +496,12 @@ public final class TownService {
 		});
 	}
 
+	/** Recalcule le palier (après un palier imposé) et l'annonce s'il a changé. */
+	public static void retier(ServerLevel level, Town town) {
+		town.updateTier().ifPresent(before -> announceTier(level, town, before));
+		settle(level, town);
+	}
+
 	private static void announceTier(ServerLevel level, Town town, TownTier before) {
 		boolean up = town.tier().ordinal() > before.ordinal();
 		Component tier = Component.translatable(town.tier().translationKey());
@@ -465,6 +509,40 @@ public final class TownService {
 			level.getServer().getPlayerList().broadcastSystemMessage(Component.translatable(
 					"message.minecities.tier.up", town.name(), tier).withStyle(ChatFormatting.GOLD), false);
 			level.playSound(null, town.hall(), SoundEvents.PLAYER_LEVELUP, SoundSource.BLOCKS, 1.0f, 1.0f);
+			for (int i = 0; i < 3; i++) {
+				Festivals.launch(level, town.hall());
+			}
+			for (ServerPlayer player : level.players()) {
+				if (town.contains(level.dimension(), player.blockPosition())) {
+					Borders.arrived(player, town);
+					Borders.title(player, Component.literal(town.name()).withStyle(ChatFormatting.GOLD),
+							Component.translatable("hud.minecities.tier_up", tier).withStyle(ChatFormatting.YELLOW));
+				}
+			}
+			// Ce que le nouveau palier ouvre : des métiers, des schémas, un territoire plus grand.
+			List<Component> unlocked = new ArrayList<>();
+			for (Job job : Job.values()) {
+				if (job.minTier() == town.tier()) {
+					unlocked.add(Component.translatable(job.translationKey()));
+				}
+			}
+			com.ajustor.minecities.build.Blueprints.all(level.getServer()).values().stream()
+					.filter(b -> b.tier() == town.tier())
+					.forEach(b -> unlocked.add(Component.translatable(b.translationKey())));
+			if (town.tier().annexes() > 0) {
+				unlocked.add(Component.translatable("message.minecities.tier.annexes", town.tier().annexes()));
+			}
+			notify(level.getServer(), town, Component.translatable("message.minecities.tier.radius", town.radius()));
+			if (!unlocked.isEmpty()) {
+				net.minecraft.network.chat.MutableComponent list = Component.empty();
+				for (Component c : unlocked) {
+					if (!list.getSiblings().isEmpty()) {
+						list.append(", ");
+					}
+					list.append(c);
+				}
+				notify(level.getServer(), town, Component.translatable("message.minecities.tier.unlocks", list));
+			}
 		} else {
 			notify(level.getServer(), town, Component.translatable("message.minecities.tier.down", town.name(), tier));
 		}
@@ -553,6 +631,9 @@ public final class TownService {
 	public static List<BlockPos> pantries(ServerLevel level, Town town, Resident resident) {
 		List<BlockPos> pantries = new ArrayList<>();
 		resident.home().flatMap(town::house).ifPresent(h -> pantries.addAll(h.containers()));
+		// Le grenier de l'annexe du quartier, s'il est plus près de chez lui que l'hôtel de ville.
+		BlockPos from = resident.home().orElse(town.hall());
+		town.activeAnnexes().stream().filter(a -> a.distSqr(from) < town.hall().distSqr(from)).forEach(pantries::add);
 		pantries.add(town.hall());
 		return pantries.stream().filter(p -> level.isLoaded(p) && level.getBlockEntity(p) instanceof Container c
 				&& hasFood(c)).toList();
@@ -594,6 +675,9 @@ public final class TownService {
 				town.hall().toShortString()));
 		granary(level, town).ifPresent(g -> player.sendSystemMessage(
 				Component.translatable("info.minecities.granary", countMeals(g))));
+		granary(level, town).ifPresent(g -> player.sendSystemMessage(Component.translatable("info.minecities.treasury",
+				com.ajustor.minecities.town.Stock.count(g, s -> s.is(Items.EMERALD)),
+				town.chronicle().earnedToday(level.getGameTime()))));
 		town.averageMood().ifPresent(mood -> player.sendSystemMessage(Component.translatable("info.minecities.mood",
 				String.format("%.1f", mood)).withStyle(mood >= com.ajustor.minecities.citizen.Happiness.HAPPY
 				? ChatFormatting.GREEN : mood > com.ajustor.minecities.citizen.Happiness.UNHAPPY ? ChatFormatting.WHITE

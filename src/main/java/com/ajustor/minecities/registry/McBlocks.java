@@ -2,6 +2,7 @@ package com.ajustor.minecities.registry;
 
 import com.ajustor.minecities.MineCities;
 import com.ajustor.minecities.block.HousePlaqueBlock;
+import com.ajustor.minecities.block.TownAnnexBlock;
 import com.ajustor.minecities.block.TownHallBlock;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
@@ -32,6 +33,15 @@ public final class McBlocks {
 					.noCollision()
 					.sound(SoundType.WOOD)
 					.pushReaction(PushReaction.DESTROY));
+
+	/** La mairie annexe : elle étend le territoire d'une grande ville, avec un grenier de quartier. */
+	public static final Block TOWN_ANNEX = register("town_annex", TownAnnexBlock::new,
+			BlockBehaviour.Properties.of()
+					.mapColor(MapColor.WOOD)
+					.strength(3.0f, 1200.0f)
+					.noOcclusion()
+					.sound(SoundType.WOOD)
+					.pushReaction(PushReaction.BLOCK));
 
 	private McBlocks() {
 	}

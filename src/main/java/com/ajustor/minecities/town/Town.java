@@ -58,11 +58,23 @@ public final class Town {
 					.forGetter(t -> t.affinities),
 			MarriageRequest.CODEC.listOf().optionalFieldOf("marriage_requests", List.of())
 					.forGetter(t -> List.copyOf(t.marriageRequests)),
-			Chronicle.CODEC.forGetter(t -> t.chronicle)
+			Chronicle.CODEC.forGetter(t -> t.chronicle),
+			BlockPos.CODEC.listOf().optionalFieldOf("annexes", List.of()).forGetter(t -> List.copyOf(t.annexes)),
+			Codec.STRING.optionalFieldOf("forced_tier").forGetter(t -> t.forcedTier.map(TownTier::serializedName))
 	).apply(i, (head, houses, residents, tier, lastArrival, villagers, constructions, affinities, requests,
-			chronicle) -> new Town(head.id(), head.name(), head.dimension(), head.hall(), head.mayor(),
-			head.mayorName(), head.deputies(), head.founded(), houses, residents, tier, lastArrival, villagers,
-			constructions, affinities, requests, chronicle)));
+			chronicle, annexes, forced) -> {
+		Town town = new Town(head.id(), head.name(), head.dimension(), head.hall(), head.mayor(),
+				head.mayorName(), head.deputies(), head.founded(), houses, residents, tier, lastArrival, villagers,
+				constructions, affinities, requests, chronicle);
+		town.annexes.addAll(annexes);
+		town.forcedTier = forced.map(TownTier::fromSerializedName);
+		return town;
+	}));
+
+	/** Une mairie annexe étend le territoire de tant de blocs autour d'elle. */
+	public static final int ANNEX_RADIUS = 48;
+	/** Une annexe se pose à tant de blocs au moins de l'hôtel de ville (et des autres annexes). */
+	public static final int ANNEX_SPACING = 40;
 
 	/** Au-delà de cette affinité, deux citoyens s'entendent. */
 	public static final int FRIENDS = 70;
@@ -89,6 +101,10 @@ public final class Town {
 	private final List<MarriageRequest> marriageRequests;
 	/** Les chantiers commandés par le maire, en cours puis finis, dans l'ordre de commande. */
 	private final List<Construction> constructions;
+	/** Le palier imposé par un opérateur (serveurs, essais), au lieu de celui de la population. */
+	private Optional<TownTier> forcedTier = Optional.empty();
+	/** Les mairies annexes : elles étendent le territoire et servent de greniers secondaires. */
+	private final List<BlockPos> annexes = new ArrayList<>();
 	/** Ce qui s'est passé dans la ville : morts, fêtes, alerte. */
 	private final Chronicle chronicle;
 	/** L'humeur de chaque citoyen, à son dernier calcul (non sauvegardé : l'entité la recalcule). */
@@ -190,14 +206,63 @@ public final class Town {
 		return lastArrival;
 	}
 
-	/** Dans le territoire de la ville : un disque autour de l'hôtel de ville, sur toute la hauteur. */
+	/**
+	 * Dans le territoire de la ville : un disque autour de l'hôtel de ville, et un autre autour de
+	 * chacune de ses mairies annexes en service, sur toute la hauteur.
+	 */
 	public boolean contains(ResourceKey<Level> dimension, BlockPos pos) {
 		if (!this.dimension.equals(dimension)) {
 			return false;
 		}
-		long dx = pos.getX() - hall.getX();
-		long dz = pos.getZ() - hall.getZ();
-		return dx * dx + dz * dz <= (long) radius() * radius();
+		if (within(hall, pos, radius())) {
+			return true;
+		}
+		for (BlockPos annex : activeAnnexes()) {
+			if (within(annex, pos, ANNEX_RADIUS)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private static boolean within(BlockPos center, BlockPos pos, int radius) {
+		long dx = pos.getX() - center.getX();
+		long dz = pos.getZ() - center.getZ();
+		return dx * dx + dz * dz <= (long) radius * radius;
+	}
+
+	// Annexes
+
+	/** Toutes les annexes posées. */
+	public List<BlockPos> annexes() {
+		return List.copyOf(annexes);
+	}
+
+	/** Les annexes en service : autant que le palier en permet (les premières posées). */
+	public List<BlockPos> activeAnnexes() {
+		return annexes.subList(0, Math.min(annexes.size(), tier.annexes()));
+	}
+
+	/** Pourquoi on ne peut pas poser d'annexe ici ; vide si on peut. */
+	public Optional<String> annexRefusal(ResourceKey<Level> dimension, BlockPos pos) {
+		if (annexes.size() >= tier.annexes()) {
+			return Optional.of(tier.annexes() == 0 ? "tier" : "too_many");
+		}
+		if (!contains(dimension, pos)) {
+			return Optional.of("outside");
+		}
+		if (within(hall, pos, ANNEX_SPACING - 1) || annexes.stream().anyMatch(a -> within(a, pos, ANNEX_SPACING - 1))) {
+			return Optional.of("too_close");
+		}
+		return Optional.empty();
+	}
+
+	public void addAnnex(BlockPos pos) {
+		annexes.add(pos.immutable());
+	}
+
+	public boolean removeAnnex(BlockPos pos) {
+		return annexes.remove(pos);
 	}
 
 	/** La distance horizontale entre l'hôtel de ville et ce point. */
@@ -282,7 +347,8 @@ public final class Town {
 		Map<UUID, Resident.Employment> hired = new LinkedHashMap<>();
 		for (House house : houses.values()) {
 			for (House.Workstation station : house.workstations()) {
-				if (taken.contains(station.pos())) {
+				// Un poste dont le métier n'est pas encore ouvert à ce palier attend.
+				if (taken.contains(station.pos()) || !station.job().unlockedAt(tier)) {
 					continue;
 				}
 				Optional<UUID> jobless = residents.entrySet().stream()
@@ -583,9 +649,18 @@ public final class Town {
 		return constructions.stream().filter(c -> c.done() && c.contains(pos)).reduce((a, b) -> b);
 	}
 
+	/** Impose un palier (vide : le palier suit à nouveau la population). */
+	public void forceTier(Optional<TownTier> tier) {
+		forcedTier = tier;
+	}
+
+	public Optional<TownTier> forcedTier() {
+		return forcedTier;
+	}
+
 	/** Recalcule le palier ; renvoie l'ancien s'il a changé. */
 	public Optional<TownTier> updateTier() {
-		TownTier now = TownTier.of(population(), homes().size());
+		TownTier now = forcedTier.orElseGet(() -> TownTier.of(population(), homes().size()));
 		if (now == tier) {
 			return Optional.empty();
 		}

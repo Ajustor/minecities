@@ -3,6 +3,7 @@ package com.ajustor.minecities.town;
 import com.ajustor.minecities.registry.McItems;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.ChatFormatting;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.game.ClientboundSetSubtitleTextPacket;
@@ -63,7 +64,10 @@ public final class Borders {
 			if (player.isHolding(McItems.TOWN_HALL) || player.isHolding(McItems.HOUSE_PLAQUE)) {
 				for (Town town : towns.all()) {
 					if (town.dimension().equals(level.dimension())) {
-						outline(level, player, town);
+						outline(level, player, town, town.hall(), town.radius());
+						for (BlockPos annex : town.activeAnnexes()) {
+							outline(level, player, town, annex, Town.ANNEX_RADIUS);
+						}
 					}
 				}
 			}
@@ -72,18 +76,31 @@ public final class Borders {
 	}
 
 	private static void welcome(ServerPlayer player, Town town) {
-		player.connection.send(new ClientboundSetTitlesAnimationPacket(10, 50, 15));
-		player.connection.send(new ClientboundSetSubtitleTextPacket(Component.translatable("hud.minecities.welcome.sub",
-				Component.translatable(town.tier().translationKey()), town.mayorName()).withStyle(ChatFormatting.GRAY)));
-		player.connection.send(new ClientboundSetTitleTextPacket(Component.translatable("hud.minecities.welcome",
-				town.name()).withStyle(ChatFormatting.GOLD)));
+		title(player, Component.translatable("hud.minecities.welcome", town.name()).withStyle(ChatFormatting.GOLD),
+				Component.translatable("hud.minecities.welcome.sub", Component.translatable(town.tier().translationKey()),
+						town.mayorName()).withStyle(ChatFormatting.GRAY));
 	}
 
-	/** Le bout du contour de ce territoire qui passe près du joueur. */
-	private static void outline(ServerLevel level, ServerPlayer player, Town town) {
-		double dx = player.getX() - (town.hall().getX() + 0.5);
-		double dz = player.getZ() - (town.hall().getZ() + 0.5);
-		double radius = town.radius();
+	/** Un titre et un sous-titre au milieu de l'écran du joueur. */
+	public static void title(ServerPlayer player, Component title, Component subtitle) {
+		player.connection.send(new ClientboundSetTitlesAnimationPacket(10, 50, 15));
+		player.connection.send(new ClientboundSetSubtitleTextPacket(subtitle));
+		player.connection.send(new ClientboundSetTitleTextPacket(title));
+	}
+
+	/** Le joueur est-il sur ce territoire (pour ne pas lui souhaiter la bienvenue juste après) ? */
+	public static void arrived(ServerPlayer player, Town town) {
+		WHERE.put(player.getUUID(), town.id());
+	}
+
+	/**
+	 * Le bout du contour de ce cercle (l'hôtel de ville ou une annexe) qui passe près du joueur, sauf ce
+	 * qui tombe à l'intérieur du territoire (là où les cercles se recouvrent).
+	 */
+	private static void outline(ServerLevel level, ServerPlayer player, Town town, BlockPos center, int r) {
+		double dx = player.getX() - (center.getX() + 0.5);
+		double dz = player.getZ() - (center.getZ() + 0.5);
+		double radius = r;
 		if (Math.abs(Math.sqrt(dx * dx + dz * dz) - radius) > SPAN * 1.5) {
 			return;
 		}
@@ -92,11 +109,13 @@ public final class Borders {
 		int points = (int) (SPAN / STEP);
 		for (int k = -points; k <= points; k++) {
 			double angle = facing + k * step;
-			double x = town.hall().getX() + 0.5 + Math.cos(angle) * radius;
-			double z = town.hall().getZ() + 0.5 + Math.sin(angle) * radius;
+			double x = center.getX() + 0.5 + Math.cos(angle) * radius;
+			double z = center.getZ() + 0.5 + Math.sin(angle) * radius;
 			int bx = (int) Math.floor(x);
 			int bz = (int) Math.floor(z);
-			if (!level.isLoaded(new net.minecraft.core.BlockPos(bx, 0, bz))) {
+			BlockPos outside = new BlockPos((int) Math.floor(center.getX() + 0.5 + Math.cos(angle) * (radius + 2)), 0,
+					(int) Math.floor(center.getZ() + 0.5 + Math.sin(angle) * (radius + 2)));
+			if (!level.isLoaded(new BlockPos(bx, 0, bz)) || town.contains(level.dimension(), outside)) {
 				continue;
 			}
 			int y = level.getHeight(Heightmap.Types.MOTION_BLOCKING, bx, bz);

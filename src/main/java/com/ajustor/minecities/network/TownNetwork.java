@@ -8,6 +8,8 @@ import com.ajustor.minecities.town.Families;
 import com.ajustor.minecities.town.Festivals;
 import com.ajustor.minecities.town.House;
 import com.ajustor.minecities.town.Raids;
+import com.ajustor.minecities.town.Stock;
+import net.minecraft.world.item.Items;
 import com.ajustor.minecities.town.MarriageRequest;
 import com.ajustor.minecities.town.Resident;
 import com.ajustor.minecities.town.Town;
@@ -67,7 +69,8 @@ public final class TownNetwork {
 			int sleepers = (int) residents.values().stream().filter(r -> r.bed().filter(house.beds()::contains)
 					.isPresent()).count();
 			buildings.add(new TownSnapshot.BuildingRow(house.plaque(), house.beds().size(), sleepers,
-					house.workstations().stream().map(w -> w.job().translationKey()).toList(), house.village()));
+					house.workstations().stream().map(w -> (w.job().unlockedAt(town.tier()) ? "" : "!")
+							+ w.job().translationKey()).toList(), house.village()));
 		}
 		List<TownSnapshot.RequestRow> requests = new ArrayList<>();
 		for (MarriageRequest request : town.marriageRequests()) {
@@ -82,7 +85,9 @@ public final class TownNetwork {
 		Chronicle chronicle = town.chronicle();
 		TownSnapshot.Life life = new TownSnapshot.Life(town.averageMood().map(m -> (int) Math.round(m * 10)).orElse(-1),
 				chronicle.partying(now), chronicle.canCelebrate(now), chronicle.untilNextFestival(now), Festivals.COST,
-				chronicle.alarmed(now) || Raids.underAttack(town.id()));
+				chronicle.alarmed(now) || Raids.underAttack(town.id()),
+				TownService.granary(level, town).map(g -> Stock.count(g, s -> s.is(Items.EMERALD))).orElse(0),
+				chronicle.earnedToday(now), town.activeAnnexes().size(), town.tier().annexes());
 		return new TownSnapshot(town.hall(), town.name(), town.tier().translationKey(), town.population(),
 				town.citizens(), town.villagers(), town.capacity(), town.homes().size(), town.workstations(),
 				(int) employed, meals, next == null ? "" : next.translationKey(),
