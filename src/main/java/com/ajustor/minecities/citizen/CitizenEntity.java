@@ -198,6 +198,8 @@ public class CitizenEntity extends PathfinderMob {
 		goalSelector.addGoal(4, new SmithGoal(this));
 		goalSelector.addGoal(4, new MinerGoal(this));
 		goalSelector.addGoal(4, new BeekeeperGoal(this));
+		goalSelector.addGoal(4, new CraftGoal(this, Job.TANNER, Crafts.TANNER, 40, Action.COOK,
+				net.minecraft.sounds.SoundEvents.ARMOR_EQUIP_LEATHER.value()));
 		goalSelector.addGoal(4, new CraftGoal(this, Job.JEWELER, Crafts.JEWELER, 60, Action.BUILD,
 				net.minecraft.sounds.SoundEvents.AMETHYST_BLOCK_CHIME));
 		goalSelector.addGoal(4, new CraftGoal(this, Job.MASON, Crafts.MASON, 25, Action.BUILD,
@@ -569,7 +571,7 @@ public class CitizenEntity extends PathfinderMob {
 				diet.hadDish(), Happiness.expectedVariety(town.get().tier().ordinal()), r.hasHome(), r.isChild(),
 				r.job().isPresent(), hasNeed("tool"), r.spouse().isPresent(), getHealth() < getMaxHealth() / 2,
 				town.get().chronicle().recentDeaths(now), danger, town.get().chronicle().rejoicing(now),
-				town.get().workers(Job.LIBRARIAN) > 0);
+				town.get().workers(Job.LIBRARIAN) > 0, town.get().decreeMood());
 		mood = Happiness.of(factors);
 		entityData.set(MOOD, mood.score());
 		town.get().setMood(getUUID(), mood.score());

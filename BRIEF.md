@@ -131,10 +131,12 @@ puis un tag `vX.Y.0` qui publie la release.
    boulanger, le mineur (et son treuil), le forgeron.
 7. **v1.0** (fait) — brief 11 : joaillier, maçon, verrier, tisserand, apiculteur, bibliothécaire ;
    l'établi du joaillier et le four du verrier (blocs et modèles du mod) ; les bijoux.
-8. **v1.1** — spécialités de niveau 4, tanneur, commerce entre villes, onglet Mairie.
-9. **v1.x** — suites du brief 09 (aperçu fantôme, plans, structures enregistrées), styles de
+8. **v1.1** (fait) — outillage du maître (niveau 4), tanneur, commerce entre villes, décrets et
+   onglet Mairie, armure visible sur les citoyens.
+9. **v1.2** — des styles de bâtiments plus travaillés (intérieurs meublés, toits variés, décor).
+10. **v1.x** — suites du brief 09 (aperçu fantôme, plans, structures enregistrées), styles de
    bâtiments plus travaillés.
-10. **v2** — brief 02 (habitants joueurs, rangs, décrets, élections).
+11. **v2** — brief 02 (habitants joueurs, rangs, décrets, élections).
 
 | # | Brief | Résumé |
 |---|---|---|

@@ -29,6 +29,8 @@ public final class McItems {
 			new Item.Properties().useBlockDescriptionPrefix());
 	public static final Item GLASS_KILN = register("glass_kiln", p -> new BlockItem(McBlocks.GLASS_KILN, p),
 			new Item.Properties().useBlockDescriptionPrefix());
+	public static final Item TANNING_RACK = register("tanning_rack", p -> new BlockItem(McBlocks.TANNING_RACK, p),
+			new Item.Properties().useBlockDescriptionPrefix());
 	/** Les bijoux du joaillier : ils se vendent cher au marché. */
 	public static final Item AMETHYST_BROOCH = register("amethyst_brooch", Item::new,
 			new Item.Properties().stacksTo(16).rarity(Rarity.UNCOMMON));
@@ -61,6 +63,7 @@ public final class McItems {
 					output.accept(MINE_WINCH);
 					output.accept(JEWELER_BENCH);
 					output.accept(GLASS_KILN);
+					output.accept(TANNING_RACK);
 					output.accept(AMETHYST_BROOCH);
 					output.accept(GOLD_RING);
 					output.accept(DIADEM);

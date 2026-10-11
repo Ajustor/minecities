@@ -68,7 +68,9 @@ public enum Job {
 	/** Récolte le miel et les rayons des ruches du territoire ; à la ruche. */
 	BEEKEEPER("beekeeper", (level, pos, state) -> state.is(Blocks.BEEHIVE), s -> s.is(net.minecraft.world.item.Items.SHEARS)),
 	/** Fait les livres, instruit les enfants, et la ville en est plus heureuse ; à la bibliothèque ciselée. Dès la ville. */
-	LIBRARIAN("librarian", (level, pos, state) -> state.is(Blocks.CHISELED_BOOKSHELF), null);
+	LIBRARIAN("librarian", (level, pos, state) -> state.is(Blocks.CHISELED_BOOKSHELF), null),
+	/** Tanne les peaux de lapin en cuir, et coud des tuniques de cuir ; au séchoir à peaux. */
+	TANNER("tanner", (level, pos, state) -> is(state, "tanning_rack"), null);
 
 	/** Ce bloc est-il ce poste de travail du mod ? (par son nom : les registres du mod ne sont pas chargés partout.) */
 	private static boolean is(BlockState state, String name) {

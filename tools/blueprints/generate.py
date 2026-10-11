@@ -77,6 +77,7 @@ KEY = {
     "w": "minecraft:beehive[facing=north,honey_level=0]",
     "x": "minecraft:chiseled_bookshelf[facing=north]",
     "#": "minecraft:bookshelf",
+    "N": "minecities:tanning_rack[facing=north]",
     "y": "minecraft:barrel[facing=north]",
     "<": "{roof_stairs}[facing=east,half=bottom,shape=straight]",
     ">": "{roof_stairs}[facing=west,half=bottom,shape=straight]",
@@ -425,6 +426,7 @@ def main():
     series(prints, "glassworks", lambda level: workshop_level(level, "v"))
     series(prints, "weavery", lambda level: workshop_level(level, "z"))
     series(prints, "apiary", lambda level: workshop_level(level, "w"))
+    series(prints, "tannery", lambda level: workshop_level(level, "N"))
     # La bibliothèque (dès la ville) : des bibliothèques ciselées, et des rayonnages le long des murs.
     series(prints, "library", lambda level: workshop_level(level, "x", more={(1, 1, 2): "#", (1, 1, 3): "#",
                                                                                (1, 1, 4): "#"}), min_tier="town")

@@ -115,7 +115,8 @@ class FarmerGoal extends WorkGoal {
 		citizen.act(Action.HOE, 15);
 		if (state.getBlock() instanceof CropBlock crop && crop.isMaxAge(state)) {
 			ItemStack hoe = citizen.getMainHandItem();
-			List<ItemStack> drops = Block.getDrops(state, level, pos, null, citizen, hoe);
+			List<ItemStack> drops = Block.getDrops(state, level, pos, null, citizen,
+					masterTool(hoe, net.minecraft.world.item.enchantment.Enchantments.FORTUNE, 2));
 			level.levelEvent(2001, pos, Block.getId(state));
 			level.setBlock(pos, Blocks.AIR.defaultBlockState(), Block.UPDATE_ALL);
 			drops.forEach(citizen::carry);

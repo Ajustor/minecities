@@ -31,7 +31,7 @@ public class TownHallScreen extends Screen {
 	private static final int ACCENT = 0xFF8A5A1E;
 	private static final int FESTIVE = 0xFF9C27B0;
 
-	public enum Tab { SUMMARY, CITIZENS, BUILDINGS, REGISTRY }
+	public enum Tab { SUMMARY, CITIZENS, BUILDINGS, REGISTRY, COUNCIL }
 
 	private TownSnapshot town;
 	private Tab tab = Tab.SUMMARY;
@@ -76,9 +76,9 @@ public class TownHallScreen extends Screen {
 				label = Component.translatable("screen.minecities.tab.registry_count", town.requests().size());
 			}
 			Button button = addRenderableWidget(Button.builder(label, b -> select(t))
-					.bounds(x, top + 26, 70, 18).build());
+					.bounds(x, top + 26, 56, 18).build());
 			button.active = tab != t;
-			x += 74;
+			x += 59;
 		}
 		addRenderableWidget(Button.builder(Component.translatable("screen.minecities.granary"),
 				b -> send("granary", TownActionPayload.NONE)).bounds(left + WIDTH - 72, top + 26, 62, 18).build());
@@ -103,6 +103,21 @@ public class TownHallScreen extends Screen {
 				pager(town.rows().size());
 			}
 			case BUILDINGS -> pager(town.buildings().size());
+			case COUNCIL -> {
+				if (town.manager()) {
+					TownSnapshot.Council council = town.council();
+					int y = top + 104;
+					for (int i = 0; i < council.decrees().size(); i++) {
+						String decree = council.decrees().get(i);
+						boolean on = council.decreed().get(i);
+						addRenderableWidget(Button.builder(Component.translatable(on ? "screen.minecities.decree.lift"
+										: "screen.minecities.decree.take"),
+								b -> send("decree." + decree, TownActionPayload.NONE))
+								.bounds(left + WIDTH - 90, y - 4, 80, 16).build());
+						y += 18;
+					}
+				}
+			}
 			case REGISTRY -> {
 				if (town.manager()) {
 					int y = top + 56;
@@ -152,6 +167,7 @@ public class TownHallScreen extends Screen {
 			case CITIZENS -> citizens(graphics);
 			case BUILDINGS -> buildings(graphics);
 			case REGISTRY -> registry(graphics);
+			case COUNCIL -> council(graphics);
 		}
 		super.extractRenderState(graphics, mouseX, mouseY, a);
 	}
@@ -278,6 +294,40 @@ public class TownHallScreen extends Screen {
 				graphics.text(font, jobs, left + 22, y + 10, ACCENT, false);
 			}
 			y += ROW;
+		}
+	}
+
+	private void council(GuiGraphicsExtractor graphics) {
+		TownSnapshot.Council council = town.council();
+		int y = top + 58;
+		line(graphics, Component.translatable("screen.minecities.council.mayor", council.mayor()), y, INK);
+		y += 14;
+		line(graphics, council.deputies().isEmpty() ? Component.translatable("screen.minecities.council.no_deputy")
+				: Component.translatable("screen.minecities.council.deputies", String.join(", ", council.deputies())),
+				y, FADED);
+		y += 20;
+		line(graphics, Component.translatable("screen.minecities.council.decrees"), y, ACCENT);
+		y += 14;
+		for (int i = 0; i < council.decrees().size(); i++) {
+			boolean on = council.decreed().get(i);
+			MutableComponent decree = Component.translatable("decree.minecities." + council.decrees().get(i));
+			graphics.text(font, Component.literal(on ? "● " : "○ ").append(decree), left + 22, y, on ? GOOD : FADED,
+					false);
+			graphics.text(font, Component.translatable("decree.minecities." + council.decrees().get(i) + ".effect"),
+					left + 130, y, FADED, false);
+			y += 18;
+		}
+		y += 4;
+		line(graphics, Component.translatable("screen.minecities.council.trade"), y, ACCENT);
+		y += 14;
+		if (council.partners().isEmpty()) {
+			graphics.text(font, Component.translatable("screen.minecities.council.no_trade"), left + 22, y, FADED, false);
+		}
+		for (int i = 0; i < council.partners().size() && y < top + HEIGHT - 12; i++) {
+			graphics.text(font, Component.translatable(council.open().get(i) ? "screen.minecities.council.partner"
+					: "screen.minecities.council.pending", council.partners().get(i)), left + 22, y,
+					council.open().get(i) ? GOOD : FADED, false);
+			y += 12;
 		}
 	}
 

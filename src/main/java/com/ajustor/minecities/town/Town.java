@@ -62,9 +62,12 @@ public final class Town {
 			BlockPos.CODEC.listOf().optionalFieldOf("annexes", List.of()).forGetter(t -> List.copyOf(t.annexes)),
 			Codec.STRING.optionalFieldOf("forced_tier").forGetter(t -> t.forcedTier.map(TownTier::serializedName)),
 			Codec.LONG.optionalFieldOf("orphaned_at").forGetter(t -> t.orphanedAt),
-			Mine.CODEC.listOf().optionalFieldOf("mines", List.of()).forGetter(t -> List.copyOf(t.mines.values()))
+			Mine.CODEC.listOf().optionalFieldOf("mines", List.of()).forGetter(t -> List.copyOf(t.mines.values())),
+			Codec.STRING.listOf().optionalFieldOf("decrees", List.of())
+					.forGetter(t -> t.decrees.stream().map(Decree::serializedName).toList()),
+			UUIDUtil.CODEC.listOf().optionalFieldOf("partners", List.of()).forGetter(t -> List.copyOf(t.partners))
 	).apply(i, (head, houses, residents, tier, lastArrival, villagers, constructions, affinities, requests,
-			chronicle, annexes, forced, orphaned, mines) -> {
+			chronicle, annexes, forced, orphaned, mines, decrees, partners) -> {
 		Town town = new Town(head.id(), head.name(), head.dimension(), head.hall(), head.mayor(),
 				head.mayorName(), head.deputies(), head.founded(), houses, residents, tier, lastArrival, villagers,
 				constructions, affinities, requests, chronicle);
@@ -72,6 +75,8 @@ public final class Town {
 		town.forcedTier = forced.map(TownTier::fromSerializedName);
 		town.orphanedAt = orphaned;
 		mines.forEach(m -> town.mines.put(m.station(), m));
+		decrees.forEach(d -> Decree.fromSerializedName(d).ifPresent(town.decrees::add));
+		town.partners.addAll(partners);
 		return town;
 	}));
 
@@ -105,6 +110,10 @@ public final class Town {
 	private final List<MarriageRequest> marriageRequests;
 	/** Les chantiers commandés par le maire, en cours puis finis, dans l'ordre de commande. */
 	private final List<Construction> constructions;
+	/** Les décrets en vigueur. */
+	private final Set<Decree> decrees = java.util.EnumSet.noneOf(Decree.class);
+	/** Les villes avec lesquelles elle commerce (brief 07). */
+	private final Set<UUID> partners = new java.util.LinkedHashSet<>();
 	/** Les galeries des mineurs, par treuil. */
 	private final Map<BlockPos, Mine> mines = new LinkedHashMap<>();
 	/** Depuis quand la ville a perdu son hôtel de ville (détruit), s'il faut en reposer un. */
@@ -658,6 +667,42 @@ public final class Town {
 	/** Le bâtiment bâti par la ville à cet endroit, s'il y en a un. */
 	public Optional<Construction> builtAt(BlockPos pos) {
 		return constructions.stream().filter(c -> c.done() && c.contains(pos)).reduce((a, b) -> b);
+	}
+
+	// Décrets et commerce
+
+	public boolean decreed(Decree decree) {
+		return decrees.contains(decree);
+	}
+
+	public Set<Decree> decrees() {
+		return java.util.Collections.unmodifiableSet(decrees);
+	}
+
+	/** Prend ou lève un décret ; renvoie vrai s'il est désormais en vigueur. */
+	public boolean toggle(Decree decree) {
+		if (!decrees.remove(decree)) {
+			decrees.add(decree);
+			return true;
+		}
+		return false;
+	}
+
+	/** Ce que les décrets en vigueur font au moral. */
+	public int decreeMood() {
+		return decrees.stream().mapToInt(Decree::mood).sum();
+	}
+
+	public Set<UUID> partners() {
+		return java.util.Collections.unmodifiableSet(partners);
+	}
+
+	public void addPartner(UUID town) {
+		partners.add(town);
+	}
+
+	public boolean removePartner(UUID town) {
+		return partners.remove(town);
 	}
 
 	/** La galerie creusée depuis ce treuil, s'il y en a une. */

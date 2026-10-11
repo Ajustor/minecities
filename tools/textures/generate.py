@@ -255,6 +255,22 @@ def annex_board():
     return img
 
 
+def hide():
+    """La peau tendue du séchoir : du cuir brun aux taches plus sombres, une couture sur le pourtour."""
+    rng = random.Random(8)
+    img = Image.new("RGBA", (16, 16))
+    base = hexc("#8a5a33")
+    for y in range(16):
+        for x in range(16):
+            c = jitter(rng, base, 0.08)
+            if ((x - 8) ** 2 + (y - 6) ** 2) < 6 or ((x - 5) ** 2 + (y - 11) ** 2) < 3:
+                c = shade(c, 0.8)
+            if x in (3, 12) or y in (2, 11):
+                c = shade(c, 1.15) if (x + y) % 2 else shade(c, 0.7)
+            img.putpixel((x, y), c)
+    return img
+
+
 def spawn_egg():
     img = Image.new("RGBA", (16, 16), (0, 0, 0, 0))
     base, spot = hexc("#7b5536"), hexc("#3f6fb5")
@@ -384,6 +400,7 @@ def main():
     save(spawn_egg(), TEXTURES / "item/citizen_spawn_egg.png")
     save(hats(), TEXTURES / "entity/citizen/hats.png")
     save(annex_board(), TEXTURES / "block/annex_board.png")
+    save(hide(), TEXTURES / "block/hide.png")
     for name, (rows, palette) in JEWELS.items():
         save(sprite(rows, palette), TEXTURES / f"item/{name}.png")
 

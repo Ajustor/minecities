@@ -7,8 +7,9 @@ vanilla : pas de plans imposés ni de huttes préfabriquées. Vous bâtissez com
 reconnaît vos maisons, et des citoyens viennent y vivre. Le village devient ville, puis grande
 ville, puis mégalopole.
 
-> État : **v1.0** (villes, maisons, familles, vingt-deux métiers et leurs filières, de la mine au
-> bijou et du blé au pain, bâtiments à quatre niveaux, bonheur et repas variés, marché et trésor, paliers qui
+> État : **v1.1** (villes, maisons, familles, vingt-trois métiers et leurs filières, de la mine au
+> bijou et du blé au pain, bâtiments à quatre niveaux et maîtrise du niveau 4, décrets du maire,
+> commerce entre villes, bonheur et repas variés, marché et trésor, paliers qui
 > débloquent, mairies annexes, fêtes, cloche d'alarme, raids de pillards, écran de l'hôtel de ville,
 > configuration et protections pour les serveurs). La suite est décrite dans [BRIEF.md](BRIEF.md) et [docs/briefs](docs/briefs).
 
@@ -103,6 +104,7 @@ ville, puis mégalopole.
    - **Bibliothèque ciselée → bibliothécaire** (dès la ville) : des livres (papier et cuir, papier de
      canne à sucre) ; avec une bibliothèque, toute la ville est plus heureuse et les enfants grandissent
      en deux jours au lieu de trois.
+   - **Séchoir à peaux → tanneur** : du cuir (peaux de lapin), et des tuniques de cuir pour les gardes.
    - **Table de forge → inventeur** : quand la ville est attaquée, il assemble devant l'hôtel de ville
      un **golem de fer** (4 blocs de fer et une citrouille sculptée, pris au grenier) ou, à défaut, un
      **golem de neige** (2 blocs de neige et une citrouille).
@@ -114,7 +116,9 @@ ville, puis mégalopole.
    taillée, briques, fer, lanternes ; dès la ville), 4 **demeure** (pierre polie, quartz, vitraux,
    cuivre, or ; dès la grande ville). Une maison gagne deux lits par niveau (2 à 8), un atelier un poste
    (1 à 4), et ses travailleurs vont plus vite (un dixième par niveau). `/ville upgrade` passe au niveau
-   suivant. Le
+   suivant. Au niveau 4, les travailleurs ont l'**outillage du maître** : le fermier et le mineur
+   récoltent comme avec une Fortune II, le pêcheur pêche comme avec une Chance de la mer III, et le
+   forgeron habille les gardes de fer de pied en cap. Le
    bâtiment se place devant lui, porte vers lui ; le bâtisseur dégage le terrain et pose les blocs
    en prenant les matériaux au grenier (le maire est prévenu de ce qui manque), et le bâtiment se
    déclare tout seul une fois fini. `/ville upgrade`, dans un bâtiment bâti par la ville,
@@ -146,6 +150,13 @@ ville, puis mégalopole.
 11. **Les fêtes** : le maire offre une fête (`/ville festival` ou le bouton de l'écran) contre
    4 émeraudes du grenier, une tous les trois jours au plus. Les citoyens dansent devant l'hôtel de
    ville sous les feux d'artifice, et sont plus heureux pendant un jour.
+12. **Les décrets** (onglet Mairie, ou `/ville decree <décret>`) : le **rationnement** (on mange moins,
+   le moral baisse), les **heures supplémentaires** (on travaille de l'aube à la nuit, le moral baisse),
+   le **jour férié** (personne ne travaille, le moral monte).
+13. **Le commerce entre villes** : `/ville trade <ville>` signe un accord ; quand les deux maires ont
+   signé, une caravane part chaque minute du marché de la ville qui a trop d'une marchandise vers
+   celle qui en manque, contre des émeraudes au cours des villageois (il faut un marchand au départ, et
+   les deux greniers chargés).
 
 | Palier | Population (citoyens + villageois) | Maisons | Rayon du territoire |
 |---|---|---|---|
@@ -179,6 +190,7 @@ ville, puis mégalopole.
 - **Treuil de mine** : bûche, ficelle, bûche ; bûche, rien, bûche ; planche, chaîne, planche.
 - **Établi de joaillier** : vitre, éclat d'améthyste, lingot de fer ; trois planches ; bûche, rien, bûche.
 - **Four de verrier** : brique, rien, brique ; brique, fourneau, brique ; brique, sable, brique.
+- **Séchoir à peaux** : trois bâtons ; bâton, cuir, bâton ; bâton, rien, bâton.
 
 ### Le maire
 
@@ -200,6 +212,8 @@ commandes du maire s'appliquent à la ville où il se trouve.
 | `build cancel` | maire, adjoints | annule le chantier en cours |
 | `upgrade` | maire, adjoints | agrandit le bâtiment où l'on se trouve |
 | `festival` | maire, adjoints | offre une fête (4 émeraudes du grenier) |
+| `decree <décret>` | maire, adjoints | prend ou lève un décret (`rationing`, `overtime`, `holiday`) |
+| `trade [ville]` | maire, adjoints | les accords de commerce ; signe ou rompt celui avec cette ville |
 | `admin immigrate\|feed\|starve` | opérateurs | tests : faire venir un citoyen, rassasier ou affamer la ville |
 | `admin raid\|raid_stop` | opérateurs | tests : lancer ou arrêter un raid |
 | `admin festival` | opérateurs | tests : une fête, gratuite |
@@ -213,7 +227,8 @@ Java 25 est requis (Loom 1.18.3, Minecraft 26.2).
 ./gradlew build                 # compile, tests unitaires, jar dans build/libs
 ./gradlew runClient             # lance le jeu avec le mod
 ./gradlew runClientGameTest     # scènes en jeu vérifiées et photographiées (build/run/clientGameTest/screenshots)
-./gradlew runClientGameTest -PminecitiesGametest=work   # une scène (city, work, countryside, village, build, family, raid, life, market, robust, industry, crafts)
+./gradlew runClientGameTest -PminecitiesGametest=work   # une scène (city, work, countryside, village, build, family, raid, life, market, robust, industry, crafts,
+council)
 python tools/textures/generate.py   # régénère les textures (peaux des citoyens, plaque, œuf)
 python tools/models/town_hall.py    # régénère le modèle de l'hôtel de ville
 python tools/blueprints/generate.py # régénère les schémas du bâtisseur

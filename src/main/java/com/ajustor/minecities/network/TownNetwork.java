@@ -92,7 +92,30 @@ public final class TownNetwork {
 				town.citizens(), town.villagers(), town.capacity(), town.homes().size(), town.workstations(),
 				(int) employed, meals, next == null ? "" : next.translationKey(),
 				next == null ? 0 : next.minCitizens(), next == null ? 0 : next.minHouses(),
-				town.canManage(player.getUUID()), life, rows, buildings, requests);
+				town.canManage(player.getUUID()), life, council(level, town), rows, buildings, requests);
+	}
+
+	private static TownSnapshot.Council council(ServerLevel level, Town town) {
+		List<String> deputies = new ArrayList<>();
+		for (UUID deputy : town.deputies()) {
+			ServerPlayer online = level.getServer().getPlayerList().getPlayer(deputy);
+			deputies.add(online != null ? online.getGameProfile().name() : deputy.toString().substring(0, 8));
+		}
+		List<String> decrees = new ArrayList<>();
+		List<Boolean> decreed = new ArrayList<>();
+		for (com.ajustor.minecities.town.Decree decree : com.ajustor.minecities.town.Decree.values()) {
+			decrees.add(decree.serializedName());
+			decreed.add(town.decreed(decree));
+		}
+		List<String> partners = new ArrayList<>();
+		List<Boolean> open = new ArrayList<>();
+		for (Town other : Towns.get(level.getServer()).all()) {
+			if (town.partners().contains(other.id()) || other.partners().contains(town.id())) {
+				partners.add(other.name());
+				open.add(com.ajustor.minecities.town.Trade.trading(town, other));
+			}
+		}
+		return new TownSnapshot.Council(town.mayorName(), deputies, decrees, decreed, partners, open);
 	}
 
 	private static void act(ServerPlayer player, TownActionPayload payload) {
@@ -127,6 +150,13 @@ public final class TownNetwork {
 							resident.get().name()));
 				}
 				return;
+			}
+			case "decree.rationing", "decree.overtime", "decree.holiday" -> {
+				if (!town.canManage(player.getUUID())) {
+					return;
+				}
+				com.ajustor.minecities.town.Decree.fromSerializedName(payload.action().substring("decree.".length()))
+						.ifPresent(decree -> TownService.decree(level, town, decree));
 			}
 			case "festival" -> {
 				if (!town.canManage(player.getUUID())) {

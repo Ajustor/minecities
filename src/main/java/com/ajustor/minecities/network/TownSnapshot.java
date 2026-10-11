@@ -19,8 +19,16 @@ import java.util.UUID;
  */
 public record TownSnapshot(BlockPos hall, String name, String tier, int population, int citizens, int villagers,
 		int capacity, int homes, int workstations, int employed, int meals, String nextTier, int nextPopulation,
-		int nextHouses, boolean manager, Life life, List<CitizenRow> rows, List<BuildingRow> buildings,
+		int nextHouses, boolean manager, Life life, Council council, List<CitizenRow> rows, List<BuildingRow> buildings,
 		List<RequestRow> requests) {
+	/**
+	 * La mairie : le maire, ses adjoints, les décrets (clé de chaque décret, et s'il est en vigueur), les
+	 * villes partenaires (nom, et si l'accord est signé des deux côtés).
+	 */
+	public record Council(String mayor, List<String> deputies, List<String> decrees, List<Boolean> decreed,
+			List<String> partners, List<Boolean> open) {
+	}
+
 	/**
 	 * Le moral de la ville : bonheur moyen (en dixièmes, -1 si inconnu), la fête (en cours, possible,
 	 * dans combien de ticks sinon, et son prix), l'alerte.
@@ -77,6 +85,12 @@ public record TownSnapshot(BlockPos hall, String name, String tier, int populati
 		buf.writeVarInt(s.life.earnedToday());
 		buf.writeVarInt(s.life.annexes());
 		buf.writeVarInt(s.life.maxAnnexes());
+		buf.writeUtf(s.council.mayor());
+		writeStrings(buf, s.council.deputies());
+		writeStrings(buf, s.council.decrees());
+		writeFlags(buf, s.council.decreed());
+		writeStrings(buf, s.council.partners());
+		writeFlags(buf, s.council.open());
 		buf.writeVarInt(s.rows.size());
 		for (CitizenRow row : s.rows) {
 			UUIDUtil.STREAM_CODEC.encode(buf, row.id);
@@ -106,6 +120,34 @@ public record TownSnapshot(BlockPos hall, String name, String tier, int populati
 		}
 	}
 
+	private static void writeStrings(RegistryFriendlyByteBuf buf, List<String> list) {
+		buf.writeVarInt(list.size());
+		list.forEach(buf::writeUtf);
+	}
+
+	private static void writeFlags(RegistryFriendlyByteBuf buf, List<Boolean> list) {
+		buf.writeVarInt(list.size());
+		list.forEach(buf::writeBoolean);
+	}
+
+	private static List<String> readStrings(RegistryFriendlyByteBuf buf) {
+		int n = buf.readVarInt();
+		List<String> list = new ArrayList<>(n);
+		for (int i = 0; i < n; i++) {
+			list.add(buf.readUtf());
+		}
+		return list;
+	}
+
+	private static List<Boolean> readFlags(RegistryFriendlyByteBuf buf) {
+		int n = buf.readVarInt();
+		List<Boolean> list = new ArrayList<>(n);
+		for (int i = 0; i < n; i++) {
+			list.add(buf.readBoolean());
+		}
+		return list;
+	}
+
 	private static TownSnapshot read(RegistryFriendlyByteBuf buf) {
 		BlockPos hall = buf.readBlockPos();
 		String name = buf.readUtf();
@@ -124,6 +166,8 @@ public record TownSnapshot(BlockPos hall, String name, String tier, int populati
 		boolean manager = buf.readBoolean();
 		Life life = new Life(buf.readInt(), buf.readBoolean(), buf.readBoolean(), buf.readVarLong(), buf.readVarInt(),
 				buf.readBoolean(), buf.readVarInt(), buf.readVarInt(), buf.readVarInt(), buf.readVarInt());
+		Council council = new Council(buf.readUtf(), readStrings(buf), readStrings(buf), readFlags(buf),
+				readStrings(buf), readFlags(buf));
 		int count = buf.readVarInt();
 		List<CitizenRow> rows = new ArrayList<>(count);
 		for (int i = 0; i < count; i++) {
@@ -149,6 +193,6 @@ public record TownSnapshot(BlockPos hall, String name, String tier, int populati
 			requests.add(new RequestRow(UUIDUtil.STREAM_CODEC.decode(buf), buf.readUtf(), buf.readUtf()));
 		}
 		return new TownSnapshot(hall, name, tier, population, citizens, villagers, capacity, homes, workstations,
-				employed, meals, nextTier, nextPopulation, nextHouses, manager, life, rows, buildings, requests);
+				employed, meals, nextTier, nextPopulation, nextHouses, manager, life, council, rows, buildings, requests);
 	}
 }

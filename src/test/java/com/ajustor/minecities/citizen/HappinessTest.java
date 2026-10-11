@@ -12,7 +12,7 @@ class HappinessTest {
 	/** Un citoyen ordinaire : repu, logé, employé, sans repas en mémoire. */
 	private static Happiness.Factors ordinary(int meals, int variety, boolean dish) {
 		return new Happiness.Factors(18, meals, variety, dish, Happiness.expectedVariety(0), true, false, true, false,
-				false, false, 0, false, false, false);
+				false, false, 0, false, false, false, 0);
 	}
 
 	@Test
@@ -51,14 +51,14 @@ class HappinessTest {
 		assertEquals(10, varied);
 		// En ville, deux aliments ne suffisent plus.
 		Happiness.Factors town = new Happiness.Factors(18, 5, 2, false, Happiness.expectedVariety(1), true, false,
-				true, false, false, false, 0, false, false, false);
+				true, false, false, false, 0, false, false, false, 0);
 		assertTrue(Happiness.of(town).factors().contains(new Happiness.Factor("monotonous", -1)));
 	}
 
 	@Test
 	void misfortunesAddUp() {
 		Happiness.Factors misery = new Happiness.Factors(0, 5, 1, false, 2, false, false, false, true, false, true, 3,
-				true, false, false);
+				true, false, false, 0);
 		Happiness.Mood mood = Happiness.of(misery);
 		// 5 - 3 (affamé) - 1 (monotone) - 2 (sans logis) - 1 (outil) - 1 (blessé) - 2 (deuil) - 1 (danger).
 		assertEquals(0, mood.score());
@@ -68,13 +68,18 @@ class HappinessTest {
 	@Test
 	void aFestivalCheersEveryoneUp() {
 		Happiness.Factors sad = new Happiness.Factors(10, 0, 0, false, 2, false, false, false, false, false, false, 0,
-				false, true, false);
+				false, true, false, 0);
 		// 5 - 1 (faim) - 2 (sans logis) + 2 (fête).
 		assertEquals(4, Happiness.of(sad).score());
 		// Avec une bibliothèque, un point de plus.
 		Happiness.Factors read = new Happiness.Factors(10, 0, 0, false, 2, false, false, false, false, false, false, 0,
-				false, true, true);
+				false, true, true, 0);
 		assertEquals(5, Happiness.of(read).score());
+		// Un jour férié : un de plus ; rationnement et heures supplémentaires : deux de moins.
+		assertEquals(6, Happiness.of(new Happiness.Factors(10, 0, 0, false, 2, false, false, false, false, false,
+				false, 0, false, true, true, 1)).score());
+		assertEquals(3, Happiness.of(new Happiness.Factors(10, 0, 0, false, 2, false, false, false, false, false,
+				false, 0, false, true, true, -2)).score());
 	}
 
 	@Test

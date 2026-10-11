@@ -89,6 +89,41 @@ class MarketTest {
 	}
 
 	@Test
+	void caravansCarryTheSurplusToTownsThatLackIt() {
+		// Trop d'un côté, pas assez de l'autre : une caravane, sans entamer la réserve du vendeur.
+		assertEquals(32, Trade.load(200, 0));
+		assertEquals(6, Trade.load(Trade.PLENTY + 6, 3));
+		assertEquals(0, Trade.load(Trade.PLENTY, 0));
+		assertEquals(0, Trade.load(500, Trade.SHORT));
+		// Le prix : au cours des villageois, la nourriture huit par émeraude, au moins une émeraude.
+		assertEquals(1, Trade.price(Items.WHEAT, 20));
+		assertEquals(4, Trade.price(Items.BREAD, 32));
+		assertEquals(1, Trade.price(Items.BREAD, 3));
+	}
+
+	@Test
+	void anAgreementNeedsBothSignatures() {
+		Town a = Town.found("Valombre", Level.OVERWORLD, HALL, UUID.randomUUID(), "Maire", 0);
+		Town b = Town.found("Pierrefeu", Level.OVERWORLD, new BlockPos(500, 64, 0), UUID.randomUUID(), "Maire", 0);
+		a.addPartner(b.id());
+		assertFalse(Trade.trading(a, b));
+		b.addPartner(a.id());
+		assertTrue(Trade.trading(a, b));
+		a.removePartner(b.id());
+		assertFalse(Trade.trading(b, a));
+	}
+
+	@Test
+	void decreesComeAndGo() {
+		Town town = Town.found("Valombre", Level.OVERWORLD, HALL, UUID.randomUUID(), "Maire", 0);
+		assertTrue(town.toggle(Decree.HOLIDAY));
+		assertTrue(town.toggle(Decree.RATIONING));
+		assertEquals(0, town.decreeMood());
+		assertFalse(town.toggle(Decree.HOLIDAY));
+		assertEquals(-1, town.decreeMood());
+	}
+
+	@Test
 	void theMarketKeepsItsBooks() {
 		Chronicle chronicle = Chronicle.empty();
 		chronicle.earn(1000, 3);
