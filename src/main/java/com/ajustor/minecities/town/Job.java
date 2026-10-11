@@ -46,7 +46,9 @@ public enum Job {
 	/** Tire à l'arc du haut d'une tour de garde, jour et nuit ; à la table d'archerie. */
 	ARCHER("archer", (level, pos, state) -> state.is(Blocks.FLETCHING_TABLE), s -> s.is(Items.BOW)),
 	/** Assemble des golems quand la ville est attaquée, avec le fer, la neige et les citrouilles du grenier ; à la table de forge. */
-	INVENTOR("inventor", (level, pos, state) -> state.is(Blocks.SMITHING_TABLE), null);
+	INVENTOR("inventor", (level, pos, state) -> state.is(Blocks.SMITHING_TABLE), null),
+	/** Soigne les blessés et nourrit les affamés de la ville ; à l'alambic. */
+	DOCTOR("doctor", (level, pos, state) -> state.is(Blocks.BREWING_STAND), null);
 
 	/** Les défenseurs veillent la nuit, ne fuient pas, et se battent. */
 	public boolean defends() {

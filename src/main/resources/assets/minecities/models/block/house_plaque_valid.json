@@ -1,0 +1,7 @@
+{
+  "parent": "minecities:block/house_plaque",
+  "textures": {
+    "particle": "minecities:block/house_plaque_valid",
+    "plaque": "minecities:block/house_plaque_valid"
+  }
+}

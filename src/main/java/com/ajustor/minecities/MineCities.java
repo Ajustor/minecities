@@ -7,6 +7,9 @@ import com.ajustor.minecities.registry.McBlockEntities;
 import com.ajustor.minecities.registry.McBlocks;
 import com.ajustor.minecities.registry.McEntities;
 import com.ajustor.minecities.registry.McItems;
+import com.ajustor.minecities.town.Alarms;
+import com.ajustor.minecities.town.Borders;
+import com.ajustor.minecities.town.Festivals;
 import com.ajustor.minecities.town.Raids;
 import com.ajustor.minecities.town.TownService;
 import net.fabricmc.api.ModInitializer;
@@ -33,6 +36,9 @@ public class MineCities implements ModInitializer {
 		TownService.register();
 		Blueprints.register();
 		Raids.register();
+		Festivals.register();
+		Alarms.register();
+		Borders.register();
 		TownCommands.register();
 		TownNetwork.register();
 	}

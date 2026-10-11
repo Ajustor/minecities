@@ -95,7 +95,7 @@ public class EatGoal extends Goal {
 			pantry = null;
 			return;
 		}
-		ItemStack food = TownService.takeFood(container);
+		ItemStack food = TownService.takeFood(container, citizen.diet());
 		if (food.isEmpty()) {
 			pantry = null;
 			return;

@@ -1,6 +1,7 @@
 package com.ajustor.minecities.town;
 
 import com.ajustor.minecities.citizen.CitizenEntity;
+import com.ajustor.minecities.citizen.Happiness;
 import com.ajustor.minecities.citizen.Hunger;
 import com.ajustor.minecities.citizen.SleepInBedGoal;
 import com.ajustor.minecities.registry.McEntities;
@@ -21,8 +22,8 @@ import java.util.UUID;
  * La vie des familles (brief 10) : une ville ne descend pas sous {@link #MINIMUM} habitants (des
  * nouveaux venus arrivent) mais ne grandit, au-delà, que par les naissances. Les citoyens qui
  * vivent et travaillent côte à côte s'apprécient ; ceux qui s'entendent demandent au maire de les
- * marier ; un couple marié, logé ensemble, bien nourri, avec un lit libre chez lui, peut avoir un
- * enfant, qui grandit en trois jours.
+ * marier ; un couple marié, logé ensemble, bien nourri, content de son sort, avec un lit libre chez
+ * lui, peut avoir un enfant, qui grandit en trois jours.
  */
 public final class Families {
 	/** Le minimum d'habitants : en dessous, des nouveaux venus arrivent. */
@@ -157,7 +158,8 @@ public final class Families {
 		Entity ea = level.getEntity(first);
 		Entity eb = level.getEntity(second);
 		if (!(ea instanceof CitizenEntity mother) || !(eb instanceof CitizenEntity father)
-				|| mother.hunger() < Hunger.WELL_FED || father.hunger() < Hunger.WELL_FED) {
+				|| mother.hunger() < Hunger.WELL_FED || father.hunger() < Hunger.WELL_FED
+				|| mother.mood() < Happiness.CONTENT || father.mood() < Happiness.CONTENT) {
 			return Optional.empty();
 		}
 		CitizenEntity child = McEntities.CITIZEN.create(level, EntitySpawnReason.BREEDING);

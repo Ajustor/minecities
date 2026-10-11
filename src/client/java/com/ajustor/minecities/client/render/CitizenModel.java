@@ -82,6 +82,25 @@ public class CitizenModel extends HumanoidModel<CitizenRenderer.State> {
 				leftArm.xRot = -1.57f + head.xRot;
 				leftArm.yRot = 0.5f + head.yRot;
 			}
+			case HEAL -> {
+				// Les mains posées sur le patient, qui frottent doucement.
+				rightArm.xRot = -1.0f + Mth.sin(t * 0.5f) * 0.1f;
+				leftArm.xRot = -1.0f + Mth.cos(t * 0.5f) * 0.1f;
+				rightArm.yRot = -0.3f;
+				leftArm.yRot = 0.3f;
+				head.xRot = 0.35f;
+			}
+			case DANCE -> {
+				// Danse : les bras levés en alternance, la tête qui balance, les jambes qui sautillent.
+				float beat = Mth.sin(t * 0.5f);
+				rightArm.xRot = -2.6f + beat * 0.5f;
+				leftArm.xRot = -2.6f - beat * 0.5f;
+				rightArm.zRot = 0.5f;
+				leftArm.zRot = -0.5f;
+				rightLeg.xRot = Math.max(0, beat) * -0.6f;
+				leftLeg.xRot = Math.max(0, -beat) * -0.6f;
+				head.zRot = beat * 0.12f;
+			}
 			case NONE -> {
 			}
 		}

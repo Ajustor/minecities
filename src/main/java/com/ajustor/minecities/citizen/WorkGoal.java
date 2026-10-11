@@ -90,7 +90,8 @@ abstract class WorkGoal extends Goal {
 
 	/** Met le travail en pause pour {@code ticks} ticks. */
 	protected void rest(int ticks) {
-		idleUntil = citizen.level().getGameTime() + ticks;
+		// Heureux, il reprend plus vite ; malheureux, il traîne.
+		idleUntil = citizen.level().getGameTime() + Math.round(ticks * Happiness.workPace(citizen.mood()));
 	}
 
 	protected ServerLevel level() {

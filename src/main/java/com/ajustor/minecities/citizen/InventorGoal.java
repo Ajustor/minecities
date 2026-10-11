@@ -1,7 +1,6 @@
 package com.ajustor.minecities.citizen;
 
 import com.ajustor.minecities.town.Job;
-import com.ajustor.minecities.town.Raids;
 import com.ajustor.minecities.town.Stock;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
@@ -49,7 +48,7 @@ class InventorGoal extends WorkGoal {
 	}
 
 	private boolean underAttack() {
-		if (Raids.underAttack(town().id())) {
+		if (citizen.alarmed()) {
 			return true;
 		}
 		BlockPos hall = town().hall();

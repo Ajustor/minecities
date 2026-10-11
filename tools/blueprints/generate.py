@@ -51,6 +51,8 @@ KEY = {
     "a": "minecraft:fletching_table",
     "i": "minecraft:smithing_table",
     "n": "minecraft:anvil[facing=east]",
+    "e": "minecraft:brewing_stand",
+    "u": "minecraft:cauldron",
     "<": "{roof_stairs}[facing=east,half=bottom,shape=straight]",
     ">": "{roof_stairs}[facing=west,half=bottom,shape=straight]",
 }
@@ -283,6 +285,12 @@ def main():
     prints.append(blueprint("guard_tower", "workshop", rows(tower()), door_x=2))
     # L'atelier de l'inventeur : une table de forge, une enclume, un coffre pour le fer et les citrouilles.
     prints.append(blueprint("inventor_workshop", "workshop", rows(workshop({(5, 1, 5): "i", (5, 1, 3): "n"}))))
+
+    # L'infirmerie du médecin : un alambic et un chaudron ; agrandie, deux alambics (deux médecins).
+    prints.append(blueprint("infirmary", "workshop", rows(workshop({(5, 1, 5): "e", (4, 1, 5): "u"})),
+            upgrade="minecities:infirmary_large"))
+    prints.append(blueprint("infirmary_large", "workshop", rows(workshop({(5, 1, 5): "e", (7, 1, 5): "e",
+            (6, 1, 5): "u"}, fine=True))))
 
     OUT.mkdir(parents=True, exist_ok=True)
     for name, data in prints:

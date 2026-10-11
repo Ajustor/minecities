@@ -21,6 +21,8 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.HorizontalDirectionalBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.EnumProperty;
+import net.minecraft.util.StringRepresentable;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
@@ -35,6 +37,26 @@ import java.util.Map;
 public class HousePlaqueBlock extends HorizontalDirectionalBlock {
 	public static final MapCodec<HousePlaqueBlock> CODEC = simpleCodec(HousePlaqueBlock::new);
 
+	/** L'état du dernier relevé, qui se voit sur la plaque : porte verte, ou rouge. */
+	public enum Status implements StringRepresentable {
+		NONE("none"),
+		VALID("valid"),
+		INVALID("invalid");
+
+		private final String name;
+
+		Status(String name) {
+			this.name = name;
+		}
+
+		@Override
+		public String getSerializedName() {
+			return name;
+		}
+	}
+
+	public static final EnumProperty<Status> STATUS = EnumProperty.create("status", Status.class);
+
 	/** Une plaque d'un pixel d'épaisseur, contre le mur derrière elle (FACING regarde vers la pièce). */
 	private static final Map<Direction, VoxelShape> SHAPES = Map.of(
 			Direction.NORTH, Block.box(3, 4, 15, 13, 12, 16),
@@ -44,7 +66,7 @@ public class HousePlaqueBlock extends HorizontalDirectionalBlock {
 
 	public HousePlaqueBlock(Properties properties) {
 		super(properties);
-		registerDefaultState(stateDefinition.any().setValue(FACING, Direction.NORTH));
+		registerDefaultState(stateDefinition.any().setValue(FACING, Direction.NORTH).setValue(STATUS, Status.NONE));
 	}
 
 	@Override
@@ -54,7 +76,7 @@ public class HousePlaqueBlock extends HorizontalDirectionalBlock {
 
 	@Override
 	protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
-		builder.add(FACING);
+		builder.add(FACING, STATUS);
 	}
 
 	@Override
@@ -116,6 +138,10 @@ public class HousePlaqueBlock extends HorizontalDirectionalBlock {
 	@Override
 	protected void affectNeighborsAfterRemoval(BlockState state, ServerLevel level, BlockPos pos, boolean movedByPiston) {
 		super.affectNeighborsAfterRemoval(state, level, pos, movedByPiston);
+		if (level.getBlockState(pos).is(this)) {
+			// La plaque a seulement changé de couleur.
+			return;
+		}
 		TownService.plaqueRemoved(level, pos);
 	}
 }

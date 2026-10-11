@@ -25,5 +25,9 @@ public enum Action {
 	/** Lève les bras de joie (mariage, naissance). */
 	CHEER,
 	/** Bande son arc, les deux bras tendus. */
-	AIM
+	AIM,
+	/** Soigne un patient, les mains posées sur lui. */
+	HEAL,
+	/** Danse à la fête. */
+	DANCE
 }

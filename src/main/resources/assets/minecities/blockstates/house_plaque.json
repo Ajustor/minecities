@@ -1,8 +1,49 @@
 {
   "variants": {
-    "facing=north": { "model": "minecities:block/house_plaque" },
-    "facing=east": { "model": "minecities:block/house_plaque", "y": 90 },
-    "facing=south": { "model": "minecities:block/house_plaque", "y": 180 },
-    "facing=west": { "model": "minecities:block/house_plaque", "y": 270 }
+    "facing=north,status=none": {
+      "model": "minecities:block/house_plaque"
+    },
+    "facing=east,status=none": {
+      "model": "minecities:block/house_plaque",
+      "y": 90
+    },
+    "facing=south,status=none": {
+      "model": "minecities:block/house_plaque",
+      "y": 180
+    },
+    "facing=west,status=none": {
+      "model": "minecities:block/house_plaque",
+      "y": 270
+    },
+    "facing=north,status=valid": {
+      "model": "minecities:block/house_plaque_valid"
+    },
+    "facing=east,status=valid": {
+      "model": "minecities:block/house_plaque_valid",
+      "y": 90
+    },
+    "facing=south,status=valid": {
+      "model": "minecities:block/house_plaque_valid",
+      "y": 180
+    },
+    "facing=west,status=valid": {
+      "model": "minecities:block/house_plaque_valid",
+      "y": 270
+    },
+    "facing=north,status=invalid": {
+      "model": "minecities:block/house_plaque_invalid"
+    },
+    "facing=east,status=invalid": {
+      "model": "minecities:block/house_plaque_invalid",
+      "y": 90
+    },
+    "facing=south,status=invalid": {
+      "model": "minecities:block/house_plaque_invalid",
+      "y": 180
+    },
+    "facing=west,status=invalid": {
+      "model": "minecities:block/house_plaque_invalid",
+      "y": 270
+    }
   }
 }

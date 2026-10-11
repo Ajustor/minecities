@@ -1,5 +1,6 @@
 package com.ajustor.minecities.town;
 
+import com.ajustor.minecities.block.HousePlaqueBlock;
 import com.ajustor.minecities.block.TownHallBlockEntity;
 import com.ajustor.minecities.citizen.CitizenEntity;
 import com.ajustor.minecities.registry.McBlocks;
@@ -191,6 +192,15 @@ public final class TownService {
 		} else {
 			town.removeHouse(plaque);
 		}
+		// La plaque montre le résultat : porte verte si le bâtiment est enregistré, rouge sinon.
+		BlockState state = level.getBlockState(plaque);
+		if (state.is(McBlocks.HOUSE_PLAQUE)) {
+			HousePlaqueBlock.Status status = result.valid() ? HousePlaqueBlock.Status.VALID
+					: HousePlaqueBlock.Status.INVALID;
+			if (state.getValue(HousePlaqueBlock.STATUS) != status) {
+				level.setBlock(plaque, state.setValue(HousePlaqueBlock.STATUS, status), Block.UPDATE_CLIENTS);
+			}
+		}
 		return result;
 	}
 
@@ -338,8 +348,11 @@ public final class TownService {
 		if (town.setVillagers(villagers.size())) {
 			town.updateTier().ifPresent(before -> announceTier(level, town, before));
 		}
-		// Un villageois sans métier peut devenir citoyen, un à la fois, au rythme de l'immigration.
-		if (level.getGameTime() - town.lastArrival() >= IMMIGRATION_DELAY) {
+		// Un villageois sans métier peut devenir citoyen, un à la fois, au rythme de l'immigration :
+		// deux fois plus vite si la ville est heureuse, jamais si elle est malheureuse.
+		double mood = town.averageMood().orElse((double) com.ajustor.minecities.citizen.Happiness.BASE);
+		long delay = mood >= com.ajustor.minecities.citizen.Happiness.HAPPY ? IMMIGRATION_DELAY / 2 : IMMIGRATION_DELAY;
+		if (mood > com.ajustor.minecities.citizen.Happiness.UNHAPPY && level.getGameTime() - town.lastArrival() >= delay) {
 			villagers.stream().filter(TownService::jobless).findFirst().ifPresent(v -> naturalize(level, town, v));
 		}
 	}
@@ -500,14 +513,29 @@ public final class TownService {
 
 	/** Prend un aliment dans ce contenant, le plus nourrissant ; vide si rien ne se mange. */
 	public static ItemStack takeFood(Container container) {
+		return takeFood(container, new com.ajustor.minecities.citizen.Diet());
+	}
+
+	/**
+	 * Prend l'aliment qui le nourrira le mieux compte tenu de ses derniers repas : il varie de lui-même
+	 * quand le garde-manger le permet, et préfère un plat élaboré. Vide si rien ne se mange.
+	 */
+	public static ItemStack takeFood(Container container, com.ajustor.minecities.citizen.Diet diet) {
 		int best = -1;
 		int bestNutrition = -1;
 		for (int i = 0; i < container.getContainerSize(); i++) {
 			ItemStack stack = container.getItem(i);
 			FoodProperties food = stack.get(DataComponents.FOOD);
-			if (food != null && isFood(stack) && food.nutrition() > bestNutrition) {
+			if (food == null || !isFood(stack)) {
+				continue;
+			}
+			String id = net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(stack.getItem()).toString();
+			// Ce qu'il n'a pas mangé dernièrement le tente plus qu'un peu plus nourrissant.
+			int value = diet.nutrition(id, food.nutrition()) + (diet.times(id) == 0 ? 4 : 0)
+					+ (com.ajustor.minecities.citizen.Diet.DISHES.contains(id) ? 3 : 0);
+			if (value > bestNutrition) {
 				best = i;
-				bestNutrition = food.nutrition();
+				bestNutrition = value;
 			}
 		}
 		if (best < 0) {
@@ -566,6 +594,10 @@ public final class TownService {
 				town.hall().toShortString()));
 		granary(level, town).ifPresent(g -> player.sendSystemMessage(
 				Component.translatable("info.minecities.granary", countMeals(g))));
+		town.averageMood().ifPresent(mood -> player.sendSystemMessage(Component.translatable("info.minecities.mood",
+				String.format("%.1f", mood)).withStyle(mood >= com.ajustor.minecities.citizen.Happiness.HAPPY
+				? ChatFormatting.GREEN : mood > com.ajustor.minecities.citizen.Happiness.UNHAPPY ? ChatFormatting.WHITE
+				: ChatFormatting.RED)));
 		TownTier next = town.tier().next();
 		if (next != null) {
 			player.sendSystemMessage(Component.translatable("info.minecities.next",
