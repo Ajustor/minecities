@@ -25,6 +25,23 @@ pain), pour que la ville produise elle-même ce que coûtent ses améliorations.
   sécurité eau/lave/maisons/territoire, galerie sauvegardée).
 - Couvre-chefs du marchand, du boulanger, du forgeron et du mineur.
 
+## État (v1.0)
+
+- `citizen/CraftGoal` : l'artisan générique (au grenier → au poste → au grenier), recettes dans
+  `citizen/Crafts`, chacune avec le stock au-delà duquel le grenier en a assez.
+- **Joaillier** (établi de joaillier, dès la ville) : broche d'améthyste, bague en or, diadème
+  (objets du mod, sprites générés) ; `Market.value` : le marchand les vend à la pièce (2, 5, 12).
+- **Maçon** (tailleur de pierre) : briques, pierre taillée, andésite polie.
+- **Verrier** (four de verrier) : verre, vitres, vitraux blancs.
+- **Tisserand** (métier à tisser) : laine, lits.
+- **Apiculteur** (ruche, cisailles ; `BeekeeperGoal`) : ruches pleines du territoire, miel ou rayons.
+- **Bibliothécaire** (bibliothèque ciselée, dès la ville) : livres, papier ; facteur de bonheur
+  « une bibliothèque » (+1), enfance de deux jours (`Families.childhood`).
+- Schémas à quatre niveaux : joaillerie, taillerie de pierre, verrerie, tissage, rucher, bibliothèque.
+- Couvre-chefs des six nouveaux métiers.
+
+Reste pour la v1.1 : le tanneur (le chaudron sert déjà à l'infirmerie), les spécialités de niveau 4.
+
 ## Quatre niveaux par bâtiment
 
 | Niveau | Matériaux | Ce que le niveau apporte |
