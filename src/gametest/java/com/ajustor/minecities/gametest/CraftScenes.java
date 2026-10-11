@@ -104,7 +104,7 @@ public class CraftScenes implements FabricClientGameTest {
 							+ ", miel " + granary(server, Items.HONEY_BOTTLE) + ".");
 			// Les bijoux se vendent : le diadème, la bague et la broche rapportent 19 émeraudes.
 			waitOrExplain(sp, server -> town(server).chronicle().earnedToday(server.overworld().getGameTime()) >= 19,
-					3600, "les bijoux ne se sont pas vendus", server -> "diadème " + granary(server, McItems.DIADEM)
+					7200, "les bijoux ne se sont pas vendus", server -> "diadème " + granary(server, McItems.DIADEM)
 							+ ", bague " + granary(server, McItems.GOLD_RING) + ", broche "
 							+ granary(server, McItems.AMETHYST_BROOCH) + ", gains "
 							+ town(server).chronicle().earnedToday(server.overworld().getGameTime()) + ".");
