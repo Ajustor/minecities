@@ -1,5 +1,7 @@
 # MineCities
 
+*[English version](README.en.md)*
+
 Des villes vivantes pour Minecraft 26.2 (Fabric), inspirées de MineColonies mais dans l'esprit
 vanilla : pas de plans imposés ni de huttes préfabriquées. Vous bâtissez comme vous voulez, le mod
 reconnaît vos maisons, et des citoyens viennent y vivre. Le village devient ville, puis grande
@@ -24,7 +26,9 @@ ville, puis mégalopole.
 4. **Les citoyens** se promènent sur le territoire le jour, rentrent dormir dans leur lit la nuit,
    et mangent quand ils ont faim : d'abord dans les coffres et tonneaux de leur maison, sinon au
    grenier. Affamés, ils dépérissent et peuvent mourir de faim. On peut aussi les nourrir à la
-   main. Un clic sur un citoyen donne son état.
+   main. Ils **parlent** : une bulle au-dessus de la tête et une ligne dans le chat des joueurs
+   proches (outil ou matériau qui manque, faim, « laissez-moi la place »…). Un clic droit sur un
+   citoyen donne son état et répète ce qui lui manque encore.
 5. **Des métiers** : un bâtiment déclaré qui contient un poste de travail vanilla est un atelier,
    et chaque poste emploie un citoyen.
    - **Composteur → fermier** : il lui faut une **houe** (dans un coffre de l'atelier ou au
@@ -38,15 +42,25 @@ ville, puis mégalopole.
      grenier) tant qu'une espèce a moins de 6 têtes, abat le surplus au-delà de 8 adultes.
    - **Baril au bord de l'eau → pêcheur** : avec une **canne à pêche**, il pêche depuis la rive.
      (Loin de l'eau, un baril reste un garde-manger.)
-   - **Table d'artisan → bâtisseur** : il bâtit les chantiers commandés par le maire (voir plus bas).
+   - **Table d'artisan → bâtisseur** : il bâtit les chantiers commandés par le maire (voir plus bas),
+     avec le bon outil pour dégager le terrain : **pioche** (pierre), **pelle** (terre), **hache** (bois).
+     Il travaille depuis le pied du chantier ou du haut d'**échafaudages** qu'il dresse et démonte ;
+     il demande à qui se trouve sur son chemin de s'écarter. Plusieurs bâtisseurs se partagent un
+     chantier, chacun son bloc.
+   - **Table de cartographie → livreur** : il porte aux bâtisseurs les matériaux qu'ils réclament,
+     pour qu'ils ne quittent pas leur chantier.
+   Deux postes dans un même atelier font deux travailleurs : les ateliers agrandis en ont deux.
 6. **Faire bâtir** : le maire (ou un adjoint) commande un bâtiment d'après un **schéma**, dans un
    **style** (plaines, taïga, désert, savane) : `/ville build minecities:house_small taiga`. Le
    bâtiment se place devant lui, porte vers lui ; le bâtisseur dégage le terrain et pose les blocs
    en prenant les matériaux au grenier (le maire est prévenu de ce qui manque), et le bâtiment se
    déclare tout seul une fois fini. `/ville upgrade`, dans un bâtiment bâti par la ville,
-   l'agrandit (la petite maison devient une grande maison). Schémas livrés : petite et grande
-   maison, ferme (avec son champ), cuisine, scierie, étable (avec son enclos), pêcherie (avec son
-   bassin), atelier du bâtisseur. Les datapacks peuvent en ajouter (`data/<ns>/blueprint/*.json`).
+   l'améliore : les premiers niveaux ont un toit plat en gradins, les améliorations un toit à deux
+   pans en escaliers et une fondation de pierre taillée. Chaque bâtiment a un perron (une marche
+   devant la porte), et il faut des échafaudages au grenier pour les toits. Petite maison → grande maison → manoir ;
+   chaque atelier (ferme avec son champ, cuisine, scierie, étable avec son enclos, pêcherie avec son
+   bassin, atelier du bâtisseur) → son grand atelier, à deux postes. Les datapacks peuvent ajouter
+   des schémas (`data/<ns>/blueprint/*.json`).
 7. **Grandir** : la ville monte de palier avec ses citoyens et ses maisons, et son territoire
    s'étend.
 

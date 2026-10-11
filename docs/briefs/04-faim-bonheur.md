@@ -32,9 +32,8 @@ Effets : vitesse de travail, immigration, **votes** (brief 02), départs si trè
   insuffisante (à garder léger).
 
 ### Naissances
-- Deux citoyens adultes, heureux et logés, dans une maison avec un lit libre : un **enfant**
-  peut naître (petite entité, grandit en N jours). Croissance « naturelle » en plus de
-  l'immigration. À valider.
+- Remplacé et précisé par le **brief 10** : les citoyens naissent de couples mariés (mariage
+  accepté par le maire), et il n'y a plus d'immigration au-delà d'un minimum de 5 habitants.
 
 ## Points d'entrée
 

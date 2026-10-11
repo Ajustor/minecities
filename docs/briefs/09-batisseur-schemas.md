@@ -2,13 +2,15 @@
 
 ## État (v0.3)
 
-Fait : le bâtisseur (table d'artisan), 8 schémas JSON générés par `tools/blueprints/generate.py`
-(petite et grande maison, ferme, cuisine, scierie, étable, pêcherie, atelier du bâtisseur), 4 styles
+Fait : le bâtisseur (table d'artisan), 15 schémas JSON générés par `tools/blueprints/generate.py`
+(petite maison → grande maison → manoir ; ferme, cuisine, scierie, étable, pêcherie, atelier du
+bâtisseur, chacun suivi de son grand atelier à deux postes ; toits plats d'abord, toits à deux pans
+et pierre taillée pour les améliorations), les outils pour dégager (pioche, pelle, hache), plusieurs
+bâtisseurs sur un même chantier, 4 styles
 (`build/BuildStyle` : plaines, taïga, désert, savane), les commandes `blueprints`, `build`,
 `build cancel`, `upgrade`, la liste des matériaux à la commande, l'emprise en particules, la
 déclaration automatique du bâtiment fini, et les schémas des datapacks (`data/<ns>/blueprint/`).
-Choix faits : schémas en JSON plutôt qu'en `.nbt` (lisibles, déclinables en styles), pas d'outil
-exigé du bâtisseur. Reste à faire : l'objet « plan » et l'aperçu fantôme côté client, les schémas
+Choix faits : schémas en JSON plutôt qu'en `.nbt` (lisibles, déclinables en styles). Reste à faire : l'objet « plan » et l'aperçu fantôme côté client, les schémas
 enregistrés avec un bloc de structure vanilla, plusieurs bâtisseurs sur plusieurs chantiers, et
 davantage de niveaux d'amélioration pour les ateliers.
 

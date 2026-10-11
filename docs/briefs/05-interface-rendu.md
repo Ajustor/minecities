@@ -16,6 +16,7 @@ vanilla (texture de livre/parchemin, pas d'interface « tablette ») :
   lumineux quelques secondes, comme l'effet *glowing*).
 - **Bâtiments** : maisons et ateliers, leurs lits/postes, état du dernier relevé.
 - **Mairie** : adjoints, décrets, élections (brief 02).
+- **Registre** : demandes de mariage à accepter ou refuser, naissances, familles (brief 10).
 - **Grenier** : l'inventaire actuel.
 
 Technique : `ExtendedScreenHandlerType`/menu Fabric pour le grenier, et un paquet

@@ -50,7 +50,14 @@ Un mod de villes « à la MineColonies », mais **vanilla-friendly** :
   billot et botte ne comptent que posés seuls au sol (rien de plein dessus).
 - **Chantiers** : `/ville build <schéma> [style]` place le bâtiment devant le maire ; le bâtisseur
   dégage puis pose (un bloc par demi-seconde), matériaux pris au grenier ; fini, le bâtiment se
-  déclare. `/ville upgrade` rebâtit au même endroit d'après le schéma suivant.
+  déclare. `/ville upgrade` rebâtit au même endroit d'après le schéma suivant (toit plat d'abord,
+  toit à deux pans et pierre taillée ensuite ; ateliers agrandis à deux postes). Le bâtisseur
+  dégage avec pioche, pelle ou hache selon le bloc ; il travaille du dehors (8 blocs de portée)
+  ou du haut d'échafaudages qu'il dresse puis démonte ; plusieurs bâtisseurs se partagent un
+  chantier en réservant chacun un bloc ; un livreur (table de cartographie) leur porte les
+  matériaux ; qui se tient sur un bloc à poser est prié de s'écarter.
+- **Parole** : les citoyens disent ce qui leur arrive (bulle et chat à 16 blocs) ; leurs besoins
+  non satisfaits sont répétés à qui clique sur eux.
 - **Sommeil** : pas de sommeil là où les lits explosent (Nether, End).
 - **Immigration** : toutes les 2 minutes au plus, s'il reste un lit libre et que le grenier
   contient de la nourriture saine (ni chair putréfiée, ni œil d'araignée…).
@@ -98,7 +105,21 @@ Changelog-en: Citizens sleep in their bed at night
 ## Feuille de route
 
 Les briefs détaillés sont dans [docs/briefs](docs/briefs) ; les questions ouvertes dans
-[QUESTIONS.md](QUESTIONS.md).
+[QUESTIONS.md](QUESTIONS.md). Une branche par version, fusionnée par pull request dans `master`,
+puis un tag `vX.Y.0` qui publie la release.
+
+**Ordre retenu** (les briefs « dans l'ordre logique ») :
+
+1. **v0.4** — brief 10 (familles, mariages, naissances, animations) avec l'écran de l'hôtel de
+   ville du brief 05, nécessaire pour accepter les mariages.
+2. **v0.5** — brief 04 (faim variée, bonheur), dont dépendent les naissances, les votes et
+   l'immigration ; et le reste du brief 05 (HUD, indications en jeu).
+3. **v0.6** — brief 06 (garde, défense, cloche, raids, fêtes).
+4. **v0.7** — brief 07 (trésor, marché, commerce) puis brief 03 (déblocages par palier).
+5. **v0.8** — brief 08 (configuration, permissions, protections, performances, compatibilité).
+6. **v1.x** — suites du brief 09 (aperçu fantôme, plans, structures enregistrées) et du brief 01
+   (garde, mineur, forgeron, bibliothécaire).
+7. **v2** — brief 02 (habitants joueurs, rangs, décrets, élections).
 
 | # | Brief | Résumé |
 |---|---|---|
@@ -110,4 +131,5 @@ Les briefs détaillés sont dans [docs/briefs](docs/briefs) ; les questions ouve
 | 06 | [Défense et événements](docs/briefs/06-defense-evenements.md) | Gardes, raids, cloche d'alarme, fêtes et marchés |
 | 07 | [Économie et commerce](docs/briefs/07-economie.md) | Trésor, marché, échanges avec les villageois et entre villes |
 | 08 | [Robustesse et multijoueur](docs/briefs/08-robustesse.md) | Permissions, protections, configuration, performance, compatibilité |
+| 10 | [Familles, mariages, naissances et animations](docs/briefs/10-familles-animations.md) | **Prochaine étape (v0.4)** : 5 fondateurs, plus d'immigration magique, mariages acceptés par le maire, naissances, animations |
 | 09 | [Bâtisseur et schémas](docs/briefs/09-batisseur-schemas.md) | Fait en v0.3 ; suite : aperçu fantôme, objet plan, schémas enregistrés au bloc de structure |
