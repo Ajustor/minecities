@@ -18,7 +18,8 @@
 			"com.ajustor.minecities.gametest.RobustScenes",
 			"com.ajustor.minecities.gametest.IndustryScenes",
 			"com.ajustor.minecities.gametest.CraftScenes",
-			"com.ajustor.minecities.gametest.CouncilScenes"
+			"com.ajustor.minecities.gametest.CouncilScenes",
+			"com.ajustor.minecities.gametest.StyleScenes"
 		]
 	},
 	"depends": {

@@ -132,9 +132,10 @@ public class BuildScenes implements FabricClientGameTest {
 			waitOrExplain(sp, server -> town(server).constructions().stream().allMatch(Construction::done), 15000,
 					"la bâtisse n'a pas été bâtie", BuildScenes::progress);
 			check(sp.getServer().computeOnServer(server -> homeBeds(server) == 6
-					&& server.overworld().getBlockState(ORIGIN.offset(0, 0, 1)).is(Blocks.STONE_BRICKS)
-					&& server.overworld().getBlockState(ORIGIN.offset(1, 1, 1)).is(Blocks.BRICKS)
-					&& server.overworld().getBlockState(ORIGIN.offset(3, 0, 0)).is(Blocks.COBBLESTONE_STAIRS) ? null
+					&& server.overworld().getBlockState(ORIGIN.offset(1, 0, 1)).is(Blocks.STONE_BRICKS)
+					&& server.overworld().getBlockState(ORIGIN.offset(2, 1, 1)).is(Blocks.BRICKS)
+					&& server.overworld().getBlockState(ORIGIN.offset(4, 0, 0)).is(Blocks.COBBLESTONE_STAIRS)
+					&& server.overworld().getBlockState(ORIGIN.offset(0, 3, 6)).is(Blocks.BRICKS) ? null
 					: "la bâtisse n'est pas conforme : " + town(server).houses()));
 			look(sp, -18, Y + 7, -3, -10, Y + 3, 9);
 			context.waitTicks(20);
@@ -164,7 +165,7 @@ public class BuildScenes implements FabricClientGameTest {
 
 	/** Les lits de la maison bâtie (sa plaque est à l'intérieur du mur nord, derrière le perron). */
 	private static int homeBeds(MinecraftServer server) {
-		return town(server).houses().stream().filter(h -> h.plaque().equals(ORIGIN.offset(2, 2, 2)))
+		return town(server).houses().stream().filter(h -> h.plaque().equals(ORIGIN.offset(3, 2, 2)))
 				.mapToInt(House::capacity).sum();
 	}
 

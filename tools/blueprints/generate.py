@@ -78,6 +78,14 @@ KEY = {
     "x": "minecraft:chiseled_bookshelf[facing=north]",
     "#": "minecraft:bookshelf",
     "N": "minecities:tanning_rack[facing=north]",
+    # Le décor (v1.2) : volets, cheminée, tapis, pot de fleurs.
+    "(": "{trapdoor}[facing=west,half=top,open=true]",
+    ")": "{trapdoor}[facing=east,half=top,open=true]",
+    "=": "{trapdoor}[facing=south,half=top,open=true]",
+    "*": "minecraft:campfire[lit=true,signal_fire=false,facing=north]",
+    "-": "{carpet}",
+    "+": "minecraft:potted_poppy",
+    "|": "{frame}[axis=x]",
     "y": "minecraft:barrel[facing=north]",
     "<": "{roof_stairs}[facing=east,half=bottom,shape=straight]",
     ">": "{roof_stairs}[facing=west,half=bottom,shape=straight]",
@@ -331,6 +339,72 @@ def levelled(level, w, d, door_x=3, beds=(), extras=None):
     return layers
 
 
+def decorate(level, layers, w, d, house):
+    """
+    Habille un bâtiment de w x d (brief v1.2) : un débord de toit tout autour, des volets ouverts aux
+    fenêtres, une cheminée contre le mur ouest (et son feu de camp allumé), un pot de fleurs sur le
+    coffre ; dans les maisons, un tapis de l'entrée au fond et, dès le niveau 3, une bibliothèque.
+    Le bâtiment gagne une colonne de chaque côté et une rangée au fond (x + 1 dans le résultat).
+    """
+    m = LEVELS[level]
+    out = []
+    for layer in layers:
+        rows = [["."] + list(row) + ["."] for row in layer]
+        rows.append(["."] * (w + 2))
+        out.append(rows)
+    width = w + 2
+    # L'intérieur : un pot de fleurs sur le coffre, un tapis, une bibliothèque.
+    if out[2][1][w - 1] == " ":
+        out[2][1][w - 1] = "+"
+    if house and level >= 2:
+        for z in range(1, d - 1):
+            if out[1][z][4] == " ":
+                out[1][z][4] = "-"
+    if house and level >= 3 and out[1][1][2] == " ":
+        out[1][1][2] = "#"
+    # Des fenêtres sur la façade, de part et d'autre de la porte (dès le niveau 2).
+    if level >= 2:
+        for x in (2, width - 3):
+            if out[2][0][x] in ("W", "K"):
+                out[2][0][x] = m["window"]
+    # Les pignons : une poutre de rondin à leur pied, une lucarne au milieu.
+    if m["roof"] is not None:
+        for z in (0, d - 1):
+            for x in range(width):
+                if out[5][z][x] == "W":
+                    out[5][z][x] = "|"
+            if len(out) > 7 and out[7][z][width // 2] == "W":
+                out[7][z][width // 2] = "G"
+    # Le débord du toit : des marches (ou des dalles) au ras du plafond, tout autour.
+    if m["roof"] is None:
+        for z in range(d + 1):
+            out[4][z][0] = out[4][z][width - 1] = "S"
+        for x in range(width):
+            out[4][d][x] = "S"
+    else:
+        east, west, _ = m["roof"]
+        for z in range(d):
+            out[4][z][0] = east
+            out[4][z][width - 1] = west
+    # Des volets de part et d'autre des fenêtres des côtés et du fond.
+    middle = d // 2
+    for dz in (-1, 1):
+        out[2][middle + dz][0] = "("
+        out[2][middle + dz][width - 1] = ")"
+    for wx in range(2, w - 2, 3):
+        for dx in (-1, 1):
+            if out[2][d][wx + 1 + dx] == ".":
+                out[2][d][wx + 1 + dx] = "="
+    # La cheminée, contre le mur ouest, jusqu'au-dessus du toit, et son feu.
+    chimney = {1: "O", 2: "O", 3: "K", 4: "K"}[level]
+    for y in range(len(out)):
+        out[y][d - 2][0] = chimney
+    top = [["."] * width for _ in range(d + 1)]
+    top[d - 2][0] = "*"
+    out.append(top)
+    return out
+
+
 # La taille de chaque niveau : une maison gagne deux lits, un atelier un poste.
 HOUSE_SIZES = {1: (7, 7), 2: (9, 7), 3: (11, 7), 4: (11, 9)}
 WORKSHOP_SIZES = {1: (7, 7), 2: (9, 7), 3: (11, 7), 4: (13, 7)}
@@ -343,7 +417,7 @@ def house_level(level):
             2: [(1, 4), (3, 4), (5, 4), (7, 4)],
             3: [(1, 4), (2, 4), (4, 4), (5, 4), (7, 4), (8, 4)],
             4: [(x, 3) for x in (1, 3, 7, 9)] + [(x, 6) for x in (1, 3, 7, 9)]}[level]
-    return levelled(level, w, d, beds=beds, extras={(w - 2, 1, 1): "C"})
+    return decorate(level, levelled(level, w, d, beds=beds, extras={(w - 2, 1, 1): "C"}), w, d, True)
 
 
 def workshop_level(level, station, beds=(), more=None):
@@ -353,7 +427,7 @@ def workshop_level(level, station, beds=(), more=None):
     for i in range(level):
         extras[(5 + 2 * i, 1, d - 2)] = station
     extras.update(more or {})
-    return levelled(level, w, d, beds=beds, extras=extras)
+    return decorate(level, levelled(level, w, d, beds=beds, extras=extras), w, d, False)
 
 
 def series(prints, name, make, outside=None, ext_width=8, min_tier=None):
@@ -367,8 +441,9 @@ def series(prints, name, make, outside=None, ext_width=8, min_tier=None):
         if min_tier == "town" and tier is None:
             tier = "town"
         upgrade = f"minecities:{name}_{level + 1}" if level < 4 else None
+        # La porte est en x = 4 : le décor a ajouté une colonne à l'ouest.
         prints.append(blueprint(f"{name}_{level}", "house" if name == "house" else "workshop", body,
-                                upgrade=upgrade, tier=tier))
+                                upgrade=upgrade, tier=tier, door_x=4))
 
 
 def workshop(extras, fine=False):

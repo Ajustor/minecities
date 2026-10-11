@@ -142,9 +142,14 @@ public class RaidScenes implements FabricClientGameTest {
 
 	/** Pose d'un coup un bâtiment d'après son schéma (sans bâtisseur). */
 	static void paste(ServerLevel level, String name, BlockPos origin) {
+		paste(level, name, origin, BuildStyle.PLAINS);
+	}
+
+	/** Pose d'un coup un bâtiment d'après son schéma, dans ce style (sans bâtisseur). */
+	static void paste(ServerLevel level, String name, BlockPos origin, BuildStyle style) {
 		Blueprint blueprint = Blueprints.get(level.getServer(), Identifier.fromNamespaceAndPath("minecities", name))
 				.orElseThrow(() -> new AssertionError("schéma introuvable : " + name));
-		for (BuildPlan.Placement p : BuildPlan.of(blueprint, BuildStyle.PLAINS, origin, Rotation.NONE)) {
+		for (BuildPlan.Placement p : BuildPlan.of(blueprint, style, origin, Rotation.NONE)) {
 			level.setBlock(p.pos(), p.state(), 3);
 			p.state().getBlock().setPlacedBy(level, p.pos(), p.state(), null, ItemStack.EMPTY);
 		}

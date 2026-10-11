@@ -123,6 +123,10 @@ public final class BuildPlan {
 		if (state.is(Blocks.FARMLAND)) {
 			return Optional.of(Items.DIRT);
 		}
+		if (state.getBlock() instanceof net.minecraft.world.level.block.FlowerPotBlock) {
+			// Un pot fleuri : le pot (la fleur, on la cueille en chemin).
+			return Optional.of(Items.FLOWER_POT);
+		}
 		Item item = state.getBlock().asItem();
 		return item == Items.AIR ? Optional.empty() : Optional.of(item);
 	}

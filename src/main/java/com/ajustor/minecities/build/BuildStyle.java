@@ -25,6 +25,8 @@ public enum BuildStyle {
 			Map.entry("stripped_log", "minecraft:stripped_oak_log"),
 			Map.entry("roof_stairs", "minecraft:spruce_stairs"),
 			Map.entry("steps", "minecraft:cobblestone_stairs"),
+			Map.entry("trapdoor", "minecraft:oak_trapdoor"),
+			Map.entry("carpet", "minecraft:red_carpet"),
 			Map.entry("fine_foundation", "minecraft:stone_bricks"))),
 	TAIGA("taiga", Map.ofEntries(
 			Map.entry("foundation", "minecraft:cobblestone"),
@@ -41,6 +43,8 @@ public enum BuildStyle {
 			Map.entry("stripped_log", "minecraft:stripped_spruce_log"),
 			Map.entry("roof_stairs", "minecraft:dark_oak_stairs"),
 			Map.entry("steps", "minecraft:cobblestone_stairs"),
+			Map.entry("trapdoor", "minecraft:spruce_trapdoor"),
+			Map.entry("carpet", "minecraft:brown_carpet"),
 			Map.entry("fine_foundation", "minecraft:mossy_stone_bricks"))),
 	DESERT("desert", Map.ofEntries(
 			Map.entry("foundation", "minecraft:sandstone"),
@@ -57,6 +61,8 @@ public enum BuildStyle {
 			Map.entry("stripped_log", "minecraft:stripped_jungle_log"),
 			Map.entry("roof_stairs", "minecraft:smooth_sandstone_stairs"),
 			Map.entry("steps", "minecraft:sandstone_stairs"),
+			Map.entry("trapdoor", "minecraft:birch_trapdoor"),
+			Map.entry("carpet", "minecraft:yellow_carpet"),
 			Map.entry("fine_foundation", "minecraft:chiseled_sandstone"))),
 	SAVANNA("savanna", Map.ofEntries(
 			Map.entry("foundation", "minecraft:cobblestone"),
@@ -73,6 +79,8 @@ public enum BuildStyle {
 			Map.entry("stripped_log", "minecraft:stripped_acacia_log"),
 			Map.entry("roof_stairs", "minecraft:acacia_stairs"),
 			Map.entry("steps", "minecraft:cobblestone_stairs"),
+			Map.entry("trapdoor", "minecraft:acacia_trapdoor"),
+			Map.entry("carpet", "minecraft:orange_carpet"),
 			Map.entry("fine_foundation", "minecraft:stone_bricks")));
 
 	private final String serializedName;
