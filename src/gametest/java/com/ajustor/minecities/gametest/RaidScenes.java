@@ -131,7 +131,7 @@ public class RaidScenes implements FabricClientGameTest {
 	}
 
 	/** La plaque d'un bâtiment posé d'après son schéma. */
-	private static Optional<BlockPos> plaque(ServerLevel level, BlockPos origin) {
+	static Optional<BlockPos> plaque(ServerLevel level, BlockPos origin) {
 		for (BlockPos pos : BlockPos.betweenClosed(origin, origin.offset(9, 3, 9))) {
 			if (level.getBlockState(pos).is(McBlocks.HOUSE_PLAQUE)) {
 				return Optional.of(pos.immutable());
@@ -141,7 +141,7 @@ public class RaidScenes implements FabricClientGameTest {
 	}
 
 	/** Pose d'un coup un bâtiment d'après son schéma (sans bâtisseur). */
-	private static void paste(ServerLevel level, String name, BlockPos origin) {
+	static void paste(ServerLevel level, String name, BlockPos origin) {
 		Blueprint blueprint = Blueprints.get(level.getServer(), Identifier.fromNamespaceAndPath("minecities", name))
 				.orElseThrow(() -> new AssertionError("schéma introuvable : " + name));
 		for (BuildPlan.Placement p : BuildPlan.of(blueprint, BuildStyle.PLAINS, origin, Rotation.NONE)) {

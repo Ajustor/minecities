@@ -12,7 +12,8 @@
 			"com.ajustor.minecities.gametest.VillageScenes",
 			"com.ajustor.minecities.gametest.BuildScenes",
 			"com.ajustor.minecities.gametest.FamilyScenes",
-			"com.ajustor.minecities.gametest.RaidScenes"
+			"com.ajustor.minecities.gametest.RaidScenes",
+			"com.ajustor.minecities.gametest.LifeScenes"
 		]
 	},
 	"depends": {
