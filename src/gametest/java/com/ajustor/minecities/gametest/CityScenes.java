@@ -54,6 +54,8 @@ public class CityScenes implements FabricClientGameTest {
 		}
 		try (TestSingleplayerContext sp = context.worldBuilder()
 				.adjustSettings(c -> c.setGameMode(WorldCreationUiState.SelectedGameMode.CREATIVE)).create()) {
+			// Cette scène compte ses citoyens : pas de nouveaux venus pour atteindre le minimum.
+			com.ajustor.minecities.town.Families.setMinimum(0);
 			command(sp, "time set 1000");
 			command(sp, "gamerule doDaylightCycle false");
 			command(sp, "gamerule doMobSpawning false");
@@ -163,6 +165,22 @@ public class CityScenes implements FabricClientGameTest {
 		} catch (AssertionError e) {
 			String state = sp.getServer().computeOnServer(server -> detail.apply(server) + " " + census(server));
 			throw new AssertionError(what + " : " + state, e);
+		}
+	}
+
+	/**
+	 * Filme : une capture toutes les {@code interval} ticks, jusqu'à {@code frames} images ou jusqu'à
+	 * ce que {@code done} soit vrai. tools/captures/animate.py en fait une vidéo animée.
+	 */
+	static void film(net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext context,
+			TestSingleplayerContext sp, String name, int frames, int interval,
+			java.util.function.Predicate<MinecraftServer> done) {
+		for (int i = 0; i < frames; i++) {
+			context.takeScreenshot("film_%s_%03d".formatted(name, i));
+			if (sp.getServer().computeOnServer(done::test)) {
+				return;
+			}
+			context.waitTicks(interval);
 		}
 	}
 

@@ -10,7 +10,8 @@
 			"com.ajustor.minecities.gametest.WorkScenes",
 			"com.ajustor.minecities.gametest.CountrysideScenes",
 			"com.ajustor.minecities.gametest.VillageScenes",
-			"com.ajustor.minecities.gametest.BuildScenes"
+			"com.ajustor.minecities.gametest.BuildScenes",
+			"com.ajustor.minecities.gametest.FamilyScenes"
 		]
 	},
 	"depends": {
