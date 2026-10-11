@@ -1,5 +1,15 @@
 # Journal des modifications
 
+## 0.9.0 — 2026-10-11
+
+### Nouveautés
+
+- Quatre niveaux pour chaque bâtiment (cabane, maison, bâtisse, demeure), de plus en plus chers et productifs
+- Nouveau métier : mineur, au treuil de mine (nouveau bloc), qui creuse une vraie galerie et suit les filons
+- Nouveau métier : forgeron (haut fourneau), qui fond les minerais et forge outils et plastrons
+- Nouveau métier : boulanger (four), pour le pain, les biscuits et les tartes
+- Couvre-chefs du marchand, du boulanger, du forgeron et du mineur
+- Le grenier de l'hôtel de ville a deux fois plus de place (54 cases)
 ## 0.8.0 — 2026-10-11
 
 ### Nouveautés

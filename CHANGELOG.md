@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.9.0 — 2026-10-11
+
+### New features
+
+- Four levels for every building (hut, house, hall, mansion), ever more costly and productive
+- New job: miner, at the mine winch (new block), who digs a real gallery and follows ore veins
+- New job: smith (blast furnace), who smelts ores and forges tools and chestplates
+- New job: baker (furnace), for bread, cookies and pies
+- Hats for the merchant, baker, smith and miner
+- The town hall granary has twice the room (54 slots)
 ## 0.8.0 — 2026-10-11
 
 ### New features
