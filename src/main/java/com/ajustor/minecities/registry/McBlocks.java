@@ -3,6 +3,7 @@ package com.ajustor.minecities.registry;
 import com.ajustor.minecities.MineCities;
 import com.ajustor.minecities.block.HousePlaqueBlock;
 import com.ajustor.minecities.block.MineWinchBlock;
+import com.ajustor.minecities.block.WorkstationBlock;
 import com.ajustor.minecities.block.TownAnnexBlock;
 import com.ajustor.minecities.block.TownHallBlock;
 import net.minecraft.core.registries.Registries;
@@ -51,6 +52,24 @@ public final class McBlocks {
 					.strength(2.0f)
 					.noOcclusion()
 					.sound(SoundType.WOOD));
+
+	/** L'établi du joaillier : le poste du joaillier. */
+	public static final Block JEWELER_BENCH = register("jeweler_bench", WorkstationBlock::new,
+			BlockBehaviour.Properties.of()
+					.mapColor(MapColor.WOOD)
+					.strength(2.5f)
+					.noOcclusion()
+					.sound(SoundType.WOOD));
+
+	/** Le four du verrier : le poste du verrier. */
+	public static final Block GLASS_KILN = register("glass_kiln", WorkstationBlock::new,
+			BlockBehaviour.Properties.of()
+					.mapColor(MapColor.COLOR_RED)
+					.strength(3.5f)
+					.requiresCorrectToolForDrops()
+					.noOcclusion()
+					.lightLevel(state -> 7)
+					.sound(SoundType.STONE));
 
 	private McBlocks() {
 	}

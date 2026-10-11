@@ -280,7 +280,7 @@ def spawn_egg():
 
 # Les couleurs des chapeaux de métier, dans l'ordre de CitizenHatModel.Tile.
 HAT_TILES = ["#d8b45a", "#8a6a2c", "#f2f0ea", "#b3312c", "#6b4a2b", "#4e6a8a", "#e07b24", "#2f4f9e",
-             "#a9adb3", "#3f7a33", "#9fd4e8", "#5a3b22", "#26262b", "#e8c13a"]
+             "#a9adb3", "#3f7a33", "#9fd4e8", "#5a3b22", "#26262b", "#e8c13a", "#6a2d8a", "#7d7f84", "#e2c33b"]
 
 
 def hats():
@@ -303,6 +303,72 @@ def hats():
     return img
 
 
+def sprite(rows, palette):
+    """Un objet de 16 x 16 dessiné en caractères : chaque caractère est une couleur de la palette."""
+    img = Image.new("RGBA", (16, 16), (0, 0, 0, 0))
+    for y, row in enumerate(rows):
+        for x, ch in enumerate(row):
+            if ch in palette:
+                img.putpixel((x, y), hexc(palette[ch]))
+    return img
+
+
+# Les bijoux du joaillier : o or ou cuivre, h reflet, s ombre, g gemme, w éclat de la gemme.
+JEWELS = {
+    "amethyst_brooch": ([
+        "................",
+        "................",
+        "......ssss......",
+        "....soooooos....",
+        "...soohgggoos...",
+        "...sohgwgggos...",
+        "..soogwggggoos..",
+        "..sooggggggoos..",
+        "..soogggggsoos..",
+        "...soggggssos...",
+        "...soosgssoos...",
+        "....soooooos....",
+        "......ssss......",
+        "................",
+        "................",
+        "................"], {"o": "#d27a4a", "h": "#f0b48c", "s": "#7a3f22", "g": "#9a5cc6", "w": "#e5c8f5"}),
+    "gold_ring": ([
+        "................",
+        "................",
+        "......gggg......",
+        ".....gwggsg.....",
+        "......gssg......",
+        ".....oohhoo.....",
+        "....oh....oo....",
+        "...oh......os...",
+        "...o.......os...",
+        "...o.......os...",
+        "...oo.....oos...",
+        "....oo...oos....",
+        ".....oooooss....",
+        "......ssss......",
+        "................",
+        "................"], {"o": "#f2c94c", "h": "#fff1a8", "s": "#a07418", "g": "#2f55c8", "w": "#9ab4ff"}),
+    "diadem": ([
+        "................",
+        "................",
+        "................",
+        ".......w........",
+        "......wgw.......",
+        "..o...ggg...o...",
+        "..oo..sgs..oo...",
+        "..ooo.ooo.ooo...",
+        "..ohooohooohoo..",
+        "..ooooooooooooo.",
+        "..hhhhhhhhhhhhh.",
+        "..sssssssssssss.",
+        "................",
+        "................",
+        "................",
+        "................"], {"o": "#f2c94c", "h": "#fff1a8", "s": "#a07418", "g": "#5fe3e0", "w": "#dffcff"}),
+}
+
+
 def save(img, path):
     path.parent.mkdir(parents=True, exist_ok=True)
     img.save(path)
@@ -318,6 +384,8 @@ def main():
     save(spawn_egg(), TEXTURES / "item/citizen_spawn_egg.png")
     save(hats(), TEXTURES / "entity/citizen/hats.png")
     save(annex_board(), TEXTURES / "block/annex_board.png")
+    for name, (rows, palette) in JEWELS.items():
+        save(sprite(rows, palette), TEXTURES / f"item/{name}.png")
 
 
 if __name__ == "__main__":

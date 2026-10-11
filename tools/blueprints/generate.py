@@ -70,6 +70,13 @@ KEY = {
     "o": "minecraft:furnace[facing=north]",
     "%": "minecraft:blast_furnace[facing=north]",
     "&": "minecities:mine_winch[facing=north]",
+    "j": "minecities:jeweler_bench[facing=north]",
+    "q": "minecraft:stonecutter[facing=north]",
+    "v": "minecities:glass_kiln[facing=north]",
+    "z": "minecraft:loom[facing=north]",
+    "w": "minecraft:beehive[facing=north,honey_level=0]",
+    "x": "minecraft:chiseled_bookshelf[facing=north]",
+    "#": "minecraft:bookshelf",
     "y": "minecraft:barrel[facing=north]",
     "<": "{roof_stairs}[facing=east,half=bottom,shape=straight]",
     ">": "{roof_stairs}[facing=west,half=bottom,shape=straight]",
@@ -412,6 +419,15 @@ def main():
                                                             beds=[(x, 2) for x in (1, 3, 5, 7)][:level + 1]))
     # La mine : le treuil, au-dessus du puits que le mineur creuse à l'est du bâtiment.
     series(prints, "mine", lambda level: workshop_level(level, "&"))
+    # Les artisans de la v1.0 : joaillerie (dès la ville), taillerie de pierre, verrerie, tissage, rucher.
+    series(prints, "jeweler_workshop", lambda level: workshop_level(level, "j"), min_tier="town")
+    series(prints, "masonry", lambda level: workshop_level(level, "q"))
+    series(prints, "glassworks", lambda level: workshop_level(level, "v"))
+    series(prints, "weavery", lambda level: workshop_level(level, "z"))
+    series(prints, "apiary", lambda level: workshop_level(level, "w"))
+    # La bibliothèque (dès la ville) : des bibliothèques ciselées, et des rayonnages le long des murs.
+    series(prints, "library", lambda level: workshop_level(level, "x", more={(1, 1, 2): "#", (1, 1, 3): "#",
+                                                                               (1, 1, 4): "#"}), min_tier="town")
 
     # Les anciens schémas (avant la v0.9) restent pour les chantiers en cours ; ils mènent aux nouveaux.
     # Les maisons : petite, grande, puis le manoir (toit à deux pans, fondation de pierre taillée).

@@ -87,6 +87,20 @@ public final class Market {
 	private Market() {
 	}
 
+	/** Ce que rapporte une pièce d'orfèvrerie (les bijoux du joaillier), en émeraudes. */
+	public static Optional<Integer> value(Item item) {
+		if (item == com.ajustor.minecities.registry.McItems.DIADEM) {
+			return Optional.of(12);
+		}
+		if (item == com.ajustor.minecities.registry.McItems.GOLD_RING) {
+			return Optional.of(5);
+		}
+		if (item == com.ajustor.minecities.registry.McItems.AMETHYST_BROOCH) {
+			return Optional.of(2);
+		}
+		return Optional.empty();
+	}
+
 	/** Combien il faut de cette marchandise pour une émeraude ; vide si elle ne se vend pas. */
 	public static Optional<Integer> rate(Item item) {
 		return Optional.ofNullable(SELL.get(item));

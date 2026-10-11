@@ -42,10 +42,11 @@ public final class Happiness {
 	 * @param recentDeaths     les morts de la ville depuis un jour
 	 * @param danger           un raid, l'alerte, ou un monstre tout près
 	 * @param festival         une fête dans la ville depuis moins d'un jour
+	 * @param culture          la ville a une bibliothèque, avec son bibliothécaire
 	 */
 	public record Factors(float hunger, int meals, int variety, boolean dish, int expectedVariety, boolean housed,
 			boolean child, boolean employed, boolean missingTool, boolean married, boolean hurt, int recentDeaths,
-			boolean danger, boolean festival) {
+			boolean danger, boolean festival, boolean culture) {
 	}
 
 	/** Un facteur et ce qu'il pèse (la clé se traduit en « mood.minecities.<clé> »). */
@@ -107,6 +108,9 @@ public final class Happiness {
 		}
 		if (f.festival()) {
 			factors.add(new Factor("festival", 2));
+		}
+		if (f.culture()) {
+			factors.add(new Factor("culture", 1));
 		}
 		int score = BASE + factors.stream().mapToInt(Factor::delta).sum();
 		return new Mood(Math.clamp(score, MIN, MAX), List.copyOf(factors));

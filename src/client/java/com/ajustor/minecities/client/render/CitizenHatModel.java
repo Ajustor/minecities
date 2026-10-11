@@ -29,7 +29,8 @@ public class CitizenHatModel extends CitizenModel {
 	public static final int TEXTURE_SIZE = 256;
 
 	/** Les couleurs des pavés, dans l'ordre de la texture (voir tools/textures/generate.py). */
-	enum Tile { STRAW, STRAW_DARK, WHITE, RED, BROWN, DENIM, ORANGE, BLUE, IRON, GREEN, GLASS, LEATHER, BLACK, GOLD }
+	enum Tile { STRAW, STRAW_DARK, WHITE, RED, BROWN, DENIM, ORANGE, BLUE, IRON, GREEN, GLASS, LEATHER, BLACK, GOLD,
+		PURPLE, GRAY, YELLOW }
 
 	private final Map<Job, ModelPart> hats = new EnumMap<>(Job.class);
 
@@ -162,6 +163,45 @@ public class CitizenHatModel extends CitizenModel {
 				hat.addOrReplaceChild("brim", cube(Tile.BROWN).addBox(-5.5f, -8.3f, -5.5f, 11, 0.5f, 11),
 						PartPose.ZERO);
 				hat.addOrReplaceChild("lamp", cube(Tile.GOLD).addBox(-1, -10, -5.2f, 2, 2, 1), PartPose.ZERO);
+			}
+			case JEWELER -> {
+				// Béret de velours pourpre, une épingle d'or.
+				hat.addOrReplaceChild("beret", cube(Tile.PURPLE).addBox(-5, -10, -5, 10, 1.5f, 10),
+						PartPose.rotation(0, 0, -0.12f));
+				hat.addOrReplaceChild("band", cube(Tile.PURPLE).addBox(-4.4f, -9, -4.4f, 8.8f, 1, 8.8f), PartPose.ZERO);
+				hat.addOrReplaceChild("pin", cube(Tile.GOLD).addBox(2.5f, -10.6f, -2, 1, 1, 1), PartPose.ZERO);
+			}
+			case MASON -> {
+				// Casquette grise de tailleur de pierre.
+				hat.addOrReplaceChild("cap", cube(Tile.GRAY).addBox(-4.5f, -10, -4.5f, 9, 2, 9), PartPose.ZERO);
+				hat.addOrReplaceChild("visor", cube(Tile.GRAY).addBox(-4, -8.5f, -7, 8, 0.5f, 2.5f), PartPose.ZERO);
+			}
+			case GLASSBLOWER -> {
+				// Calotte de cuir et lunettes sombres sur les yeux.
+				hat.addOrReplaceChild("cap", cube(Tile.LEATHER).addBox(-4.5f, -10, -4.5f, 9, 2, 9), PartPose.ZERO);
+				hat.addOrReplaceChild("strap", cube(Tile.BLACK).addBox(-4.4f, -6, -4.4f, 8.8f, 1, 8.8f), PartPose.ZERO);
+				hat.addOrReplaceChild("left", cube(Tile.BLACK).addBox(-3.5f, -6.5f, -4.9f, 3, 2, 0.5f), PartPose.ZERO);
+				hat.addOrReplaceChild("right", cube(Tile.BLACK).addBox(0.5f, -6.5f, -4.9f, 3, 2, 0.5f), PartPose.ZERO);
+			}
+			case WEAVER -> {
+				// Bonnet tricoté jaune à rayure rouge.
+				hat.addOrReplaceChild("cap", cube(Tile.YELLOW).addBox(-4.5f, -11, -4.5f, 9, 3, 9), PartPose.ZERO);
+				hat.addOrReplaceChild("stripe", cube(Tile.RED).addBox(-4.6f, -9.5f, -4.6f, 9.2f, 1, 9.2f), PartPose.ZERO);
+			}
+			case BEEKEEPER -> {
+				// Grand chapeau blanc d'apiculteur.
+				hat.addOrReplaceChild("crown", cube(Tile.WHITE).addBox(-4.5f, -11, -4.5f, 9, 3, 9), PartPose.ZERO);
+				hat.addOrReplaceChild("brim", cube(Tile.WHITE).addBox(-7, -8.5f, -7, 14, 0.5f, 14), PartPose.ZERO);
+				hat.addOrReplaceChild("band", cube(Tile.YELLOW).addBox(-4.6f, -9, -4.6f, 9.2f, 0.6f, 9.2f),
+						PartPose.ZERO);
+			}
+			case LIBRARIAN -> {
+				// Toque de savant : un mortier noir et son gland doré.
+				hat.addOrReplaceChild("cap", cube(Tile.BLUE).addBox(-4.5f, -10, -4.5f, 9, 2, 9), PartPose.ZERO);
+				hat.addOrReplaceChild("board", cube(Tile.BLACK).addBox(-5.5f, -10.5f, -5.5f, 11, 0.5f, 11),
+						PartPose.ZERO);
+				hat.addOrReplaceChild("tassel", cube(Tile.GOLD).addBox(4.5f, -10.5f, -0.5f, 0.5f, 3, 0.5f),
+						PartPose.ZERO);
 			}
 			case DOCTOR -> {
 				// Bandeau blanc à croix rouge.

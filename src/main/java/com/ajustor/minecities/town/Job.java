@@ -56,12 +56,34 @@ public enum Job {
 	/** Fond les minerais en lingots, forge les outils et les armures ; au haut fourneau. Dès la ville. */
 	SMITH("smith", (level, pos, state) -> state.is(Blocks.BLAST_FURNACE), null),
 	/** Creuse une vraie galerie sous le territoire et en rapporte pierre et minerais ; au treuil de mine. */
-	MINER("miner", (level, pos, state) -> BuiltInRegistries.BLOCK.getKey(state.getBlock()).toString()
-			.equals("minecities:mine_winch"), s -> s.is(ItemTags.PICKAXES));
+	MINER("miner", (level, pos, state) -> is(state, "mine_winch"), s -> s.is(ItemTags.PICKAXES)),
+	/** Taille les bijoux (or, cuivre, gemmes) que le marchand vend cher ; à l'établi du joaillier. Dès la ville. */
+	JEWELER("jeweler", (level, pos, state) -> is(state, "jeweler_bench"), null),
+	/** Taille la pierre, cuit les briques, polit l'andésite ; au tailleur de pierre. */
+	MASON("mason", (level, pos, state) -> state.is(Blocks.STONECUTTER), null),
+	/** Fond le sable en verre, fait les vitres et les vitraux ; au four du verrier. */
+	GLASSBLOWER("glassblower", (level, pos, state) -> is(state, "glass_kiln"), null),
+	/** File la laine et coud les lits des maisons ; au métier à tisser. */
+	WEAVER("weaver", (level, pos, state) -> state.is(Blocks.LOOM), null),
+	/** Récolte le miel et les rayons des ruches du territoire ; à la ruche. */
+	BEEKEEPER("beekeeper", (level, pos, state) -> state.is(Blocks.BEEHIVE), s -> s.is(net.minecraft.world.item.Items.SHEARS)),
+	/** Fait les livres, instruit les enfants, et la ville en est plus heureuse ; à la bibliothèque ciselée. Dès la ville. */
+	LIBRARIAN("librarian", (level, pos, state) -> state.is(Blocks.CHISELED_BOOKSHELF), null);
 
-	/** Le palier où ce métier s'ouvre (brief 03) : le marché et la forge attendent que le village soit une ville. */
+	/** Ce bloc est-il ce poste de travail du mod ? (par son nom : les registres du mod ne sont pas chargés partout.) */
+	private static boolean is(BlockState state, String name) {
+		return BuiltInRegistries.BLOCK.getKey(state.getBlock()).toString().equals("minecities:" + name);
+	}
+
+	/**
+	 * Le palier où ce métier s'ouvre (brief 03) : le marché, la forge, la joaillerie et la bibliothèque
+	 * attendent que le village soit une ville.
+	 */
 	public TownTier minTier() {
-		return this == MERCHANT || this == SMITH ? TownTier.TOWN : TownTier.VILLAGE;
+		return switch (this) {
+			case MERCHANT, SMITH, JEWELER, LIBRARIAN -> TownTier.TOWN;
+			default -> TownTier.VILLAGE;
+		};
 	}
 
 	/** Ce métier est-il ouvert à ce palier ? */
