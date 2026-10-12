@@ -365,6 +365,10 @@ class BuilderGoal extends WorkGoal {
 
 	/** Va chercher l'outil au grenier ou à l'atelier ; s'il n'y en a pas, prévient le maire. */
 	private void fetchTool(TagKey<Item> tool) {
+		if (freeSlots() == 0) {
+			makeRoom();
+			return;
+		}
 		Optional<BlockPos> source = find(supplies(), s -> s.is(tool));
 		if (source.isEmpty()) {
 			String name = toolName(tool);
@@ -377,6 +381,14 @@ class BuilderGoal extends WorkGoal {
 		if (goTo(source.get())) {
 			container(source.get()).ifPresent(c -> citizen.carry(Stock.take(c, s -> s.is(tool), 1)));
 		}
+	}
+
+	/**
+	 * Les poches pleines (de matériaux qui serviront plus tard) : il en rapporte aux réserves, sans quoi
+	 * ce qu'il va chercher tomberait à ses pieds. Il garde un outil de chaque sorte.
+	 */
+	private void makeRoom() {
+		deliver(BuilderGoal::isTool, 1);
 	}
 
 	private int freeSlots() {
@@ -669,6 +681,10 @@ class BuilderGoal extends WorkGoal {
 
 	/** Va chercher un matériau ; s'il n'y en a nulle part, prévient le maire et attend. */
 	private void fetch(Construction construction, Item item) {
+		if (freeSlots() == 0) {
+			makeRoom();
+			return;
+		}
 		Optional<BlockPos> source = find(supplies(), s -> s.is(item));
 		// Un livreur dans la ville : le bâtisseur reste sur son chantier et lui réclame le matériau.
 		if (source.isPresent() && town().workers(Job.COURIER) > 0 && citizen.wanted().isEmpty()) {

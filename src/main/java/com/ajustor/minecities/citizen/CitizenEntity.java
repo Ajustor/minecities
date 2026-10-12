@@ -335,6 +335,11 @@ public class CitizenEntity extends PathfinderMob {
 		}
 	}
 
+	/** Prend ce qu'on lui tend, autant que ses poches en tiennent ; renvoie le reste (rien n'est posé par terre). */
+	public ItemStack accept(ItemStack stack) {
+		return Stock.insert(inventory, stack);
+	}
+
 	/** Ce qu'il a posé à ses pieds, les poches pleines (pas sauvegardé : au pire, cela reste par terre). */
 	private final java.util.List<UUID> dropped = new java.util.ArrayList<>();
 
@@ -361,7 +366,7 @@ public class CitizenEntity extends PathfinderMob {
 	}
 
 	/** D'où il reprend ce qu'il a posé par terre. */
-	private static final double PICK_UP = 6.0;
+	private static final double PICK_UP = 16.0;
 
 	public boolean inventoryFull() {
 		return inventory.stream().noneMatch(ItemStack::isEmpty);
