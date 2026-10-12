@@ -29,6 +29,21 @@ public final class Builds {
 	 */
 	public static Optional<Component> order(ServerLevel level, Town town, Blueprint blueprint, BuildStyle style,
 			BlockPos origin, Rotation rotation) {
+		Optional<Component> refusal = check(level, town, blueprint, origin, rotation);
+		if (refusal.isPresent()) {
+			return refusal;
+		}
+		town.order(Construction.order(blueprint, style, origin, rotation));
+		Towns.get(level.getServer()).changed();
+		return Optional.empty();
+	}
+
+	/**
+	 * Ce qui empêcherait de commander ce chantier ici : schéma pas encore ouvert à ce palier, emprise
+	 * hors du territoire, ou sur un chantier pas encore fini.
+	 */
+	public static Optional<Component> check(ServerLevel level, Town town, Blueprint blueprint, BlockPos origin,
+			Rotation rotation) {
 		if (town.tier().ordinal() < blueprint.tier().ordinal()) {
 			return Optional.of(Component.translatable("message.minecities.build.locked",
 					blueprint.displayName(), Component.translatable(blueprint.tier().translationKey())));
@@ -43,8 +58,6 @@ public final class Builds {
 		if (town.constructions().stream().anyMatch(c -> !c.done() && c.overlaps(bounds[0], bounds[1]))) {
 			return Optional.of(Component.translatable("message.minecities.build.overlap"));
 		}
-		town.order(Construction.order(blueprint, style, origin, rotation));
-		Towns.get(level.getServer()).changed();
 		return Optional.empty();
 	}
 

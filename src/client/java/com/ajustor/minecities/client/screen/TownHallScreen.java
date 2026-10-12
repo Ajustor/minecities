@@ -14,13 +14,16 @@ import java.util.List;
 /**
  * L'écran de l'hôtel de ville, l'interface d'administration de la cité : le résumé de la ville (et
  * son moral, ses fêtes, l'alerte), ses citoyens (métier, faim, humeur, famille, ce qui leur manque ;
- * un bouton les fait luire pour les retrouver), ses bâtiments, et le registre où le maire accepte ou
- * refuse les demandes de mariage. Un bouton ouvre le grenier.
+ * un bouton les fait luire pour les retrouver), ses bâtiments, le registre où le maire accepte ou
+ * refuse les demandes de mariage, la mairie, et les plans des bâtiments qu'il peut commander (dans
+ * le style choisi). Un bouton ouvre le grenier.
  */
 public class TownHallScreen extends Screen {
 	private static final int WIDTH = 380;
 	private static final int HEIGHT = 230;
 	private static final int ROWS = 7;
+	/** Les plans : deux lignes de moins, sous le choix du style et au-dessus du grenier. */
+	private static final int PLAN_ROWS = 5;
 	private static final int ROW = 22;
 	private static final int PAPER = 0xFFEDE3C8;
 	private static final int EDGE = 0xFF5A4A33;
@@ -31,11 +34,15 @@ public class TownHallScreen extends Screen {
 	private static final int ACCENT = 0xFF8A5A1E;
 	private static final int FESTIVE = 0xFF9C27B0;
 
-	public enum Tab { SUMMARY, CITIZENS, BUILDINGS, REGISTRY, COUNCIL }
+	public enum Tab { SUMMARY, CITIZENS, BUILDINGS, REGISTRY, COUNCIL, PLANS }
+
+	private static final String[] STYLES = {"plains", "taiga", "desert", "savanna"};
 
 	private TownSnapshot town;
 	private Tab tab = Tab.SUMMARY;
 	private int page;
+	/** Le style des plans qu'on prend (dans {@link #STYLES}). */
+	private int style;
 	private int left;
 	private int top;
 
@@ -81,7 +88,7 @@ public class TownHallScreen extends Screen {
 			x += 59;
 		}
 		addRenderableWidget(Button.builder(Component.translatable("screen.minecities.granary"),
-				b -> send("granary", TownActionPayload.NONE)).bounds(left + WIDTH - 72, top + 26, 62, 18).build());
+				b -> send("granary", TownActionPayload.NONE)).bounds(left + 10, top + HEIGHT - 26, 62, 18).build());
 		switch (tab) {
 			case SUMMARY -> {
 				if (town.manager()) {
@@ -118,6 +125,24 @@ public class TownHallScreen extends Screen {
 					}
 				}
 			}
+			case PLANS -> {
+				addRenderableWidget(Button.builder(Component.translatable("screen.minecities.plans.style",
+						Component.translatable("style.minecities." + STYLES[style])), b -> {
+					style = (style + 1) % STYLES.length;
+					rebuildWidgets();
+				}).bounds(left + 14, top + 54, 130, 16).build());
+				if (town.manager()) {
+					int y = top + 76;
+					for (TownSnapshot.PlanRow plan : visible(town.plans(), PLAN_ROWS)) {
+						Button take = addRenderableWidget(Button.builder(Component.translatable("screen.minecities.plans.take"),
+								b -> send("plan:" + STYLES[style] + ":" + plan.id(), TownActionPayload.NONE))
+								.bounds(left + WIDTH - 80, y, 70, 16).build());
+						take.active = plan.locked().isEmpty();
+						y += ROW;
+					}
+				}
+				pager(town.plans().size(), PLAN_ROWS);
+			}
 			case REGISTRY -> {
 				if (town.manager()) {
 					int y = top + 56;
@@ -134,12 +159,20 @@ public class TownHallScreen extends Screen {
 	}
 
 	private <T> List<T> visible(List<T> all) {
-		return all.subList(Math.min(all.size(), page * ROWS), Math.min(all.size(), (page + 1) * ROWS));
+		return visible(all, ROWS);
+	}
+
+	private <T> List<T> visible(List<T> all, int rows) {
+		return all.subList(Math.min(all.size(), page * rows), Math.min(all.size(), (page + 1) * rows));
 	}
 
 	/** Les boutons pour tourner les pages d'une liste. */
 	private void pager(int count) {
-		int pages = Math.max(1, (count + ROWS - 1) / ROWS);
+		pager(count, ROWS);
+	}
+
+	private void pager(int count, int rows) {
+		int pages = Math.max(1, (count + rows - 1) / rows);
 		if (pages <= 1) {
 			return;
 		}
@@ -168,6 +201,7 @@ public class TownHallScreen extends Screen {
 			case BUILDINGS -> buildings(graphics);
 			case REGISTRY -> registry(graphics);
 			case COUNCIL -> council(graphics);
+			case PLANS -> plans(graphics);
 		}
 		super.extractRenderState(graphics, mouseX, mouseY, a);
 	}
@@ -323,11 +357,37 @@ public class TownHallScreen extends Screen {
 		if (council.partners().isEmpty()) {
 			graphics.text(font, Component.translatable("screen.minecities.council.no_trade"), left + 22, y, FADED, false);
 		}
-		for (int i = 0; i < council.partners().size() && y < top + HEIGHT - 12; i++) {
+		// Sous la liste, en bas à gauche : le bouton du grenier.
+		for (int i = 0; i < council.partners().size() && y < top + HEIGHT - 30; i++) {
 			graphics.text(font, Component.translatable(council.open().get(i) ? "screen.minecities.council.partner"
 					: "screen.minecities.council.pending", council.partners().get(i)), left + 22, y,
 					council.open().get(i) ? GOOD : FADED, false);
 			y += 12;
+		}
+	}
+
+	/** Les plans : nom, dimensions, maison ou atelier, et le palier qu'attend un plan fermé. */
+	private void plans(GuiGraphicsExtractor graphics) {
+		List<TownSnapshot.PlanRow> plans = town.plans();
+		if (plans.isEmpty()) {
+			line(graphics, Component.translatable("screen.minecities.plans.none"), top + 80, FADED);
+			return;
+		}
+		int y = top + 78;
+		for (TownSnapshot.PlanRow plan : visible(plans, PLAN_ROWS)) {
+			graphics.text(font, Component.translatableWithFallback(plan.key(), plan.fallback()), left + 14, y,
+					plan.locked().isEmpty() ? INK : FADED, false);
+			graphics.text(font, Component.translatable("screen.minecities.plans.size", plan.width(), plan.depth(),
+					plan.height()), left + 170, y, FADED, false);
+			Component detail = plan.locked().isEmpty()
+					? Component.translatable("blueprint.minecities.kind." + plan.kind())
+					: Component.translatable("screen.minecities.plans.locked", Component.translatable(plan.locked()));
+			graphics.text(font, detail, left + 22, y + 9, plan.locked().isEmpty() ? ACCENT : BAD, false);
+			y += ROW;
+		}
+		if (!town.manager()) {
+			graphics.text(font, Component.translatable("screen.minecities.mayor_decides"), left + 80, top + HEIGHT - 20,
+					FADED, false);
 		}
 	}
 
@@ -343,7 +403,8 @@ public class TownHallScreen extends Screen {
 			y += ROW + 4;
 		}
 		if (!town.manager()) {
-			line(graphics, Component.translatable("screen.minecities.mayor_decides"), top + HEIGHT - 18, FADED);
+			graphics.text(font, Component.translatable("screen.minecities.mayor_decides"), left + 80, top + HEIGHT - 20,
+					FADED, false);
 		}
 	}
 

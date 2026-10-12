@@ -20,7 +20,7 @@ import java.util.UUID;
 public record TownSnapshot(BlockPos hall, String name, String tier, int population, int citizens, int villagers,
 		int capacity, int homes, int workstations, int employed, int meals, String nextTier, int nextPopulation,
 		int nextHouses, boolean manager, Life life, Council council, List<CitizenRow> rows, List<BuildingRow> buildings,
-		List<RequestRow> requests) {
+		List<RequestRow> requests, List<PlanRow> plans) {
 	/**
 	 * La mairie : le maire, ses adjoints, les décrets (clé de chaque décret, et s'il est en vigueur), les
 	 * villes partenaires (nom, et si l'accord est signé des deux côtés).
@@ -51,6 +51,15 @@ public record TownSnapshot(BlockPos hall, String name, String tier, int populati
 
 	/** Une demande de mariage en attente. */
 	public record RequestRow(UUID id, String first, String second) {
+	}
+
+	/**
+	 * Un schéma qu'on peut commander (onglet Plans) : son identifiant, son nom (clé de traduction, et
+	 * le nom à montrer sans traduction), ses dimensions, maison ou atelier, et le palier qu'il attend
+	 * (vide s'il est ouvert).
+	 */
+	public record PlanRow(String id, String key, String fallback, int width, int depth, int height, String kind,
+			String locked) {
 	}
 
 	private static final StreamCodec<RegistryFriendlyByteBuf, Optional<Component>> NEED =
@@ -117,6 +126,17 @@ public record TownSnapshot(BlockPos hall, String name, String tier, int populati
 			UUIDUtil.STREAM_CODEC.encode(buf, request.id);
 			buf.writeUtf(request.first);
 			buf.writeUtf(request.second);
+		}
+		buf.writeVarInt(s.plans.size());
+		for (PlanRow plan : s.plans) {
+			buf.writeUtf(plan.id);
+			buf.writeUtf(plan.key);
+			buf.writeUtf(plan.fallback);
+			buf.writeVarInt(plan.width);
+			buf.writeVarInt(plan.depth);
+			buf.writeVarInt(plan.height);
+			buf.writeUtf(plan.kind);
+			buf.writeUtf(plan.locked);
 		}
 	}
 
@@ -192,7 +212,14 @@ public record TownSnapshot(BlockPos hall, String name, String tier, int populati
 		for (int i = 0; i < requestCount; i++) {
 			requests.add(new RequestRow(UUIDUtil.STREAM_CODEC.decode(buf), buf.readUtf(), buf.readUtf()));
 		}
+		int planCount = buf.readVarInt();
+		List<PlanRow> plans = new ArrayList<>(planCount);
+		for (int i = 0; i < planCount; i++) {
+			plans.add(new PlanRow(buf.readUtf(), buf.readUtf(), buf.readUtf(), buf.readVarInt(), buf.readVarInt(),
+					buf.readVarInt(), buf.readUtf(), buf.readUtf()));
+		}
 		return new TownSnapshot(hall, name, tier, population, citizens, villagers, capacity, homes, workstations,
-				employed, meals, nextTier, nextPopulation, nextHouses, manager, life, council, rows, buildings, requests);
+				employed, meals, nextTier, nextPopulation, nextHouses, manager, life, council, rows, buildings, requests,
+				plans);
 	}
 }

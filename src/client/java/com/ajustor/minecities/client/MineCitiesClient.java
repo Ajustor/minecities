@@ -15,6 +15,7 @@ public class MineCitiesClient implements ClientModInitializer {
 	@Override
 	public void onInitializeClient() {
 		EntityRendererRegistry.register(McEntities.CITIZEN, CitizenRenderer::new);
+		com.ajustor.minecities.client.render.GhostRenderer.register();
 		Guide.opener = player -> Minecraft.getInstance().gui.setScreen(
 				new BookViewScreen(new BookViewScreen.BookAccess(Guide.pages())));
 		ClientPlayNetworking.registerGlobalReceiver(OpenTownPayload.TYPE, (payload, context) -> {

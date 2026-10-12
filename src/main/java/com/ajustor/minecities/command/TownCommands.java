@@ -6,6 +6,7 @@ import com.ajustor.minecities.build.BuildPlan;
 import com.ajustor.minecities.build.BuildStyle;
 import com.ajustor.minecities.build.Builds;
 import com.ajustor.minecities.build.Construction;
+import com.ajustor.minecities.build.Proposals;
 import com.ajustor.minecities.citizen.CitizenEntity;
 import com.ajustor.minecities.guide.Guide;
 import com.ajustor.minecities.town.Families;
@@ -104,6 +105,8 @@ public final class TownCommands {
 				.then(Commands.literal("blueprints").executes(TownCommands::blueprints))
 				.then(Commands.literal("build")
 						.then(Commands.literal("cancel").executes(TownCommands::cancelBuild))
+						.then(Commands.literal("rotate").executes(TownCommands::rotateBuild))
+						.then(Commands.literal("confirm").executes(TownCommands::confirmBuild))
 						.then(Commands.argument("blueprint", IdentifierArgument.id())
 								.suggests((c, b) -> SharedSuggestionProvider.suggestResource(
 										Blueprints.all(c.getSource().getServer()).values().stream()
@@ -451,6 +454,10 @@ public final class TownCommands {
 		return all.size();
 	}
 
+	/**
+	 * Propose un chantier devant le joueur, porte vers lui : son fantôme apparaît, et il le tourne, le
+	 * valide ou l'abandonne ({@code rotate}, {@code confirm}, {@code cancel}).
+	 */
 	private static int build(CommandContext<CommandSourceStack> context, BuildStyle style) throws CommandSyntaxException {
 		Town town = managedHere(context);
 		ServerPlayer player = context.getSource().getPlayerOrException();
@@ -459,25 +466,36 @@ public final class TownCommands {
 		Blueprint blueprint = Blueprints.get(context.getSource().getServer(), id).orElseThrow(NO_BLUEPRINT::create);
 		Rotation rotation = BuildPlan.facing(player.getDirection().getOpposite());
 		BlockPos origin = BuildPlan.originFacing(blueprint, player.blockPosition(), rotation);
-		Optional<Component> refusal = Builds.order(level, town, blueprint, style, origin, rotation);
+		Optional<Component> refusal = Proposals.propose(level, player, town, blueprint, style, origin, rotation);
 		if (refusal.isPresent()) {
 			context.getSource().sendFailure(refusal.get());
 			return 0;
 		}
-		BlockPos[] bounds = BuildPlan.bounds(blueprint, origin, rotation);
-		Builds.outline(level, player, bounds[0], bounds[1]);
-		context.getSource().sendSuccess(() -> Component.translatable("command.minecities.build.ordered",
-				blueprint.displayName(), Component.translatable(style.translationKey()),
-				town.name()).withStyle(ChatFormatting.GOLD), false);
-		Builds.describeMaterials(level, town, BuildPlan.of(blueprint, style, origin, rotation), player);
-		if (town.workers(Job.BUILDER) == 0) {
-			context.getSource().sendSuccess(() -> Component.translatable("command.minecities.build.no_builder")
-					.withStyle(ChatFormatting.YELLOW), false);
-		}
 		return Command.SINGLE_SUCCESS;
 	}
 
+	private static int rotateBuild(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
+		ServerPlayer player = context.getSource().getPlayerOrException();
+		Optional<Component> refusal = Proposals.rotate(context.getSource().getLevel(), player);
+		refusal.ifPresent(context.getSource()::sendFailure);
+		return refusal.isEmpty() ? Command.SINGLE_SUCCESS : 0;
+	}
+
+	private static int confirmBuild(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
+		ServerPlayer player = context.getSource().getPlayerOrException();
+		Optional<Component> refusal = Proposals.confirm(context.getSource().getLevel(), player);
+		refusal.ifPresent(context.getSource()::sendFailure);
+		return refusal.isEmpty() ? Command.SINGLE_SUCCESS : 0;
+	}
+
+	/** Abandonne le chantier proposé, s'il y en a un ; sinon annule le chantier en cours. */
 	private static int cancelBuild(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
+		if (context.getSource().getEntity() instanceof ServerPlayer player
+				&& Proposals.cancel(context.getSource().getServer(), player.getUUID())) {
+			context.getSource().sendSuccess(() -> Component.translatable("message.minecities.proposal.cancelled"),
+					false);
+			return Command.SINGLE_SUCCESS;
+		}
 		Town town = managedHere(context);
 		Optional<Construction> active = town.activeConstruction();
 		if (active.isEmpty()) {
