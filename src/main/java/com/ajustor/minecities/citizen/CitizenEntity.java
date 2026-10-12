@@ -318,6 +318,13 @@ public class CitizenEntity extends PathfinderMob {
 		return resident.flatMap(Resident::job);
 	}
 
+	/** Les buts qu'il poursuit en ce moment, par leur nom (pour les diagnostics des scènes). */
+	public java.util.List<String> runningGoals() {
+		return goalSelector.getAvailableGoals().stream()
+				.filter(net.minecraft.world.entity.ai.goal.WrappedGoal::isRunning)
+				.map(g -> g.getGoal().getClass().getSimpleName()).toList();
+	}
+
 	public NonNullList<ItemStack> inventory() {
 		return inventory;
 	}
