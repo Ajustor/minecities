@@ -427,5 +427,19 @@
   "blueprint.minecities.tannery_1": "Tannerie, niveau 1 (cabane)",
   "blueprint.minecities.tannery_2": "Tannerie, niveau 2 (maison)",
   "blueprint.minecities.tannery_3": "Tannerie, niveau 3 (bâtisse)",
-  "blueprint.minecities.tannery_4": "Tannerie, niveau 4 (demeure)"
+  "blueprint.minecities.tannery_4": "Tannerie, niveau 4 (demeure)",
+  "job.minecities.carpenter": "charpentier",
+  "tool.minecities.carpenter": "rien",
+  "block.minecities.carpenter_bench": "Établi de charpentier",
+  "block.minecities.warehouse_ledger": "Registre d'entrepôt",
+  "speech.minecities.fletched": "J'ai taillé %s flèches.",
+  "screen.minecities.building.warehouse": "Entrepôt",
+  "blueprint.minecities.carpentry_1": "Charpenterie, niveau 1 (cabane)",
+  "blueprint.minecities.warehouse_1": "Entrepôt, niveau 1 (cabane)",
+  "blueprint.minecities.carpentry_2": "Charpenterie, niveau 2 (maison)",
+  "blueprint.minecities.warehouse_2": "Entrepôt, niveau 2 (maison)",
+  "blueprint.minecities.carpentry_3": "Charpenterie, niveau 3 (bâtisse)",
+  "blueprint.minecities.warehouse_3": "Entrepôt, niveau 3 (bâtisse)",
+  "blueprint.minecities.carpentry_4": "Charpenterie, niveau 4 (demeure)",
+  "blueprint.minecities.warehouse_4": "Entrepôt, niveau 4 (demeure)"
 }

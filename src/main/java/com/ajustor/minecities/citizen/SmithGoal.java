@@ -75,6 +75,8 @@ class SmithGoal extends WorkGoal {
 			case "bow" -> List.of(new Forging(Items.BOW, of(Items.STICK, 3, Items.STRING, 3)));
 			case "chestplate" -> List.of(new Forging(Items.IRON_CHESTPLATE, of(Items.IRON_INGOT, 8)));
 			case "helmet" -> List.of(new Forging(Items.IRON_HELMET, of(Items.IRON_INGOT, 5)));
+			case "shears" -> List.of(new Forging(Items.SHEARS, of(Items.IRON_INGOT, 2)));
+			case "iron_block" -> List.of(new Forging(Items.IRON_BLOCK, of(Items.IRON_INGOT, 9)));
 			case "leggings" -> List.of(new Forging(Items.IRON_LEGGINGS, of(Items.IRON_INGOT, 7)));
 			case "boots" -> List.of(new Forging(Items.IRON_BOOTS, of(Items.IRON_INGOT, 4)));
 			default -> List.of();
@@ -90,6 +92,7 @@ class SmithGoal extends WorkGoal {
 			case GUARD -> "sword";
 			case ARCHER -> "bow";
 			case MINER -> "pickaxe";
+			case BEEKEEPER -> "shears";
 			default -> null;
 		});
 	}
@@ -124,21 +127,22 @@ class SmithGoal extends WorkGoal {
 	}
 
 	private void decide() {
-		BlockPos granary = town().hall();
-		if (!goTo(granary)) {
+		// Il va là où sont ses matières (son atelier, l'entrepôt, le grenier), et y rassemble le reste.
+		Optional<BlockPos> source = find(supplies(), s -> SMELTS.containsKey(s.getItem()) || s.is(Items.IRON_INGOT)
+				|| s.is(Items.COBBLESTONE) || s.is(Items.STICK) || s.is(Items.STRING));
+		if (source.isEmpty()) {
+			rest(IDLE_LONG / 2);
 			return;
 		}
-		Optional<Container> stock = container(granary);
-		if (stock.isEmpty()) {
-			rest(IDLE_SHORT);
+		if (!goTo(source.get())) {
 			return;
 		}
-		Container c = stock.get();
-		// Un travailleur attend un outil, un garde un plastron : on le forge, si le grenier en a de quoi.
+		List<Container> c = pool(supplies());
+		// Un travailleur attend un outil, un garde un plastron : on le forge, si la ville en a de quoi.
 		for (String wanted : wanted(c)) {
 			for (Forging f : forgings(wanted)) {
-				if (f.materials().entrySet().stream().allMatch(e -> Stock.count(c, s -> s.is(e.getKey())) >= e.getValue())) {
-					f.materials().forEach((item, n) -> citizen.carry(Stock.take(c, s -> s.is(item), n)));
+				if (f.materials().entrySet().stream().allMatch(e -> count(c, s -> s.is(e.getKey())) >= e.getValue())) {
+					f.materials().forEach((item, n) -> citizen.carry(take(c, s -> s.is(item), n)));
 					forging = f;
 					phase = Phase.WORK;
 					timer = 0;
@@ -148,7 +152,7 @@ class SmithGoal extends WorkGoal {
 		}
 		// Sinon, il fond les minerais bruts.
 		forging = null;
-		ItemStack raw = Stock.take(c, s -> SMELTS.containsKey(s.getItem()), 16);
+		ItemStack raw = take(c, s -> SMELTS.containsKey(s.getItem()), 16);
 		if (!raw.isEmpty()) {
 			citizen.carry(raw);
 			phase = Phase.WORK;
@@ -158,8 +162,8 @@ class SmithGoal extends WorkGoal {
 		rest(IDLE_LONG / 2);
 	}
 
-	/** Ce qu'attendent les travailleurs, et qui n'est pas déjà au grenier. */
-	private List<String> wanted(Container granary) {
+	/** Ce qu'attendent les travailleurs, et qui n'est pas déjà dans les réserves. */
+	private List<String> wanted(List<Container> granary) {
 		List<String> wanted = new java.util.ArrayList<>();
 		BlockPos hall = town().hall();
 		int r = town().radius();
@@ -178,7 +182,7 @@ class SmithGoal extends WorkGoal {
 				tool = toolOf(job);
 			}
 			if (job == Job.GUARD && worker.getItemBySlot(EquipmentSlot.CHEST).isEmpty()
-					&& Stock.count(granary, s -> s.is(Items.IRON_CHESTPLATE)) == 0) {
+					&& count(granary, s -> s.is(Items.IRON_CHESTPLATE)) == 0) {
 				wanted.add("chestplate");
 			}
 			// Le forgeron d'une demeure habille les gardes de pied en cap.
@@ -186,13 +190,17 @@ class SmithGoal extends WorkGoal {
 				for (Object[] piece : new Object[][]{{EquipmentSlot.HEAD, Items.IRON_HELMET, "helmet"},
 						{EquipmentSlot.LEGS, Items.IRON_LEGGINGS, "leggings"}, {EquipmentSlot.FEET, Items.IRON_BOOTS, "boots"}}) {
 					if (worker.getItemBySlot((EquipmentSlot) piece[0]).isEmpty()
-							&& Stock.count(granary, s -> s.is((Item) piece[1])) == 0) {
+							&& count(granary, s -> s.is((Item) piece[1])) == 0) {
 						wanted.add((String) piece[2]);
 					}
 				}
 			}
-			tool.filter(t -> forgings(t).stream().noneMatch(f -> Stock.count(granary, s -> s.is(f.result())) > 0))
+			tool.filter(t -> forgings(t).stream().noneMatch(f -> count(granary, s -> s.is(f.result())) > 0))
 					.ifPresent(wanted::add);
+		}
+		// Les golems de l'inventeur : quatre blocs de fer d'avance.
+		if (town().workers(Job.INVENTOR) > 0 && count(granary, s -> s.is(Items.IRON_BLOCK)) < 4) {
+			wanted.add("iron_block");
 		}
 		return wanted;
 	}

@@ -58,7 +58,8 @@ class BeekeeperGoal extends WorkGoal {
 				homeward = false;
 				// Au grenier, il reprend des fioles vides.
 				if (citizen.inventory().stream().noneMatch(s -> s.is(Items.GLASS_BOTTLE))) {
-					container(town().hall()).ifPresent(c -> citizen.carry(Stock.take(c, s -> s.is(Items.GLASS_BOTTLE), 16)));
+					find(supplies(), s -> s.is(Items.GLASS_BOTTLE)).flatMap(this::container)
+							.ifPresent(c -> citizen.carry(Stock.take(c, s -> s.is(Items.GLASS_BOTTLE), 16)));
 				}
 				rest(40);
 			}
@@ -67,13 +68,17 @@ class BeekeeperGoal extends WorkGoal {
 		// Sans fiole, il passe au grenier en prendre : le miel en bouteille vaut mieux que les rayons.
 		if (citizen.inventory().stream().noneMatch(s -> s.is(Items.GLASS_BOTTLE))
 				&& level().getGameTime() >= nextBottles) {
-			BlockPos granary = town().hall();
-			if (!goTo(granary)) {
+			Optional<BlockPos> bottles = find(supplies(), s -> s.is(Items.GLASS_BOTTLE));
+			if (bottles.isEmpty()) {
+				nextBottles = level().getGameTime() + 1200;
+			} else {
+				if (!goTo(bottles.get())) {
+					return;
+				}
+				container(bottles.get()).ifPresent(c -> citizen.carry(Stock.take(c, s -> s.is(Items.GLASS_BOTTLE), 16)));
+				nextBottles = level().getGameTime() + 1200;
 				return;
 			}
-			container(granary).ifPresent(c -> citizen.carry(Stock.take(c, s -> s.is(Items.GLASS_BOTTLE), 16)));
-			nextBottles = level().getGameTime() + 1200;
-			return;
 		}
 		if (hive == null || !full(level().getBlockState(hive))) {
 			if (--scan > 0) {

@@ -47,6 +47,33 @@ class ArcherGoal extends WorkGoal {
 		post = null;
 	}
 
+	/**
+	 * Sans flèches en réserve, il en taille : un silex, un bâton et une plume font quatre flèches. Il va
+	 * chercher le tout là où il est. Renvoie vrai tant qu'il s'en occupe.
+	 */
+	private boolean fletch() {
+		java.util.function.Predicate<ItemStack> feathers = s -> s.is(net.minecraft.world.item.Items.FEATHER);
+		java.util.function.Predicate<ItemStack> flints = s -> s.is(net.minecraft.world.item.Items.FLINT);
+		java.util.function.Predicate<ItemStack> sticks = s -> s.is(net.minecraft.world.item.Items.STICK);
+		java.util.List<net.minecraft.world.Container> pool = pool(supplies());
+		int sets = Math.min(16, Math.min(count(pool, feathers), Math.min(count(pool, flints), count(pool, sticks))));
+		if (sets <= 0) {
+			return false;
+		}
+		Optional<BlockPos> source = find(supplies(), feathers);
+		if (source.isEmpty() || !goTo(source.get())) {
+			return true;
+		}
+		take(pool, feathers, sets);
+		take(pool, flints, sets);
+		take(pool, sticks, sets);
+		citizen.carry(new ItemStack(net.minecraft.world.item.Items.ARROW, 4 * sets));
+		citizen.act(Action.BUILD, 40);
+		citizen.say("fletched", net.minecraft.network.chat.Component.translatable("speech.minecities.fletched", 4 * sets));
+		citizen.satisfied("arrows");
+		return true;
+	}
+
 	private int arrows() {
 		return citizen.inventory().stream().filter(s -> s.is(ItemTags.ARROWS)).mapToInt(ItemStack::getCount).sum();
 	}
@@ -62,6 +89,9 @@ class ArcherGoal extends WorkGoal {
 		}
 		if (arrows() == 0) {
 			Optional<BlockPos> source = find(supplies(), s -> s.is(ItemTags.ARROWS));
+			if (source.isEmpty() && fletch()) {
+				return;
+			}
 			if (source.isEmpty()) {
 				citizen.complain("arrows", Component.translatable("message.minecities.archer.no_arrows", citizen.getName()),
 						Component.translatable("speech.minecities.no_arrows"));

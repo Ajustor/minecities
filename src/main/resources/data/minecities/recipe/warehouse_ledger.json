@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    " B ",
+    " F ",
+    " R "
+  ],
+  "key": {
+    "B": "minecraft:book",
+    "F": "minecraft:feather",
+    "R": "minecraft:barrel"
+  },
+  "result": {
+    "id": "minecities:warehouse_ledger",
+    "count": 1
+  }
+}

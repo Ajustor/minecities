@@ -198,6 +198,8 @@ public class CitizenEntity extends PathfinderMob {
 		goalSelector.addGoal(4, new SmithGoal(this));
 		goalSelector.addGoal(4, new MinerGoal(this));
 		goalSelector.addGoal(4, new BeekeeperGoal(this));
+		goalSelector.addGoal(4, new CraftGoal(this, Job.CARPENTER, this::carpentry, 25, Action.BUILD,
+				net.minecraft.sounds.SoundEvents.WOOD_HIT, net.minecraft.core.particles.ParticleTypes.CRIT));
 		goalSelector.addGoal(4, new CraftGoal(this, Job.TANNER, Crafts.TANNER, 40, Action.COOK,
 				net.minecraft.sounds.SoundEvents.ARMOR_EQUIP_LEATHER.value()));
 		goalSelector.addGoal(4, new CraftGoal(this, Job.JEWELER, Crafts.JEWELER, 60, Action.BUILD,
@@ -519,6 +521,20 @@ public class CitizenEntity extends PathfinderMob {
 
 		private Trouble() {
 		}
+	}
+
+	/** Ce que fait le charpentier : d'abord les ouvrages de bois que réclament les bâtisseurs. */
+	private java.util.List<CraftGoal.Craft> carpentry() {
+		java.util.List<CraftGoal.Craft> crafts = new java.util.ArrayList<>();
+		if (level() instanceof ServerLevel serverLevel) {
+			town().ifPresent(t -> t.residents().keySet().forEach(id -> {
+				if (serverLevel.getEntity(id) instanceof CitizenEntity other) {
+					other.wanted().flatMap(Crafts::woodwork).ifPresent(crafts::add);
+				}
+			}));
+		}
+		crafts.addAll(Crafts.CARPENTER);
+		return crafts;
 	}
 
 	/** Sa ville est attaquée (un raid) ou a sonné l'alerte (la cloche). */

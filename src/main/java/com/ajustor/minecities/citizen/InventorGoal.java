@@ -101,9 +101,28 @@ class InventorGoal extends WorkGoal {
 		return recipe.entrySet().stream().allMatch(e -> count(e.getKey()) >= e.getValue());
 	}
 
+	/** Ce qui convient pour cet ingrédient : une citrouille entière fait l'affaire, il la sculpte lui-même. */
+	private static java.util.function.Predicate<ItemStack> accepts(Item item) {
+		return item == Items.CARVED_PUMPKIN ? s -> s.is(Items.CARVED_PUMPKIN) || s.is(Items.PUMPKIN) : s -> s.is(item);
+	}
+
 	private boolean available(Map<Item, Integer> recipe) {
 		return recipe.entrySet().stream().allMatch(e -> count(e.getKey()) >= e.getValue()
-				|| find(supplies(), s -> s.is(e.getKey())).isPresent());
+				|| find(supplies(), accepts(e.getKey())).isPresent());
+	}
+
+	/** Les citrouilles qu'il porte, il les sculpte (comme aux cisailles), et garde les graines. */
+	private void carve() {
+		for (int i = 0; i < citizen.inventory().size(); i++) {
+			ItemStack stack = citizen.inventory().get(i);
+			if (stack.is(Items.PUMPKIN)) {
+				int n = stack.getCount();
+				citizen.inventory().set(i, new ItemStack(Items.CARVED_PUMPKIN, n));
+				citizen.carry(new ItemStack(Items.PUMPKIN_SEEDS, 4 * n));
+				level().playSound(null, citizen.blockPosition(), net.minecraft.sounds.SoundEvents.PUMPKIN_CARVE,
+						net.minecraft.sounds.SoundSource.NEUTRAL, 1.0f, 1.0f);
+			}
+		}
 	}
 
 	private void fetch(Map<Item, Integer> recipe) {
@@ -112,12 +131,13 @@ class InventorGoal extends WorkGoal {
 			if (missing <= 0) {
 				continue;
 			}
-			Optional<BlockPos> source = find(supplies(), s -> s.is(e.getKey()));
+			Optional<BlockPos> source = find(supplies(), accepts(e.getKey()));
 			if (source.isEmpty()) {
 				return;
 			}
 			if (goTo(source.get())) {
-				container(source.get()).ifPresent(c -> citizen.carry(Stock.take(c, s -> s.is(e.getKey()), missing)));
+				container(source.get()).ifPresent(c -> citizen.carry(Stock.take(c, accepts(e.getKey()), missing)));
+				carve();
 			}
 			return;
 		}

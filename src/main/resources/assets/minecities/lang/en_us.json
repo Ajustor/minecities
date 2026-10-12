@@ -427,5 +427,19 @@
   "blueprint.minecities.tannery_1": "Tannery, level 1 (hut)",
   "blueprint.minecities.tannery_2": "Tannery, level 2 (house)",
   "blueprint.minecities.tannery_3": "Tannery, level 3 (hall)",
-  "blueprint.minecities.tannery_4": "Tannery, level 4 (mansion)"
+  "blueprint.minecities.tannery_4": "Tannery, level 4 (mansion)",
+  "job.minecities.carpenter": "carpenter",
+  "tool.minecities.carpenter": "nothing",
+  "block.minecities.carpenter_bench": "Carpenter's bench",
+  "block.minecities.warehouse_ledger": "Warehouse ledger",
+  "speech.minecities.fletched": "I've made %s arrows.",
+  "screen.minecities.building.warehouse": "Warehouse",
+  "blueprint.minecities.carpentry_1": "Carpentry, level 1 (hut)",
+  "blueprint.minecities.warehouse_1": "Warehouse, level 1 (hut)",
+  "blueprint.minecities.carpentry_2": "Carpentry, level 2 (house)",
+  "blueprint.minecities.warehouse_2": "Warehouse, level 2 (house)",
+  "blueprint.minecities.carpentry_3": "Carpentry, level 3 (hall)",
+  "blueprint.minecities.warehouse_3": "Warehouse, level 3 (hall)",
+  "blueprint.minecities.carpentry_4": "Carpentry, level 4 (mansion)",
+  "blueprint.minecities.warehouse_4": "Warehouse, level 4 (mansion)"
 }

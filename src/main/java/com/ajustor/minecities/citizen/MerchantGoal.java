@@ -81,7 +81,9 @@ class MerchantGoal extends WorkGoal {
 		}
 		Container c = stock.get();
 		int treasury = Stock.count(c, s -> s.is(Items.EMERALD));
-		Optional<Market.Offer> wanted = wanted(c);
+		// Les marchandises sont au grenier, à l'entrepôt ou au marché : il en tient les comptes.
+		List<Container> goods = pool(supplies());
+		Optional<Market.Offer> wanted = wanted(goods);
 		if (wanted.isPresent() && treasury >= wanted.get().price()) {
 			buying = wanted.get();
 			selling = null;
@@ -93,14 +95,13 @@ class MerchantGoal extends WorkGoal {
 		int cap = Market.dailyEarnings() * Math.max(1, town().workers(Job.MERCHANT));
 		if (town().chronicle().earnedToday(now) < cap) {
 			// Les bijoux d'abord, à la pièce : ils rapportent le plus.
-			for (int i = 0; i < c.getContainerSize(); i++) {
-				ItemStack stack = c.getItem(i);
+			for (ItemStack stack : slots(goods)) {
 				Optional<Integer> value = Market.value(stack.getItem());
 				if (!stack.isEmpty() && value.isPresent()) {
 					Item item = stack.getItem();
 					int pieces = Math.max(1, Math.min(stack.getCount(),
 							(cap - town().chronicle().earnedToday(now)) / value.get()));
-					ItemStack taken = Stock.take(c, s -> s.is(item), pieces);
+					ItemStack taken = take(goods, s -> s.is(item), pieces);
 					buying = null;
 					selling = item;
 					sellingCount = taken.getCount();
@@ -109,19 +110,18 @@ class MerchantGoal extends WorkGoal {
 					return;
 				}
 			}
-			for (int i = 0; i < c.getContainerSize(); i++) {
-				ItemStack stack = c.getItem(i);
+			for (ItemStack stack : slots(goods)) {
 				Optional<Integer> rate = Market.rate(stack.getItem());
 				if (stack.isEmpty() || rate.isEmpty()) {
 					continue;
 				}
 				Item item = stack.getItem();
-				int saleable = Math.min(Market.saleable(Stock.count(c, s -> s.is(item)), rate.get()),
+				int saleable = Math.min(Market.saleable(count(goods, s -> s.is(item)), rate.get()),
 						rate.get() * Math.max(1, Math.min(4, (cap - town().chronicle().earnedToday(now)))));
 				if (saleable <= 0) {
 					continue;
 				}
-				ItemStack taken = Stock.take(c, s -> s.is(item), saleable);
+				ItemStack taken = take(goods, s -> s.is(item), saleable);
 				buying = null;
 				selling = item;
 				sellingCount = taken.getCount();
@@ -142,7 +142,18 @@ class MerchantGoal extends WorkGoal {
 	 * Ce dont on a besoin, s'il ne se trouve pas déjà au grenier : l'outil d'un travailleur qui le
 	 * réclame, des flèches, du pain quand il n'y a plus rien à manger.
 	 */
-	private Optional<Market.Offer> wanted(Container granary) {
+	/** Toutes les cases de ces contenants (des copies : on ne fait que regarder). */
+	private static List<ItemStack> slots(List<Container> pool) {
+		List<ItemStack> all = new java.util.ArrayList<>();
+		for (Container c : pool) {
+			for (int i = 0; i < c.getContainerSize(); i++) {
+				all.add(c.getItem(i).copy());
+			}
+		}
+		return all;
+	}
+
+	private Optional<Market.Offer> wanted(List<Container> granary) {
 		BlockPos hall = town().hall();
 		int r = town().radius();
 		List<CitizenEntity> workers = level().getEntitiesOfClass(CitizenEntity.class, new AABB(hall).inflate(r, 48, r),
@@ -164,12 +175,12 @@ class MerchantGoal extends WorkGoal {
 			}
 			if (offer.isPresent()) {
 				Item item = offer.get().item();
-				if (Stock.count(granary, s -> s.is(item)) == 0) {
+				if (count(granary, s -> s.is(item)) == 0) {
 					return offer;
 				}
 			}
 		}
-		if (!TownService.hasFood(granary)) {
+		if (granary.stream().noneMatch(TownService::hasFood)) {
 			return Market.offer(Items.BREAD);
 		}
 		return Optional.empty();

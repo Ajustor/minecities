@@ -18,7 +18,7 @@ import java.util.Optional;
  * d'où part le relevé), et sans poste de travail (ceux des villageois restent à eux).
  */
 public record House(BlockPos plaque, List<BlockPos> beds, List<BlockPos> containers, List<Workstation> workstations,
-		int volume, boolean village, Optional<BlockPos> min, Optional<BlockPos> max) {
+		int volume, boolean village, Optional<BlockPos> min, Optional<BlockPos> max, boolean warehouse) {
 	public static final Codec<House> CODEC = RecordCodecBuilder.create(i -> i.group(
 			BlockPos.CODEC.fieldOf("plaque").forGetter(House::plaque),
 			BlockPos.CODEC.listOf().optionalFieldOf("beds", List.of()).forGetter(House::beds),
@@ -27,7 +27,8 @@ public record House(BlockPos plaque, List<BlockPos> beds, List<BlockPos> contain
 			Codec.INT.optionalFieldOf("volume", 0).forGetter(House::volume),
 			Codec.BOOL.optionalFieldOf("village", false).forGetter(House::village),
 			BlockPos.CODEC.optionalFieldOf("min").forGetter(House::min),
-			BlockPos.CODEC.optionalFieldOf("max").forGetter(House::max)
+			BlockPos.CODEC.optionalFieldOf("max").forGetter(House::max),
+			Codec.BOOL.optionalFieldOf("warehouse", false).forGetter(House::warehouse)
 	).apply(i, House::new));
 
 	/** Un poste de travail : sa position et le métier qu'il offre. */
@@ -47,12 +48,18 @@ public record House(BlockPos plaque, List<BlockPos> beds, List<BlockPos> contain
 
 	public House(BlockPos plaque, List<BlockPos> beds, List<BlockPos> containers, List<Workstation> workstations,
 			int volume, boolean village) {
-		this(plaque, beds, containers, workstations, volume, village, Optional.empty(), Optional.empty());
+		this(plaque, beds, containers, workstations, volume, village, Optional.empty(), Optional.empty(), false);
 	}
 
 	/** Le même bâtiment, avec son étendue (de coin à coin, murs compris). */
 	public House within(BlockPos min, BlockPos max) {
-		return new House(plaque, beds, containers, workstations, volume, village, Optional.of(min), Optional.of(max));
+		return new House(plaque, beds, containers, workstations, volume, village, Optional.of(min), Optional.of(max),
+				warehouse);
+	}
+
+	/** Le même bâtiment, entrepôt de la ville (il a son registre d'entrepôt). */
+	public House asWarehouse() {
+		return new House(plaque, beds, containers, workstations, volume, village, min, max, true);
 	}
 
 	/** Ce bloc fait-il partie du bâtiment (son intérieur et ses murs) ? */

@@ -283,9 +283,12 @@ public final class TownService {
 				.toList();
 		HouseScanner.Result result = raw;
 		boolean declared = raw.plaques().stream().anyMatch(p -> town.house(pos(p)).isPresent());
+		// Un registre d'entrepôt fait du bâtiment l'entrepôt de la ville.
+		boolean warehouse = raw.workstations().stream().anyMatch(p -> level.getBlockState(pos(p))
+				.is(McBlocks.WAREHOUSE_LEDGER));
 		if (raw.valid() && declared) {
 			result = raw.withStatus(HouseScanner.Status.ALREADY_DECLARED);
-		} else if (raw.valid() && beds.isEmpty() && stations.isEmpty()) {
+		} else if (raw.valid() && beds.isEmpty() && stations.isEmpty() && !warehouse) {
 			result = raw.withStatus(HouseScanner.Status.NO_BED);
 		}
 		boolean village = town.house(plaque).map(House::village).orElse(false);
@@ -295,8 +298,9 @@ public final class TownService {
 		if (result.valid()) {
 			List<BlockPos> containers = raw.containers().stream().map(TownService::pos).toList();
 			// Une maison de village garde ses postes de travail pour ses villageois.
-			town.putHouse(new House(plaque, beds, containers, village ? List.of() : stations, raw.volume(), village)
-					.within(pos(raw.min()).offset(-1, -1, -1), pos(raw.max()).offset(1, 1, 1)));
+			House house = new House(plaque, beds, containers, village ? List.of() : stations, raw.volume(), village)
+					.within(pos(raw.min()).offset(-1, -1, -1), pos(raw.max()).offset(1, 1, 1));
+			town.putHouse(warehouse ? house.asWarehouse() : house);
 		} else {
 			town.removeHouse(plaque);
 		}
@@ -334,7 +338,7 @@ public final class TownService {
 			// Vitres, barreaux, clôtures et murets ferment une ouverture.
 			return HouseScanner.Cell.SOLID;
 		}
-		if (Job.ofWorkstation(level, pos, state).isPresent()) {
+		if (Job.ofWorkstation(level, pos, state).isPresent() || state.is(McBlocks.WAREHOUSE_LEDGER)) {
 			return HouseScanner.Cell.WORKSTATION;
 		}
 		BlockEntity blockEntity = level.getBlockEntity(pos);

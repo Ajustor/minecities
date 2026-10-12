@@ -61,6 +61,22 @@ public final class McBlocks {
 					.noOcclusion()
 					.sound(SoundType.WOOD));
 
+	/** Le registre d'entrepôt : il fait du bâtiment où il est l'entrepôt de la ville. */
+	public static final Block WAREHOUSE_LEDGER = register("warehouse_ledger", WorkstationBlock::new,
+			BlockBehaviour.Properties.of()
+					.mapColor(MapColor.WOOD)
+					.strength(2.0f)
+					.noOcclusion()
+					.sound(SoundType.WOOD));
+
+	/** L'établi du charpentier : le poste du charpentier. */
+	public static final Block CARPENTER_BENCH = register("carpenter_bench", WorkstationBlock::new,
+			BlockBehaviour.Properties.of()
+					.mapColor(MapColor.WOOD)
+					.strength(2.5f)
+					.noOcclusion()
+					.sound(SoundType.WOOD));
+
 	/** Le séchoir à peaux : le poste du tanneur. */
 	public static final Block TANNING_RACK = register("tanning_rack", WorkstationBlock::new,
 			BlockBehaviour.Properties.of()

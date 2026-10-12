@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "IS ",
+    "PPP",
+    "L L"
+  ],
+  "key": {
+    "I": "minecraft:iron_ingot",
+    "S": "minecraft:stick",
+    "P": "#minecraft:planks",
+    "L": "#minecraft:logs"
+  },
+  "result": {
+    "id": "minecities:carpenter_bench",
+    "count": 1
+  }
+}

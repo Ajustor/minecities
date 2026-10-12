@@ -35,7 +35,8 @@ class CraftGoal extends WorkGoal {
 	/** On emporte de quoi faire tant d'ouvrages à la fois. */
 	private static final int BATCH = 8;
 
-	private final List<Craft> crafts;
+	private final java.util.function.Supplier<List<Craft>> recipes;
+	private List<Craft> crafts = List.of();
 	private final int workTime;
 	private final Action gesture;
 	private final SoundEvent sound;
@@ -46,11 +47,18 @@ class CraftGoal extends WorkGoal {
 	private Phase phase = Phase.DECIDE;
 	private Craft current;
 	private int timer;
+	/** Le contenant où il va chercher de quoi travailler. */
+	private BlockPos source;
 
 	CraftGoal(CitizenEntity citizen, Job job, List<Craft> crafts, int workTime, Action gesture, SoundEvent sound,
 			ParticleOptions particle) {
+		this(citizen, job, () -> crafts, workTime, gesture, sound, particle);
+	}
+
+	CraftGoal(CitizenEntity citizen, Job job, java.util.function.Supplier<List<Craft>> recipes, int workTime,
+			Action gesture, SoundEvent sound, ParticleOptions particle) {
 		super(citizen, job);
-		this.crafts = crafts;
+		this.recipes = recipes;
 		this.workTime = workTime;
 		this.gesture = gesture;
 		this.sound = sound;
@@ -89,33 +97,56 @@ class CraftGoal extends WorkGoal {
 		}
 	}
 
-	/** Combien d'ouvrages ce contenant permet, sans dépasser ce dont le grenier a besoin. */
-	static int possible(Container c, Craft craft) {
+	/** Combien d'ouvrages ce contenant permet, sans dépasser ce dont la ville a besoin ({@code stocked} en réserve). */
+	static int possible(Container c, Craft craft, int stocked) {
 		int batches = BATCH;
 		for (Input input : craft.inputs()) {
 			batches = Math.min(batches, Stock.count(c, input.accepts()) / input.count());
 		}
 		if (craft.enough() > 0) {
-			int stocked = Stock.count(c, s -> ItemStack.isSameItemSameComponents(s, craft.result()));
 			int wanted = (craft.enough() - stocked + craft.result().getCount() - 1) / craft.result().getCount();
 			batches = Math.min(batches, Math.max(0, wanted));
 		}
 		return batches;
 	}
 
+	/** Ce que la ville a déjà de cet ouvrage, dans ses réserves et les coffres de l'atelier. */
+	private int stocked(Craft craft) {
+		return count(pool(supplies()), s -> ItemStack.isSameItemSameComponents(s, craft.result()));
+	}
+
+	/** Le contenant (de l'atelier, de l'entrepôt, du grenier) où il y a de quoi faire un ouvrage. */
+	private Optional<BlockPos> source() {
+		for (BlockPos pos : supplies()) {
+			Optional<Container> c = container(pos);
+			if (c.isPresent() && crafts.stream().anyMatch(craft -> possible(c.get(), craft, stocked(craft)) > 0)) {
+				return Optional.of(pos);
+			}
+		}
+		return Optional.empty();
+	}
+
 	private void decide() {
-		BlockPos granary = town().hall();
-		if (!goTo(granary)) {
+		crafts = recipes.get();
+		if (source == null) {
+			source = source().orElse(null);
+			if (source == null) {
+				rest(IDLE_LONG / 2);
+				return;
+			}
+		}
+		if (!goTo(source)) {
 			return;
 		}
-		Optional<Container> stock = container(granary);
+		Optional<Container> stock = container(source);
+		source = null;
 		if (stock.isEmpty()) {
 			rest(IDLE_SHORT);
 			return;
 		}
 		Container c = stock.get();
 		for (Craft craft : crafts) {
-			int batches = possible(c, craft);
+			int batches = possible(c, craft, stocked(craft));
 			if (batches <= 0) {
 				continue;
 			}
