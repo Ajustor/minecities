@@ -1,0 +1,8 @@
+# Le relais du formulaire de signalement vers Notion (voir README.md).
+name = "minecities-report"
+main = "worker.js"
+compatibility_date = "2025-06-01"
+
+[vars]
+# Seul le site du mod peut envoyer des signalements.
+ALLOWED_ORIGIN = "https://ajustor.github.io"

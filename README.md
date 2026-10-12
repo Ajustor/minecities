@@ -7,13 +7,19 @@ vanilla : pas de plans imposés ni de huttes préfabriquées. Vous bâtissez com
 reconnaît vos maisons, et des citoyens viennent y vivre. Le village devient ville, puis grande
 ville, puis mégalopole.
 
-> État : **v1.4** (villes, maisons, familles, vingt-quatre métiers et leurs filières, de la mine au
+> État : **v1.6** (guide de la ville et formulaire de signalement, villes, maisons, familles, vingt-quatre métiers et leurs filières, de la mine au
 > bijou et du blé au pain, bâtiments à quatre niveaux et maîtrise du niveau 4, décrets du maire,
 > commerce entre villes, bâtiments décorés et meublés, entrepôt et logistique, bonheur et repas variés, marché et trésor, paliers qui
 > débloquent, mairies annexes, fêtes, cloche d'alarme, raids de pillards, écran de l'hôtel de ville,
 > configuration et protections pour les serveurs). La suite est décrite dans [BRIEF.md](BRIEF.md) et [docs/briefs](docs/briefs).
 
 ## Jouer
+
+À sa première venue, chaque joueur reçoit le **guide de la ville**, un livre qui explique tout ce qui
+suit, avec un sommaire cliquable (`/ville guide` en redonne un ; recette : un livre et une planche).
+Un bug, une idée, un avis ? `/ville bug` ouvre le
+[formulaire de signalement](https://ajustor.github.io/minecities/report.html), déjà rempli avec la
+version du mod, les autres mods et le temps de jeu.
 
 1. **Fonder une ville** : fabriquez un **hôtel de ville** et posez-le. Vous devenez maire. Pour
    choisir le nom de la ville, renommez l'hôtel de ville à l'enclume avant de le poser ; sinon, la
@@ -196,6 +202,7 @@ ville, puis mégalopole.
 | `protect_buildings` | faux | seuls le maire et ses adjoints (et les opérateurs) cassent les blocs des bâtiments déclarés |
 | `hall_grace_minutes` | 10 | un hôtel de ville détruit (explosion…) : le maire a tant de minutes pour le reposer au même endroit, sinon la ville disparaît |
 | `missing_citizen_minutes` | 60 | un citoyen jamais revu depuis tant de minutes, sa maison chargée, est rayé (0 : jamais) |
+| `give_guide` | vrai | chaque joueur reçoit le guide de la ville à sa première venue |
 
 ### Recettes
 
@@ -209,6 +216,7 @@ ville, puis mégalopole.
 - **Séchoir à peaux** : trois bâtons ; bâton, cuir, bâton ; bâton, rien, bâton.
 - **Registre d'entrepôt** : un livre, une plume, un tonneau (en colonne).
 - **Établi de charpentier** : lingot de fer, bâton ; trois planches ; bûche, rien, bûche.
+- **Guide de la ville** : un livre et une planche, sans forme.
 
 ### Le maire
 
@@ -232,6 +240,8 @@ commandes du maire s'appliquent à la ville où il se trouve.
 | `festival` | maire, adjoints | offre une fête (4 émeraudes du grenier) |
 | `decree <décret>` | maire, adjoints | prend ou lève un décret (`rationing`, `overtime`, `holiday`) |
 | `trade [ville]` | maire, adjoints | les accords de commerce ; signe ou rompt celui avec cette ville |
+| `guide` | tous | donne le guide de la ville |
+| `bug` | tous | un lien vers le formulaire de signalement, prérempli (versions, mods, temps de jeu, ville) |
 | `admin immigrate\|feed\|starve` | opérateurs | tests : faire venir un citoyen, rassasier ou affamer la ville |
 | `admin raid\|raid_stop` | opérateurs | tests : lancer ou arrêter un raid |
 | `admin festival` | opérateurs | tests : une fête, gratuite |
@@ -246,7 +256,7 @@ Java 25 est requis (Loom 1.18.3, Minecraft 26.2).
 ./gradlew runClient             # lance le jeu avec le mod
 ./gradlew runGameTest           # les scènes de jeu, vérifiées sur le seul serveur, sans fenêtre (rapide)
 ./gradlew runGameTest -PminecitiesGametest=work   # une scène (city, work, countryside, village, build, family, raid, life, market, robust, industry, crafts,
-council, logistics)
+council, logistics, guide)
 ./gradlew runClientGameTest     # les mêmes scènes dans le vrai jeu, photographiées (build/run/clientGameTest/screenshots), plus styles
 ./gradlew runClientGameTest -PminecitiesFilm   # avec les films image par image (lents)
 python tools/textures/generate.py   # régénère les textures (peaux des citoyens, plaque, œuf)

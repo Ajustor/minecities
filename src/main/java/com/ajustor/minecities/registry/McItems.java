@@ -1,6 +1,7 @@
 package com.ajustor.minecities.registry;
 
 import com.ajustor.minecities.MineCities;
+import com.ajustor.minecities.guide.GuideItem;
 import net.fabricmc.fabric.api.creativetab.v1.FabricCreativeModeTab;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -42,6 +43,8 @@ public final class McItems {
 			new Item.Properties().stacksTo(16).rarity(Rarity.UNCOMMON));
 	public static final Item DIADEM = register("diadem", Item::new,
 			new Item.Properties().stacksTo(16).rarity(Rarity.RARE));
+	/** Le guide de la ville, que chaque joueur reçoit à sa première venue. */
+	public static final Item GUIDE = register("guide", GuideItem::new, new Item.Properties().stacksTo(1));
 	public static final Item CITIZEN_SPAWN_EGG = register("citizen_spawn_egg", SpawnEggItem::new,
 			new Item.Properties().spawnEgg(McEntities.CITIZEN));
 
@@ -61,6 +64,7 @@ public final class McItems {
 				.title(Component.translatable("itemGroup.minecities.minecities"))
 				.icon(() -> new ItemStack(TOWN_HALL))
 				.displayItems((parameters, output) -> {
+					output.accept(GUIDE);
 					output.accept(TOWN_HALL);
 					output.accept(HOUSE_PLAQUE);
 					output.accept(TOWN_ANNEX);

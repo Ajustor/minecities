@@ -3,6 +3,10 @@ Installation, en français et en anglais (sélecteur de langue comme sur l'accue
 
 Usage : python3 site/build.py <dossier de sortie> [releases.json]
 
+La page Signaler (report.html) vient de site/report.body.html ; elle envoie le formulaire au relais
+dont l'adresse est dans REPORT_ENDPOINT (une variable du dépôt, voir tools/report-worker), et
+TURNSTILE_SITEKEY, si elle est donnée, ajoute la vérification anti-robots de Cloudflare.
+
 releases.json est la réponse de l'API GitHub (liste des releases) ; les changelogs viennent de
 CHANGELOG.fr.md et CHANGELOG.md, recommités par le workflow de release. Sans eux, les pages le disent.
 Bibliothèque standard uniquement.
@@ -19,7 +23,8 @@ SITE = os.path.join(ROOT, "site")
 REPO = "https://github.com/Ajustor/minecities"
 
 NAV = [("index.html", "Accueil", "Home"), ("releases.html", "Versions", "Releases"),
-       ("changelog.html", "Changelog", "Changelog"), ("installation.html", "Installation", "Installation")]
+       ("changelog.html", "Changelog", "Changelog"), ("installation.html", "Installation", "Installation"),
+       ("report.html", "Signaler un bug", "Report a bug")]
 
 
 NAV_STYLE = ("<style>.site-nav{margin:12px 0 0;font-size:.95rem}.site-nav a{color:var(--accent)}"
@@ -48,7 +53,7 @@ def nav(current):
     return '<nav class="site-nav">' + " · ".join(links) + "</nav>"
 
 
-def page(head, footer, tail, current, title_fr, title_en, body_fr, body_en):
+def page(head, footer, tail, current, title_fr, title_en, body_fr, body_en, shared=""):
     lang_buttons = ('<div class="lang"><button data-set-lang="fr" aria-pressed="true">FR</button> '
                     '<button data-set-lang="en" aria-pressed="false">EN</button></div>')
     head = re.sub(r"<title>.*?</title>", f"<title>MineCities — {html.escape(title_en)}</title>", head, count=1)
@@ -57,6 +62,7 @@ def page(head, footer, tail, current, title_fr, title_en, body_fr, body_en):
             f"<main>\n<header><div><h1 data-lang=\"fr\">{html.escape(title_fr)}</h1>"
             f"<h1 data-lang=\"en\">{html.escape(title_en)}</h1>{nav(current)}</div>{lang_buttons}</header>\n"
             f"<section data-lang=\"fr\">{body_fr}</section>\n<section data-lang=\"en\">{body_en}</section>\n"
+            f"{shared}\n"
             f"{footer}\n</main>\n{tail}")
 
 
@@ -153,10 +159,30 @@ INSTALL_EN = """
 """
 
 
+def report(data):
+    """Le formulaire de signalement : les deux langues dans un seul formulaire, les versions publiées
+    dans le sélecteur (la plus récente d'abord, choisie par défaut)."""
+    body = open(os.path.join(SITE, "report.body.html"), encoding="utf-8").read()
+    versions = []
+    for r in data:
+        if r.get("draft"):
+            continue
+        tag = r.get("tag_name", "").lstrip("v")
+        if tag:
+            versions.append(f'          <option value="{html.escape(tag)}">{html.escape(tag)}</option>')
+    sitekey = os.environ.get("TURNSTILE_SITEKEY", "").strip()
+    turnstile = (f'<div class="cf-turnstile" data-sitekey="{html.escape(sitekey)}" style="margin-top:12px"></div>'
+                 '<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>'
+                 if sitekey else "")
+    return (body.replace("{{VERSIONS}}", "\n".join(versions))
+            .replace("{{REPORT_ENDPOINT}}", os.environ.get("REPORT_ENDPOINT", "").strip())
+            .replace("{{TURNSTILE}}", turnstile))
+
+
 def main(out, releases_json=None):
     if os.path.exists(out):
         shutil.rmtree(out)
-    shutil.copytree(SITE, out, ignore=shutil.ignore_patterns("build.py", "__pycache__"))
+    shutil.copytree(SITE, out, ignore=shutil.ignore_patterns("build.py", "*.body.html", "__pycache__"))
     head, footer, tail = template()
     # L'accueil reçoit le même menu que les autres pages.
     index = os.path.join(out, "index.html")
@@ -179,6 +205,8 @@ def main(out, releases_json=None):
     for name, (tfr, ten, bfr, ben) in pages.items():
         with open(os.path.join(out, name), "w", encoding="utf-8", newline="\n") as f:
             f.write(page(head, footer, tail, name, tfr, ten, bfr, ben))
+    with open(os.path.join(out, "report.html"), "w", encoding="utf-8", newline="\n") as f:
+        f.write(page(head, footer, tail, "report.html", "Signaler un bug", "Report a bug", "", "", report(data)))
     print(f"site assemblé dans {out} ({len(data)} release(s))")
 
 

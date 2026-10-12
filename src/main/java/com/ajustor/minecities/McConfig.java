@@ -69,6 +69,9 @@ public final class McConfig {
 	 */
 	@SerializedName("missing_citizen_minutes")
 	public int missingCitizenMinutes = 60;
+	/** Chaque joueur reçoit le guide de la ville à sa première venue. */
+	@SerializedName("give_guide")
+	public boolean giveGuide = true;
 
 	public static McConfig get() {
 		return current;

@@ -1,0 +1,381 @@
+<style>
+  html[lang="fr"] span[data-lang="fr"], html[lang="en"] span[data-lang="en"] { display: inline; }
+  form.report code, .report-status code { overflow-wrap: anywhere; }
+  form.report fieldset { border: 0; background: var(--card); border-radius: 8px; padding: 16px 20px; margin: 20px 0; min-width: 0; }
+  form.report legend { font-weight: bold; font-size: 1.15rem; padding: 0; float: left; width: 100%; margin-bottom: 8px; }
+  form.report legend + * { clear: both; }
+  form.report label { display: block; margin: 12px 0 4px; font-weight: bold; font-size: .95rem; }
+  form.report .hint { color: var(--muted); font-size: .85rem; font-weight: normal; }
+  form.report input[type=text], form.report input[type=number], form.report input[type=email],
+  form.report select, form.report textarea {
+    width: 100%; max-width: 100%; min-width: 0; font: inherit; font-size: .95rem; color: var(--ink); background: var(--paper);
+    border: 1px solid var(--muted); border-radius: 6px; padding: 8px 10px;
+  }
+  form.report textarea { min-height: 96px; resize: vertical; }
+  form.report textarea.mods { min-height: 64px; font-family: ui-monospace, Consolas, monospace; font-size: .85rem; }
+  form.report .row { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr)); gap: 0 16px; }
+  form.report .row > div { min-width: 0; }
+  form.report .kinds { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(150px, 100%), 1fr)); gap: 8px; }
+  form.report .kinds label { margin: 0; font-weight: normal; border: 1px solid var(--muted); border-radius: 6px;
+    padding: 10px 12px; cursor: pointer; display: flex; gap: 8px; align-items: flex-start; }
+  form.report .kinds label:has(input:checked) { border-color: var(--accent); outline: 2px solid var(--accent); }
+  form.report .kinds strong { display: block; }
+  form.report .stars { display: flex; gap: 4px; flex-direction: row-reverse; justify-content: flex-end; }
+  form.report .stars input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  form.report .stars label { margin: 0; font-size: 1.8rem; line-height: 1; color: var(--muted); cursor: pointer; font-weight: normal; }
+  form.report .stars input:checked ~ label, form.report .stars label:hover, form.report .stars label:hover ~ label { color: #e0a82e; }
+  form.report .stars input:focus-visible + label { outline: 2px solid var(--accent); border-radius: 4px; }
+  form.report .drop { border: 2px dashed var(--muted); border-radius: 8px; padding: 16px; text-align: center; cursor: pointer; }
+  form.report .drop.over { border-color: var(--accent); background: var(--paper); }
+  form.report .files { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 8px; margin-top: 8px; }
+  form.report .files figure { margin: 0; position: relative; font-size: .75rem; color: var(--muted); word-break: break-all; }
+  form.report .files img { width: 100%; height: 80px; object-fit: cover; border-radius: 4px; display: block; }
+  form.report .files .doc { height: 80px; border-radius: 4px; background: var(--paper); display: flex; align-items: center; justify-content: center; font-size: 1.6rem; }
+  form.report .files button { position: absolute; top: 2px; right: 2px; border: 0; border-radius: 50%; width: 22px; height: 22px;
+    background: rgba(0,0,0,.6); color: #fff; cursor: pointer; line-height: 22px; padding: 0; }
+  form.report .trap { position: absolute; left: -9999px; }
+  form.report button[type=submit] { font: inherit; font-weight: bold; border: 0; border-radius: 6px; padding: 10px 22px;
+    background: var(--accent); color: #fff; cursor: pointer; }
+  form.report button[disabled] { opacity: .6; cursor: wait; }
+  form.report .error { color: #c0392b; font-size: .9rem; }
+  .report-status { border-radius: 8px; padding: 12px 16px; margin: 16px 0; background: var(--card); border-left: 4px solid var(--accent); }
+  .report-status.fail { border-left-color: #c0392b; }
+  .report-status:empty { display: none; }
+  .bug-only { transition: opacity .2s; }
+  form.report[data-kind="idea"] .bug-only, form.report[data-kind="feedback"] .bug-only { display: none; }
+</style>
+
+<p>
+  <span data-lang="fr">Un bug, un plantage, une idée ou un avis ? Ce formulaire arrive directement dans notre suivi. Plus il y a de détails, plus vite on corrige.
+    <strong>Astuce</strong> : en jeu, tapez <code>/ville bug</code> ; le lien ouvre ce formulaire déjà rempli avec votre version, vos mods et votre temps de jeu.</span>
+  <span data-lang="en">A bug, a crash, an idea or some feedback? This form goes straight into our tracker. The more details, the faster the fix.
+    <strong>Tip</strong>: in game, type <code>/ville bug</code>; the link opens this form pre-filled with your version, mods and playtime.</span>
+</p>
+
+<div class="report-status" id="status" role="status" aria-live="polite"></div>
+
+<form class="report" id="report" data-kind="bug" novalidate>
+  <input class="trap" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+
+  <fieldset>
+    <legend><span data-lang="fr">De quoi s'agit-il ?</span><span data-lang="en">What is it about?</span></legend>
+    <div class="kinds">
+      <label><input type="radio" name="kind" value="bug" checked><span><strong><span data-lang="fr">Bug</span><span data-lang="en">Bug</span></strong>
+        <span class="hint"><span data-lang="fr">quelque chose ne marche pas</span><span data-lang="en">something doesn't work</span></span></span></label>
+      <label><input type="radio" name="kind" value="crash"><span><strong><span data-lang="fr">Plantage</span><span data-lang="en">Crash</span></strong>
+        <span class="hint"><span data-lang="fr">le jeu se ferme ou se fige</span><span data-lang="en">the game closes or freezes</span></span></span></label>
+      <label><input type="radio" name="kind" value="idea"><span><strong><span data-lang="fr">Idée</span><span data-lang="en">Idea</span></strong>
+        <span class="hint"><span data-lang="fr">une suggestion</span><span data-lang="en">a suggestion</span></span></span></label>
+      <label><input type="radio" name="kind" value="feedback"><span><strong><span data-lang="fr">Avis</span><span data-lang="en">Feedback</span></strong>
+        <span class="hint"><span data-lang="fr">ce que vous en pensez</span><span data-lang="en">what you think</span></span></span></label>
+    </div>
+
+    <label for="title"><span data-lang="fr">Titre</span><span data-lang="en">Title</span> *</label>
+    <input type="text" id="title" name="title" maxlength="150" required data-fr="Ex. : le bâtisseur s'arrête au milieu du chantier" data-en="E.g. the builder stops halfway through the site">
+
+    <label for="description"><span data-lang="fr">Description</span><span data-lang="en">Description</span> *</label>
+    <textarea id="description" name="description" maxlength="6000" required data-fr="Que s'est-il passé ? Que faisiez-vous ?" data-en="What happened? What were you doing?"></textarea>
+
+    <div class="bug-only">
+      <label for="steps"><span data-lang="fr">Étapes pour reproduire</span><span data-lang="en">Steps to reproduce</span>
+        <span class="hint"><span data-lang="fr">(une par ligne)</span><span data-lang="en">(one per line)</span></span></label>
+      <textarea id="steps" name="steps" maxlength="4000" data-fr="1. Poser un hôtel de ville&#10;2. Commander une maison : /ville build minecities:house_1&#10;3. …" data-en="1. Place a town hall&#10;2. Order a house: /ville build minecities:house_1&#10;3. …"></textarea>
+
+      <div class="row">
+        <div>
+          <label for="expected"><span data-lang="fr">Ce que vous attendiez</span><span data-lang="en">What you expected</span></label>
+          <textarea id="expected" name="expected" maxlength="2000"></textarea>
+        </div>
+        <div>
+          <label for="actual"><span data-lang="fr">Ce qui s'est passé</span><span data-lang="en">What actually happened</span></label>
+          <textarea id="actual" name="actual" maxlength="2000"></textarea>
+        </div>
+      </div>
+
+      <div class="row">
+        <div>
+          <label for="frequency"><span data-lang="fr">Fréquence</span><span data-lang="en">How often</span></label>
+          <select id="frequency" name="frequency">
+            <option value="" data-fr="—" data-en="—"></option>
+            <option value="always" data-fr="À chaque fois" data-en="Every time"></option>
+            <option value="sometimes" data-fr="Parfois" data-en="Sometimes"></option>
+            <option value="once" data-fr="Une seule fois" data-en="Only once"></option>
+          </select>
+        </div>
+        <div>
+          <label for="severity"><span data-lang="fr">Gravité</span><span data-lang="en">Severity</span></label>
+          <select id="severity" name="severity">
+            <option value="" data-fr="—" data-en="—"></option>
+            <option value="blocking" data-fr="Bloquant : impossible de jouer" data-en="Blocking: can't play"></option>
+            <option value="major" data-fr="Gênant : la ville en souffre" data-en="Major: the town suffers"></option>
+            <option value="minor" data-fr="Mineur : on contourne" data-en="Minor: there's a workaround"></option>
+            <option value="cosmetic" data-fr="Cosmétique : un détail visuel" data-en="Cosmetic: a visual detail"></option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend><span data-lang="fr">Votre partie</span><span data-lang="en">Your game</span></legend>
+    <div class="row">
+      <div>
+        <label for="version"><span data-lang="fr">Version du mod</span><span data-lang="en">Mod version</span> *</label>
+        <select id="version" name="version" required>
+{{VERSIONS}}
+          <option value="dev" data-fr="Version de développement" data-en="Development build"></option>
+          <option value="unknown" data-fr="Je ne sais pas" data-en="I don't know"></option>
+        </select>
+      </div>
+      <div>
+        <label for="mc"><span data-lang="fr">Version de Minecraft</span><span data-lang="en">Minecraft version</span></label>
+        <input type="text" id="mc" name="mc" value="26.2" maxlength="40">
+      </div>
+      <div>
+        <label for="env"><span data-lang="fr">Mode de jeu</span><span data-lang="en">Game mode</span></label>
+        <select id="env" name="env">
+          <option value="solo" data-fr="Solo" data-en="Singleplayer"></option>
+          <option value="lan" data-fr="Réseau local (LAN)" data-en="LAN"></option>
+          <option value="server" data-fr="Serveur" data-en="Server"></option>
+        </select>
+      </div>
+    </div>
+    <div class="row">
+      <div>
+        <label for="loader">Fabric Loader</label>
+        <input type="text" id="loader" name="loader" maxlength="40" placeholder="0.19.3">
+      </div>
+      <div>
+        <label for="api">Fabric API</label>
+        <input type="text" id="api" name="api" maxlength="60" placeholder="0.161.0+26.2">
+      </div>
+    </div>
+    <div class="row">
+      <div>
+        <label for="playtime"><span data-lang="fr">Temps de jeu avec le mod</span><span data-lang="en">Playtime with the mod</span>
+          <span class="hint"><span data-lang="fr">(heures)</span><span data-lang="en">(hours)</span></span></label>
+        <input type="number" id="playtime" name="playtime" min="0" max="100000" step="0.1">
+      </div>
+      <div>
+        <label for="day"><span data-lang="fr">Jour en jeu</span><span data-lang="en">In-game day</span></label>
+        <input type="number" id="day" name="day" min="0" max="10000000" step="1">
+      </div>
+    </div>
+    <div class="row">
+      <div>
+        <label for="tier"><span data-lang="fr">Taille de la ville</span><span data-lang="en">Town size</span></label>
+        <select id="tier" name="tier">
+          <option value="" data-fr="—" data-en="—"></option>
+          <option value="village" data-fr="Village" data-en="Village"></option>
+          <option value="town" data-fr="Ville" data-en="Town"></option>
+          <option value="city" data-fr="Grande ville" data-en="City"></option>
+          <option value="megalopolis" data-fr="Mégalopole" data-en="Megalopolis"></option>
+        </select>
+      </div>
+      <div>
+        <label for="population"><span data-lang="fr">Habitants</span><span data-lang="en">Residents</span></label>
+        <input type="number" id="population" name="population" min="0" max="100000" step="1">
+      </div>
+    </div>
+    <label for="mods"><span data-lang="fr">Autres mods installés</span><span data-lang="en">Other installed mods</span></label>
+    <textarea class="mods" id="mods" name="mods" maxlength="4000" data-fr="sodium 0.7.0, lithium 0.16.0…" data-en="sodium 0.7.0, lithium 0.16.0…"></textarea>
+  </fieldset>
+
+  <fieldset>
+    <legend><span data-lang="fr">Captures et journaux</span><span data-lang="en">Screenshots and logs</span></legend>
+    <p class="hint">
+      <span data-lang="fr">Jusqu'à 6 fichiers de 5 Mo. Captures : touche F2, dossier <code>screenshots</code>. Journal : <code>logs/latest.log</code>. Plantage : le dernier fichier de <code>crash-reports</code>.</span>
+      <span data-lang="en">Up to 6 files of 5 MB. Screenshots: F2 key, <code>screenshots</code> folder. Log: <code>logs/latest.log</code>. Crash: the latest file in <code>crash-reports</code>.</span>
+    </p>
+    <div class="drop" id="drop" tabindex="0" role="button">
+      <span data-lang="fr">Glissez vos fichiers ici, collez une capture (Ctrl+V), ou <u>cliquez pour choisir</u></span>
+      <span data-lang="en">Drop files here, paste a screenshot (Ctrl+V), or <u>click to choose</u></span>
+    </div>
+    <input type="file" id="files" multiple accept="image/png,image/jpeg,image/gif,image/webp,.log,.txt,.gz" hidden>
+    <div class="files" id="file-list"></div>
+    <p class="error" id="file-error"></p>
+  </fieldset>
+
+  <fieldset>
+    <legend><span data-lang="fr">Votre avis sur le mod</span><span data-lang="en">Your opinion of the mod</span></legend>
+    <label><span data-lang="fr">Votre note</span><span data-lang="en">Your rating</span></label>
+    <div class="stars" role="radiogroup">
+      <input type="radio" id="star5" name="rating" value="5"><label for="star5" title="5/5">★</label>
+      <input type="radio" id="star4" name="rating" value="4"><label for="star4" title="4/5">★</label>
+      <input type="radio" id="star3" name="rating" value="3"><label for="star3" title="3/5">★</label>
+      <input type="radio" id="star2" name="rating" value="2"><label for="star2" title="2/5">★</label>
+      <input type="radio" id="star1" name="rating" value="1"><label for="star1" title="1/5">★</label>
+    </div>
+    <div class="row">
+      <div>
+        <label for="likes"><span data-lang="fr">Ce que vous aimez</span><span data-lang="en">What you like</span></label>
+        <textarea id="likes" name="likes" maxlength="2000"></textarea>
+      </div>
+      <div>
+        <label for="wishes"><span data-lang="fr">Ce qui manque, ce qui gêne</span><span data-lang="en">What's missing or annoying</span></label>
+        <textarea id="wishes" name="wishes" maxlength="2000"></textarea>
+      </div>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend><span data-lang="fr">Pour vous répondre</span><span data-lang="en">So we can reply</span></legend>
+    <label for="contact"><span data-lang="fr">Pseudo, Discord ou e-mail</span><span data-lang="en">Username, Discord or e-mail</span>
+      <span class="hint"><span data-lang="fr">(facultatif)</span><span data-lang="en">(optional)</span></span></label>
+    <input type="text" id="contact" name="contact" maxlength="200">
+    <label style="font-weight:normal"><input type="checkbox" id="consent" name="consent" required>
+      <span data-lang="fr">J'accepte que ce signalement, ses fichiers et les informations techniques de mon navigateur soient conservés pour le suivi des bugs.</span>
+      <span data-lang="en">I agree that this report, its files and my browser's technical details are stored for bug tracking.</span></label>
+    {{TURNSTILE}}
+    <p class="error" id="form-error"></p>
+    <button type="submit" id="send"><span data-lang="fr">Envoyer</span><span data-lang="en">Send</span></button>
+  </fieldset>
+</form>
+
+<script>
+(function () {
+  var ENDPOINT = "{{REPORT_ENDPOINT}}";
+  var REPO = "https://github.com/Ajustor/minecities";
+  var MAX_FILES = 6, MAX_SIZE = 5 * 1024 * 1024;
+  var form = document.getElementById("report");
+  var files = [];
+
+  function lang() { return document.documentElement.lang === "en" ? "en" : "fr"; }
+  function t(fr, en) { return lang() === "en" ? en : fr; }
+
+  // Les textes qui ne peuvent pas être des balises (options, exemples) suivent la langue de la page.
+  function translate() {
+    document.querySelectorAll("[data-fr]").forEach(function (el) {
+      var text = el.getAttribute("data-" + lang());
+      if (el.tagName === "OPTION") { el.textContent = text; } else { el.placeholder = text; }
+    });
+  }
+  new MutationObserver(translate).observe(document.documentElement, { attributes: true, attributeFilter: ["lang"] });
+  translate();
+
+  // Le type de signalement : une idée ou un avis n'a pas d'étapes ni de gravité.
+  form.querySelectorAll("input[name=kind]").forEach(function (radio) {
+    radio.addEventListener("change", function () { form.dataset.kind = radio.value; });
+  });
+
+  // Prérempli par /ville bug : ?version=1.6.0+26.2&mc=26.2&loader=…&api=…&mods=…&playtime=…&day=…&env=…&town=town, 12
+  var params = new URLSearchParams(location.search);
+  function prefill(name, value) {
+    var el = document.getElementById(name);
+    if (!el || value == null || value === "") return;
+    if (el.tagName === "SELECT" && !Array.prototype.some.call(el.options, function (o) { return o.value === value; })) {
+      var option = document.createElement("option");
+      option.value = option.textContent = value;
+      el.insertBefore(option, el.firstChild);
+    }
+    el.value = value;
+  }
+  var version = (params.get("version") || "").split("+")[0];
+  if (version) prefill("version", /-dev|-SNAPSHOT/.test(version) ? "dev" : version);
+  ["mc", "loader", "api", "mods", "playtime", "day", "env"].forEach(function (k) { prefill(k, params.get(k)); });
+  var town = (params.get("town") || "").split(",");
+  if (town.length === 2) { prefill("tier", town[0].trim()); prefill("population", town[1].trim()); }
+  var kind = params.get("kind");
+  if (kind) { var r = form.querySelector("input[name=kind][value=" + CSS.escape(kind) + "]"); if (r) { r.checked = true; form.dataset.kind = kind; } }
+
+  // Les fichiers : glisser-déposer, coller, ou choisir.
+  var input = document.getElementById("files"), drop = document.getElementById("drop"), list = document.getElementById("file-list");
+  var fileError = document.getElementById("file-error");
+  function add(incoming) {
+    fileError.textContent = "";
+    Array.prototype.forEach.call(incoming, function (file) {
+      if (files.length >= MAX_FILES) { fileError.textContent = t("6 fichiers au plus.", "6 files at most."); return; }
+      if (file.size > MAX_SIZE) { fileError.textContent = t(file.name + " dépasse 5 Mo.", file.name + " is over 5 MB."); return; }
+      if (!/^image\//.test(file.type) && !/\.(log|txt|gz)$/i.test(file.name)) { fileError.textContent = t(file.name + " : images, .log ou .txt seulement.", file.name + ": images, .log or .txt only."); return; }
+      files.push(file);
+    });
+    render();
+  }
+  function render() {
+    list.innerHTML = "";
+    files.forEach(function (file, i) {
+      var fig = document.createElement("figure");
+      if (/^image\//.test(file.type)) {
+        var img = document.createElement("img");
+        img.src = URL.createObjectURL(file); img.alt = file.name;
+        fig.appendChild(img);
+      } else {
+        var doc = document.createElement("div"); doc.className = "doc"; doc.textContent = "📄"; fig.appendChild(doc);
+      }
+      var cap = document.createElement("figcaption"); cap.textContent = file.name; fig.appendChild(cap);
+      var del = document.createElement("button"); del.type = "button"; del.textContent = "×";
+      del.setAttribute("aria-label", t("Retirer ", "Remove ") + file.name);
+      del.addEventListener("click", function () { files.splice(i, 1); render(); });
+      fig.appendChild(del);
+      list.appendChild(fig);
+    });
+  }
+  drop.addEventListener("click", function () { input.click(); });
+  drop.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); input.click(); } });
+  input.addEventListener("change", function () { add(input.files); input.value = ""; });
+  ["dragenter", "dragover"].forEach(function (n) { drop.addEventListener(n, function (e) { e.preventDefault(); drop.classList.add("over"); }); });
+  ["dragleave", "drop"].forEach(function (n) { drop.addEventListener(n, function (e) { e.preventDefault(); drop.classList.remove("over"); }); });
+  drop.addEventListener("drop", function (e) { add(e.dataTransfer.files); });
+  document.addEventListener("paste", function (e) {
+    var pasted = Array.prototype.filter.call(e.clipboardData ? e.clipboardData.files : [], function (f) { return /^image\//.test(f.type); });
+    if (pasted.length) add(pasted);
+  });
+
+  // Ce que le navigateur sait, pour nous aider.
+  function client() {
+    return navigator.userAgent + " · " + (navigator.language || "") + " · " + screen.width + "x" + screen.height;
+  }
+
+  // Sans relais vers Notion, on se rabat sur une issue GitHub préremplie (sans les fichiers).
+  function issueUrl(data) {
+    var lines = ["**" + t("Type", "Kind") + "** : " + data.get("kind"), "", data.get("description") || ""];
+    [["steps", t("Étapes", "Steps")], ["expected", t("Attendu", "Expected")], ["actual", t("Observé", "Actual")]].forEach(function (p) {
+      if (data.get(p[0])) lines.push("", "### " + p[1], data.get(p[0]));
+    });
+    lines.push("", "### " + t("Partie", "Game"));
+    ["version", "mc", "loader", "api", "env", "playtime", "day", "tier", "population", "frequency", "severity", "rating"].forEach(function (k) {
+      if (data.get(k)) lines.push("- " + k + " : " + data.get(k));
+    });
+    if (data.get("mods")) lines.push("- mods : " + data.get("mods"));
+    if (files.length) lines.push("", t("_Joignez vos captures et journaux en les glissant ici._", "_Attach your screenshots and logs by dropping them here._"));
+    var url = REPO + "/issues/new?title=" + encodeURIComponent(data.get("title")) + "&body=" + encodeURIComponent(lines.join("\n"));
+    return url.length > 7500 ? url.slice(0, 7500) : url;
+  }
+
+  var status = document.getElementById("status"), formError = document.getElementById("form-error"), send = document.getElementById("send");
+  function show(html, fail) { status.className = "report-status" + (fail ? " fail" : ""); status.innerHTML = html; status.scrollIntoView({ behavior: "smooth", block: "center" }); }
+
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    formError.textContent = "";
+    var title = form.title.value.trim(), description = form.description.value.trim();
+    if (!title || !description) { formError.textContent = t("Le titre et la description sont obligatoires.", "Title and description are required."); return; }
+    if (!form.consent.checked) { formError.textContent = t("Merci de cocher la case d'accord.", "Please tick the consent box."); return; }
+    var data = new FormData(form);
+    data.delete("consent");
+    data.set("client", client());
+    data.set("lang", lang());
+    files.forEach(function (file) { data.append("files", file, file.name); });
+    if (!ENDPOINT || ENDPOINT.indexOf("{{") === 0) {
+      show(t("Le formulaire n'est pas encore relié à notre suivi. <a href=\"" + issueUrl(data) + "\" target=\"_blank\" rel=\"noopener\">Ouvrez plutôt une issue GitHub préremplie</a>.",
+             "The form is not linked to our tracker yet. <a href=\"" + issueUrl(data) + "\" target=\"_blank\" rel=\"noopener\">Open a pre-filled GitHub issue instead</a>."), true);
+      return;
+    }
+    send.disabled = true;
+    show(t("Envoi en cours…", "Sending…"));
+    fetch(ENDPOINT, { method: "POST", body: data })
+      .then(function (res) { return res.json().catch(function () { return {}; }).then(function (body) { return { ok: res.ok, body: body }; }); })
+      .then(function (r) {
+        if (!r.ok) throw new Error(r.body.error || "HTTP");
+        form.reset(); files = []; render(); form.dataset.kind = "bug"; translate();
+        show(t("<strong>Merci !</strong> Votre signalement est bien arrivé" + (r.body.ref ? " (n° " + r.body.ref + ")" : "") + ". On s'en occupe.",
+               "<strong>Thank you!</strong> Your report has arrived" + (r.body.ref ? " (no. " + r.body.ref + ")" : "") + ". We're on it."));
+      })
+      .catch(function (err) {
+        show(t("L'envoi a échoué (" + err.message + "). Réessayez, ou <a href=\"" + issueUrl(data) + "\" target=\"_blank\" rel=\"noopener\">ouvrez une issue GitHub</a>.",
+               "Sending failed (" + err.message + "). Try again, or <a href=\"" + issueUrl(data) + "\" target=\"_blank\" rel=\"noopener\">open a GitHub issue</a>."), true);
+      })
+      .finally(function () { send.disabled = false; });
+  });
+})();
+</script>

@@ -385,6 +385,27 @@ JEWELS = {
 }
 
 
+# Le guide de la ville : un livre relié de bleu, une maison dorée sur la couverture.
+# b reliure, h reflet, s ombre, p pages, o or, r toit.
+GUIDE = ([
+    "................",
+    "..sbbbbbbbbbbs..",
+    "..bhhhhhhhhhbsp.",
+    "..bh........bsp.",
+    "..bh...oo...bsp.",
+    "..bh..orro..bsp.",
+    "..bh.orrrro.bsp.",
+    "..bh..oooo..bsp.",
+    "..bh..o.oo..bsp.",
+    "..bh..o.oo..bsp.",
+    "..bh..oooo..bsp.",
+    "..bh........bsp.",
+    "..bhhhhhhhhhbsp.",
+    "..sbbbbbbbbbbsp.",
+    "...pppppppppppp.",
+    "................"], {"b": "#2f4f9e", "h": "#4f74c8", "s": "#1c2f63", "p": "#efe6cf", "o": "#f2c94c", "r": "#b5462f"})
+
+
 def save(img, path):
     path.parent.mkdir(parents=True, exist_ok=True)
     img.save(path)
@@ -403,6 +424,7 @@ def main():
     save(hide(), TEXTURES / "block/hide.png")
     for name, (rows, palette) in JEWELS.items():
         save(sprite(rows, palette), TEXTURES / f"item/{name}.png")
+    save(sprite(*GUIDE), TEXTURES / "item/guide.png")
 
 
 if __name__ == "__main__":
