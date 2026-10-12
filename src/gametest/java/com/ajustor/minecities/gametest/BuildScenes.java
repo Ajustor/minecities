@@ -13,11 +13,7 @@ import com.ajustor.minecities.town.Job;
 import com.ajustor.minecities.town.Town;
 import com.ajustor.minecities.town.TownService;
 import com.ajustor.minecities.town.Towns;
-import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest;
-import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext;
-import net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext;
 import net.minecraft.client.CameraType;
-import net.minecraft.client.gui.screens.worldselection.WorldCreationUiState;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
@@ -34,18 +30,17 @@ import java.util.Map;
 import static com.ajustor.minecities.gametest.CityScenes.check;
 import static com.ajustor.minecities.gametest.CityScenes.command;
 import static com.ajustor.minecities.gametest.CityScenes.hideGui;
-import static com.ajustor.minecities.gametest.CityScenes.look;
 import static com.ajustor.minecities.gametest.CityScenes.waitOrExplain;
 
 /**
- * Le bâtisseur, dans le vrai jeu : un atelier à deux tables d'artisan et une table de cartographie
- * (deux bâtisseurs et un livreur), une petite maison commandée
+ * Le bâtisseur, dans le vrai jeu : un atelier à quatre tables d'artisan et deux tables de cartographie
+ * (quatre bâtisseurs et deux livreurs), une petite maison commandée
  * (style plaines) avec ses matériaux au grenier ; le bâtisseur la bâtit, elle se déclare toute
  * seule ; puis on l'agrandit en grande maison, au même endroit.
  *
  * <p>{@code ./gradlew runClientGameTest -PminecitiesGametest=build}
  */
-public class BuildScenes implements FabricClientGameTest {
+public class BuildScenes implements Scene {
 	private static final int Y = 100;
 	private static final BlockPos HALL = new BlockPos(0, Y, 0);
 	private static final BlockPos HUT_PLAQUE = new BlockPos(5, Y + 1, 4);
@@ -57,90 +52,89 @@ public class BuildScenes implements FabricClientGameTest {
 	private static final Identifier MANOR = Identifier.fromNamespaceAndPath("minecities", "house_3");
 
 	@Override
-	public void runTest(ClientGameTestContext context) {
-		if (!CityScenes.selected("build")) {
-			return;
-		}
-		try (TestSingleplayerContext sp = context.worldBuilder()
-				.adjustSettings(c -> c.setGameMode(WorldCreationUiState.SelectedGameMode.CREATIVE)).create()) {
-			// Cette scène compte ses citoyens : pas de nouveaux venus pour atteindre le minimum.
-			com.ajustor.minecities.town.Families.setMinimum(0);
-			command(sp, "time set 1000");
-			command(sp, "gamerule doDaylightCycle false");
-			command(sp, "gamerule doMobSpawning false");
-			command(sp, "weather clear");
-			context.waitTicks(20);
-			sp.getServer().runOnServer(BuildScenes::build);
-			context.runOnClient(mc -> {
-				hideGui(mc, true);
-				mc.options.setCameraType(CameraType.FIRST_PERSON);
-			});
+	public String name() {
+		return "build";
+	}
 
-			check(sp.getServer().computeOnServer(server -> {
-				ServerLevel level = server.overworld();
-				ServerPlayer player = server.getPlayerList().getPlayers().getFirst();
-				TownService.found(level, HALL, player, new ItemStack(McItems.TOWN_HALL));
-				Town town = town(server);
-				for (int i = 0; i < 3; i++) {
-					TownService.immigrate(level, town);
-				}
-				TownService.declareHouse(level, HUT_PLAQUE, player);
-				if (town.workers(Job.BUILDER) != 2 || town.workers(Job.COURIER) != 1) {
-					return "il faut deux bâtisseurs et un livreur : " + town.residents() + " ; " + town.houses();
-				}
-				stock(server, SMALL);
-				return Builds.order(level, town, blueprint(server, SMALL), BuildStyle.PLAINS, ORIGIN, Rotation.NONE)
-						.map(c -> "commande refusée : " + c.getString()).orElse(null);
-			}));
-			look(sp, -16, Y + 9, -2, -11, Y + 1, 9);
-			context.waitTicks(40);
-			// Le chantier filmé : une image par seconde de jeu.
-			CityScenes.film(context, sp, "petite_maison", 240, 20,
-					server -> town(server).constructions().stream().allMatch(Construction::done));
-			waitOrExplain(sp, server -> town(server).constructions().stream().allMatch(Construction::done), 9000,
-					"la petite maison n'a pas été bâtie", BuildScenes::progress);
-			check(sp.getServer().computeOnServer(server -> homeBeds(server) == 2 ? null
-					: "la petite maison n'est pas déclarée avec deux lits : " + town(server).houses()));
-			context.waitTicks(20);
-			context.takeScreenshot("build_1_small_house");
+	@Override
+	public void play(Stage stage) {
+		// Cette scène compte ses citoyens : pas de nouveaux venus pour atteindre le minimum.
+		com.ajustor.minecities.town.Families.setMinimum(0);
+		stage.command("time set 1000");
+		stage.command("gamerule advance_time false");
+		stage.command("gamerule spawn_mobs false");
+		stage.command("weather clear");
+		stage.waitTicks(20);
+		stage.run(BuildScenes::build);
+		stage.client(mc -> {
+			hideGui(mc, true);
+			mc.options.setCameraType(CameraType.FIRST_PERSON);
+		});
 
-			// L'agrandir : la grande maison, au même endroit.
-			check(sp.getServer().computeOnServer(server -> {
-				stock(server, LARGE);
-				return Builds.upgrade(server.overworld(), town(server), ORIGIN.offset(3, 1, 3))
-						.map(c -> "agrandissement refusé : " + c.getString()).orElse(null);
-			}));
-			waitOrExplain(sp, server -> town(server).constructions().stream().allMatch(Construction::done), 15000,
-					"la grande maison n'a pas été bâtie", BuildScenes::progress);
-			check(sp.getServer().computeOnServer(server -> homeBeds(server) == 4 ? null
-					: "la grande maison n'est pas déclarée avec quatre lits : " + town(server).houses()));
-			look(sp, -16, Y + 9, -2, -10, Y + 1, 9);
-			context.waitTicks(20);
-			context.takeScreenshot("build_2_large_house");
+		check(stage.compute(server -> {
+			ServerLevel level = server.overworld();
+			ServerPlayer player = server.getPlayerList().getPlayers().getFirst();
+			TownService.found(level, HALL, player, new ItemStack(McItems.TOWN_HALL));
+			Town town = town(server);
+			for (int i = 0; i < 6; i++) {
+				TownService.immigrate(level, town);
+			}
+			TownService.declareHouse(level, HUT_PLAQUE, player);
+			if (town.workers(Job.BUILDER) != 4 || town.workers(Job.COURIER) != 2) {
+				return "il faut quatre bâtisseurs et deux livreurs : " + town.residents() + " ; " + town.houses();
+			}
+			stock(server, SMALL);
+			return Builds.order(level, town, blueprint(server, SMALL), BuildStyle.PLAINS, ORIGIN, Rotation.NONE)
+					.map(c -> "commande refusée : " + c.getString()).orElse(null);
+		}));
+		stage.look(-16, Y + 9, -2, -11, Y + 1, 9);
+		stage.waitTicks(40);
+		// Le chantier filmé : une image par seconde de jeu.
+		stage.film("petite_maison", 240, 20,
+				server -> town(server).constructions().stream().allMatch(Construction::done));
+		waitOrExplain(stage, server -> town(server).constructions().stream().allMatch(Construction::done), 9000,
+				"la petite maison n'a pas été bâtie", BuildScenes::progress);
+		check(stage.compute(server -> homeBeds(server) == 2 ? null
+				: "la petite maison n'est pas déclarée avec deux lits : " + town(server).houses()));
+		stage.waitTicks(20);
+		stage.shot("build_1_small_house");
 
-			// Puis la bâtisse (niveau 3, dès la ville) : pierre taillée, briques, fer, six lits.
-			check(sp.getServer().computeOnServer(server -> {
-				town(server).forceTier(java.util.Optional.of(com.ajustor.minecities.town.TownTier.TOWN));
-				town(server).updateTier();
-				stock(server, MANOR);
-				return Builds.upgrade(server.overworld(), town(server), ORIGIN.offset(3, 1, 3))
-						.map(c -> "bâtisse refusée : " + c.getString()).orElse(null);
-			}));
-			look(sp, -19, Y + 8, -3, -10, Y + 3, 9);
-			CityScenes.film(context, sp, "manoir", 300, 20,
-					server -> town(server).constructions().stream().allMatch(Construction::done));
-			waitOrExplain(sp, server -> town(server).constructions().stream().allMatch(Construction::done), 15000,
-					"la bâtisse n'a pas été bâtie", BuildScenes::progress);
-			check(sp.getServer().computeOnServer(server -> homeBeds(server) == 6
-					&& server.overworld().getBlockState(ORIGIN.offset(1, 0, 1)).is(Blocks.STONE_BRICKS)
-					&& server.overworld().getBlockState(ORIGIN.offset(2, 1, 1)).is(Blocks.BRICKS)
-					&& server.overworld().getBlockState(ORIGIN.offset(4, 0, 0)).is(Blocks.COBBLESTONE_STAIRS)
-					&& server.overworld().getBlockState(ORIGIN.offset(0, 3, 6)).is(Blocks.BRICKS) ? null
-					: "la bâtisse n'est pas conforme : " + town(server).houses()));
-			look(sp, -18, Y + 7, -3, -10, Y + 3, 9);
-			context.waitTicks(20);
-			context.takeScreenshot("build_3_manor");
-		}
+		// L'agrandir : la grande maison, au même endroit.
+		check(stage.compute(server -> {
+			stock(server, LARGE);
+			return Builds.upgrade(server.overworld(), town(server), ORIGIN.offset(3, 1, 3))
+					.map(c -> "agrandissement refusé : " + c.getString()).orElse(null);
+		}));
+		waitOrExplain(stage, server -> town(server).constructions().stream().allMatch(Construction::done), 15000,
+				"la grande maison n'a pas été bâtie", BuildScenes::progress);
+		check(stage.compute(server -> homeBeds(server) == 4 ? null
+				: "la grande maison n'est pas déclarée avec quatre lits : " + town(server).houses()));
+		stage.look(-16, Y + 9, -2, -10, Y + 1, 9);
+		stage.waitTicks(20);
+		stage.shot("build_2_large_house");
+
+		// Puis la bâtisse (niveau 3, dès la ville) : pierre taillée, briques, fer, six lits.
+		check(stage.compute(server -> {
+			town(server).forceTier(java.util.Optional.of(com.ajustor.minecities.town.TownTier.TOWN));
+			town(server).updateTier();
+			stock(server, MANOR);
+			return Builds.upgrade(server.overworld(), town(server), ORIGIN.offset(3, 1, 3))
+					.map(c -> "bâtisse refusée : " + c.getString()).orElse(null);
+		}));
+		stage.look(-19, Y + 8, -3, -10, Y + 3, 9);
+		stage.film("manoir", 300, 20,
+				server -> town(server).constructions().stream().allMatch(Construction::done));
+		waitOrExplain(stage, server -> town(server).constructions().stream().allMatch(Construction::done), 15000,
+				"la bâtisse n'a pas été bâtie", BuildScenes::progress);
+		check(stage.compute(server -> homeBeds(server) == 6
+				&& server.overworld().getBlockState(ORIGIN.offset(1, 0, 1)).is(Blocks.STONE_BRICKS)
+				&& server.overworld().getBlockState(ORIGIN.offset(2, 1, 1)).is(Blocks.BRICKS)
+				&& server.overworld().getBlockState(ORIGIN.offset(4, 0, 0)).is(Blocks.COBBLESTONE_STAIRS)
+				&& server.overworld().getBlockState(ORIGIN.offset(0, 3, 6)).is(Blocks.BRICKS) ? null
+				: "la bâtisse n'est pas conforme : " + town(server).houses()));
+		stage.look(-18, Y + 7, -3, -10, Y + 3, 9);
+		stage.waitTicks(20);
+		stage.shot("build_3_manor");
 	}
 
 	private static String progress(MinecraftServer server) {
@@ -151,8 +145,32 @@ public class BuildScenes implements FabricClientGameTest {
 			}
 			var p = plan.get(c.step());
 			return "chantier " + c.blueprint() + " à l'étape " + c.step() + "/" + plan.size() + " : " + p.state()
-					+ " en " + p.pos().toShortString() + ", où se trouve " + server.overworld().getBlockState(p.pos()) + ".";
+					+ " en " + p.pos().toShortString() + ", où se trouve " + server.overworld().getBlockState(p.pos()) + ". "
+					+ BuildPlan.material(p.state()).map(m -> ledger(server, plan, m)).orElse("");
 		}).orElse("aucun chantier.");
+	}
+
+	/** Où en est ce matériau : au plan, posé, au grenier, dans les poches, par terre. */
+	private static String ledger(MinecraftServer server, java.util.List<BuildPlan.Placement> plan, Item item) {
+		ServerLevel level = server.overworld();
+		long needed = plan.stream().filter(p -> BuildPlan.material(p.state()).filter(item::equals).isPresent()).count();
+		long placed = plan.stream().filter(p -> BuildPlan.material(p.state()).filter(item::equals).isPresent()
+				&& level.getBlockState(p.pos()).is(p.state().getBlock())).count();
+		long elsewhere = 0;
+		for (BlockPos pos : BlockPos.betweenClosed(ORIGIN.offset(-6, 0, -6), ORIGIN.offset(16, 12, 16))) {
+			if (level.getBlockState(pos).getBlock().asItem() == item) {
+				elsewhere++;
+			}
+		}
+		int granary = level.getBlockEntity(HALL) instanceof TownHallBlockEntity hall
+				? com.ajustor.minecities.town.Stock.count(hall, s -> s.is(item)) : -1;
+		int pockets = CityScenes.citizens(server).stream().mapToInt(c -> c.inventory().stream().filter(s -> s.is(item))
+				.mapToInt(ItemStack::getCount).sum() + (c.getMainHandItem().is(item) ? c.getMainHandItem().getCount() : 0)).sum();
+		int ground = level.getEntitiesOfClass(net.minecraft.world.entity.item.ItemEntity.class,
+				new net.minecraft.world.phys.AABB(-64, 0, -64, 64, 200, 64), e -> e.getItem().is(item)).stream()
+				.mapToInt(e -> e.getItem().getCount()).sum();
+		return "%s : %d au plan, %d posés à leur place, %d de ce bloc alentour, %d au grenier, %d en poche, %d par terre."
+				.formatted(item, needed, placed, elsewhere, granary, pockets, ground);
 	}
 
 	private static Town town(MinecraftServer server) {
@@ -181,7 +199,7 @@ public class BuildScenes implements FabricClientGameTest {
 		hall.setItem(slot++, new ItemStack(Items.BREAD, 32));
 		// Les outils pour dégager : la pioche pour la pierre, la pelle pour la terre, la hache pour le bois.
 		// Un jeu d'outils par bâtisseur.
-		for (int i = 0; i < 2; i++) {
+		for (int i = 0; i < 4; i++) {
 			hall.setItem(slot++, new ItemStack(Items.IRON_PICKAXE));
 			hall.setItem(slot++, new ItemStack(Items.IRON_SHOVEL));
 			hall.setItem(slot++, new ItemStack(Items.IRON_AXE));
@@ -191,6 +209,9 @@ public class BuildScenes implements FabricClientGameTest {
 			int left = e.getValue();
 			while (left > 0) {
 				int count = Math.min(left, new ItemStack(e.getKey()).getMaxStackSize());
+				if (slot >= hall.getContainerSize()) {
+					throw new AssertionError("le grenier est trop petit pour les matériaux de " + id);
+				}
 				hall.setItem(slot++, new ItemStack(e.getKey(), count));
 				left -= count;
 			}
@@ -216,10 +237,12 @@ public class BuildScenes implements FabricClientGameTest {
 		command(server, "summon minecraft:cow -11 %d 9".formatted(Y));
 		// L'atelier du bâtisseur, bâti à la main : une table d'artisan.
 		WorkScenes.room(level, 4, 4, 8, 8, 6);
-		// Deux tables d'artisan : deux bâtisseurs, qui partagent le chantier.
-		command(server, "setblock 8 %d 6 minecraft:crafter".formatted(Y));
-		command(server, "setblock 8 %d 7 minecraft:crafter".formatted(Y));
-		// Une table de cartographie : un livreur, qui leur porte les matériaux.
+		// Quatre tables d'artisan : quatre bâtisseurs, qui partagent le chantier.
+		for (int z = 5; z <= 8; z++) {
+			command(server, "setblock 8 %d %d minecraft:crafter".formatted(Y, z));
+		}
+		// Deux tables de cartographie : deux livreurs, qui leur portent les matériaux.
+		command(server, "setblock 4 %d 6 minecraft:cartography_table".formatted(Y));
 		command(server, "setblock 4 %d 7 minecraft:cartography_table".formatted(Y));
 		command(server, "setblock 5 %d 4 minecities:house_plaque[facing=south]".formatted(Y + 1));
 		command(server, "setblock 0 %d 0 minecities:town_hall[facing=north]".formatted(Y));

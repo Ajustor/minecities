@@ -9,11 +9,7 @@ import com.ajustor.minecities.town.Stock;
 import com.ajustor.minecities.town.Town;
 import com.ajustor.minecities.town.TownService;
 import com.ajustor.minecities.town.Towns;
-import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest;
-import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext;
-import net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext;
 import net.minecraft.client.CameraType;
-import net.minecraft.client.gui.screens.worldselection.WorldCreationUiState;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
@@ -32,7 +28,6 @@ import static com.ajustor.minecities.gametest.CityScenes.check;
 import static com.ajustor.minecities.gametest.CityScenes.citizens;
 import static com.ajustor.minecities.gametest.CityScenes.command;
 import static com.ajustor.minecities.gametest.CityScenes.hideGui;
-import static com.ajustor.minecities.gametest.CityScenes.look;
 import static com.ajustor.minecities.gametest.CityScenes.waitOrExplain;
 
 /**
@@ -43,7 +38,7 @@ import static com.ajustor.minecities.gametest.CityScenes.waitOrExplain;
  *
  * <p>{@code ./gradlew runClientGameTest -Dminecities.gametest=work}
  */
-public class WorkScenes implements FabricClientGameTest {
+public class WorkScenes implements Scene {
 	private static final int Y = 100;
 	private static final BlockPos HALL = new BlockPos(0, Y, 0);
 	private static final BlockPos HOUSE_PLAQUE = new BlockPos(-8, Y + 1, 4);
@@ -54,81 +49,80 @@ public class WorkScenes implements FabricClientGameTest {
 	private static final int FIELD_X0 = 10, FIELD_X1 = 14, FIELD_Z0 = -6, FIELD_Z1 = -2;
 
 	@Override
-	public void runTest(ClientGameTestContext context) {
-		if (!CityScenes.selected("work")) {
-			return;
-		}
-		try (TestSingleplayerContext sp = context.worldBuilder()
-				.adjustSettings(c -> c.setGameMode(WorldCreationUiState.SelectedGameMode.CREATIVE)).create()) {
-			// Cette scène compte ses citoyens : pas de nouveaux venus pour atteindre le minimum.
-			com.ajustor.minecities.town.Families.setMinimum(0);
-			command(sp, "time set 1000");
-			command(sp, "gamerule doDaylightCycle false");
-			command(sp, "gamerule doMobSpawning false");
-			command(sp, "weather clear");
-			context.waitTicks(20);
-			sp.getServer().runOnServer(WorkScenes::build);
-			context.runOnClient(mc -> {
-				hideGui(mc, true);
-				mc.options.setCameraType(CameraType.FIRST_PERSON);
-			});
+	public String name() {
+		return "work";
+	}
 
-			// Fondation, maison, deux citoyens, puis l'atelier : chacun y trouve un emploi.
-			check(sp.getServer().computeOnServer(server -> {
-				ServerLevel level = server.overworld();
-				ServerPlayer player = server.getPlayerList().getPlayers().getFirst();
-				TownService.found(level, HALL, player, new ItemStack(McItems.TOWN_HALL));
-				TownService.declareHouse(level, HOUSE_PLAQUE, player);
-				Town town = town(server);
-				TownService.immigrate(level, town);
-				TownService.immigrate(level, town);
-				TownService.declareHouse(level, WORKSHOP_PLAQUE, player);
-				long farmers = town.residents().values().stream().filter(r -> hasJob(r, Job.FARMER)).count();
-				long cooks = town.residents().values().stream().filter(r -> hasJob(r, Job.COOK)).count();
-				return farmers == 1 && cooks == 1 ? null
-						: "emplois mal attribués : " + town.residents() + " ; bâtiments : " + town.houses();
-			}));
-			look(sp, 6, Y + 9, -14, 9, Y, -1);
-			context.waitTicks(40);
-			context.takeScreenshot("work_0_field_ripe");
+	@Override
+	public void play(Stage stage) {
+		// Cette scène compte ses citoyens : pas de nouveaux venus pour atteindre le minimum.
+		com.ajustor.minecities.town.Families.setMinimum(0);
+		stage.command("time set 1000");
+		stage.command("gamerule advance_time false");
+		stage.command("gamerule spawn_mobs false");
+		stage.command("weather clear");
+		stage.waitTicks(20);
+		stage.run(WorkScenes::build);
+		stage.client(mc -> {
+			hideGui(mc, true);
+			mc.options.setCameraType(CameraType.FIRST_PERSON);
+		});
 
-			// Sans houe, le fermier ne travaille pas.
-			context.waitTicks(200);
-			check(sp.getServer().computeOnServer(server -> {
-				Optional<CitizenEntity> farmer = farmer(server);
-				if (farmer.isEmpty()) {
-					return "pas de fermier : " + CityScenes.census(server);
-				}
-				return farmer.get().getMainHandItem().isEmpty() ? null : "le fermier a trouvé une houe qui n'existe pas";
-			}));
+		// Fondation, maison, deux citoyens, puis l'atelier : chacun y trouve un emploi.
+		check(stage.compute(server -> {
+			ServerLevel level = server.overworld();
+			ServerPlayer player = server.getPlayerList().getPlayers().getFirst();
+			TownService.found(level, HALL, player, new ItemStack(McItems.TOWN_HALL));
+			TownService.declareHouse(level, HOUSE_PLAQUE, player);
+			Town town = town(server);
+			TownService.immigrate(level, town);
+			TownService.immigrate(level, town);
+			TownService.declareHouse(level, WORKSHOP_PLAQUE, player);
+			long farmers = town.residents().values().stream().filter(r -> hasJob(r, Job.FARMER)).count();
+			long cooks = town.residents().values().stream().filter(r -> hasJob(r, Job.COOK)).count();
+			return farmers == 1 && cooks == 1 ? null
+					: "emplois mal attribués : " + town.residents() + " ; bâtiments : " + town.houses();
+		}));
+		stage.look(6, Y + 9, -14, 9, Y, -1);
+		stage.waitTicks(40);
+		stage.shot("work_0_field_ripe");
 
-			// Une houe dans le coffre de l'atelier : il la prend, récolte, replante et livre.
-			sp.getServer().runOnServer(server -> {
-				if (server.overworld().getBlockEntity(WORKSHOP_CHEST) instanceof Container chest) {
-					chest.setItem(0, new ItemStack(Items.IRON_HOE));
-				}
-			});
-			waitOrExplain(sp, server -> farmer(server).map(f -> f.getMainHandItem().is(Items.IRON_HOE)).orElse(false),
-					1200, "le fermier n'a pas pris la houe");
-			context.waitTicks(200);
-			context.takeScreenshot("work_1_farmer_at_work");
-			waitOrExplain(sp, server -> ripeCrops(server) == 0, 2400, "le champ n'a pas été récolté");
-			check(sp.getServer().computeOnServer(server -> youngCrops(server) >= 20 ? null
-					: "le champ n'a pas été replanté : " + youngCrops(server) + " jeunes pousses"));
-			waitOrExplain(sp, server -> granary(server, Items.CARROT) > 0 || granary(server, Items.WHEAT) > 0
-					|| granary(server, Items.BREAD) > 16, 2400, "la récolte n'est pas arrivée au grenier");
-			look(sp, 6, Y + 9, -14, 9, Y, -1);
-			context.waitTicks(20);
-			context.takeScreenshot("work_2_field_replanted");
+		// Sans houe, le fermier ne travaille pas.
+		stage.waitTicks(200);
+		check(stage.compute(server -> {
+			Optional<CitizenEntity> farmer = farmer(server);
+			if (farmer.isEmpty()) {
+				return "pas de fermier : " + CityScenes.census(server);
+			}
+			return farmer.get().getMainHandItem().isEmpty() ? null : "le fermier a trouvé une houe qui n'existe pas";
+		}));
 
-			// Le cuisinier : la viande crue du grenier revient cuite, le blé en pain.
-			waitOrExplain(sp, server -> granary(server, Items.COOKED_BEEF) > 0, 2400,
-					"le cuisinier n'a pas cuit la viande");
-			waitOrExplain(sp, server -> granary(server, Items.BREAD) > 16, 3600, "le cuisinier n'a pas fait de pain");
-			look(sp, 6, Y + 2, 5.2, 4.5, Y + 0.5, 8);
-			context.waitTicks(10);
-			context.takeScreenshot("work_3_kitchen");
-		}
+		// Une houe dans le coffre de l'atelier : il la prend, récolte, replante et livre.
+		stage.run(server -> {
+			if (server.overworld().getBlockEntity(WORKSHOP_CHEST) instanceof Container chest) {
+				chest.setItem(0, new ItemStack(Items.IRON_HOE));
+			}
+		});
+		waitOrExplain(stage, server -> farmer(server).map(f -> f.getMainHandItem().is(Items.IRON_HOE)).orElse(false),
+				1200, "le fermier n'a pas pris la houe");
+		stage.waitTicks(200);
+		stage.shot("work_1_farmer_at_work");
+		waitOrExplain(stage, server -> ripeCrops(server) == 0, 2400, "le champ n'a pas été récolté");
+		check(stage.compute(server -> youngCrops(server) >= 20 ? null
+				: "le champ n'a pas été replanté : " + youngCrops(server) + " jeunes pousses"));
+		waitOrExplain(stage, server -> granary(server, Items.CARROT) > 0 || granary(server, Items.WHEAT) > 0
+				|| granary(server, Items.BREAD) > 16, 2400, "la récolte n'est pas arrivée au grenier");
+		stage.look(6, Y + 9, -14, 9, Y, -1);
+		stage.waitTicks(20);
+		stage.shot("work_2_field_replanted");
+
+		// Le cuisinier : la viande crue du grenier revient cuite, le blé en pain.
+		waitOrExplain(stage, server -> granary(server, Items.COOKED_BEEF) > 0, 2400,
+				"le cuisinier n'a pas cuit la viande");
+		waitOrExplain(stage, server -> granary(server, Items.BREAD) > 16, 3600, "le cuisinier n'a pas fait de pain");
+		stage.look(6, Y + 2, 5.2, 4.5, Y + 0.5, 8);
+		stage.waitTicks(10);
+		stage.shot("work_3_kitchen");
 	}
 
 	private static boolean hasJob(Resident resident, Job job) {

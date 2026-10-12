@@ -3,24 +3,13 @@
 	"id": "minecities-gametest",
 	"version": "1.0.0",
 	"name": "MineCities in-game scenes",
-	"environment": "client",
+	"environment": "*",
 	"entrypoints": {
 		"fabric-client-gametest": [
-			"com.ajustor.minecities.gametest.CityScenes",
-			"com.ajustor.minecities.gametest.WorkScenes",
-			"com.ajustor.minecities.gametest.CountrysideScenes",
-			"com.ajustor.minecities.gametest.VillageScenes",
-			"com.ajustor.minecities.gametest.BuildScenes",
-			"com.ajustor.minecities.gametest.FamilyScenes",
-			"com.ajustor.minecities.gametest.RaidScenes",
-			"com.ajustor.minecities.gametest.LifeScenes",
-			"com.ajustor.minecities.gametest.MarketScenes",
-			"com.ajustor.minecities.gametest.RobustScenes",
-			"com.ajustor.minecities.gametest.IndustryScenes",
-			"com.ajustor.minecities.gametest.CraftScenes",
-			"com.ajustor.minecities.gametest.CouncilScenes",
-			"com.ajustor.minecities.gametest.StyleScenes",
-			"com.ajustor.minecities.gametest.LogisticsScenes"
+			"com.ajustor.minecities.gametest.ClientScenes"
+		],
+		"fabric-gametest": [
+			"com.ajustor.minecities.gametest.HeadlessScenes"
 		]
 	},
 	"depends": {

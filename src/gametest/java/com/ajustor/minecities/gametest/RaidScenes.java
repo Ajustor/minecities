@@ -15,11 +15,7 @@ import com.ajustor.minecities.town.Stock;
 import com.ajustor.minecities.town.Town;
 import com.ajustor.minecities.town.TownService;
 import com.ajustor.minecities.town.Towns;
-import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest;
-import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext;
-import net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext;
 import net.minecraft.client.CameraType;
-import net.minecraft.client.gui.screens.worldselection.WorldCreationUiState;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
@@ -38,7 +34,6 @@ import static com.ajustor.minecities.gametest.CityScenes.check;
 import static com.ajustor.minecities.gametest.CityScenes.citizens;
 import static com.ajustor.minecities.gametest.CityScenes.command;
 import static com.ajustor.minecities.gametest.CityScenes.hideGui;
-import static com.ajustor.minecities.gametest.CityScenes.look;
 import static com.ajustor.minecities.gametest.CityScenes.waitOrExplain;
 
 /**
@@ -50,7 +45,7 @@ import static com.ajustor.minecities.gametest.CityScenes.waitOrExplain;
  *
  * <p>{@code ./gradlew runClientGameTest -PminecitiesGametest=raid}
  */
-public class RaidScenes implements FabricClientGameTest {
+public class RaidScenes implements Scene {
 	private static final int Y = 100;
 	private static final BlockPos HALL = new BlockPos(0, Y, 0);
 	private static final BlockPos BARRACKS = new BlockPos(-18, Y, 4);
@@ -59,67 +54,66 @@ public class RaidScenes implements FabricClientGameTest {
 	private static final BlockPos WORKSHOP = new BlockPos(8, Y, -16);
 
 	@Override
-	public void runTest(ClientGameTestContext context) {
-		if (!CityScenes.selected("raid")) {
-			return;
-		}
-		try (TestSingleplayerContext sp = context.worldBuilder()
-				.adjustSettings(c -> c.setGameMode(WorldCreationUiState.SelectedGameMode.CREATIVE)).create()) {
-			Families.setMinimum(0);
-			command(sp, "time set 1000");
-			command(sp, "gamerule doDaylightCycle false");
-			command(sp, "gamerule doMobSpawning false");
-			command(sp, "weather clear");
-			context.waitTicks(20);
-			sp.getServer().runOnServer(RaidScenes::build);
-			context.runOnClient(mc -> mc.options.setCameraType(CameraType.FIRST_PERSON));
+	public String name() {
+		return "raid";
+	}
 
-			// La ville, ses bâtiments posés d'après les schémas, et ses défenseurs.
-			check(sp.getServer().computeOnServer(server -> {
-				ServerLevel level = server.overworld();
-				ServerPlayer player = server.getPlayerList().getPlayers().getFirst();
-				TownService.found(level, HALL, player, new ItemStack(McItems.TOWN_HALL));
-				Town town = town(server);
-				for (int i = 0; i < 7; i++) {
-					TownService.immigrate(level, town);
-				}
-				for (BlockPos[] building : new BlockPos[][]{{BARRACKS}, {TOWER}, {HOUSE}, {WORKSHOP}}) {
-					plaque(level, building[0]).ifPresent(p -> TownService.declareHouse(level, p, player));
-				}
-				int guards = town.workers(Job.GUARD);
-				int archers = town.workers(Job.ARCHER);
-				int inventors = town.workers(Job.INVENTOR);
-				return guards == 2 && archers == 1 && inventors == 1 ? null
-						: "défenseurs mal embauchés : " + guards + " gardes, " + archers + " archers, " + inventors
-								+ " inventeurs ; " + town.houses();
-			}));
-			waitOrExplain(sp, server -> citizens(server).stream().filter(CitizenEntity::isGuard)
-							.allMatch(c -> c.getMainHandItem().is(Items.IRON_SWORD)
-									&& c.getItemBySlot(net.minecraft.world.entity.EquipmentSlot.CHEST).is(Items.IRON_CHESTPLATE)),
-					1200, "les gardes ne se sont pas équipés");
-			waitOrExplain(sp, server -> citizens(server).stream().filter(c -> c.job()
-							.filter(j -> j.job() == Job.ARCHER).isPresent())
-							.allMatch(c -> c.getY() >= Y + 9), 1200, "l'archer n'est pas monté à son poste");
+	@Override
+	public void play(Stage stage) {
+		Families.setMinimum(0);
+		stage.command("time set 1000");
+		stage.command("gamerule advance_time false");
+		stage.command("gamerule spawn_mobs false");
+		stage.command("weather clear");
+		stage.waitTicks(20);
+		stage.run(RaidScenes::build);
+		stage.client(mc -> mc.options.setCameraType(CameraType.FIRST_PERSON));
 
-			look(sp, -2, Y + 14, -24, -2, Y, 6);
-			context.runOnClient(mc -> hideGui(mc, false));
-			context.waitTicks(20);
-			context.takeScreenshot("raid_0_town");
+		// La ville, ses bâtiments posés d'après les schémas, et ses défenseurs.
+		check(stage.compute(server -> {
+			ServerLevel level = server.overworld();
+			ServerPlayer player = server.getPlayerList().getPlayers().getFirst();
+			TownService.found(level, HALL, player, new ItemStack(McItems.TOWN_HALL));
+			Town town = town(server);
+			for (int i = 0; i < 7; i++) {
+				TownService.immigrate(level, town);
+			}
+			for (BlockPos[] building : new BlockPos[][]{{BARRACKS}, {TOWER}, {HOUSE}, {WORKSHOP}}) {
+				plaque(level, building[0]).ifPresent(p -> TownService.declareHouse(level, p, player));
+			}
+			int guards = town.workers(Job.GUARD);
+			int archers = town.workers(Job.ARCHER);
+			int inventors = town.workers(Job.INVENTOR);
+			return guards == 2 && archers == 1 && inventors == 1 ? null
+					: "défenseurs mal embauchés : " + guards + " gardes, " + archers + " archers, " + inventors
+							+ " inventeurs ; " + town.houses();
+		}));
+		waitOrExplain(stage, server -> citizens(server).stream().filter(CitizenEntity::isGuard)
+						.allMatch(c -> c.getMainHandItem().is(Items.IRON_SWORD)
+								&& c.getItemBySlot(net.minecraft.world.entity.EquipmentSlot.CHEST).is(Items.IRON_CHESTPLATE)),
+				1200, "les gardes ne se sont pas équipés");
+		waitOrExplain(stage, server -> citizens(server).stream().filter(c -> c.job()
+						.filter(j -> j.job() == Job.ARCHER).isPresent())
+						.allMatch(c -> c.getY() >= Y + 9), 1200, "l'archer n'est pas monté à son poste");
 
-			// Le raid : on le filme jusqu'à la victoire.
-			check(sp.getServer().computeOnServer(server -> Raids.start(server.overworld(), town(server)) ? null
-					: "le raid n'a pas commencé"));
-			context.waitTicks(40);
-			CityScenes.film(context, sp, "raid", 360, 20, server -> !Raids.underAttack(town(server).id()));
-			waitOrExplain(sp, server -> !Raids.underAttack(town(server).id()), 6000, "le raid n'est pas fini",
-					server -> "vague " + Raids.progress(town(server).id())[0] + "/" + Raids.progress(town(server).id())[1]
-							+ ", " + Raids.raiders(town(server).id()).size() + " pillards.");
-			check(sp.getServer().computeOnServer(server -> granary(server, Items.EMERALD) > 0 ? null
-					: "pas d'émeraudes : le raid a-t-il été repoussé ?"));
-			context.waitTicks(20);
-			context.takeScreenshot("raid_1_victory");
-			context.runOnClient(mc -> hideGui(mc, true));
-		}
+		stage.look(-2, Y + 14, -24, -2, Y, 6);
+		stage.client(mc -> hideGui(mc, false));
+		stage.waitTicks(20);
+		stage.shot("raid_0_town");
+
+		// Le raid : on le filme jusqu'à la victoire.
+		check(stage.compute(server -> Raids.start(server.overworld(), town(server)) ? null
+				: "le raid n'a pas commencé"));
+		stage.waitTicks(40);
+		stage.film("raid", 360, 20, server -> !Raids.underAttack(town(server).id()));
+		waitOrExplain(stage, server -> !Raids.underAttack(town(server).id()), 6000, "le raid n'est pas fini",
+				server -> "vague " + Raids.progress(town(server).id())[0] + "/" + Raids.progress(town(server).id())[1]
+						+ ", " + Raids.raiders(town(server).id()).size() + " pillards.");
+		check(stage.compute(server -> granary(server, Items.EMERALD) > 0 ? null
+				: "pas d'émeraudes : le raid a-t-il été repoussé ?"));
+		stage.waitTicks(20);
+		stage.shot("raid_1_victory");
+		stage.client(mc -> hideGui(mc, true));
 	}
 
 	private static Town town(MinecraftServer server) {

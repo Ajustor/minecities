@@ -11,11 +11,7 @@ import com.ajustor.minecities.town.Town;
 import com.ajustor.minecities.town.TownService;
 import com.ajustor.minecities.town.TownTier;
 import com.ajustor.minecities.town.Towns;
-import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest;
-import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext;
-import net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext;
 import net.minecraft.client.CameraType;
-import net.minecraft.client.gui.screens.worldselection.WorldCreationUiState;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
@@ -31,7 +27,6 @@ import static com.ajustor.minecities.gametest.CityScenes.check;
 import static com.ajustor.minecities.gametest.CityScenes.citizens;
 import static com.ajustor.minecities.gametest.CityScenes.command;
 import static com.ajustor.minecities.gametest.CityScenes.hideGui;
-import static com.ajustor.minecities.gametest.CityScenes.look;
 import static com.ajustor.minecities.gametest.CityScenes.waitOrExplain;
 
 /**
@@ -42,7 +37,7 @@ import static com.ajustor.minecities.gametest.CityScenes.waitOrExplain;
  *
  * <p>{@code ./gradlew runClientGameTest -PminecitiesGametest=industry}
  */
-public class IndustryScenes implements FabricClientGameTest {
+public class IndustryScenes implements Scene {
 	private static final int Y = 100;
 	private static final BlockPos HALL = new BlockPos(0, Y, 0);
 	/** La mine à l'ouest : son escalier part vers l'est, dans le champ libre avant la forge. */
@@ -55,77 +50,76 @@ public class IndustryScenes implements FabricClientGameTest {
 	private static final int SHOWCASE_Z = 30;
 
 	@Override
-	public void runTest(ClientGameTestContext context) {
-		if (!CityScenes.selected("industry")) {
-			return;
-		}
-		try (TestSingleplayerContext sp = context.worldBuilder()
-				.adjustSettings(c -> c.setGameMode(WorldCreationUiState.SelectedGameMode.CREATIVE)).create()) {
-			Families.setMinimum(0);
-			command(sp, "time set 1000");
-			command(sp, "gamerule doDaylightCycle false");
-			command(sp, "gamerule doMobSpawning false");
-			command(sp, "weather clear");
-			context.waitTicks(20);
-			sp.getServer().runOnServer(IndustryScenes::build);
-			context.runOnClient(mc -> mc.options.setCameraType(CameraType.FIRST_PERSON));
+	public String name() {
+		return "industry";
+	}
 
-			// Les quatre niveaux de la maison.
-			look(sp, -2, Y + 16, SHOWCASE_Z - 12, -2, Y + 2, SHOWCASE_Z + 5);
-			context.runOnClient(mc -> hideGui(mc, true));
-			context.waitTicks(30);
-			context.takeScreenshot("industry_0_house_levels");
+	@Override
+	public void play(Stage stage) {
+		Families.setMinimum(0);
+		stage.command("time set 1000");
+		stage.command("gamerule advance_time false");
+		stage.command("gamerule spawn_mobs false");
+		stage.command("weather clear");
+		stage.waitTicks(20);
+		stage.run(IndustryScenes::build);
+		stage.client(mc -> mc.options.setCameraType(CameraType.FIRST_PERSON));
 
-			// La ville (forcée au palier Ville, pour la forge) et ses travailleurs.
-			check(sp.getServer().computeOnServer(server -> {
-				ServerLevel level = server.overworld();
-				ServerPlayer player = server.getPlayerList().getPlayers().getFirst();
-				TownService.found(level, HALL, player, new ItemStack(McItems.TOWN_HALL));
-				Town town = town(server);
-				town.forceTier(Optional.of(TownTier.TOWN));
-				TownService.retier(level, town);
-				for (int i = 0; i < 4; i++) {
-					TownService.immigrate(level, town);
-				}
-				for (BlockPos origin : new BlockPos[]{MINE, SMITHY, BAKERY, FARM, HOUSE}) {
-					RaidScenes.plaque(level, origin).ifPresent(p -> TownService.declareHouse(level, p, player));
-				}
-				return town.workers(Job.MINER) == 1 && town.workers(Job.SMITH) == 1 && town.workers(Job.BAKER) == 1
-						&& town.workers(Job.FARMER) == 1 ? null : "métiers : " + town.residents() + " ; " + town.houses();
-			}));
-			look(sp, -6, Y + 16, 2, -6, Y, -16);
-			context.waitTicks(10);
-			context.takeScreenshot("industry_1_workshops");
+		// Les quatre niveaux de la maison.
+		stage.look(-2, Y + 16, SHOWCASE_Z - 12, -2, Y + 2, SHOWCASE_Z + 5);
+		stage.client(mc -> hideGui(mc, true));
+		stage.waitTicks(30);
+		stage.shot("industry_0_house_levels");
 
-			// Le boulanger cuit, le forgeron fond le fer puis forge la houe du fermier.
-			CityScenes.film(context, sp, "industry", 40, 20, server -> granary(server, Items.BREAD) > 0
-					&& farmerHasHoe(server));
-			waitOrExplain(sp, server -> granary(server, Items.BREAD) >= 5, 2400, "le boulanger n'a pas cuit de pain",
-					server -> "blé " + granary(server, Items.WHEAT) + ".");
-			waitOrExplain(sp, IndustryScenes::farmerHasHoe, 3600, "le forgeron n'a pas forgé de houe",
-					server -> "grenier " + contents(server) + ", besoins " + citizens(server).stream()
-							.map(c -> c.getName().getString() + "=" + c.hasNeed("tool") + "/" + c.lastNeed()
-									.map(net.minecraft.network.chat.Component::getString).orElse("-")).toList() + ".");
+		// La ville (forcée au palier Ville, pour la forge) et ses travailleurs.
+		check(stage.compute(server -> {
+			ServerLevel level = server.overworld();
+			ServerPlayer player = server.getPlayerList().getPlayers().getFirst();
+			TownService.found(level, HALL, player, new ItemStack(McItems.TOWN_HALL));
+			Town town = town(server);
+			town.forceTier(Optional.of(TownTier.TOWN));
+			TownService.retier(level, town);
+			for (int i = 0; i < 4; i++) {
+				TownService.immigrate(level, town);
+			}
+			for (BlockPos origin : new BlockPos[]{MINE, SMITHY, BAKERY, FARM, HOUSE}) {
+				RaidScenes.plaque(level, origin).ifPresent(p -> TownService.declareHouse(level, p, player));
+			}
+			return town.workers(Job.MINER) == 1 && town.workers(Job.SMITH) == 1 && town.workers(Job.BAKER) == 1
+					&& town.workers(Job.FARMER) == 1 ? null : "métiers : " + town.residents() + " ; " + town.houses();
+		}));
+		stage.look(-6, Y + 16, 2, -6, Y, -16);
+		stage.waitTicks(10);
+		stage.shot("industry_1_workshops");
 
-			// Le mineur creuse son escalier, et l'éclaire.
-			waitOrExplain(sp, server -> mine(server).filter(m -> m.face().getY() <= m.entrance().getY() - 8).isPresent(),
-					3600, "le mineur n'a pas creusé", server -> "galerie " + mine(server) + ".");
-			// Il a suivi le filon de fer croisé en chemin.
-			waitOrExplain(sp, server -> citizens(server).stream().anyMatch(c -> c.inventory().stream()
-							.anyMatch(st -> st.is(Items.RAW_IRON))) || granary(server, Items.RAW_IRON) > 0, 1200,
-					"le mineur n'a pas suivi le filon de fer", server -> "galerie " + mine(server) + ".");
-			check(sp.getServer().computeOnServer(server -> {
-				Mine mine = mine(server).orElseThrow();
-				BlockPos step = mine.entrance().east(3).below(3);
-				return server.overworld().getBlockState(step).isAir() && server.overworld().getBlockState(step.above()).isAir()
-						? null : "l'escalier n'est pas dégagé en " + step + " : " + server.overworld().getBlockState(step);
-			}));
-			BlockPos entrance = sp.getServer().computeOnServer(server -> mine(server).orElseThrow().entrance());
-			look(sp, entrance.getX() + 0.5, entrance.getY() + 1.2, entrance.getZ() + 0.5, entrance.getX() + 8,
-					entrance.getY() - 7, entrance.getZ() + 0.5);
-			context.waitTicks(20);
-			context.takeScreenshot("industry_2_mine");
-		}
+		// Le boulanger cuit, le forgeron fond le fer puis forge la houe du fermier.
+		stage.film("industry", 40, 20, server -> granary(server, Items.BREAD) > 0
+				&& farmerHasHoe(server));
+		waitOrExplain(stage, server -> granary(server, Items.BREAD) >= 5, 2400, "le boulanger n'a pas cuit de pain",
+				server -> "blé " + granary(server, Items.WHEAT) + ".");
+		waitOrExplain(stage, IndustryScenes::farmerHasHoe, 3600, "le forgeron n'a pas forgé de houe",
+				server -> "grenier " + contents(server) + ", besoins " + citizens(server).stream()
+						.map(c -> c.getName().getString() + "=" + c.hasNeed("tool") + "/" + c.lastNeed()
+								.map(net.minecraft.network.chat.Component::getString).orElse("-")).toList() + ".");
+
+		// Le mineur creuse son escalier, et l'éclaire.
+		waitOrExplain(stage, server -> mine(server).filter(m -> m.face().getY() <= m.entrance().getY() - 8).isPresent(),
+				3600, "le mineur n'a pas creusé", server -> "galerie " + mine(server) + ".");
+		// Il a suivi le filon de fer croisé en chemin.
+		waitOrExplain(stage, server -> citizens(server).stream().anyMatch(c -> c.inventory().stream()
+						.anyMatch(st -> st.is(Items.RAW_IRON))) || granary(server, Items.RAW_IRON) > 0, 1200,
+				"le mineur n'a pas suivi le filon de fer", server -> "galerie " + mine(server) + ".");
+		check(stage.compute(server -> {
+			Mine mine = mine(server).orElseThrow();
+			BlockPos step = mine.entrance().east(3).below(3);
+			return server.overworld().getBlockState(step).isAir() && server.overworld().getBlockState(step.above()).isAir()
+					? null : "l'escalier n'est pas dégagé en " + step + " : " + server.overworld().getBlockState(step);
+		}));
+		BlockPos entrance = stage.compute(server -> mine(server).orElseThrow().entrance());
+		stage.look(entrance.getX() + 0.5, entrance.getY() + 1.2, entrance.getZ() + 0.5, entrance.getX() + 8,
+				entrance.getY() - 7, entrance.getZ() + 0.5);
+		stage.waitTicks(20);
+		stage.shot("industry_2_mine");
 	}
 
 	private static Town town(MinecraftServer server) {

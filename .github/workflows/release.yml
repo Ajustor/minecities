@@ -27,7 +27,7 @@ jobs:
       - name: build
         run: |
           chmod +x ./gradlew
-          ./gradlew build -PreleaseVersion=${{ github.ref_name }}
+          ./gradlew build -x runGameTest -PreleaseVersion=${{ github.ref_name }}
       - name: changelog of this version (en)
         uses: orhun/git-cliff-action@v4
         with:

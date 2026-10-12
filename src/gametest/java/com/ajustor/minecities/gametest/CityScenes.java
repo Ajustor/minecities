@@ -7,12 +7,8 @@ import com.ajustor.minecities.registry.McItems;
 import com.ajustor.minecities.town.Town;
 import com.ajustor.minecities.town.TownService;
 import com.ajustor.minecities.town.Towns;
-import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest;
-import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext;
-import net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext;
 import net.minecraft.client.CameraType;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screens.worldselection.WorldCreationUiState;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
@@ -24,7 +20,6 @@ import net.minecraft.world.level.block.Blocks;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
 /**
  * Une ville de bout en bout, dans le vrai jeu : on fonde la ville, on bâtit une maison de deux lits
@@ -35,152 +30,130 @@ import java.util.Locale;
  * <p>{@code ./gradlew runClientGameTest} ; {@code -Dminecities.gametest=city} pour ne jouer que
  * cette scène.
  */
-public class CityScenes implements FabricClientGameTest {
+public class CityScenes implements Scene {
 	private static final int Y = 100;
 	private static final BlockPos HALL = new BlockPos(0, Y, 0);
 	/** L'intérieur de la maison : [4, 8] x [Y, Y + 2] x [4, 8], la porte au nord. */
 	private static final BlockPos PLAQUE = new BlockPos(5, Y + 1, 4);
 	private static final BlockPos CHEST = new BlockPos(8, Y, 5);
 
-	static boolean selected(String name) {
-		String only = System.getProperty("minecities.gametest");
-		return only == null || only.isBlank() || List.of(only.split(",")).contains(name);
+	@Override
+	public String name() {
+		return "city";
 	}
 
 	@Override
-	public void runTest(ClientGameTestContext context) {
-		if (!selected("city")) {
-			return;
-		}
-		try (TestSingleplayerContext sp = context.worldBuilder()
-				.adjustSettings(c -> c.setGameMode(WorldCreationUiState.SelectedGameMode.CREATIVE)).create()) {
-			// Cette scène compte ses citoyens : pas de nouveaux venus pour atteindre le minimum.
-			com.ajustor.minecities.town.Families.setMinimum(0);
-			command(sp, "time set 1000");
-			command(sp, "gamerule doDaylightCycle false");
-			command(sp, "gamerule doMobSpawning false");
-			command(sp, "weather clear");
-			context.waitTicks(20);
-			sp.getServer().runOnServer(CityScenes::build);
-			context.runOnClient(mc -> {
-				hideGui(mc, true);
-				mc.options.setCameraType(CameraType.FIRST_PERSON);
-			});
+	public void play(Stage stage) {
+		// Cette scène compte ses citoyens : pas de nouveaux venus pour atteindre le minimum.
+		com.ajustor.minecities.town.Families.setMinimum(0);
+		stage.command("time set 1000");
+		stage.command("gamerule advance_time false");
+		stage.command("gamerule spawn_mobs false");
+		stage.command("weather clear");
+		stage.waitTicks(20);
+		stage.run(CityScenes::build);
+		stage.client(mc -> {
+			hideGui(mc, true);
+			mc.options.setCameraType(CameraType.FIRST_PERSON);
+		});
 
-			// Fondation, maison, grenier.
-			String founded = sp.getServer().computeOnServer(server -> {
-				ServerLevel level = server.overworld();
-				ServerPlayer player = server.getPlayerList().getPlayers().getFirst();
-				TownService.found(level, HALL, player, new ItemStack(McItems.TOWN_HALL));
-				TownService.declareHouse(level, PLAQUE, player);
-				Town town = town(server);
-				if (town == null) {
-					return "aucune ville fondée";
-				}
-				if (town.houses().size() != 1 || town.capacity() != 2) {
-					return "maison mal relevée : " + town.houses();
-				}
-				return null;
-			});
-			check(founded);
-
-			// Une maison ouverte n'en est plus une ; refermée, elle redevient valide.
-			check(sp.getServer().computeOnServer(server -> {
-				ServerLevel level = server.overworld();
-				ServerPlayer player = server.getPlayerList().getPlayers().getFirst();
-				level.setBlockAndUpdate(new BlockPos(3, Y + 1, 7), Blocks.AIR.defaultBlockState());
-				TownService.declareHouse(level, PLAQUE, player);
-				boolean open = town(server).capacity() == 0;
-				level.setBlockAndUpdate(new BlockPos(3, Y + 1, 7), Blocks.GLASS.defaultBlockState());
-				TownService.declareHouse(level, PLAQUE, player);
-				return open && town(server).capacity() == 2 ? null : "le trou dans le mur n'a pas été vu";
-			}));
-
-			// Deux citoyens arrivent et prennent chacun un lit.
-			check(sp.getServer().computeOnServer(server -> {
-				Town town = town(server);
-				TownService.immigrate(server.overworld(), town);
-				TownService.immigrate(server.overworld(), town);
-				if (town.population() != 2 || town.freeBeds() != 0) {
-					return "population " + town.population() + ", lits libres " + town.freeBeds();
-				}
-				return null;
-			}));
-			look(sp, -7, Y + 9, -9, 4, Y, 4);
-			context.waitTicks(120);
-			context.takeScreenshot("city_0_overview");
-			look(sp, -1.2, Y + 1.7, -2.6, 0.5, Y + 0.5, 0.5);
-			context.waitTicks(10);
-			context.takeScreenshot("city_0_town_hall");
-			look(sp, 2, Y + 2.2, -3, 1, Y + 1, 2);
-			sp.getServer().runOnServer(server -> citizens(server).forEach(c -> c.snapTo(1 + c.getId() % 2, Y,
-					1, 180, 0)));
-			context.waitTicks(10);
-			context.takeScreenshot("city_1_citizens");
-
-			// Affamés, ils vont manger : au coffre de la maison d'abord.
-			int before = sp.getServer().computeOnServer(server -> meals(server, CHEST) + meals(server, HALL));
-			sp.getServer().runOnServer(server -> citizens(server).forEach(c -> c.setHunger(Hunger.HUNGRY - 4)));
-			waitOrExplain(sp, server -> citizens(server).stream().allMatch(c -> c.hunger() >= Hunger.HUNGRY), 1200,
-					"les citoyens n'ont pas mangé");
-			int after = sp.getServer().computeOnServer(server -> meals(server, CHEST) + meals(server, HALL));
-			if (after >= before) {
-				throw new AssertionError("les citoyens ont mangé sans entamer les réserves : " + before + " -> " + after);
+		// Fondation, maison, grenier.
+		String founded = stage.compute(server -> {
+			ServerLevel level = server.overworld();
+			ServerPlayer player = server.getPlayerList().getPlayers().getFirst();
+			TownService.found(level, HALL, player, new ItemStack(McItems.TOWN_HALL));
+			TownService.declareHouse(level, PLAQUE, player);
+			Town town = town(server);
+			if (town == null) {
+				return "aucune ville fondée";
 			}
-			look(sp, 6, Y + 1.8, 7.5, 7.5, Y + 0.8, 5);
-			context.waitTicks(10);
-			context.takeScreenshot("city_2_after_meal");
-
-			// La nuit, chacun dans son lit.
-			command(sp, "time set 13000");
-			waitOrExplain(sp, server -> citizens(server).stream().allMatch(CitizenEntity::isSleeping), 1200,
-					"les citoyens ne sont pas couchés");
-			look(sp, 6, Y + 2.4, 4.6, 6, Y + 0.3, 7.5);
-			context.waitTicks(20);
-			context.takeScreenshot("city_3_night");
-			command(sp, "time set 1000");
-			sp.getServer().waitFor(server -> citizens(server).stream().noneMatch(CitizenEntity::isSleeping), 400);
-
-			// Des villageois vanilla sur le territoire comptent dans la population (sans devenir citoyens).
-			for (int i = 0; i < 3; i++) {
-				command(sp, "summon minecraft:villager %d %d -6".formatted(-4 + i * 3, Y));
+			if (town.houses().size() != 1 || town.capacity() != 2) {
+				return "maison mal relevée : " + town.houses();
 			}
-			// (Sans métier, ils peuvent aussi devenir citoyens : la population reste la même.)
-			waitOrExplain(sp, server -> town(server).population() == 5, 400, "les villageois n'ont pas été recensés",
-					server -> "population " + town(server).population() + ", villageois " + town(server).villagers() + ".");
+			return null;
+		});
+		check(founded);
+
+		// Une maison ouverte n'en est plus une ; refermée, elle redevient valide.
+		check(stage.compute(server -> {
+			ServerLevel level = server.overworld();
+			ServerPlayer player = server.getPlayerList().getPlayers().getFirst();
+			level.setBlockAndUpdate(new BlockPos(3, Y + 1, 7), Blocks.AIR.defaultBlockState());
+			TownService.declareHouse(level, PLAQUE, player);
+			boolean open = town(server).capacity() == 0;
+			level.setBlockAndUpdate(new BlockPos(3, Y + 1, 7), Blocks.GLASS.defaultBlockState());
+			TownService.declareHouse(level, PLAQUE, player);
+			return open && town(server).capacity() == 2 ? null : "le trou dans le mur n'a pas été vu";
+		}));
+
+		// Deux citoyens arrivent et prennent chacun un lit.
+		check(stage.compute(server -> {
+			Town town = town(server);
+			TownService.immigrate(server.overworld(), town);
+			TownService.immigrate(server.overworld(), town);
+			if (town.population() != 2 || town.freeBeds() != 0) {
+				return "population " + town.population() + ", lits libres " + town.freeBeds();
+			}
+			return null;
+		}));
+		stage.look(-7, Y + 9, -9, 4, Y, 4);
+		stage.waitTicks(120);
+		stage.shot("city_0_overview");
+		stage.look(-1.2, Y + 1.7, -2.6, 0.5, Y + 0.5, 0.5);
+		stage.waitTicks(10);
+		stage.shot("city_0_town_hall");
+		stage.look(2, Y + 2.2, -3, 1, Y + 1, 2);
+		stage.run(server -> citizens(server).forEach(c -> c.snapTo(1 + c.getId() % 2, Y,
+				1, 180, 0)));
+		stage.waitTicks(10);
+		stage.shot("city_1_citizens");
+
+		// Affamés, ils vont manger : au coffre de la maison d'abord.
+		int before = stage.compute(server -> meals(server, CHEST) + meals(server, HALL));
+		stage.run(server -> citizens(server).forEach(c -> c.setHunger(Hunger.HUNGRY - 4)));
+		waitOrExplain(stage, server -> citizens(server).stream().allMatch(c -> c.hunger() >= Hunger.HUNGRY), 1200,
+				"les citoyens n'ont pas mangé");
+		int after = stage.compute(server -> meals(server, CHEST) + meals(server, HALL));
+		if (after >= before) {
+			throw new AssertionError("les citoyens ont mangé sans entamer les réserves : " + before + " -> " + after);
 		}
+		stage.look(6, Y + 1.8, 7.5, 7.5, Y + 0.8, 5);
+		stage.waitTicks(10);
+		stage.shot("city_2_after_meal");
+
+		// La nuit, chacun dans son lit.
+		stage.command("time set 13000");
+		waitOrExplain(stage, server -> citizens(server).stream().allMatch(CitizenEntity::isSleeping), 1200,
+				"les citoyens ne sont pas couchés");
+		stage.look(6, Y + 2.4, 4.6, 6, Y + 0.3, 7.5);
+		stage.waitTicks(20);
+		stage.shot("city_3_night");
+		stage.command("time set 1000");
+		stage.waitFor(server -> citizens(server).stream().noneMatch(CitizenEntity::isSleeping), 400);
+
+		// Des villageois vanilla sur le territoire comptent dans la population (sans devenir citoyens).
+		for (int i = 0; i < 3; i++) {
+			stage.command("summon minecraft:villager %d %d -6".formatted(-4 + i * 3, Y));
+		}
+		// (Sans métier, ils peuvent aussi devenir citoyens : la population reste la même.)
+		waitOrExplain(stage, server -> town(server).population() == 5, 400, "les villageois n'ont pas été recensés",
+				server -> "population " + town(server).population() + ", villageois " + town(server).villagers() + ".");
 	}
 
 	/** Attend la condition ; sinon échoue en décrivant chaque citoyen (faim, position, sommeil). */
-	static void waitOrExplain(TestSingleplayerContext sp, java.util.function.Predicate<MinecraftServer> done,
+	static void waitOrExplain(Stage stage, java.util.function.Predicate<MinecraftServer> done,
 			int ticks, String what) {
-		waitOrExplain(sp, done, ticks, what, server -> "");
+		waitOrExplain(stage, done, ticks, what, server -> "");
 	}
 
 	/** Comme l'autre, avec un détail de plus calculé au moment de l'échec. */
-	static void waitOrExplain(TestSingleplayerContext sp, java.util.function.Predicate<MinecraftServer> done,
+	static void waitOrExplain(Stage stage, java.util.function.Predicate<MinecraftServer> done,
 			int ticks, String what, java.util.function.Function<MinecraftServer, String> detail) {
 		try {
-			sp.getServer().waitFor(done, ticks);
+			stage.waitFor(done, ticks);
 		} catch (AssertionError e) {
-			String state = sp.getServer().computeOnServer(server -> detail.apply(server) + " " + census(server));
+			String state = stage.compute(server -> detail.apply(server) + " " + census(server));
 			throw new AssertionError(what + " : " + state, e);
-		}
-	}
-
-	/**
-	 * Filme : une capture toutes les {@code interval} ticks, jusqu'à {@code frames} images ou jusqu'à
-	 * ce que {@code done} soit vrai. tools/captures/animate.py en fait une vidéo animée.
-	 */
-	static void film(net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext context,
-			TestSingleplayerContext sp, String name, int frames, int interval,
-			java.util.function.Predicate<MinecraftServer> done) {
-		for (int i = 0; i < frames; i++) {
-			context.takeScreenshot("film_%s_%03d".formatted(name, i));
-			if (sp.getServer().computeOnServer(done::test)) {
-				return;
-			}
-			context.waitTicks(interval);
 		}
 	}
 
@@ -270,18 +243,6 @@ public class CityScenes implements FabricClientGameTest {
 
 	static void command(MinecraftServer server, String command) {
 		server.getCommands().performPrefixedCommand(server.createCommandSourceStack(), command);
-	}
-
-	static void command(TestSingleplayerContext sp, String command) {
-		sp.getServer().runCommand(command);
-	}
-
-	/** Se poste à (x, y, z), les yeux vers (tx, ty, tz). */
-	static void look(TestSingleplayerContext sp, double x, double y, double z, double tx, double ty, double tz) {
-		double dx = tx - x, dy = ty - y, dz = tz - z;
-		float yaw = (float) Math.toDegrees(Math.atan2(-dx, dz));
-		float pitch = (float) -Math.toDegrees(Math.atan2(dy, Math.hypot(dx, dz)));
-		sp.getServer().runCommand(String.format(Locale.ROOT, "tp @p %.2f %.2f %.2f %.1f %.1f", x, y - 1.62, z, yaw, pitch));
 	}
 
 	static void hideGui(Minecraft mc, boolean hidden) {
