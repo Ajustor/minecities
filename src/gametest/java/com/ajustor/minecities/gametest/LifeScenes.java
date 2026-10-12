@@ -13,6 +13,7 @@ import com.ajustor.minecities.town.Alarms;
 import com.ajustor.minecities.town.Families;
 import com.ajustor.minecities.town.Festivals;
 import com.ajustor.minecities.town.Job;
+import com.ajustor.minecities.town.Resident;
 import com.ajustor.minecities.town.Town;
 import com.ajustor.minecities.town.TownService;
 import com.ajustor.minecities.town.Towns;
@@ -107,7 +108,11 @@ public class LifeScenes implements Scene {
 
 		// Le même pain cinq fois lasse ; des repas variés, avec un bon plat, rendent heureux.
 		UUID[] eaters = stage.compute(server -> {
-			List<CitizenEntity> civilians = civilians(server);
+			// Deux citoyens logés : la maison n'a que quatre lits, et le sans-logis serait moins heureux
+			// quoi qu'il mange.
+			Town town = town(server);
+			List<CitizenEntity> civilians = civilians(server).stream()
+					.filter(c -> town.resident(c.getUUID()).filter(Resident::hasHome).isPresent()).toList();
 			CitizenEntity bored = civilians.get(0);
 			CitizenEntity gourmet = civilians.get(1);
 			for (int i = 0; i < 5; i++) {
