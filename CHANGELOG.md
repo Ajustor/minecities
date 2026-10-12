@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.5.0 — 2026-10-12
+
+### Fixes
+
+- Citizens with full pockets pick back up what they had to drop, instead of losing it
+- Builders with full pockets make room before fetching a tool or material, instead of dropping it
+- Couriers only hand over what fits in the builder's pockets
 ## 1.4.0 — 2026-10-12
 
 ### New features

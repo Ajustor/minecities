@@ -1,5 +1,12 @@
 # Journal des modifications
 
+## 1.5.0 — 2026-10-12
+
+### Corrections
+
+- Un citoyen aux poches pleines reprend ce qu'il a dû poser par terre, au lieu de le perdre
+- Les bâtisseurs aux poches pleines font de la place avant d'aller chercher un outil ou un matériau, au lieu de le laisser tomber
+- Le livreur ne remet que ce qui tient dans les poches du bâtisseur
 ## 1.4.0 — 2026-10-12
 
 ### Nouveautés
