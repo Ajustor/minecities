@@ -81,7 +81,8 @@ export default {
       return reply(200, { ok: true, ref: page.id.slice(0, 8) });
     } catch (e) {
       console.error(e);
-      return reply(502, { error: "notion" });
+      // Le refus de Notion (code et message, sans rien de secret) : de quoi comprendre ce qui cloche.
+      return reply(502, { error: "notion", step: e.step, code: e.code, message: e.notion });
     }
   },
 };
@@ -133,7 +134,7 @@ function client(token) {
       body: body ? JSON.stringify(body) : undefined,
     });
     const json = await res.json();
-    if (!res.ok) throw new Error(`${method} ${path}: ${res.status} ${JSON.stringify(json)}`);
+    if (!res.ok) throw refusal(`${method} ${path}`, res.status, json);
     return json;
   };
   call.token = token;
@@ -153,8 +154,17 @@ async function upload(notion, file) {
     headers: { "Authorization": `Bearer ${notion.token}`, "Notion-Version": NOTION_VERSION },
     body,
   });
-  if (!res.ok) throw new Error(`upload ${name}: ${res.status} ${await res.text()}`);
+  if (!res.ok) throw refusal(`upload ${name}`, res.status, await res.json().catch(() => ({})));
   return { id: created.id, name, image };
+}
+
+/** Une erreur de Notion : l'étape, son code (object_not_found, unauthorized…) et son message. */
+function refusal(step, status, json) {
+  const error = new Error(`${step}: ${status} ${JSON.stringify(json)}`);
+  error.step = step;
+  error.code = json.code || String(status);
+  error.notion = json.message || "";
+  return error;
 }
 
 function select(value) {
