@@ -1,7 +1,8 @@
 # Build du mod à chaque pull request et à chaque push sur master (ou à la demande) : compilation,
-# tests (relevé des maisons, villes et paliers, faim, clés fr_fr/en_us), puis le jar du mod en
-# artefact téléchargeable, nommé d'après sa version et son commit. La release au tag est dans
-# release.yml.
+# tests unitaires (relevé des maisons, villes et paliers, faim, clés fr_fr/en_us), puis le jar du mod
+# en artefact téléchargeable, nommé d'après sa version et son commit. En parallèle, les scènes de jeu
+# sans fenêtre (src/gametest), en deux lots : le bâtisseur, le plus long, seul ; toutes les autres
+# ensemble. La release au tag est dans release.yml.
 name: build
 on:
   pull_request:
@@ -35,7 +36,7 @@ jobs:
       - name: make gradle wrapper executable
         run: chmod +x ./gradlew
       - name: build
-        run: ./gradlew build
+        run: ./gradlew build -x runGameTest
       - name: name the jar
         id: jar
         run: |
@@ -55,3 +56,29 @@ jobs:
           name: ${{ steps.jar.outputs.name }}
           path: ${{ steps.jar.outputs.path }}
           if-no-files-found: error
+
+  scenes:
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        scenes:
+          - build
+          - city,work,countryside,village,family,raid,life,market,robust,industry,crafts,council,logistics
+    name: scenes (${{ matrix.scenes == 'build' && 'bâtisseur' || 'les autres' }})
+    steps:
+      - name: checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: setup jdk
+        uses: actions/setup-java@v5
+        with:
+          java-version: '25'
+          distribution: 'microsoft'
+      - name: setup gradle
+        uses: gradle/actions/setup-gradle@v6
+      - name: make gradle wrapper executable
+        run: chmod +x ./gradlew
+      - name: play the scenes
+        run: ./gradlew runGameTest -PminecitiesGametest=${{ matrix.scenes }}
