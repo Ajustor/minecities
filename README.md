@@ -211,6 +211,12 @@ version du mod, les autres mods et le temps de jeu.
 | `missing_citizen_minutes` | 60 | un citoyen jamais revu depuis tant de minutes, sa maison chargée, est rayé (0 : jamais) |
 | `give_guide` | vrai | chaque joueur reçoit le guide de la ville à sa première venue |
 
+### Jade
+
+Avec [Jade](https://modrinth.com/mod/jade) (facultatif), l'infobulle d'un citoyen dit sa faim et s'il
+est logé, et celle d'une plaque de maison l'état de son dernier relevé. Chaque ligne se coupe dans la
+configuration de Jade. Sans Jade, rien ne change.
+
 ### Recettes
 
 - **Hôtel de ville** : cloche au centre du haut, entre deux émeraudes ; pupitre au centre, entouré
