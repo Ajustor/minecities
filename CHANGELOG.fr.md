@@ -1,5 +1,18 @@
 # Journal des modifications
 
+## 1.4.0 — 2026-10-12
+
+### Nouveautés
+
+- Entrepôt : un registre d'entrepôt fait d'un bâtiment la réserve commune (le grenier garde la nourriture et le trésor)
+- Les livreurs font la navette entre les ateliers et l'entrepôt, et garnissent les ateliers à l'avance
+- Nouveau métier : charpentier (établi de charpentier), pour les planches et les ouvrages de bois des chantiers
+- Le forgeron fait cisailles et blocs de fer, le verrier des fioles, l'archer ses flèches, l'inventeur sculpte ses citrouilles
+
+### Corrections
+
+- Les bâtisseurs récupèrent les lits et les portes qu'ils démontent, et scient leurs bûches quand les planches manquent
+- Le livreur ne perd plus ce qu'il tient en main, et remet toujours sa livraison au bâtisseur
 ## 1.3.0 — 2026-10-12
 
 ### Nouveautés
