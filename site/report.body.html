@@ -1,5 +1,6 @@
 <style>
   html[lang="fr"] span[data-lang="fr"], html[lang="en"] span[data-lang="en"] { display: inline; }
+  form.report code, .report-status code { overflow-wrap: anywhere; }
   form.report fieldset { border: 0; background: var(--card); border-radius: 8px; padding: 16px 20px; margin: 20px 0; min-width: 0; }
   form.report legend { font-weight: bold; font-size: 1.15rem; padding: 0; float: left; width: 100%; margin-bottom: 8px; }
   form.report legend + * { clear: both; }
@@ -7,13 +8,14 @@
   form.report .hint { color: var(--muted); font-size: .85rem; font-weight: normal; }
   form.report input[type=text], form.report input[type=number], form.report input[type=email],
   form.report select, form.report textarea {
-    width: 100%; font: inherit; font-size: .95rem; color: var(--ink); background: var(--paper);
+    width: 100%; max-width: 100%; min-width: 0; font: inherit; font-size: .95rem; color: var(--ink); background: var(--paper);
     border: 1px solid var(--muted); border-radius: 6px; padding: 8px 10px;
   }
   form.report textarea { min-height: 96px; resize: vertical; }
   form.report textarea.mods { min-height: 64px; font-family: ui-monospace, Consolas, monospace; font-size: .85rem; }
-  form.report .row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0 16px; }
-  form.report .kinds { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
+  form.report .row { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr)); gap: 0 16px; }
+  form.report .row > div { min-width: 0; }
+  form.report .kinds { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(150px, 100%), 1fr)); gap: 8px; }
   form.report .kinds label { margin: 0; font-weight: normal; border: 1px solid var(--muted); border-radius: 6px;
     padding: 10px 12px; cursor: pointer; display: flex; gap: 8px; align-items: flex-start; }
   form.report .kinds label:has(input:checked) { border-color: var(--accent); outline: 2px solid var(--accent); }
