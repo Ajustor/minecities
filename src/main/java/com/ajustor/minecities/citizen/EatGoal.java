@@ -84,6 +84,10 @@ public class EatGoal extends Goal {
 
 	@Override
 	public void tick() {
+		// Le garde-manger a pu se vider (ou disparaître) au tick précédent : le but s'arrête.
+		if (pantry == null) {
+			return;
+		}
 		elapsed++;
 		citizen.getLookControl().setLookAt(pantry.getX() + 0.5, pantry.getY() + 0.5, pantry.getZ() + 0.5);
 		if (!citizen.reached(pantry)) {
