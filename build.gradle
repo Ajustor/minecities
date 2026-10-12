@@ -46,10 +46,31 @@ loom {
 	}
 }
 
+repositories {
+	// Jade, pour l'intégration facultative (compat/jade) : Modrinth sert ses versions en Maven.
+	exclusiveContent {
+		forRepository {
+			maven {
+				name = 'Modrinth'
+				url = 'https://api.modrinth.com/maven'
+			}
+		}
+		filter {
+			includeGroup 'maven.modrinth'
+		}
+	}
+}
+
 dependencies {
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
 	implementation "net.fabricmc:fabric-loader:${project.loader_version}"
 	implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+	// Jade n'est pas requis : on compile contre lui, sans l'embarquer. -PminecitiesJade le met dans le jeu
+	// des runs et des scènes, pour voir les infobulles.
+	compileOnly "maven.modrinth:jade:${project.jade_version}"
+	if (project.hasProperty('minecitiesJade')) {
+		runtimeOnly "maven.modrinth:jade:${project.jade_version}"
+	}
 
 	testImplementation platform('org.junit:junit-bom:5.13.4')
 	testImplementation 'org.junit.jupiter:junit-jupiter'

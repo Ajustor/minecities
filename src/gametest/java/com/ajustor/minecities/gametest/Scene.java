@@ -13,7 +13,8 @@ public interface Scene {
 	List<Scene> ALL = List.of(new CityScenes(), new WorkScenes(), new CountrysideScenes(), new VillageScenes(),
 			new BuildScenes(), new FamilyScenes(), new RaidScenes(), new LifeScenes(), new MarketScenes(),
 			new RobustScenes(), new IndustryScenes(), new CraftScenes(), new CouncilScenes(), new StyleScenes(),
-			new LogisticsScenes(), new GuideScenes(), new StructureScenes(), new PlanScenes());
+			new LogisticsScenes(), new GuideScenes(), new StructureScenes(), new PlanScenes(),
+			new JadeScenes());
 
 	/** Son nom, pour {@code -PminecitiesGametest}. */
 	String name();

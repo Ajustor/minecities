@@ -507,5 +507,13 @@
   "screen.minecities.plans.take": "Prendre",
   "screen.minecities.plans.size": "%s × %s, %s de haut",
   "screen.minecities.plans.locked": "dès le palier %s",
-  "screen.minecities.plans.none": "Aucun schéma."
+  "screen.minecities.plans.none": "Aucun schéma.",
+  "jade.minecities.hunger": "Faim : %s",
+  "jade.minecities.housed": "Logé",
+  "jade.minecities.homeless": "Sans logis",
+  "jade.minecities.plaque.valid": "Maison enregistrée",
+  "jade.minecities.plaque.invalid": "Maison non reconnue : cliquez la plaque pour savoir pourquoi",
+  "jade.minecities.plaque.none": "Pas encore relevée",
+  "config.jade.plugin_minecities.citizen": "Citoyen MineCities : faim et logement",
+  "config.jade.plugin_minecities.house_plaque": "Plaque de maison MineCities"
 }

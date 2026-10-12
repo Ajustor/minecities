@@ -507,5 +507,13 @@
   "screen.minecities.plans.take": "Take",
   "screen.minecities.plans.size": "%s × %s, %s high",
   "screen.minecities.plans.locked": "from %s tier",
-  "screen.minecities.plans.none": "No blueprints."
+  "screen.minecities.plans.none": "No blueprints.",
+  "jade.minecities.hunger": "Hunger: %s",
+  "jade.minecities.housed": "Housed",
+  "jade.minecities.homeless": "Homeless",
+  "jade.minecities.plaque.valid": "House registered",
+  "jade.minecities.plaque.invalid": "House not recognized: click the plaque to see why",
+  "jade.minecities.plaque.none": "Not surveyed yet",
+  "config.jade.plugin_minecities.citizen": "MineCities citizen: hunger and housing",
+  "config.jade.plugin_minecities.house_plaque": "MineCities house plaque"
 }

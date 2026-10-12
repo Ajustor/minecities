@@ -125,6 +125,12 @@ deputies and operators may break blocks of declared buildings), `hall_grace_minu
 hall can be placed back at the same spot for that long), `missing_citizen_minutes` (citizens never
 seen again are struck off) and `give_guide` (every player gets the town guide on their first visit).
 
+## Jade
+
+With [Jade](https://modrinth.com/mod/jade) (optional), a citizen's tooltip shows their hunger and
+whether they are housed, and a house plaque's tooltip shows its last survey. Each line can be turned
+off in Jade's settings. Without Jade, nothing changes.
+
 ## Commands (`/minecities` or `/ville`)
 
 `info`, `list`, `citizens`, `rename <name>`, `mayor <player>`, `deputy add|remove <player>`,

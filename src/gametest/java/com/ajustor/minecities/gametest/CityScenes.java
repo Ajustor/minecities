@@ -201,7 +201,7 @@ public class CityScenes implements Scene {
 	}
 
 	/** Une esplanade, l'hôtel de ville au centre, et une maison de planches de deux lits au sud-est. */
-	private static void build(MinecraftServer server) {
+	static void build(MinecraftServer server) {
 		ServerLevel level = server.overworld();
 		for (int x = -16; x <= 16; x++) {
 			for (int z = -16; z <= 16; z++) {
