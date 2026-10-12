@@ -169,8 +169,11 @@ public class BuildScenes implements Scene {
 		int ground = level.getEntitiesOfClass(net.minecraft.world.entity.item.ItemEntity.class,
 				new net.minecraft.world.phys.AABB(-64, 0, -64, 64, 200, 64), e -> e.getItem().is(item)).stream()
 				.mapToInt(e -> e.getItem().getCount()).sum();
-		return "%s : %d au plan, %d posés à leur place, %d de ce bloc alentour, %d au grenier, %d en poche, %d par terre."
-				.formatted(item, needed, placed, elsewhere, granary, pockets, ground);
+		String content = level.getBlockEntity(HALL) instanceof TownHallBlockEntity hall
+				? java.util.stream.IntStream.range(0, hall.getContainerSize()).mapToObj(hall::getItem)
+						.filter(s -> !s.isEmpty()).map(ItemStack::toString).toList().toString() : "?";
+		return "%s : %d au plan, %d posés à leur place, %d de ce bloc alentour, %d au grenier, %d en poche, %d par terre. Grenier : %s."
+				.formatted(item, needed, placed, elsewhere, granary, pockets, ground, content);
 	}
 
 	private static Town town(MinecraftServer server) {
