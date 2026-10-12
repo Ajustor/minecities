@@ -112,7 +112,8 @@ public class CouncilScenes implements Scene {
 				"le garde n'est pas armé de pied en cap", server -> "lingots " + granary(server, HALL, Items.IRON_INGOT)
 						+ ", au grenier casques " + granary(server, HALL, Items.IRON_HELMET) + ", jambières "
 						+ granary(server, HALL, Items.IRON_LEGGINGS) + ", bottes " + granary(server, HALL, Items.IRON_BOOTS)
-						+ ", émeraudes " + granary(server, HALL, Items.EMERALD) + " ; " + town(server).houses() + ".");
+						+ ", émeraudes " + granary(server, HALL, Items.EMERALD) + ", par terre " + dropped(server) + " ; "
+						+ town(server).houses() + ".");
 		waitOrExplain(stage, server -> granary(server, HALL, Items.LEATHER) >= 2, 2400, "le tanneur n'a pas tanné");
 		stage.run(server -> citizens(server).stream().filter(CitizenEntity::isGuard).findFirst()
 				.ifPresent(g -> {
@@ -169,6 +170,17 @@ public class CouncilScenes implements Scene {
 
 	private static Town town(MinecraftServer server) {
 		return Towns.get(server).byHall(server.overworld().dimension(), HALL).orElseThrow();
+	}
+
+	/** Les objets qui traînent par terre (une pièce d'armure perdue, par exemple). */
+	private static java.util.List<String> dropped(MinecraftServer server) {
+		java.util.List<String> dropped = new java.util.ArrayList<>();
+		server.overworld().getAllEntities().forEach(e -> {
+			if (e instanceof net.minecraft.world.entity.item.ItemEntity item) {
+				dropped.add(item.getItem() + " en " + item.blockPosition().toShortString());
+			}
+		});
+		return dropped;
 	}
 
 	private static int granary(MinecraftServer server, BlockPos hall, Item item) {
