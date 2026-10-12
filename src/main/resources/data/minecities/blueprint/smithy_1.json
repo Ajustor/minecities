@@ -16,8 +16,8 @@
    ".... ....",
    ".PPPDPPP.",
    ".Pt   CP.",
-   ".P     P.",
-   ".P     P.",
+   ".Pn    P.",
+   ".P3    P.",
    ".P     P.",
    "OP    %P.",
    ".PPPPPPP.",
@@ -75,6 +75,7 @@
   ")": "{trapdoor}[facing=east,half=top,open=true]",
   "*": "minecraft:campfire[lit=true,signal_fire=false,facing=north]",
   "+": "minecraft:potted_poppy",
+  "3": "minecraft:cauldron",
   "=": "{trapdoor}[facing=south,half=top,open=true]",
   "C": "minecraft:chest[facing=south]",
   "D": "{door}[facing=north,half=lower,hinge=left]",
@@ -86,6 +87,7 @@
   "^": "{steps}[facing=south,half=bottom,shape=straight]",
   "_": "minecraft:coarse_dirt",
   "d": "{door}[facing=north,half=upper,hinge=left]",
+  "n": "minecraft:anvil[facing=east]",
   "t": "minecraft:torch"
  },
  "upgrade": "minecities:smithy_2"

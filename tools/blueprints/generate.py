@@ -86,6 +86,19 @@ KEY = {
     "-": "{carpet}",
     "+": "minecraft:potted_poppy",
     "|": "{frame}[axis=x]",
+    # Le mobilier (v1.3) : rien qui soit un poste de travail, pour ne pas créer d'emploi par mégarde.
+    "A": "minecraft:crafting_table",
+    "1": "minecraft:candle[candles=3,lit=true]",
+    "2": "minecraft:decorated_pot",
+    "3": "minecraft:cauldron",
+    "5": "minecraft:cake",
+    "6": "minecraft:pumpkin",
+    "7": "minecraft:melon",
+    "8": "minecraft:rail",
+    "@": "minecraft:potted_oak_sapling",
+    ";": "minecraft:smooth_stone_slab[type=top]",
+    ":": "{roof_slab}[type=top]",
+    "9": "minecraft:white_wool",
     "y": "minecraft:barrel[facing=north]",
     "<": "{roof_stairs}[facing=east,half=bottom,shape=straight]",
     ">": "{roof_stairs}[facing=west,half=bottom,shape=straight]",
@@ -430,10 +443,83 @@ def workshop_level(level, station, beds=(), more=None):
     return decorate(level, levelled(level, w, d, beds=beds, extras=extras), w, d, False)
 
 
+# Le mobilier de chaque bâtiment, dans l'ordre où on le pose le long des murs ; « T » est une table
+# (un piquet de barrière et une bougie dessus). Plus le niveau est haut, plus il y a de meubles.
+FURNITURE = {
+    "house": ["A", "T", "2", "@", "C", ":", "T", "@"],
+    "kitchen": [";", ";", "3", "T", "5", "2", ";", "@"],
+    "bakery": [";", "5", "2", ";", "6", "T", "5", "@"],
+    "sawmill": ["P", "P", "2", "A", "@", "P", "T", "2"],
+    "builder_hut": ["A", "n", "2", "T", "P", "@", "2", "A"],
+    "smithy": ["n", "3", "I", "2", "T", "n", "I", "2"],
+    "infirmary": ["3", "@", "T", "9", "@", "2", "T", "9"],
+    "inventor_workshop": ["n", "A", "2", "T", "6", "@", "n", "2"],
+    "farm": ["6", "7", "@", "2", "6", "T", "7", "@"],
+    "barn": ["2", "6", "@", "T", "2", "7", "@", "2"],
+    "fishery": ["2", "@", "T", "2", "3", "@", "2", "T"],
+    "market": ["2", "6", "7", "T", "2", "C", "@", "2"],
+    "barracks": ["I", "2", "n", "T", "I", "@", "2", "A"],
+    "mine": ["8", "2", "n", "8", "T", "2", "8", "@"],
+    "jeweler_workshop": ["T", "2", "@", "A", "T", "2", "@", "C"],
+    "masonry": ["2", "Z", "Z", "T", "A", "2", "Z", "@"],
+    "glassworks": ["2", "3", "T", "@", "2", "A", "T", "2"],
+    "weavery": ["9", "9", "2", "T", "@", "9", "2", "A"],
+    "apiary": ["@", "@", "2", "T", "@", "2", "6", "@"],
+    "tannery": ["3", "2", "T", "@", "3", "2", "A", "@"],
+    "library": ["#", "T", "#", "@", "#", "T", "#", "2"],
+}
+# Combien de meubles à chaque niveau.
+FURNISHED = {1: 2, 2: 3, 3: 5, 4: 8}
+
+
+def furnish(level, out, family):
+    """
+    Meuble un bâtiment déjà habillé (décalé d'une colonne : murs en x = 1 et x = w, porte en x = 4) :
+    le long des murs ouest et est puis du fond, sur les cases libres, en laissant l'allée centrale, le
+    devant de la porte, les lits et les postes de travail dégagés.
+    """
+    props = FURNITURE.get(family, [])[:FURNISHED[level]]
+    if not props:
+        return out
+    floor = out[1]
+    depth = len(floor) - 1
+    width = len(floor[0])
+    w = width - 2
+
+    def free(x, z):
+        if not (2 <= x <= w - 1 and 1 <= z <= depth - 2) or floor[z][x] != " ":
+            return False
+        if x == 4 or z == 1 and abs(x - 4) <= 1:
+            return False
+        # Ne pas boucher l'accès d'un lit ni d'un poste (la case devant eux).
+        for dz in (-1, 1):
+            if 0 <= z + dz < depth and floor[z + dz][x] not in (" ", "-") and floor[z + dz][x] in "bBskloe%im&jqvzwxNphra":
+                return False
+        return True
+
+    cells = [(2, z) for z in range(2, depth - 1)] + [(w - 1, z) for z in range(2, depth - 1)] \
+        + [(x, depth - 2) for x in range(3, w - 1)]
+    placed = 0
+    for x, z in cells:
+        if placed >= len(props):
+            break
+        if not free(x, z):
+            continue
+        prop = props[placed]
+        if prop == "T":
+            floor[z][x] = "E"
+            if out[2][z][x] == " ":
+                out[2][z][x] = "1"
+        else:
+            floor[z][x] = prop
+        placed += 1
+    return out
+
+
 def series(prints, name, make, outside=None, ext_width=8, min_tier=None):
     """Les quatre niveaux d'un bâtiment : nom_1 … nom_4, chacun s'améliore en le suivant."""
     for level in range(1, 5):
-        layers = make(level)
+        layers = furnish(level, make(level), name)
         w = len(layers[0][0])
         d = len(layers[0])
         body = extend(layers, w, d, ext_width, outside(w)) if outside else rows(layers)
