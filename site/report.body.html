@@ -366,7 +366,7 @@
     fetch(ENDPOINT, { method: "POST", body: data })
       .then(function (res) { return res.json().catch(function () { return {}; }).then(function (body) { return { ok: res.ok, body: body }; }); })
       .then(function (r) {
-        if (!r.ok) throw new Error(r.body.error || "HTTP");
+        if (!r.ok) throw new Error([r.body.error || "HTTP", r.body.code].filter(Boolean).join(" : "));
         form.reset(); files = []; render(); form.dataset.kind = "bug"; translate();
         show(t("<strong>Merci !</strong> Votre signalement est bien arrivé" + (r.body.ref ? " (n° " + r.body.ref + ")" : "") + ". On s'en occupe.",
                "<strong>Thank you!</strong> Your report has arrived" + (r.body.ref ? " (no. " + r.body.ref + ")" : "") + ". We're on it."));
