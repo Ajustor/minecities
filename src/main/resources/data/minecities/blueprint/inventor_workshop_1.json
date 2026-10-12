@@ -16,8 +16,8 @@
    ".... ....",
    ".PPPDPPP.",
    ".Pt   CP.",
-   ".P     P.",
-   ".P     P.",
+   ".Pn    P.",
+   ".PA    P.",
    ".P     P.",
    "OP    iP.",
    ".PPPPPPP.",
@@ -75,6 +75,7 @@
   "*": "minecraft:campfire[lit=true,signal_fire=false,facing=north]",
   "+": "minecraft:potted_poppy",
   "=": "{trapdoor}[facing=south,half=top,open=true]",
+  "A": "minecraft:crafting_table",
   "C": "minecraft:chest[facing=south]",
   "D": "{door}[facing=north,half=lower,hinge=left]",
   "E": "{fence}",
@@ -86,6 +87,7 @@
   "_": "minecraft:coarse_dirt",
   "d": "{door}[facing=north,half=upper,hinge=left]",
   "i": "minecraft:smithing_table",
+  "n": "minecraft:anvil[facing=east]",
   "t": "minecraft:torch"
  },
  "upgrade": "minecities:inventor_workshop_2"

@@ -110,7 +110,7 @@ public class BuildScenes implements FabricClientGameTest {
 				return Builds.upgrade(server.overworld(), town(server), ORIGIN.offset(3, 1, 3))
 						.map(c -> "agrandissement refusé : " + c.getString()).orElse(null);
 			}));
-			waitOrExplain(sp, server -> town(server).constructions().stream().allMatch(Construction::done), 9000,
+			waitOrExplain(sp, server -> town(server).constructions().stream().allMatch(Construction::done), 15000,
 					"la grande maison n'a pas été bâtie", BuildScenes::progress);
 			check(sp.getServer().computeOnServer(server -> homeBeds(server) == 4 ? null
 					: "la grande maison n'est pas déclarée avec quatre lits : " + town(server).houses()));

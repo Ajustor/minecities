@@ -135,9 +135,10 @@ puis un tag `vX.Y.0` qui publie la release.
    onglet Mairie, armure visible sur les citoyens.
 9. **v1.2** (fait) — des bâtiments plus travaillés : débords de toit, volets, pignons à poutre et
    lucarne, cheminées qui fument, fenêtres en façade, tapis, pots de fleurs, bibliothèques.
-10. **v1.x** — suites du brief 09 (aperçu fantôme, plans, structures enregistrées), styles de
+10. **v1.3** (fait) — des intérieurs meublés selon le métier et le niveau.
+11. **v1.x** — suites du brief 09 (aperçu fantôme, plans, structures enregistrées), styles de
    bâtiments plus travaillés.
-11. **v2** — brief 02 (habitants joueurs, rangs, décrets, élections).
+12. **v2** — brief 02 (habitants joueurs, rangs, décrets, élections).
 
 | # | Brief | Résumé |
 |---|---|---|
