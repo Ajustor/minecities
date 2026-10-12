@@ -1,5 +1,14 @@
 # Journal des modifications
 
+## 1.3.0 — 2026-10-12
+
+### Nouveautés
+
+- Intérieurs meublés selon le métier et le niveau du bâtiment (tables, bougies, comptoirs, jarres, plantes…)
+
+### Corrections
+
+- Correction d'un plantage rare quand le garde-manger d'un citoyen se vide pendant qu'il mange
 ## 1.2.0 — 2026-10-11
 
 ### Nouveautés

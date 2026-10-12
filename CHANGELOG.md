@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.3.0 — 2026-10-12
+
+### New features
+
+- Interiors furnished after each building's trade and level (tables, candles, counters, pots, plants…)
+
+### Fixes
+
+- Fixed a rare crash when a citizen's pantry empties while they eat
 ## 1.2.0 — 2026-10-11
 
 ### New features
