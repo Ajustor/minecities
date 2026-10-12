@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.4.0 — 2026-10-12
+
+### New features
+
+- Warehouse: a warehouse ledger makes a building the common store (the granary keeps food and treasury)
+- Couriers shuttle between workshops and the warehouse, and stock workshops in advance
+- New job: carpenter (carpenter's bench), for planks and the woodwork building sites need
+- The smith makes shears and iron blocks, the glassblower bottles, the archer fletches arrows, the inventor carves pumpkins
+
+### Fixes
+
+- Builders recover the beds and doors they dismantle, and saw their logs into planks when planks run out
+- Couriers no longer lose what they hold, and always hand their delivery over to the builder
 ## 1.3.0 — 2026-10-12
 
 ### New features
