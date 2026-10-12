@@ -11,11 +11,7 @@ import com.ajustor.minecities.town.Town;
 import com.ajustor.minecities.town.TownService;
 import com.ajustor.minecities.town.TownTier;
 import com.ajustor.minecities.town.Towns;
-import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest;
-import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext;
-import net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext;
 import net.minecraft.client.CameraType;
-import net.minecraft.client.gui.screens.worldselection.WorldCreationUiState;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
@@ -32,7 +28,6 @@ import static com.ajustor.minecities.gametest.CityScenes.check;
 import static com.ajustor.minecities.gametest.CityScenes.citizens;
 import static com.ajustor.minecities.gametest.CityScenes.command;
 import static com.ajustor.minecities.gametest.CityScenes.hideGui;
-import static com.ajustor.minecities.gametest.CityScenes.look;
 import static com.ajustor.minecities.gametest.CityScenes.waitOrExplain;
 
 /**
@@ -42,7 +37,7 @@ import static com.ajustor.minecities.gametest.CityScenes.waitOrExplain;
  *
  * <p>{@code ./gradlew runClientGameTest -PminecitiesGametest=crafts}
  */
-public class CraftScenes implements FabricClientGameTest {
+public class CraftScenes implements Scene {
 	private static final int Y = 100;
 	private static final BlockPos HALL = new BlockPos(0, Y, 0);
 	private static final List<String> WORKSHOPS = List.of("jeweler_workshop_1", "masonry_1", "glassworks_1",
@@ -52,83 +47,82 @@ public class CraftScenes implements FabricClientGameTest {
 	private static final BlockPos HIVE = new BlockPos(-20, Y, -2);
 
 	@Override
-	public void runTest(ClientGameTestContext context) {
-		if (!CityScenes.selected("crafts")) {
-			return;
-		}
-		try (TestSingleplayerContext sp = context.worldBuilder()
-				.adjustSettings(c -> c.setGameMode(WorldCreationUiState.SelectedGameMode.CREATIVE)).create()) {
-			Families.setMinimum(0);
-			command(sp, "time set 1000");
-			command(sp, "gamerule doDaylightCycle false");
-			command(sp, "gamerule doMobSpawning false");
-			command(sp, "weather clear");
-			context.waitTicks(20);
-			sp.getServer().runOnServer(CraftScenes::build);
-			context.runOnClient(mc -> mc.options.setCameraType(CameraType.FIRST_PERSON));
+	public String name() {
+		return "crafts";
+	}
 
-			check(sp.getServer().computeOnServer(server -> {
-				ServerLevel level = server.overworld();
-				ServerPlayer player = server.getPlayerList().getPlayers().getFirst();
-				TownService.found(level, HALL, player, new ItemStack(McItems.TOWN_HALL));
-				Town town = town(server);
-				town.forceTier(Optional.of(TownTier.TOWN));
-				TownService.retier(level, town);
-				for (int i = 0; i < WORKSHOPS.size(); i++) {
-					TownService.immigrate(level, town);
-				}
-				for (int i = 0; i < WORKSHOPS.size(); i++) {
-					RaidScenes.plaque(level, origin(i)).ifPresent(p -> TownService.declareHouse(level, p, player));
-				}
-				RaidScenes.plaque(level, HOUSE).ifPresent(p -> TownService.declareHouse(level, p, player));
-				for (Job job : List.of(Job.JEWELER, Job.MASON, Job.GLASSBLOWER, Job.WEAVER, Job.BEEKEEPER,
-						Job.LIBRARIAN, Job.MERCHANT)) {
-					if (town.workers(job) != 1) {
-						return "pas de " + job.serializedName() + " : " + town.residents() + " ; " + town.houses();
-					}
-				}
-				return null;
-			}));
-			look(sp, 6, Y + 16, 2, 6, Y, -16);
-			context.runOnClient(mc -> hideGui(mc, true));
-			context.waitTicks(20);
-			context.takeScreenshot("crafts_0_workshops");
-			CityScenes.film(context, sp, "crafts", 40, 20, server -> false);
+	@Override
+	public void play(Stage stage) {
+		Families.setMinimum(0);
+		stage.command("time set 1000");
+		stage.command("gamerule advance_time false");
+		stage.command("gamerule spawn_mobs false");
+		stage.command("weather clear");
+		stage.waitTicks(20);
+		stage.run(CraftScenes::build);
+		stage.client(mc -> mc.options.setCameraType(CameraType.FIRST_PERSON));
 
-			// Chacun son ouvrage.
-			waitOrExplain(sp, server -> granary(server, Items.BRICKS) >= 2 && granary(server, Items.GLASS) >= 1
-							&& granary(server, Items.BED.white()) >= 1 && granary(server, Items.BOOK) >= 1
-							&& granary(server, Items.HONEY_BOTTLE) >= 1, 3600, "les artisans n'ont pas tout fait",
-					server -> "briques " + granary(server, Items.BRICKS) + ", verre " + granary(server, Items.GLASS)
-							+ ", lits " + granary(server, Items.BED.white()) + ", livres " + granary(server, Items.BOOK)
-							+ ", miel " + granary(server, Items.HONEY_BOTTLE) + ".");
-			// Les bijoux se vendent : le diadème, la bague et la broche rapportent 19 émeraudes.
-			waitOrExplain(sp, server -> town(server).chronicle().earnedToday(server.overworld().getGameTime()) >= 19,
-					7200, "les bijoux ne se sont pas vendus", server -> "diadème " + granary(server, McItems.DIADEM)
-							+ ", bague " + granary(server, McItems.GOLD_RING) + ", broche "
-							+ granary(server, McItems.AMETHYST_BROOCH) + ", gains "
-							+ town(server).chronicle().earnedToday(server.overworld().getGameTime()) + ".");
-			// La bibliothèque réjouit la ville.
-			waitOrExplain(sp, server -> citizens(server).stream().allMatch(c -> c.moodDetail().factors()
-					.contains(new Happiness.Factor("culture", 1))), 400, "la bibliothèque ne réjouit personne");
-
-			// Leurs couvre-chefs.
-			sp.getServer().runOnServer(server -> {
-				List<CitizenEntity> all = citizens(server).stream()
-						.sorted(java.util.Comparator.comparing(c -> c.job().map(j -> j.job().ordinal()).orElse(99)))
-						.toList();
-				for (int i = 0; i < all.size(); i++) {
-					CitizenEntity c = all.get(i);
-					c.setNoAi(true);
-					c.snapTo(-4.8 + i * 1.6, Y, 34.5, 180, 0);
-					c.setYHeadRot(180);
-					c.setYBodyRot(180);
+		check(stage.compute(server -> {
+			ServerLevel level = server.overworld();
+			ServerPlayer player = server.getPlayerList().getPlayers().getFirst();
+			TownService.found(level, HALL, player, new ItemStack(McItems.TOWN_HALL));
+			Town town = town(server);
+			town.forceTier(Optional.of(TownTier.TOWN));
+			TownService.retier(level, town);
+			for (int i = 0; i < WORKSHOPS.size(); i++) {
+				TownService.immigrate(level, town);
+			}
+			for (int i = 0; i < WORKSHOPS.size(); i++) {
+				RaidScenes.plaque(level, origin(i)).ifPresent(p -> TownService.declareHouse(level, p, player));
+			}
+			RaidScenes.plaque(level, HOUSE).ifPresent(p -> TownService.declareHouse(level, p, player));
+			for (Job job : List.of(Job.JEWELER, Job.MASON, Job.GLASSBLOWER, Job.WEAVER, Job.BEEKEEPER,
+					Job.LIBRARIAN, Job.MERCHANT)) {
+				if (town.workers(job) != 1) {
+					return "pas de " + job.serializedName() + " : " + town.residents() + " ; " + town.houses();
 				}
-			});
-			look(sp, 0, Y + 2.3, 28, 0, Y + 1.5, 34.5);
-			context.waitTicks(10);
-			context.takeScreenshot("crafts_1_hats");
-		}
+			}
+			return null;
+		}));
+		stage.look(6, Y + 16, 2, 6, Y, -16);
+		stage.client(mc -> hideGui(mc, true));
+		stage.waitTicks(20);
+		stage.shot("crafts_0_workshops");
+		stage.film("crafts", 40, 20, server -> false);
+
+		// Chacun son ouvrage.
+		waitOrExplain(stage, server -> granary(server, Items.BRICKS) >= 2 && granary(server, Items.GLASS) >= 1
+						&& granary(server, Items.BED.white()) >= 1 && granary(server, Items.BOOK) >= 1
+						&& granary(server, Items.HONEY_BOTTLE) >= 1, 3600, "les artisans n'ont pas tout fait",
+				server -> "briques " + granary(server, Items.BRICKS) + ", verre " + granary(server, Items.GLASS)
+						+ ", lits " + granary(server, Items.BED.white()) + ", livres " + granary(server, Items.BOOK)
+						+ ", miel " + granary(server, Items.HONEY_BOTTLE) + ".");
+		// Les bijoux se vendent : le diadème, la bague et la broche rapportent 19 émeraudes.
+		waitOrExplain(stage, server -> town(server).chronicle().earnedToday(server.overworld().getGameTime()) >= 19,
+				7200, "les bijoux ne se sont pas vendus", server -> "diadème " + granary(server, McItems.DIADEM)
+						+ ", bague " + granary(server, McItems.GOLD_RING) + ", broche "
+						+ granary(server, McItems.AMETHYST_BROOCH) + ", gains "
+						+ town(server).chronicle().earnedToday(server.overworld().getGameTime()) + ".");
+		// La bibliothèque réjouit la ville.
+		waitOrExplain(stage, server -> citizens(server).stream().allMatch(c -> c.moodDetail().factors()
+				.contains(new Happiness.Factor("culture", 1))), 400, "la bibliothèque ne réjouit personne");
+
+		// Leurs couvre-chefs.
+		stage.run(server -> {
+			List<CitizenEntity> all = citizens(server).stream()
+					.sorted(java.util.Comparator.comparing(c -> c.job().map(j -> j.job().ordinal()).orElse(99)))
+					.toList();
+			for (int i = 0; i < all.size(); i++) {
+				CitizenEntity c = all.get(i);
+				c.setNoAi(true);
+				c.snapTo(-4.8 + i * 1.6, Y, 34.5, 180, 0);
+				c.setYHeadRot(180);
+				c.setYBodyRot(180);
+			}
+		});
+		stage.look(0, Y + 2.3, 28, 0, Y + 1.5, 34.5);
+		stage.waitTicks(10);
+		stage.shot("crafts_1_hats");
 	}
 
 	private static BlockPos origin(int i) {

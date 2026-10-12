@@ -16,11 +16,7 @@ import com.ajustor.minecities.town.Job;
 import com.ajustor.minecities.town.Town;
 import com.ajustor.minecities.town.TownService;
 import com.ajustor.minecities.town.Towns;
-import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest;
-import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext;
-import net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext;
 import net.minecraft.client.CameraType;
-import net.minecraft.client.gui.screens.worldselection.WorldCreationUiState;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
@@ -41,7 +37,6 @@ import static com.ajustor.minecities.gametest.CityScenes.check;
 import static com.ajustor.minecities.gametest.CityScenes.citizens;
 import static com.ajustor.minecities.gametest.CityScenes.command;
 import static com.ajustor.minecities.gametest.CityScenes.hideGui;
-import static com.ajustor.minecities.gametest.CityScenes.look;
 import static com.ajustor.minecities.gametest.CityScenes.waitOrExplain;
 
 /**
@@ -53,7 +48,7 @@ import static com.ajustor.minecities.gametest.CityScenes.waitOrExplain;
  *
  * <p>{@code ./gradlew runClientGameTest -PminecitiesGametest=life}
  */
-public class LifeScenes implements FabricClientGameTest {
+public class LifeScenes implements Scene {
 	private static final int Y = 100;
 	private static final BlockPos HALL = new BlockPos(0, Y, 0);
 	private static final BlockPos HOUSE = new BlockPos(-6, Y, -16);
@@ -63,232 +58,231 @@ public class LifeScenes implements FabricClientGameTest {
 	private static final BlockPos LONE_WALL = new BlockPos(-4, Y, 4);
 
 	@Override
-	public void runTest(ClientGameTestContext context) {
-		if (!CityScenes.selected("life")) {
-			return;
-		}
-		try (TestSingleplayerContext sp = context.worldBuilder()
-				.adjustSettings(c -> c.setGameMode(WorldCreationUiState.SelectedGameMode.CREATIVE)).create()) {
-			Families.setMinimum(0);
-			command(sp, "time set 1000");
-			command(sp, "gamerule doDaylightCycle false");
-			command(sp, "gamerule doMobSpawning false");
-			command(sp, "weather clear");
-			context.waitTicks(20);
-			sp.getServer().runOnServer(LifeScenes::build);
-			context.runOnClient(mc -> mc.options.setCameraType(CameraType.FIRST_PERSON));
+	public String name() {
+		return "life";
+	}
 
-			// La ville : cinq citoyens, une maison de quatre lits et une infirmerie.
-			check(sp.getServer().computeOnServer(server -> {
-				ServerLevel level = server.overworld();
-				ServerPlayer player = server.getPlayerList().getPlayers().getFirst();
-				TownService.found(level, HALL, player, new ItemStack(McItems.TOWN_HALL));
-				Town town = town(server);
-				for (int i = 0; i < 5; i++) {
-					TownService.immigrate(level, town);
-				}
-				for (BlockPos origin : new BlockPos[]{HOUSE, INFIRMARY}) {
-					RaidScenes.plaque(level, origin).ifPresent(p -> TownService.declareHouse(level, p, player));
-				}
-				command(server, "setblock %d %d %d minecities:house_plaque[facing=south]".formatted(LONE_WALL.getX(),
-						LONE_WALL.getY() + 1, LONE_WALL.getZ() + 1));
-				TownService.declareHouse(level, LONE_WALL.offset(0, 1, 1), player);
-				return town.workers(Job.DOCTOR) == 1 ? null : "pas de médecin : " + town.houses();
-			}));
-			check(sp.getServer().computeOnServer(server -> {
-				ServerLevel level = server.overworld();
-				Optional<BlockPos> plaque = RaidScenes.plaque(level, HOUSE);
-				HousePlaqueBlock.Status house = plaque.map(p -> level.getBlockState(p).getValue(HousePlaqueBlock.STATUS))
-						.orElse(null);
-				HousePlaqueBlock.Status lone = level.getBlockState(LONE_WALL.offset(0, 1, 1))
-						.getValue(HousePlaqueBlock.STATUS);
-				return house == HousePlaqueBlock.Status.VALID && lone == HousePlaqueBlock.Status.INVALID ? null
-						: "plaques : maison " + house + ", mur seul " + lone;
-			}));
-			look(sp, -4, Y + 2, 7.5, -4, Y + 1.3, 5);
-			context.runOnClient(mc -> hideGui(mc, true));
-			context.waitTicks(20);
-			context.takeScreenshot("life_0_red_plaque");
+	@Override
+	public void play(Stage stage) {
+		Families.setMinimum(0);
+		stage.command("time set 1000");
+		stage.command("gamerule advance_time false");
+		stage.command("gamerule spawn_mobs false");
+		stage.command("weather clear");
+		stage.waitTicks(20);
+		stage.run(LifeScenes::build);
+		stage.client(mc -> mc.options.setCameraType(CameraType.FIRST_PERSON));
 
-			// Le même pain cinq fois lasse ; des repas variés, avec un bon plat, rendent heureux.
-			UUID[] eaters = sp.getServer().computeOnServer(server -> {
-				List<CitizenEntity> civilians = civilians(server);
-				CitizenEntity bored = civilians.get(0);
-				CitizenEntity gourmet = civilians.get(1);
-				for (int i = 0; i < 5; i++) {
-					bored.eat(new ItemStack(Items.BREAD));
-				}
-				for (var food : List.of(Items.BREAD, Items.COOKED_BEEF, Items.BAKED_POTATO, Items.CARROT,
-						Items.MUSHROOM_STEW)) {
-					gourmet.eat(new ItemStack(food));
-				}
-				return new UUID[]{bored.getUUID(), gourmet.getUUID()};
-			});
-			context.waitTicks(220);
-			check(sp.getServer().computeOnServer(server -> {
-				CitizenEntity bored = (CitizenEntity) server.overworld().getEntity(eaters[0]);
-				CitizenEntity gourmet = (CitizenEntity) server.overworld().getEntity(eaters[1]);
-				boolean monotonous = bored.moodDetail().factors().contains(new Happiness.Factor("monotonous", -1));
-				boolean varied = gourmet.moodDetail().factors().contains(new Happiness.Factor("varied", 2));
-				return monotonous && varied && gourmet.mood() > bored.mood() ? null
-						: "humeurs : lassé " + bored.mood() + " " + bored.moodDetail().factors() + ", gourmet "
-								+ gourmet.mood() + " " + gourmet.moodDetail().factors();
-			}));
-
-			// Un affamé, devant un grenier varié, ne mange pas trois fois la même chose.
-			UUID hungry = sp.getServer().computeOnServer(server -> {
-				CitizenEntity c = civilians(server).get(2);
-				c.setHunger(3);
-				return c.getUUID();
-			});
-			waitOrExplain(sp, server -> ((CitizenEntity) server.overworld().getEntity(hungry)).hunger() >= 18, 1200,
-					"l'affamé n'a pas mangé");
-			check(sp.getServer().computeOnServer(server -> {
-				CitizenEntity c = (CitizenEntity) server.overworld().getEntity(hungry);
-				return c.diet().variety() >= 2 ? null : "il a mangé toujours la même chose : " + c.diet().meals();
-			}));
-
-			// Le médecin soigne un blessé, et nourrit un affamé.
-			UUID[] patients = sp.getServer().computeOnServer(server -> {
-				List<CitizenEntity> civilians = civilians(server);
-				CitizenEntity hurt = civilians.get(0);
-				CitizenEntity starving = civilians.get(3);
-				hurt.setHealth(4);
-				starving.setHunger(0);
-				return new UUID[]{hurt.getUUID(), starving.getUUID()};
-			});
-			look(sp, 3, Y + 13, 2, 1, Y, -12);
-			context.waitTicks(20);
-			CityScenes.film(context, sp, "doctor", 40, 15, server -> {
-				CitizenEntity hurt = (CitizenEntity) server.overworld().getEntity(patients[0]);
-				CitizenEntity starving = (CitizenEntity) server.overworld().getEntity(patients[1]);
-				return hurt.getHealth() >= 18 && starving.hunger() > 0;
-			});
-			waitOrExplain(sp, server -> {
-				CitizenEntity hurt = (CitizenEntity) server.overworld().getEntity(patients[0]);
-				CitizenEntity starving = (CitizenEntity) server.overworld().getEntity(patients[1]);
-				return hurt.getHealth() >= 18 && starving.hunger() > 0;
-			}, 2400, "le médecin n'a pas soigné ses patients");
-
-			// L'écran : le bonheur moyen, les citoyens et leur humeur, les bâtiments.
-			context.waitTicks(120);
-			TownSnapshot snapshot = sp.getServer().computeOnServer(server -> TownNetwork.snapshot(server.overworld(),
-					town(server), server.getPlayerList().getPlayers().getFirst()));
-			check(snapshot.life().mood() >= 0 && snapshot.buildings().size() == 2 ? null
-					: "écran : bonheur " + snapshot.life().mood() + ", bâtiments " + snapshot.buildings());
-			context.runOnClient(mc -> {
-				hideGui(mc, false);
-				mc.gui.setScreen(new TownHallScreen(snapshot));
-			});
-			context.waitTicks(5);
-			context.takeScreenshot("life_1_summary");
-			context.runOnClient(mc -> ((TownHallScreen) mc.gui.screen()).select(TownHallScreen.Tab.CITIZENS));
-			context.waitTicks(3);
-			context.takeScreenshot("life_2_citizens");
-			context.runOnClient(mc -> ((TownHallScreen) mc.gui.screen()).select(TownHallScreen.Tab.BUILDINGS));
-			context.waitTicks(3);
-			context.takeScreenshot("life_3_buildings");
-			context.runOnClient(mc -> {
-				mc.gui.setScreen(null);
-				hideGui(mc, true);
-			});
-
-			// Une fête : les émeraudes du grenier paient, tout le monde danse devant l'hôtel de ville.
-			check(sp.getServer().computeOnServer(server -> Festivals.offer(server.overworld(), town(server))
-					.map(r -> "fête refusée : " + r).orElse(null)));
-			check(sp.getServer().computeOnServer(server -> Festivals.offer(server.overworld(), town(server))
-					.isPresent() ? null : "une seconde fête aussitôt après ne devrait pas être possible"));
-			look(sp, 0.5, Y + 7, -13, 0.5, Y + 3, 1);
-			waitOrExplain(sp, server -> citizens(server).stream().filter(c -> c.action() == Action.DANCE
-					&& c.distanceToSqr(0.5, Y, 0.5) < 8 * 8).count() >= 3, 600, "personne ne danse");
-			CityScenes.film(context, sp, "festival", 40, 8, server -> false);
-			context.waitTicks(100);
-			check(sp.getServer().computeOnServer(server -> citizens(server).stream().allMatch(c ->
-					c.moodDetail().factors().contains(new Happiness.Factor("festival", 2))) ? null
-					: "la fête ne réjouit pas tout le monde"));
-			sp.getServer().runOnServer(server -> town(server).chronicle().celebrate(-100000));
-
-			// La cloche : l'alerte. Les civils rentrent, le monstre qui rôde luit.
-			UUID husk = sp.getServer().computeOnServer(server -> {
-				ServerLevel level = server.overworld();
-				Mob mob = EntityTypes.HUSK.create(level, EntitySpawnReason.COMMAND);
-				mob.snapTo(-16.5, Y, -6.5, 0, 0);
-				mob.setNoAi(true);
-				level.addFreshEntity(mob);
-				Alarms.ring(level, BELL, server.getPlayerList().getPlayers().getFirst());
-				return mob.getUUID();
-			});
-			check(sp.getServer().computeOnServer(server -> town(server).chronicle().alarmed(
-					server.overworld().getGameTime()) && ((Mob) server.overworld().getEntity(husk))
-					.hasEffect(MobEffects.GLOWING) ? null : "l'alerte n'a pas été donnée"));
-			waitOrExplain(sp, server -> civilians(server).stream().filter(c -> c.bed().isPresent())
-					.allMatch(c -> c.bed().get().distSqr(c.blockPosition()) <= 9), 900,
-					"les civils ne se sont pas mis à l'abri");
-			look(sp, 10, Y + 9, 6, -6, Y, -11);
-			context.waitTicks(10);
-			context.takeScreenshot("life_4_alarm");
-			check(sp.getServer().computeOnServer(server -> {
-				Alarms.ring(server.overworld(), BELL, server.getPlayerList().getPlayers().getFirst());
-				server.overworld().getEntity(husk).discard();
-				return town(server).chronicle().alarmed(server.overworld().getGameTime())
-						? "la cloche, à nouveau, devait lever l'alerte" : null;
-			}));
-
-			// Le titre d'entrée sur le territoire, et son contour, l'hôtel de ville en main.
-			command(sp, "gamemode creative @p");
-			command(sp, "item replace entity @p weapon.mainhand with minecities:town_hall");
-			look(sp, 70, Y + 3, 0.5, 0, Y, 0.5);
-			context.waitTicks(30);
-			look(sp, 44, Y + 3, 0.5, 47, Y, 20);
-			context.runOnClient(mc -> hideGui(mc, false));
-			context.waitTicks(25);
-			context.takeScreenshot("life_5_welcome");
-			context.waitTicks(60);
-			context.takeScreenshot("life_6_border");
-			context.runOnClient(mc -> hideGui(mc, true));
-
-			// Un citoyen par métier, chacun son couvre-chef : un atelier factice offre tous les postes.
-			command(sp, "gamemode spectator @p");
-			check(sp.getServer().computeOnServer(server -> {
-				ServerLevel level = server.overworld();
-				Town town = town(server);
-				for (int i = 0; i < Job.values().length - 1; i++) {
-					TownService.immigrate(level, town);
-				}
-				List<com.ajustor.minecities.town.House.Workstation> stations = new java.util.ArrayList<>();
-				int x = 30;
-				for (Job job : Job.values()) {
-					if (job != Job.DOCTOR) {
-						stations.add(new com.ajustor.minecities.town.House.Workstation(new BlockPos(x++, Y, 30), job));
-					}
-				}
-				town.putHouse(new com.ajustor.minecities.town.House(new BlockPos(29, Y, 30), List.of(), List.of(),
-						stations, 10));
-				town.assignJobs();
-				return town.workers(Job.GUARD) == 1 && town.workers(Job.INVENTOR) == 1 ? null
-						: "métiers : " + town.residents().values();
-			}));
-			context.waitTicks(120);
-			for (int half = 0; half < 2; half++) {
-				int from = half * 6;
-				sp.getServer().runOnServer(server -> {
-					List<CitizenEntity> all = citizens(server).stream()
-							.sorted(java.util.Comparator.comparing(c -> c.job().map(j -> j.job().ordinal()).orElse(99)))
-							.toList();
-					for (int i = 0; i < all.size(); i++) {
-						CitizenEntity c = all.get(i);
-						c.setNoAi(true);
-						boolean shown = i >= from && i < from + 6 && c.job().isPresent();
-						// Les autres attendent plus loin, hors du champ.
-						c.snapTo(shown ? -4 + (i - from) * 1.6 : 40 + i, Y, shown ? 12.5 : 40, 180, 0);
-						c.setYHeadRot(180);
-						c.setYBodyRot(180);
-					}
-				});
-				look(sp, 0, Y + 2.3, 6.5, 0, Y + 1.5, 12.5);
-				context.waitTicks(10);
-				context.takeScreenshot("life_7_hats_" + half);
+		// La ville : cinq citoyens, une maison de quatre lits et une infirmerie.
+		check(stage.compute(server -> {
+			ServerLevel level = server.overworld();
+			ServerPlayer player = server.getPlayerList().getPlayers().getFirst();
+			TownService.found(level, HALL, player, new ItemStack(McItems.TOWN_HALL));
+			Town town = town(server);
+			for (int i = 0; i < 5; i++) {
+				TownService.immigrate(level, town);
 			}
+			for (BlockPos origin : new BlockPos[]{HOUSE, INFIRMARY}) {
+				RaidScenes.plaque(level, origin).ifPresent(p -> TownService.declareHouse(level, p, player));
+			}
+			command(server, "setblock %d %d %d minecities:house_plaque[facing=south]".formatted(LONE_WALL.getX(),
+					LONE_WALL.getY() + 1, LONE_WALL.getZ() + 1));
+			TownService.declareHouse(level, LONE_WALL.offset(0, 1, 1), player);
+			return town.workers(Job.DOCTOR) == 1 ? null : "pas de médecin : " + town.houses();
+		}));
+		check(stage.compute(server -> {
+			ServerLevel level = server.overworld();
+			Optional<BlockPos> plaque = RaidScenes.plaque(level, HOUSE);
+			HousePlaqueBlock.Status house = plaque.map(p -> level.getBlockState(p).getValue(HousePlaqueBlock.STATUS))
+					.orElse(null);
+			HousePlaqueBlock.Status lone = level.getBlockState(LONE_WALL.offset(0, 1, 1))
+					.getValue(HousePlaqueBlock.STATUS);
+			return house == HousePlaqueBlock.Status.VALID && lone == HousePlaqueBlock.Status.INVALID ? null
+					: "plaques : maison " + house + ", mur seul " + lone;
+		}));
+		stage.look(-4, Y + 2, 7.5, -4, Y + 1.3, 5);
+		stage.client(mc -> hideGui(mc, true));
+		stage.waitTicks(20);
+		stage.shot("life_0_red_plaque");
+
+		// Le même pain cinq fois lasse ; des repas variés, avec un bon plat, rendent heureux.
+		UUID[] eaters = stage.compute(server -> {
+			List<CitizenEntity> civilians = civilians(server);
+			CitizenEntity bored = civilians.get(0);
+			CitizenEntity gourmet = civilians.get(1);
+			for (int i = 0; i < 5; i++) {
+				bored.eat(new ItemStack(Items.BREAD));
+			}
+			for (var food : List.of(Items.BREAD, Items.COOKED_BEEF, Items.BAKED_POTATO, Items.CARROT,
+					Items.MUSHROOM_STEW)) {
+				gourmet.eat(new ItemStack(food));
+			}
+			return new UUID[]{bored.getUUID(), gourmet.getUUID()};
+		});
+		stage.waitTicks(220);
+		check(stage.compute(server -> {
+			CitizenEntity bored = (CitizenEntity) server.overworld().getEntity(eaters[0]);
+			CitizenEntity gourmet = (CitizenEntity) server.overworld().getEntity(eaters[1]);
+			boolean monotonous = bored.moodDetail().factors().contains(new Happiness.Factor("monotonous", -1));
+			boolean varied = gourmet.moodDetail().factors().contains(new Happiness.Factor("varied", 2));
+			return monotonous && varied && gourmet.mood() > bored.mood() ? null
+					: "humeurs : lassé " + bored.mood() + " " + bored.moodDetail().factors() + ", gourmet "
+							+ gourmet.mood() + " " + gourmet.moodDetail().factors();
+		}));
+
+		// Un affamé, devant un grenier varié, ne mange pas trois fois la même chose.
+		UUID hungry = stage.compute(server -> {
+			CitizenEntity c = civilians(server).get(2);
+			c.setHunger(3);
+			return c.getUUID();
+		});
+		waitOrExplain(stage, server -> ((CitizenEntity) server.overworld().getEntity(hungry)).hunger() >= 18, 1200,
+				"l'affamé n'a pas mangé");
+		check(stage.compute(server -> {
+			CitizenEntity c = (CitizenEntity) server.overworld().getEntity(hungry);
+			return c.diet().variety() >= 2 ? null : "il a mangé toujours la même chose : " + c.diet().meals();
+		}));
+
+		// Le médecin soigne un blessé, et nourrit un affamé.
+		UUID[] patients = stage.compute(server -> {
+			List<CitizenEntity> civilians = civilians(server);
+			CitizenEntity hurt = civilians.get(0);
+			CitizenEntity starving = civilians.get(3);
+			hurt.setHealth(4);
+			starving.setHunger(0);
+			return new UUID[]{hurt.getUUID(), starving.getUUID()};
+		});
+		stage.look(3, Y + 13, 2, 1, Y, -12);
+		stage.waitTicks(20);
+		stage.film("doctor", 40, 15, server -> {
+			CitizenEntity hurt = (CitizenEntity) server.overworld().getEntity(patients[0]);
+			CitizenEntity starving = (CitizenEntity) server.overworld().getEntity(patients[1]);
+			return hurt.getHealth() >= 18 && starving.hunger() > 0;
+		});
+		waitOrExplain(stage, server -> {
+			CitizenEntity hurt = (CitizenEntity) server.overworld().getEntity(patients[0]);
+			CitizenEntity starving = (CitizenEntity) server.overworld().getEntity(patients[1]);
+			return hurt.getHealth() >= 18 && starving.hunger() > 0;
+		}, 2400, "le médecin n'a pas soigné ses patients");
+
+		// L'écran : le bonheur moyen, les citoyens et leur humeur, les bâtiments.
+		stage.waitTicks(120);
+		TownSnapshot snapshot = stage.compute(server -> TownNetwork.snapshot(server.overworld(),
+				town(server), server.getPlayerList().getPlayers().getFirst()));
+		check(snapshot.life().mood() >= 0 && snapshot.buildings().size() == 2 ? null
+				: "écran : bonheur " + snapshot.life().mood() + ", bâtiments " + snapshot.buildings());
+		stage.client(mc -> {
+			hideGui(mc, false);
+			mc.gui.setScreen(new TownHallScreen(snapshot));
+		});
+		stage.waitTicks(5);
+		stage.shot("life_1_summary");
+		stage.client(mc -> ((TownHallScreen) mc.gui.screen()).select(TownHallScreen.Tab.CITIZENS));
+		stage.waitTicks(3);
+		stage.shot("life_2_citizens");
+		stage.client(mc -> ((TownHallScreen) mc.gui.screen()).select(TownHallScreen.Tab.BUILDINGS));
+		stage.waitTicks(3);
+		stage.shot("life_3_buildings");
+		stage.client(mc -> {
+			mc.gui.setScreen(null);
+			hideGui(mc, true);
+		});
+
+		// Une fête : les émeraudes du grenier paient, tout le monde danse devant l'hôtel de ville.
+		check(stage.compute(server -> Festivals.offer(server.overworld(), town(server))
+				.map(r -> "fête refusée : " + r).orElse(null)));
+		check(stage.compute(server -> Festivals.offer(server.overworld(), town(server))
+				.isPresent() ? null : "une seconde fête aussitôt après ne devrait pas être possible"));
+		stage.look(0.5, Y + 7, -13, 0.5, Y + 3, 1);
+		waitOrExplain(stage, server -> citizens(server).stream().filter(c -> c.action() == Action.DANCE
+				&& c.distanceToSqr(0.5, Y, 0.5) < 8 * 8).count() >= 3, 600, "personne ne danse");
+		stage.film("festival", 40, 8, server -> false);
+		stage.waitTicks(100);
+		check(stage.compute(server -> citizens(server).stream().allMatch(c ->
+				c.moodDetail().factors().contains(new Happiness.Factor("festival", 2))) ? null
+				: "la fête ne réjouit pas tout le monde"));
+		stage.run(server -> town(server).chronicle().celebrate(-100000));
+
+		// La cloche : l'alerte. Les civils rentrent, le monstre qui rôde luit.
+		UUID husk = stage.compute(server -> {
+			ServerLevel level = server.overworld();
+			Mob mob = EntityTypes.HUSK.create(level, EntitySpawnReason.COMMAND);
+			mob.snapTo(-16.5, Y, -6.5, 0, 0);
+			mob.setNoAi(true);
+			level.addFreshEntity(mob);
+			Alarms.ring(level, BELL, server.getPlayerList().getPlayers().getFirst());
+			return mob.getUUID();
+		});
+		check(stage.compute(server -> town(server).chronicle().alarmed(
+				server.overworld().getGameTime()) && ((Mob) server.overworld().getEntity(husk))
+				.hasEffect(MobEffects.GLOWING) ? null : "l'alerte n'a pas été donnée"));
+		waitOrExplain(stage, server -> civilians(server).stream().filter(c -> c.bed().isPresent())
+				.allMatch(c -> c.bed().get().distSqr(c.blockPosition()) <= 9), 900,
+				"les civils ne se sont pas mis à l'abri");
+		stage.look(10, Y + 9, 6, -6, Y, -11);
+		stage.waitTicks(10);
+		stage.shot("life_4_alarm");
+		check(stage.compute(server -> {
+			Alarms.ring(server.overworld(), BELL, server.getPlayerList().getPlayers().getFirst());
+			server.overworld().getEntity(husk).discard();
+			return town(server).chronicle().alarmed(server.overworld().getGameTime())
+					? "la cloche, à nouveau, devait lever l'alerte" : null;
+		}));
+
+		// Le titre d'entrée sur le territoire, et son contour, l'hôtel de ville en main.
+		stage.command("gamemode creative @p");
+		stage.command("item replace entity @p weapon.mainhand with minecities:town_hall");
+		stage.look(70, Y + 3, 0.5, 0, Y, 0.5);
+		stage.waitTicks(30);
+		stage.look(44, Y + 3, 0.5, 47, Y, 20);
+		stage.client(mc -> hideGui(mc, false));
+		stage.waitTicks(25);
+		stage.shot("life_5_welcome");
+		stage.waitTicks(60);
+		stage.shot("life_6_border");
+		stage.client(mc -> hideGui(mc, true));
+
+		// Un citoyen par métier, chacun son couvre-chef : un atelier factice offre tous les postes.
+		stage.command("gamemode spectator @p");
+		check(stage.compute(server -> {
+			ServerLevel level = server.overworld();
+			Town town = town(server);
+			for (int i = 0; i < Job.values().length - 1; i++) {
+				TownService.immigrate(level, town);
+			}
+			List<com.ajustor.minecities.town.House.Workstation> stations = new java.util.ArrayList<>();
+			int x = 30;
+			for (Job job : Job.values()) {
+				if (job != Job.DOCTOR) {
+					stations.add(new com.ajustor.minecities.town.House.Workstation(new BlockPos(x++, Y, 30), job));
+				}
+			}
+			town.putHouse(new com.ajustor.minecities.town.House(new BlockPos(29, Y, 30), List.of(), List.of(),
+					stations, 10));
+			town.assignJobs();
+			return town.workers(Job.GUARD) == 1 && town.workers(Job.INVENTOR) == 1 ? null
+					: "métiers : " + town.residents().values();
+		}));
+		stage.waitTicks(120);
+		for (int half = 0; half < 2; half++) {
+			int from = half * 6;
+			stage.run(server -> {
+				List<CitizenEntity> all = citizens(server).stream()
+						.sorted(java.util.Comparator.comparing(c -> c.job().map(j -> j.job().ordinal()).orElse(99)))
+						.toList();
+				for (int i = 0; i < all.size(); i++) {
+					CitizenEntity c = all.get(i);
+					c.setNoAi(true);
+					boolean shown = i >= from && i < from + 6 && c.job().isPresent();
+					// Les autres attendent plus loin, hors du champ.
+					c.snapTo(shown ? -4 + (i - from) * 1.6 : 40 + i, Y, shown ? 12.5 : 40, 180, 0);
+					c.setYHeadRot(180);
+					c.setYBodyRot(180);
+				}
+			});
+			stage.look(0, Y + 2.3, 6.5, 0, Y + 1.5, 12.5);
+			stage.waitTicks(10);
+			stage.shot("life_7_hats_" + half);
 		}
 	}
 

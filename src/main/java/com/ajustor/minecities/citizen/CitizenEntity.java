@@ -326,9 +326,47 @@ public class CitizenEntity extends PathfinderMob {
 	public void carry(ItemStack stack) {
 		ItemStack rest = Stock.insert(inventory, stack);
 		if (!rest.isEmpty() && level() instanceof ServerLevel serverLevel) {
-			spawnAtLocation(serverLevel, rest);
+			// Les poches pleines : il le pose à ses pieds, et le reprend dès qu'il a de la place.
+			net.minecraft.world.entity.item.ItemEntity item = spawnAtLocation(serverLevel, rest);
+			if (item != null) {
+				item.setUnlimitedLifetime();
+				dropped.add(item.getUUID());
+			}
 		}
 	}
+
+	/** Prend ce qu'on lui tend, autant que ses poches en tiennent ; renvoie le reste (rien n'est posé par terre). */
+	public ItemStack accept(ItemStack stack) {
+		return Stock.insert(inventory, stack);
+	}
+
+	/** Ce qu'il a posé à ses pieds, les poches pleines (pas sauvegardé : au pire, cela reste par terre). */
+	private final java.util.List<UUID> dropped = new java.util.ArrayList<>();
+
+	/** Reprend ce qu'il a posé par terre, s'il en est assez près et qu'il a de la place. */
+	private void pickUpDropped(ServerLevel level) {
+		java.util.Iterator<UUID> it = dropped.iterator();
+		while (it.hasNext()) {
+			if (!(level.getEntity(it.next()) instanceof net.minecraft.world.entity.item.ItemEntity item) || !item.isAlive()) {
+				it.remove();
+				continue;
+			}
+			if (distanceToSqr(item) > PICK_UP * PICK_UP) {
+				continue;
+			}
+			ItemStack rest = Stock.insert(inventory, item.getItem().copy());
+			if (rest.isEmpty()) {
+				take(item, item.getItem().getCount());
+				item.discard();
+				it.remove();
+			} else {
+				item.setItem(rest);
+			}
+		}
+	}
+
+	/** D'où il reprend ce qu'il a posé par terre. */
+	private static final double PICK_UP = 16.0;
 
 	public boolean inventoryFull() {
 		return inventory.stream().noneMatch(ItemStack::isEmpty);
@@ -488,6 +526,9 @@ public class CitizenEntity extends PathfinderMob {
 		}
 		if (tickCount % 20 != 0) {
 			return;
+		}
+		if (!dropped.isEmpty()) {
+			pickUpDropped(serverLevel);
 		}
 		if (tickCount % SYNC_INTERVAL == 0 && !syncWithTown(serverLevel)) {
 			return;

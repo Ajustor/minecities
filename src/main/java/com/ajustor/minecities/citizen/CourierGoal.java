@@ -242,20 +242,25 @@ class CourierGoal extends WorkGoal {
 			return;
 		}
 		citizen.getNavigation().stop();
+		// Il ne donne que ce qui tient dans les poches du bâtisseur, et garde le reste.
 		int given = 0;
 		ItemStack held = citizen.getMainHandItem();
 		if (held.is(cargo)) {
-			given += held.getCount();
-			customer.carry(held.copy());
-			citizen.setItemSlot(EquipmentSlot.MAINHAND, ItemStack.EMPTY);
+			ItemStack rest = customer.accept(held.copy());
+			given += held.getCount() - rest.getCount();
+			citizen.setItemSlot(EquipmentSlot.MAINHAND, rest);
 		}
 		for (int i = 0; i < citizen.inventory().size(); i++) {
 			ItemStack stack = citizen.inventory().get(i);
 			if (stack.is(cargo)) {
-				given += stack.getCount();
-				customer.carry(stack.copy());
-				citizen.inventory().set(i, ItemStack.EMPTY);
+				ItemStack rest = customer.accept(stack.copy());
+				given += stack.getCount() - rest.getCount();
+				citizen.inventory().set(i, rest);
 			}
+		}
+		if (given == 0) {
+			// Ses poches sont pleines : le bâtisseur va faire de la place ; le livreur attend.
+			return;
 		}
 		citizen.swing(InteractionHand.MAIN_HAND);
 		citizen.say("delivered", Component.translatable("speech.minecities.delivered", given,

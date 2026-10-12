@@ -7,11 +7,7 @@ import com.ajustor.minecities.town.Stock;
 import com.ajustor.minecities.town.Town;
 import com.ajustor.minecities.town.TownService;
 import com.ajustor.minecities.town.Towns;
-import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest;
-import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext;
-import net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext;
 import net.minecraft.client.CameraType;
-import net.minecraft.client.gui.screens.worldselection.WorldCreationUiState;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
@@ -30,7 +26,6 @@ import java.util.Arrays;
 import static com.ajustor.minecities.gametest.CityScenes.check;
 import static com.ajustor.minecities.gametest.CityScenes.command;
 import static com.ajustor.minecities.gametest.CityScenes.hideGui;
-import static com.ajustor.minecities.gametest.CityScenes.look;
 import static com.ajustor.minecities.gametest.CityScenes.waitOrExplain;
 
 /**
@@ -40,7 +35,7 @@ import static com.ajustor.minecities.gametest.CityScenes.waitOrExplain;
  *
  * <p>{@code ./gradlew runClientGameTest -PminecitiesGametest=countryside}
  */
-public class CountrysideScenes implements FabricClientGameTest {
+public class CountrysideScenes implements Scene {
 	private static final int Y = 100;
 	private static final BlockPos HALL = new BlockPos(0, Y, 0);
 	private static final BlockPos HOUSE_PLAQUE = new BlockPos(-12, Y + 1, 4);
@@ -51,71 +46,70 @@ public class CountrysideScenes implements FabricClientGameTest {
 	private static final AABB PASTURE = new AABB(-26, Y - 2, -30, 6, Y + 4, 2);
 
 	@Override
-	public void runTest(ClientGameTestContext context) {
-		if (!CityScenes.selected("countryside")) {
-			return;
-		}
-		try (TestSingleplayerContext sp = context.worldBuilder()
-				.adjustSettings(c -> c.setGameMode(WorldCreationUiState.SelectedGameMode.CREATIVE)).create()) {
-			// Cette scène compte ses citoyens : pas de nouveaux venus pour atteindre le minimum.
-			com.ajustor.minecities.town.Families.setMinimum(0);
-			command(sp, "time set 1000");
-			command(sp, "gamerule doDaylightCycle false");
-			command(sp, "gamerule doMobSpawning false");
-			command(sp, "weather clear");
-			context.waitTicks(20);
-			sp.getServer().runOnServer(CountrysideScenes::build);
-			context.runOnClient(mc -> {
-				hideGui(mc, true);
-				mc.options.setCameraType(CameraType.FIRST_PERSON);
-			});
+	public String name() {
+		return "countryside";
+	}
 
-			check(sp.getServer().computeOnServer(server -> {
-				ServerLevel level = server.overworld();
-				ServerPlayer player = server.getPlayerList().getPlayers().getFirst();
-				TownService.found(level, HALL, player, new ItemStack(McItems.TOWN_HALL));
-				TownService.declareHouse(level, HOUSE_PLAQUE, player);
-				Town town = town(server);
-				for (int i = 0; i < 3; i++) {
-					TownService.immigrate(level, town);
-				}
-				TownService.declareHouse(level, LUMBER_PLAQUE, player);
-				TownService.declareHouse(level, BARN_PLAQUE, player);
-				TownService.declareHouse(level, FISHERY_PLAQUE, player);
-				for (Job job : new Job[]{Job.LUMBERJACK, Job.BREEDER, Job.FISHERMAN}) {
-					if (town.residents().values().stream().noneMatch(r -> r.job().filter(j -> j.job() == job).isPresent())) {
-						return "pas de " + job.serializedName() + " : " + town.residents() + " ; bâtiments : " + town.houses();
-					}
-				}
-				return null;
-			}));
-			look(sp, 0, Y + 22, -2, 0, Y, -1);
-			context.waitTicks(60);
-			context.takeScreenshot("countryside_0_before");
+	@Override
+	public void play(Stage stage) {
+		// Cette scène compte ses citoyens : pas de nouveaux venus pour atteindre le minimum.
+		com.ajustor.minecities.town.Families.setMinimum(0);
+		stage.command("time set 1000");
+		stage.command("gamerule advance_time false");
+		stage.command("gamerule spawn_mobs false");
+		stage.command("weather clear");
+		stage.waitTicks(20);
+		stage.run(CountrysideScenes::build);
+		stage.client(mc -> {
+			hideGui(mc, true);
+			mc.options.setCameraType(CameraType.FIRST_PERSON);
+		});
 
-			waitOrExplain(sp, server -> granary(server, s -> s.is(ItemTags.FISHES)) > 0
-					|| carried(server, Job.FISHERMAN, s -> s.is(ItemTags.FISHES)), 2400, "le pêcheur n'a rien pêché");
-			waitOrExplain(sp, server -> calves(server) > 0, 3600, "l'éleveur n'a pas fait naître de veau",
-					server -> cows(server) + " vaches au pré.");
-			waitOrExplain(sp, server -> logs(server) == 0, 2400, "le bûcheron n'a pas abattu les arbres",
-					server -> logs(server) + " bûches restantes, à " + remainingLogs(server) + ".");
-			waitOrExplain(sp, server -> granary(server, s -> s.is(ItemTags.LOGS)) > 0, 2400,
-					"le bois n'est pas arrivé au grenier");
-			look(sp, 0, Y + 22, -2, 0, Y, -1);
-			context.waitTicks(20);
-			context.takeScreenshot("countryside_1_after");
-
-			// Un nouveau relevé des bâtiments (comme toutes les 5 minutes) ne doit débaucher personne.
-			check(sp.getServer().computeOnServer(server -> {
-				ServerLevel level = server.overworld();
-				ServerPlayer player = server.getPlayerList().getPlayers().getFirst();
-				for (BlockPos plaque : new BlockPos[]{HOUSE_PLAQUE, LUMBER_PLAQUE, BARN_PLAQUE, FISHERY_PLAQUE}) {
-					TownService.declareHouse(level, plaque, player);
+		check(stage.compute(server -> {
+			ServerLevel level = server.overworld();
+			ServerPlayer player = server.getPlayerList().getPlayers().getFirst();
+			TownService.found(level, HALL, player, new ItemStack(McItems.TOWN_HALL));
+			TownService.declareHouse(level, HOUSE_PLAQUE, player);
+			Town town = town(server);
+			for (int i = 0; i < 3; i++) {
+				TownService.immigrate(level, town);
+			}
+			TownService.declareHouse(level, LUMBER_PLAQUE, player);
+			TownService.declareHouse(level, BARN_PLAQUE, player);
+			TownService.declareHouse(level, FISHERY_PLAQUE, player);
+			for (Job job : new Job[]{Job.LUMBERJACK, Job.BREEDER, Job.FISHERMAN}) {
+				if (town.residents().values().stream().noneMatch(r -> r.job().filter(j -> j.job() == job).isPresent())) {
+					return "pas de " + job.serializedName() + " : " + town.residents() + " ; bâtiments : " + town.houses();
 				}
-				long employed = town(server).residents().values().stream().filter(r -> r.job().isPresent()).count();
-				return employed == 3 ? null : "un relevé a débauché : " + town(server).residents() + " ; " + town(server).houses();
-			}));
-		}
+			}
+			return null;
+		}));
+		stage.look(0, Y + 22, -2, 0, Y, -1);
+		stage.waitTicks(60);
+		stage.shot("countryside_0_before");
+
+		waitOrExplain(stage, server -> granary(server, s -> s.is(ItemTags.FISHES)) > 0
+				|| carried(server, Job.FISHERMAN, s -> s.is(ItemTags.FISHES)), 2400, "le pêcheur n'a rien pêché");
+		waitOrExplain(stage, server -> calves(server) > 0, 3600, "l'éleveur n'a pas fait naître de veau",
+				server -> cows(server) + " vaches au pré.");
+		waitOrExplain(stage, server -> logs(server) == 0, 2400, "le bûcheron n'a pas abattu les arbres",
+				server -> logs(server) + " bûches restantes, à " + remainingLogs(server) + ".");
+		waitOrExplain(stage, server -> granary(server, s -> s.is(ItemTags.LOGS)) > 0, 2400,
+				"le bois n'est pas arrivé au grenier");
+		stage.look(0, Y + 22, -2, 0, Y, -1);
+		stage.waitTicks(20);
+		stage.shot("countryside_1_after");
+
+		// Un nouveau relevé des bâtiments (comme toutes les 5 minutes) ne doit débaucher personne.
+		check(stage.compute(server -> {
+			ServerLevel level = server.overworld();
+			ServerPlayer player = server.getPlayerList().getPlayers().getFirst();
+			for (BlockPos plaque : new BlockPos[]{HOUSE_PLAQUE, LUMBER_PLAQUE, BARN_PLAQUE, FISHERY_PLAQUE}) {
+				TownService.declareHouse(level, plaque, player);
+			}
+			long employed = town(server).residents().values().stream().filter(r -> r.job().isPresent()).count();
+			return employed == 3 ? null : "un relevé a débauché : " + town(server).residents() + " ; " + town(server).houses();
+		}));
 	}
 
 	private static Town town(MinecraftServer server) {

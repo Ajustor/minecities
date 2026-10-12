@@ -13,11 +13,7 @@ import com.ajustor.minecities.town.Town;
 import com.ajustor.minecities.town.TownService;
 import com.ajustor.minecities.town.TownTier;
 import com.ajustor.minecities.town.Towns;
-import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest;
-import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext;
-import net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext;
 import net.minecraft.client.CameraType;
-import net.minecraft.client.gui.screens.worldselection.WorldCreationUiState;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
@@ -34,7 +30,6 @@ import static com.ajustor.minecities.gametest.CityScenes.check;
 import static com.ajustor.minecities.gametest.CityScenes.citizens;
 import static com.ajustor.minecities.gametest.CityScenes.command;
 import static com.ajustor.minecities.gametest.CityScenes.hideGui;
-import static com.ajustor.minecities.gametest.CityScenes.look;
 import static com.ajustor.minecities.gametest.CityScenes.waitOrExplain;
 
 /**
@@ -44,7 +39,7 @@ import static com.ajustor.minecities.gametest.CityScenes.waitOrExplain;
  *
  * <p>{@code ./gradlew runClientGameTest -PminecitiesGametest=market}
  */
-public class MarketScenes implements FabricClientGameTest {
+public class MarketScenes implements Scene {
 	private static final int Y = 100;
 	private static final BlockPos HALL = new BlockPos(0, Y, 0);
 	private static final BlockPos HOUSE = new BlockPos(-6, Y, -16);
@@ -54,105 +49,104 @@ public class MarketScenes implements FabricClientGameTest {
 	private static final int WHEAT = 92;
 
 	@Override
-	public void runTest(ClientGameTestContext context) {
-		if (!CityScenes.selected("market")) {
-			return;
-		}
-		try (TestSingleplayerContext sp = context.worldBuilder()
-				.adjustSettings(c -> c.setGameMode(WorldCreationUiState.SelectedGameMode.CREATIVE)).create()) {
-			Families.setMinimum(0);
-			command(sp, "time set 1000");
-			command(sp, "gamerule doDaylightCycle false");
-			command(sp, "gamerule doMobSpawning false");
-			command(sp, "weather clear");
-			context.waitTicks(20);
-			sp.getServer().runOnServer(MarketScenes::build);
-			context.runOnClient(mc -> mc.options.setCameraType(CameraType.FIRST_PERSON));
+	public String name() {
+		return "market";
+	}
 
-			// Un village : le pupitre du marché attend, le fermier est embauché.
-			check(sp.getServer().computeOnServer(server -> {
-				ServerLevel level = server.overworld();
-				ServerPlayer player = server.getPlayerList().getPlayers().getFirst();
-				TownService.found(level, HALL, player, new ItemStack(McItems.TOWN_HALL));
-				Town town = town(server);
-				for (int i = 0; i < 3; i++) {
-					TownService.immigrate(level, town);
-				}
-				for (BlockPos origin : new BlockPos[]{HOUSE, MARKET, FARM}) {
-					RaidScenes.plaque(level, origin).ifPresent(p -> TownService.declareHouse(level, p, player));
-				}
-				return town.workers(Job.FARMER) == 1 && town.workers(Job.MERCHANT) == 0 ? null
-						: "au village : " + town.workers(Job.FARMER) + " fermier, " + town.workers(Job.MERCHANT)
-								+ " marchand ; " + town.houses();
-			}));
+	@Override
+	public void play(Stage stage) {
+		Families.setMinimum(0);
+		stage.command("time set 1000");
+		stage.command("gamerule advance_time false");
+		stage.command("gamerule spawn_mobs false");
+		stage.command("weather clear");
+		stage.waitTicks(20);
+		stage.run(MarketScenes::build);
+		stage.client(mc -> mc.options.setCameraType(CameraType.FIRST_PERSON));
 
-			// La ville : le marché ouvre, avec l'annonce et les feux d'artifice.
-			look(sp, 4, Y + 6, 10, 2, Y + 2, -10);
-			context.runOnClient(mc -> hideGui(mc, false));
-			check(sp.getServer().computeOnServer(server -> {
-				Town town = town(server);
-				town.forceTier(Optional.of(TownTier.TOWN));
-				TownService.retier(server.overworld(), town);
-				return town.workers(Job.MERCHANT) == 1 ? null : "pas de marchand en ville : " + town.residents();
-			}));
-			context.waitTicks(30);
-			context.takeScreenshot("market_0_tier_up");
-			context.runOnClient(mc -> hideGui(mc, true));
+		// Un village : le pupitre du marché attend, le fermier est embauché.
+		check(stage.compute(server -> {
+			ServerLevel level = server.overworld();
+			ServerPlayer player = server.getPlayerList().getPlayers().getFirst();
+			TownService.found(level, HALL, player, new ItemStack(McItems.TOWN_HALL));
+			Town town = town(server);
+			for (int i = 0; i < 3; i++) {
+				TownService.immigrate(level, town);
+			}
+			for (BlockPos origin : new BlockPos[]{HOUSE, MARKET, FARM}) {
+				RaidScenes.plaque(level, origin).ifPresent(p -> TownService.declareHouse(level, p, player));
+			}
+			return town.workers(Job.FARMER) == 1 && town.workers(Job.MERCHANT) == 0 ? null
+					: "au village : " + town.workers(Job.FARMER) + " fermier, " + town.workers(Job.MERCHANT)
+							+ " marchand ; " + town.houses();
+		}));
 
-			// Le fermier n'a pas de houe : le marchand l'achète, puis vend le surplus de blé.
-			look(sp, 2, Y + 12, 4, 2, Y, -12);
-			context.waitTicks(10);
-			CityScenes.film(context, sp, "market", 60, 20, server -> farmerHasHoe(server)
-					&& town(server).chronicle().earnedToday(server.overworld().getGameTime()) > 0);
-			waitOrExplain(sp, MarketScenes::farmerHasHoe, 2400, "le marchand n'a pas acheté de houe",
-					server -> "émeraudes " + granary(server, Items.EMERALD) + ".");
-			waitOrExplain(sp, server -> town(server).chronicle().earnedToday(server.overworld().getGameTime()) >= 3,
-					2400, "le marchand n'a pas vendu le blé",
-					server -> "blé " + granary(server, Items.WHEAT) + ", émeraudes " + granary(server, Items.EMERALD) + ".");
-			// Il rapporte les émeraudes au grenier ; la réserve de blé y est restée.
-			waitOrExplain(sp, server -> granary(server, Items.WHEAT) >= 32 && granary(server, Items.EMERALD) >= 4, 600,
-					"les comptes ne tombent pas juste",
-					server -> "blé " + granary(server, Items.WHEAT) + ", émeraudes " + granary(server, Items.EMERALD) + ".");
+		// La ville : le marché ouvre, avec l'annonce et les feux d'artifice.
+		stage.look(4, Y + 6, 10, 2, Y + 2, -10);
+		stage.client(mc -> hideGui(mc, false));
+		check(stage.compute(server -> {
+			Town town = town(server);
+			town.forceTier(Optional.of(TownTier.TOWN));
+			TownService.retier(server.overworld(), town);
+			return town.workers(Job.MERCHANT) == 1 ? null : "pas de marchand en ville : " + town.residents();
+		}));
+		stage.waitTicks(30);
+		stage.shot("market_0_tier_up");
+		stage.client(mc -> hideGui(mc, true));
 
-			// Grande ville : une mairie annexe étend le territoire.
-			check(sp.getServer().computeOnServer(server -> {
-				ServerLevel level = server.overworld();
-				Town town = town(server);
-				town.forceTier(Optional.of(TownTier.CITY));
-				TownService.retier(level, town);
-				BlockPos beyond = ANNEX.east(40);
-				if (town.contains(level.dimension(), beyond)) {
-					return "trop tôt : " + beyond + " est déjà dans la ville";
-				}
-				command(server, "setblock %d %d %d minecities:town_annex[facing=west]".formatted(ANNEX.getX(),
-						ANNEX.getY(), ANNEX.getZ()));
-				TownService.placeAnnex(level, ANNEX, server.getPlayerList().getPlayers().getFirst(),
-						new ItemStack(McItems.TOWN_ANNEX));
-				return town.contains(level.dimension(), beyond) ? null : "l'annexe n'étend pas le territoire";
-			}));
-			look(sp, ANNEX.getX() - 3.5, Y + 2.2, ANNEX.getZ() + 2.5, ANNEX.getX() + 0.5, Y + 0.6, ANNEX.getZ() + 0.5);
-			context.waitTicks(20);
-			context.takeScreenshot("market_1_annex");
+		// Le fermier n'a pas de houe : le marchand l'achète, puis vend le surplus de blé.
+		stage.look(2, Y + 12, 4, 2, Y, -12);
+		stage.waitTicks(10);
+		stage.film("market", 60, 20, server -> farmerHasHoe(server)
+				&& town(server).chronicle().earnedToday(server.overworld().getGameTime()) > 0);
+		waitOrExplain(stage, MarketScenes::farmerHasHoe, 2400, "le marchand n'a pas acheté de houe",
+				server -> "émeraudes " + granary(server, Items.EMERALD) + ".");
+		waitOrExplain(stage, server -> town(server).chronicle().earnedToday(server.overworld().getGameTime()) >= 3,
+				2400, "le marchand n'a pas vendu le blé",
+				server -> "blé " + granary(server, Items.WHEAT) + ", émeraudes " + granary(server, Items.EMERALD) + ".");
+		// Il rapporte les émeraudes au grenier ; la réserve de blé y est restée.
+		waitOrExplain(stage, server -> granary(server, Items.WHEAT) >= 32 && granary(server, Items.EMERALD) >= 4, 600,
+				"les comptes ne tombent pas juste",
+				server -> "blé " + granary(server, Items.WHEAT) + ", émeraudes " + granary(server, Items.EMERALD) + ".");
 
-			// L'écran : le trésor, les annexes, le marché parmi les bâtiments.
-			TownSnapshot snapshot = sp.getServer().computeOnServer(server -> TownNetwork.snapshot(server.overworld(),
-					town(server), server.getPlayerList().getPlayers().getFirst()));
-			check(snapshot.life().treasury() >= 4 && snapshot.life().annexes() == 1 ? null
-					: "écran : trésor " + snapshot.life().treasury() + ", annexes " + snapshot.life().annexes());
-			context.runOnClient(mc -> {
-				hideGui(mc, false);
-				mc.gui.setScreen(new TownHallScreen(snapshot));
-			});
-			context.waitTicks(5);
-			context.takeScreenshot("market_2_summary");
-			context.runOnClient(mc -> ((TownHallScreen) mc.gui.screen()).select(TownHallScreen.Tab.BUILDINGS));
-			context.waitTicks(3);
-			context.takeScreenshot("market_3_buildings");
-			context.runOnClient(mc -> {
-				mc.gui.setScreen(null);
-				hideGui(mc, true);
-			});
-		}
+		// Grande ville : une mairie annexe étend le territoire.
+		check(stage.compute(server -> {
+			ServerLevel level = server.overworld();
+			Town town = town(server);
+			town.forceTier(Optional.of(TownTier.CITY));
+			TownService.retier(level, town);
+			BlockPos beyond = ANNEX.east(40);
+			if (town.contains(level.dimension(), beyond)) {
+				return "trop tôt : " + beyond + " est déjà dans la ville";
+			}
+			command(server, "setblock %d %d %d minecities:town_annex[facing=west]".formatted(ANNEX.getX(),
+					ANNEX.getY(), ANNEX.getZ()));
+			TownService.placeAnnex(level, ANNEX, server.getPlayerList().getPlayers().getFirst(),
+					new ItemStack(McItems.TOWN_ANNEX));
+			return town.contains(level.dimension(), beyond) ? null : "l'annexe n'étend pas le territoire";
+		}));
+		stage.look(ANNEX.getX() - 3.5, Y + 2.2, ANNEX.getZ() + 2.5, ANNEX.getX() + 0.5, Y + 0.6, ANNEX.getZ() + 0.5);
+		stage.waitTicks(20);
+		stage.shot("market_1_annex");
+
+		// L'écran : le trésor, les annexes, le marché parmi les bâtiments.
+		TownSnapshot snapshot = stage.compute(server -> TownNetwork.snapshot(server.overworld(),
+				town(server), server.getPlayerList().getPlayers().getFirst()));
+		check(snapshot.life().treasury() >= 4 && snapshot.life().annexes() == 1 ? null
+				: "écran : trésor " + snapshot.life().treasury() + ", annexes " + snapshot.life().annexes());
+		stage.client(mc -> {
+			hideGui(mc, false);
+			mc.gui.setScreen(new TownHallScreen(snapshot));
+		});
+		stage.waitTicks(5);
+		stage.shot("market_2_summary");
+		stage.client(mc -> ((TownHallScreen) mc.gui.screen()).select(TownHallScreen.Tab.BUILDINGS));
+		stage.waitTicks(3);
+		stage.shot("market_3_buildings");
+		stage.client(mc -> {
+			mc.gui.setScreen(null);
+			hideGui(mc, true);
+		});
 	}
 
 	private static Town town(MinecraftServer server) {

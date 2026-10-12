@@ -6,11 +6,7 @@ import com.ajustor.minecities.town.House;
 import com.ajustor.minecities.town.Town;
 import com.ajustor.minecities.town.TownService;
 import com.ajustor.minecities.town.Towns;
-import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest;
-import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext;
-import net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext;
 import net.minecraft.client.CameraType;
-import net.minecraft.client.gui.screens.worldselection.WorldCreationUiState;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
@@ -21,7 +17,6 @@ import net.minecraft.world.level.block.Blocks;
 
 import static com.ajustor.minecities.gametest.CityScenes.command;
 import static com.ajustor.minecities.gametest.CityScenes.hideGui;
-import static com.ajustor.minecities.gametest.CityScenes.look;
 import static com.ajustor.minecities.gametest.CityScenes.waitOrExplain;
 
 /**
@@ -31,46 +26,45 @@ import static com.ajustor.minecities.gametest.CityScenes.waitOrExplain;
  *
  * <p>{@code ./gradlew runClientGameTest -PminecitiesGametest=village}
  */
-public class VillageScenes implements FabricClientGameTest {
+public class VillageScenes implements Scene {
 	private static final int Y = 100;
 	private static final BlockPos HALL = new BlockPos(0, Y, 0);
 
 	@Override
-	public void runTest(ClientGameTestContext context) {
-		if (!CityScenes.selected("village")) {
-			return;
-		}
-		try (TestSingleplayerContext sp = context.worldBuilder()
-				.adjustSettings(c -> c.setGameMode(WorldCreationUiState.SelectedGameMode.CREATIVE)).create()) {
-			// Cette scène compte ses citoyens : pas de nouveaux venus pour atteindre le minimum.
-			com.ajustor.minecities.town.Families.setMinimum(0);
-			command(sp, "time set 1000");
-			command(sp, "gamerule doDaylightCycle false");
-			command(sp, "gamerule doMobSpawning false");
-			command(sp, "weather clear");
-			context.waitTicks(20);
-			sp.getServer().runOnServer(VillageScenes::build);
-			context.runOnClient(mc -> {
-				hideGui(mc, true);
-				mc.options.setCameraType(CameraType.FIRST_PERSON);
-			});
-			// Les villageois prennent leurs lits (mémoire HOME) avant que la ville ne soit fondée.
-			context.waitTicks(400);
-			sp.getServer().runOnServer(server -> {
-				ServerPlayer player = server.getPlayerList().getPlayers().getFirst();
-				TownService.found(server.overworld(), HALL, player, new ItemStack(McItems.TOWN_HALL));
-			});
-			waitOrExplain(sp, server -> town(server).houses().stream().anyMatch(House::village), 1200,
-					"la maison du village n'a pas été reprise", server -> "bâtiments " + town(server).houses()
-							+ ", villageois " + town(server).villagers() + ".");
-			look(sp, -2, Y + 7, -6, 6, Y, 6);
-			context.waitTicks(20);
-			context.takeScreenshot("village_0_adopted");
-			waitOrExplain(sp, server -> town(server).citizens() >= 1, 3600, "aucun villageois n'est devenu citoyen",
-					server -> "villageois " + town(server).villagers() + ", citoyens " + town(server).citizens() + ".");
-			context.waitTicks(40);
-			context.takeScreenshot("village_1_naturalized");
-		}
+	public String name() {
+		return "village";
+	}
+
+	@Override
+	public void play(Stage stage) {
+		// Cette scène compte ses citoyens : pas de nouveaux venus pour atteindre le minimum.
+		com.ajustor.minecities.town.Families.setMinimum(0);
+		stage.command("time set 1000");
+		stage.command("gamerule advance_time false");
+		stage.command("gamerule spawn_mobs false");
+		stage.command("weather clear");
+		stage.waitTicks(20);
+		stage.run(VillageScenes::build);
+		stage.client(mc -> {
+			hideGui(mc, true);
+			mc.options.setCameraType(CameraType.FIRST_PERSON);
+		});
+		// Les villageois prennent leurs lits (mémoire HOME) avant que la ville ne soit fondée.
+		stage.waitTicks(400);
+		stage.run(server -> {
+			ServerPlayer player = server.getPlayerList().getPlayers().getFirst();
+			TownService.found(server.overworld(), HALL, player, new ItemStack(McItems.TOWN_HALL));
+		});
+		waitOrExplain(stage, server -> town(server).houses().stream().anyMatch(House::village), 1200,
+				"la maison du village n'a pas été reprise", server -> "bâtiments " + town(server).houses()
+						+ ", villageois " + town(server).villagers() + ".");
+		stage.look(-2, Y + 7, -6, 6, Y, 6);
+		stage.waitTicks(20);
+		stage.shot("village_0_adopted");
+		waitOrExplain(stage, server -> town(server).citizens() >= 1, 3600, "aucun villageois n'est devenu citoyen",
+				server -> "villageois " + town(server).villagers() + ", citoyens " + town(server).citizens() + ".");
+		stage.waitTicks(40);
+		stage.shot("village_1_naturalized");
 	}
 
 	private static Town town(MinecraftServer server) {

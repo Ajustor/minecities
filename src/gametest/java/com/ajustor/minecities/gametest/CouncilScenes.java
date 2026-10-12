@@ -18,11 +18,7 @@ import com.ajustor.minecities.town.Town;
 import com.ajustor.minecities.town.TownService;
 import com.ajustor.minecities.town.TownTier;
 import com.ajustor.minecities.town.Towns;
-import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest;
-import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext;
-import net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext;
 import net.minecraft.client.CameraType;
-import net.minecraft.client.gui.screens.worldselection.WorldCreationUiState;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
@@ -41,7 +37,6 @@ import static com.ajustor.minecities.gametest.CityScenes.check;
 import static com.ajustor.minecities.gametest.CityScenes.citizens;
 import static com.ajustor.minecities.gametest.CityScenes.command;
 import static com.ajustor.minecities.gametest.CityScenes.hideGui;
-import static com.ajustor.minecities.gametest.CityScenes.look;
 import static com.ajustor.minecities.gametest.CityScenes.waitOrExplain;
 
 /**
@@ -51,7 +46,7 @@ import static com.ajustor.minecities.gametest.CityScenes.waitOrExplain;
  *
  * <p>{@code ./gradlew runClientGameTest -PminecitiesGametest=council}
  */
-public class CouncilScenes implements FabricClientGameTest {
+public class CouncilScenes implements Scene {
 	private static final int Y = 100;
 	private static final BlockPos HALL = new BlockPos(0, Y, 0);
 	private static final BlockPos SMITHY = new BlockPos(-30, Y, -18);
@@ -63,109 +58,113 @@ public class CouncilScenes implements FabricClientGameTest {
 	private static final BlockPos OTHER_HALL = new BlockPos(200, Y, 0);
 
 	@Override
-	public void runTest(ClientGameTestContext context) {
-		if (!CityScenes.selected("council")) {
-			return;
-		}
-		try (TestSingleplayerContext sp = context.worldBuilder()
-				.adjustSettings(c -> c.setGameMode(WorldCreationUiState.SelectedGameMode.CREATIVE)).create()) {
-			Families.setMinimum(0);
-			command(sp, "time set 1000");
-			command(sp, "gamerule doDaylightCycle false");
-			command(sp, "gamerule doMobSpawning false");
-			command(sp, "weather clear");
-			command(sp, "forceload add 184 -16 216 16");
-			context.waitTicks(20);
-			sp.getServer().runOnServer(CouncilScenes::build);
-			context.runOnClient(mc -> mc.options.setCameraType(CameraType.FIRST_PERSON));
+	public String name() {
+		return "council";
+	}
 
-			check(sp.getServer().computeOnServer(server -> {
-				ServerLevel level = server.overworld();
-				ServerPlayer player = server.getPlayerList().getPlayers().getFirst();
-				TownService.found(level, HALL, player, new ItemStack(McItems.TOWN_HALL));
-				TownService.found(level, OTHER_HALL, player, new ItemStack(McItems.TOWN_HALL));
-				Town town = town(server);
-				town.forceTier(Optional.of(TownTier.TOWN));
-				TownService.retier(level, town);
-				// La forge est une demeure, bâtie par la ville (niveau 4).
-				Construction smithy = Construction.order(Blueprints.get(server,
-						Identifier.fromNamespaceAndPath("minecities", "smithy_4")).orElseThrow(), BuildStyle.PLAINS,
-						SMITHY, Rotation.NONE);
-				smithy.finish();
-				town.order(smithy);
-				for (int i = 0; i < 4; i++) {
-					TownService.immigrate(level, town);
+	@Override
+	public void play(Stage stage) {
+		Families.setMinimum(0);
+		stage.command("time set 1000");
+		stage.command("gamerule advance_time false");
+		stage.command("gamerule spawn_mobs false");
+		stage.command("weather clear");
+		stage.command("forceload add 184 -16 216 16");
+		stage.waitTicks(20);
+		stage.run(CouncilScenes::build);
+		stage.client(mc -> mc.options.setCameraType(CameraType.FIRST_PERSON));
+
+		check(stage.compute(server -> {
+			ServerLevel level = server.overworld();
+			ServerPlayer player = server.getPlayerList().getPlayers().getFirst();
+			TownService.found(level, HALL, player, new ItemStack(McItems.TOWN_HALL));
+			TownService.found(level, OTHER_HALL, player, new ItemStack(McItems.TOWN_HALL));
+			Town town = town(server);
+			town.forceTier(Optional.of(TownTier.TOWN));
+			TownService.retier(level, town);
+			// La forge est une demeure, bâtie par la ville (niveau 4).
+			Construction smithy = Construction.order(Blueprints.get(server,
+					Identifier.fromNamespaceAndPath("minecities", "smithy_4")).orElseThrow(), BuildStyle.PLAINS,
+					SMITHY, Rotation.NONE);
+			smithy.finish();
+			town.order(smithy);
+			for (int i = 0; i < 4; i++) {
+				TownService.immigrate(level, town);
+			}
+			// La forge (quatre postes) en dernier : un seul forgeron, les autres métiers d'abord.
+			for (BlockPos origin : new BlockPos[]{BARRACKS, MARKET, TANNERY, HOUSE, SMITHY}) {
+				RaidScenes.plaque(level, origin).ifPresent(p -> TownService.declareHouse(level, p, player));
+			}
+			for (Job job : new Job[]{Job.SMITH, Job.GUARD, Job.MERCHANT, Job.TANNER}) {
+				if (town.workers(job) != 1) {
+					return "pas de " + job.serializedName() + " : " + town.residents() + " ; " + town.houses();
 				}
-				// La forge (quatre postes) en dernier : un seul forgeron, les autres métiers d'abord.
-				for (BlockPos origin : new BlockPos[]{BARRACKS, MARKET, TANNERY, HOUSE, SMITHY}) {
-					RaidScenes.plaque(level, origin).ifPresent(p -> TownService.declareHouse(level, p, player));
-				}
-				for (Job job : new Job[]{Job.SMITH, Job.GUARD, Job.MERCHANT, Job.TANNER}) {
-					if (town.workers(job) != 1) {
-						return "pas de " + job.serializedName() + " : " + town.residents() + " ; " + town.houses();
-					}
-				}
-				return town.buildingLevel(RaidScenes.plaque(level, SMITHY).orElseThrow()) == 4 ? null
-						: "la forge n'est pas de niveau 4";
-			}));
+			}
+			return town.buildingLevel(RaidScenes.plaque(level, SMITHY).orElseThrow()) == 4 ? null
+					: "la forge n'est pas de niveau 4";
+		}));
 
-			// Le maître forgeron habille le garde de fer, de pied en cap ; le tanneur tanne.
-			waitOrExplain(sp, server -> citizens(server).stream().filter(CitizenEntity::isGuard).anyMatch(g ->
-							g.getItemBySlot(EquipmentSlot.HEAD).is(Items.IRON_HELMET)
-									&& g.getItemBySlot(EquipmentSlot.LEGS).is(Items.IRON_LEGGINGS)
-									&& g.getItemBySlot(EquipmentSlot.FEET).is(Items.IRON_BOOTS)), 4800,
-					"le garde n'est pas armé de pied en cap", server -> "lingots " + granary(server, HALL, Items.IRON_INGOT) + ".");
-			waitOrExplain(sp, server -> granary(server, HALL, Items.LEATHER) >= 2, 2400, "le tanneur n'a pas tanné");
-			sp.getServer().runOnServer(server -> citizens(server).stream().filter(CitizenEntity::isGuard).findFirst()
-					.ifPresent(g -> {
-						g.setNoAi(true);
-						g.snapTo(0.5, Y, 6.5, 180, 0);
-						g.setYHeadRot(180);
-						g.setYBodyRot(180);
-					}));
-			look(sp, 0.5, Y + 1.8, 3.5, 0.5, Y + 1.2, 6.5);
-			context.runOnClient(mc -> hideGui(mc, true));
-			context.waitTicks(10);
-			context.takeScreenshot("council_0_guard");
-			sp.getServer().runOnServer(server -> citizens(server).forEach(c -> c.setNoAi(false)));
+		// Le maître forgeron habille le garde de fer, de pied en cap ; le tanneur tanne.
+		waitOrExplain(stage, server -> citizens(server).stream().filter(CitizenEntity::isGuard).anyMatch(g ->
+						g.getItemBySlot(EquipmentSlot.HEAD).is(Items.IRON_HELMET)
+								&& g.getItemBySlot(EquipmentSlot.LEGS).is(Items.IRON_LEGGINGS)
+								&& g.getItemBySlot(EquipmentSlot.FEET).is(Items.IRON_BOOTS)), 4800,
+				"le garde n'est pas armé de pied en cap", server -> "lingots " + granary(server, HALL, Items.IRON_INGOT)
+						+ ", au grenier casques " + granary(server, HALL, Items.IRON_HELMET) + ", jambières "
+						+ granary(server, HALL, Items.IRON_LEGGINGS) + ", bottes " + granary(server, HALL, Items.IRON_BOOTS)
+						+ ", émeraudes " + granary(server, HALL, Items.EMERALD) + " ; " + town(server).houses() + ".");
+		waitOrExplain(stage, server -> granary(server, HALL, Items.LEATHER) >= 2, 2400, "le tanneur n'a pas tanné");
+		stage.run(server -> citizens(server).stream().filter(CitizenEntity::isGuard).findFirst()
+				.ifPresent(g -> {
+					g.setNoAi(true);
+					g.snapTo(0.5, Y, 6.5, 180, 0);
+					g.setYHeadRot(180);
+					g.setYBodyRot(180);
+				}));
+		stage.look(0.5, Y + 1.8, 3.5, 0.5, Y + 1.2, 6.5);
+		stage.client(mc -> hideGui(mc, true));
+		stage.waitTicks(10);
+		stage.shot("council_0_guard");
+		stage.run(server -> citizens(server).forEach(c -> c.setNoAi(false)));
 
-			// Le jour férié : la ville se réjouit (et ne travaille pas).
-			sp.getServer().runOnServer(server -> TownService.decree(server.overworld(), town(server), Decree.HOLIDAY));
-			waitOrExplain(sp, server -> citizens(server).stream().filter(c -> c.townId().filter(town(server).id()::equals)
-					.isPresent()).allMatch(c -> c.moodDetail().factors().contains(new Happiness.Factor("decrees_good", 1))),
-					400, "le jour férié ne réjouit personne");
+		// Le jour férié : la ville se réjouit (et ne travaille pas).
+		stage.run(server -> TownService.decree(server.overworld(), town(server), Decree.HOLIDAY));
+		waitOrExplain(stage, server -> citizens(server).stream().filter(c -> c.townId().filter(town(server).id()::equals)
+				.isPresent()).allMatch(c -> c.moodDetail().factors().contains(new Happiness.Factor("decrees_good", 1))),
+				400, "le jour férié ne réjouit personne");
 
-			// Un accord de commerce : la voisine n'a pas de pain, la ville en a trop.
-			sp.getServer().runOnServer(server -> {
-				Town town = town(server);
-				Town other = Towns.get(server).byHall(server.overworld().dimension(), OTHER_HALL).orElseThrow();
-				town.addPartner(other.id());
-				other.addPartner(town.id());
-			});
-			waitOrExplain(sp, server -> granary(server, OTHER_HALL, Items.BREAD) > 0, 2600, "pas de caravane",
-					server -> "pain " + granary(server, HALL, Items.BREAD) + " / " + granary(server, OTHER_HALL, Items.BREAD)
-							+ ", émeraudes " + granary(server, OTHER_HALL, Items.EMERALD) + ".");
-			check(sp.getServer().computeOnServer(server -> granary(server, OTHER_HALL, Items.EMERALD) < 20
-					? null : "la voisine n'a pas payé la caravane"));
+		// Un accord de commerce : la voisine n'a pas de pain, la ville en a trop.
+		stage.run(server -> {
+			Town town = town(server);
+			Town other = Towns.get(server).byHall(server.overworld().dimension(), OTHER_HALL).orElseThrow();
+			town.addPartner(other.id());
+			other.addPartner(town.id());
+		});
+		waitOrExplain(stage, server -> granary(server, OTHER_HALL, Items.BREAD) > 0, 2600, "pas de caravane",
+				server -> "pain " + granary(server, HALL, Items.BREAD) + " / " + granary(server, OTHER_HALL, Items.BREAD)
+						+ ", émeraudes " + granary(server, OTHER_HALL, Items.EMERALD) + ".");
+		check(stage.compute(server -> granary(server, OTHER_HALL, Items.EMERALD) < 20
+				? null : "la voisine n'a pas payé la caravane : émeraudes " + granary(server, HALL, Items.EMERALD) + " / "
+						+ granary(server, OTHER_HALL, Items.EMERALD) + ", pain " + granary(server, HALL, Items.BREAD) + " / "
+						+ granary(server, OTHER_HALL, Items.BREAD)));
 
-			// L'onglet Mairie : le maire, les décrets, l'accord.
-			TownSnapshot snapshot = sp.getServer().computeOnServer(server -> TownNetwork.snapshot(server.overworld(),
-					town(server), server.getPlayerList().getPlayers().getFirst()));
-			check(snapshot.council().partners().size() == 1 && snapshot.council().open().getFirst() ? null
-					: "la mairie ne montre pas l'accord : " + snapshot.council());
-			context.runOnClient(mc -> {
-				hideGui(mc, false);
-				mc.gui.setScreen(new TownHallScreen(snapshot));
-			});
-			context.waitTicks(3);
-			context.runOnClient(mc -> ((TownHallScreen) mc.gui.screen()).select(TownHallScreen.Tab.COUNCIL));
-			context.waitTicks(3);
-			context.takeScreenshot("council_1_tab");
-			context.runOnClient(mc -> {
-				mc.gui.setScreen(null);
-				hideGui(mc, true);
-			});
-		}
+		// L'onglet Mairie : le maire, les décrets, l'accord.
+		TownSnapshot snapshot = stage.compute(server -> TownNetwork.snapshot(server.overworld(),
+				town(server), server.getPlayerList().getPlayers().getFirst()));
+		check(snapshot.council().partners().size() == 1 && snapshot.council().open().getFirst() ? null
+				: "la mairie ne montre pas l'accord : " + snapshot.council());
+		stage.client(mc -> {
+			hideGui(mc, false);
+			mc.gui.setScreen(new TownHallScreen(snapshot));
+		});
+		stage.waitTicks(3);
+		stage.client(mc -> ((TownHallScreen) mc.gui.screen()).select(TownHallScreen.Tab.COUNCIL));
+		stage.waitTicks(3);
+		stage.shot("council_1_tab");
+		stage.client(mc -> {
+			mc.gui.setScreen(null);
+			hideGui(mc, true);
+		});
 	}
 
 	private static Town town(MinecraftServer server) {

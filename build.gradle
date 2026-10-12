@@ -95,20 +95,32 @@ jar {
 	}
 }
 
-// Visite guidée en captures d'écran (./gradlew runClientGameTest) : voir CityShowcase.
+// Les scènes de jeu (src/gametest, voir Scene) : ./gradlew runGameTest les joue sur le seul serveur,
+// sans fenêtre (la suite d'avant envoi) ; ./gradlew runClientGameTest dans le vrai jeu, pour les captures.
 fabricApi {
 	configureTests {
 		createSourceSet = true
 		modId = 'minecities-gametest'
-		enableGameTests = false
+		enableGameTests = true
 		enableClientGameTests = true
 		eula = true
 	}
 }
 
-// ./gradlew runClientGameTest -PminecitiesGametest=city,work : ne joue que ces scènes (voir CityScenes.selected).
-loom.runs.matching { it.name == 'clientGameTest' }.configureEach {
+// -PminecitiesGametest=city,work : ne joue que ces scènes ; -PminecitiesFilm : les films image par image.
+loom.runs.matching { it.name == 'clientGameTest' || it.name == 'gameTest' }.configureEach {
 	if (project.hasProperty('minecitiesGametest')) {
 		vmArg "-Dminecities.gametest=${project.property('minecitiesGametest')}"
+	}
+	if (project.hasProperty('minecitiesFilm')) {
+		vmArg '-Dminecities.film=true'
+	}
+}
+
+// Chaque suite sans fenêtre part d'un monde neuf : rien ne reste d'une suite à l'autre.
+def gameTestWorld = layout.buildDirectory.dir('run/gameTest/world').get().asFile
+tasks.matching { it.name == 'runGameTest' }.configureEach {
+	doFirst {
+		gameTestWorld.deleteDir()
 	}
 }

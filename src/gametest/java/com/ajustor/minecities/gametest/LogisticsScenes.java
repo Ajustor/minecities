@@ -9,11 +9,7 @@ import com.ajustor.minecities.town.Stock;
 import com.ajustor.minecities.town.Town;
 import com.ajustor.minecities.town.TownService;
 import com.ajustor.minecities.town.Towns;
-import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest;
-import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext;
-import net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext;
 import net.minecraft.client.CameraType;
-import net.minecraft.client.gui.screens.worldselection.WorldCreationUiState;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
@@ -27,7 +23,6 @@ import net.minecraft.world.level.block.Blocks;
 import static com.ajustor.minecities.gametest.CityScenes.check;
 import static com.ajustor.minecities.gametest.CityScenes.command;
 import static com.ajustor.minecities.gametest.CityScenes.hideGui;
-import static com.ajustor.minecities.gametest.CityScenes.look;
 import static com.ajustor.minecities.gametest.CityScenes.waitOrExplain;
 
 /**
@@ -37,7 +32,7 @@ import static com.ajustor.minecities.gametest.CityScenes.waitOrExplain;
  *
  * <p>{@code ./gradlew runClientGameTest -PminecitiesGametest=logistics}
  */
-public class LogisticsScenes implements FabricClientGameTest {
+public class LogisticsScenes implements Scene {
 	private static final int Y = 100;
 	private static final BlockPos HALL = new BlockPos(0, Y, 0);
 	private static final BlockPos WAREHOUSE = new BlockPos(-22, Y, -18);
@@ -47,79 +42,78 @@ public class LogisticsScenes implements FabricClientGameTest {
 	private static final BlockPos HOUSE = new BlockPos(-6, Y, 10);
 
 	@Override
-	public void runTest(ClientGameTestContext context) {
-		if (!CityScenes.selected("logistics")) {
-			return;
-		}
-		try (TestSingleplayerContext sp = context.worldBuilder()
-				.adjustSettings(c -> c.setGameMode(WorldCreationUiState.SelectedGameMode.CREATIVE)).create()) {
-			Families.setMinimum(0);
-			command(sp, "time set 1000");
-			command(sp, "gamerule doDaylightCycle false");
-			command(sp, "gamerule doMobSpawning false");
-			command(sp, "weather clear");
-			context.waitTicks(20);
-			sp.getServer().runOnServer(LogisticsScenes::build);
-			context.runOnClient(mc -> mc.options.setCameraType(CameraType.FIRST_PERSON));
+	public String name() {
+		return "logistics";
+	}
 
-			// Sans livreur : un entrepôt (avec des bûches), un charpentier.
-			check(sp.getServer().computeOnServer(server -> {
-				ServerLevel level = server.overworld();
-				ServerPlayer player = server.getPlayerList().getPlayers().getFirst();
-				TownService.found(level, HALL, player, new ItemStack(McItems.TOWN_HALL));
-				Town town = town(server);
-				for (int i = 0; i < 2; i++) {
-					TownService.immigrate(level, town);
-				}
-				for (BlockPos origin : new BlockPos[]{HOUSE, WAREHOUSE, CARPENTRY}) {
-					RaidScenes.plaque(level, origin).ifPresent(p -> TownService.declareHouse(level, p, player));
-				}
-				if (town.warehouseContainers().isEmpty()) {
-					return "pas d'entrepôt : " + town.houses();
-				}
-				if (level.getBlockEntity(town.warehouseContainers().getFirst()) instanceof Container chest) {
-					chest.setItem(0, new ItemStack(Items.OAK_LOG, 16));
-				}
-				return town.workers(Job.CARPENTER) == 1 ? null : "pas de charpentier : " + town.residents();
-			}));
-			waitOrExplain(sp, server -> warehouse(server, Items.OAK_PLANKS) >= 32, 3600,
-					"le charpentier n'a pas rapporté de planches à l'entrepôt",
-					server -> "planches à l'entrepôt " + warehouse(server, Items.OAK_PLANKS) + ", au grenier "
-							+ granary(server, Items.OAK_PLANKS) + ".");
-			check(sp.getServer().computeOnServer(server -> granary(server, Items.OAK_PLANKS) == 0 ? null
-					: "les planches sont allées au grenier, pas à l'entrepôt"));
-			look(sp, WAREHOUSE.getX() + 5.5, Y + 2.6, WAREHOUSE.getZ() + 2.5, WAREHOUSE.getX() + 5, Y + 1, WAREHOUSE.getZ() + 7);
-			context.runOnClient(mc -> hideGui(mc, true));
-			context.waitTicks(20);
-			context.takeScreenshot("logistics_0_warehouse");
+	@Override
+	public void play(Stage stage) {
+		Families.setMinimum(0);
+		stage.command("time set 1000");
+		stage.command("gamerule advance_time false");
+		stage.command("gamerule spawn_mobs false");
+		stage.command("weather clear");
+		stage.waitTicks(20);
+		stage.run(LogisticsScenes::build);
+		stage.client(mc -> mc.options.setCameraType(CameraType.FIRST_PERSON));
 
-			// Avec un livreur : le maçon laisse ses briques à l'atelier, le livreur les porte à l'entrepôt.
-			check(sp.getServer().computeOnServer(server -> {
-				ServerLevel level = server.overworld();
-				ServerPlayer player = server.getPlayerList().getPlayers().getFirst();
-				Town town = town(server);
-				for (int i = 0; i < 2; i++) {
-					TownService.immigrate(level, town);
-				}
-				for (BlockPos origin : new BlockPos[]{MASONRY, COURIER_HUT}) {
-					RaidScenes.plaque(level, origin).ifPresent(p -> TownService.declareHouse(level, p, player));
-				}
-				if (level.getBlockEntity(town.warehouseContainers().getFirst()) instanceof Container chest) {
-					chest.setItem(1, new ItemStack(Items.CLAY_BALL, 16));
-				}
-				return town.workers(Job.MASON) == 1 && town.workers(Job.COURIER) == 1 ? null
-						: "maçon " + town.workers(Job.MASON) + ", livreur " + town.workers(Job.COURIER) + " ; "
-								+ town.houses();
-			}));
-			look(sp, 4, Y + 14, -2, -6, Y, -14);
-			context.waitTicks(10);
-			CityScenes.film(context, sp, "logistics", 40, 20, server -> warehouse(server, Items.BRICKS) >= 2);
-			waitOrExplain(sp, server -> warehouse(server, Items.BRICKS) >= 2, 4800,
-					"le livreur n'a pas porté les briques à l'entrepôt",
-					server -> "briques à l'entrepôt " + warehouse(server, Items.BRICKS) + ", à la taillerie "
-							+ masonry(server, Items.BRICKS) + ", argile à la taillerie " + masonry(server, Items.CLAY_BALL)
-							+ ".");
-		}
+		// Sans livreur : un entrepôt (avec des bûches), un charpentier.
+		check(stage.compute(server -> {
+			ServerLevel level = server.overworld();
+			ServerPlayer player = server.getPlayerList().getPlayers().getFirst();
+			TownService.found(level, HALL, player, new ItemStack(McItems.TOWN_HALL));
+			Town town = town(server);
+			for (int i = 0; i < 2; i++) {
+				TownService.immigrate(level, town);
+			}
+			for (BlockPos origin : new BlockPos[]{HOUSE, WAREHOUSE, CARPENTRY}) {
+				RaidScenes.plaque(level, origin).ifPresent(p -> TownService.declareHouse(level, p, player));
+			}
+			if (town.warehouseContainers().isEmpty()) {
+				return "pas d'entrepôt : " + town.houses();
+			}
+			if (level.getBlockEntity(town.warehouseContainers().getFirst()) instanceof Container chest) {
+				chest.setItem(0, new ItemStack(Items.OAK_LOG, 16));
+			}
+			return town.workers(Job.CARPENTER) == 1 ? null : "pas de charpentier : " + town.residents();
+		}));
+		waitOrExplain(stage, server -> warehouse(server, Items.OAK_PLANKS) >= 32, 3600,
+				"le charpentier n'a pas rapporté de planches à l'entrepôt",
+				server -> "planches à l'entrepôt " + warehouse(server, Items.OAK_PLANKS) + ", au grenier "
+						+ granary(server, Items.OAK_PLANKS) + ".");
+		check(stage.compute(server -> granary(server, Items.OAK_PLANKS) == 0 ? null
+				: "les planches sont allées au grenier, pas à l'entrepôt"));
+		stage.look(WAREHOUSE.getX() + 5.5, Y + 2.6, WAREHOUSE.getZ() + 2.5, WAREHOUSE.getX() + 5, Y + 1, WAREHOUSE.getZ() + 7);
+		stage.client(mc -> hideGui(mc, true));
+		stage.waitTicks(20);
+		stage.shot("logistics_0_warehouse");
+
+		// Avec un livreur : le maçon laisse ses briques à l'atelier, le livreur les porte à l'entrepôt.
+		check(stage.compute(server -> {
+			ServerLevel level = server.overworld();
+			ServerPlayer player = server.getPlayerList().getPlayers().getFirst();
+			Town town = town(server);
+			for (int i = 0; i < 2; i++) {
+				TownService.immigrate(level, town);
+			}
+			for (BlockPos origin : new BlockPos[]{MASONRY, COURIER_HUT}) {
+				RaidScenes.plaque(level, origin).ifPresent(p -> TownService.declareHouse(level, p, player));
+			}
+			if (level.getBlockEntity(town.warehouseContainers().getFirst()) instanceof Container chest) {
+				chest.setItem(1, new ItemStack(Items.CLAY_BALL, 16));
+			}
+			return town.workers(Job.MASON) == 1 && town.workers(Job.COURIER) == 1 ? null
+					: "maçon " + town.workers(Job.MASON) + ", livreur " + town.workers(Job.COURIER) + " ; "
+							+ town.houses();
+		}));
+		stage.look(4, Y + 14, -2, -6, Y, -14);
+		stage.waitTicks(10);
+		stage.film("logistics", 40, 20, server -> warehouse(server, Items.BRICKS) >= 2);
+		waitOrExplain(stage, server -> warehouse(server, Items.BRICKS) >= 2, 4800,
+				"le livreur n'a pas porté les briques à l'entrepôt",
+				server -> "briques à l'entrepôt " + warehouse(server, Items.BRICKS) + ", à la taillerie "
+						+ masonry(server, Items.BRICKS) + ", argile à la taillerie " + masonry(server, Items.CLAY_BALL)
+						+ ".");
 	}
 
 	private static Town town(MinecraftServer server) {
