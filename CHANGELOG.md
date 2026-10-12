@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.6.1 — 2026-10-12
+
+### Fixes
+
+- When sending a report fails, the form shows why
 ## 1.6.0 — 2026-10-12
 
 ### New features

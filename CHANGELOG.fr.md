@@ -1,5 +1,10 @@
 # Journal des modifications
 
+## 1.6.1 — 2026-10-12
+
+### Corrections
+
+- Quand l'envoi d'un signalement échoue, le formulaire affiche la raison
 ## 1.6.0 — 2026-10-12
 
 ### Nouveautés
