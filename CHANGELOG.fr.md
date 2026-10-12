@@ -1,5 +1,16 @@
 # Journal des modifications
 
+## 1.6.0 — 2026-10-12
+
+### Nouveautés
+
+- Le guide de la ville : un livre offert à la première venue, qui explique tout le mod (sommaire cliquable, /ville guide, recette : un livre et une planche)
+- /ville bug ouvre le formulaire de signalement du site, déjà rempli avec votre version, vos mods et votre temps de jeu
+- Le site a un formulaire pour signaler un bug ou donner son avis, avec captures, journaux, version du mod et temps de jeu
+
+### Corrections
+
+- Le site s'affiche mieux sur téléphone (formulaire, tableau des paliers)
 ## 1.5.0 — 2026-10-12
 
 ### Corrections

@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.6.0 — 2026-10-12
+
+### New features
+
+- The town guide: a book given on your first visit that explains the whole mod (clickable contents, /ville guide, recipe: a book and a plank)
+- /ville bug opens the website's report form, pre-filled with your version, mods and playtime
+- The website has a form to report a bug or give feedback, with screenshots, logs, mod version and playtime
+
+### Fixes
+
+- The website fits phone screens better (form, tier table)
 ## 1.5.0 — 2026-10-12
 
 ### Fixes
