@@ -4,7 +4,12 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.ajustor.minecities.town.TownTier;
+import net.minecraft.core.Vec3i;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
+import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -65,6 +70,65 @@ public record Blueprint(Identifier id, String kind, int width, int height, int d
 
 	public String translationKey() {
 		return "blueprint." + id.getNamespace() + "." + id.getPath();
+	}
+
+	/** Son nom : traduit pour les schémas du mod, son identifiant pour ceux des joueurs. */
+	public Component displayName() {
+		return Component.translatableWithFallback(translationKey(), id.getPath());
+	}
+
+	/**
+	 * Un bâtiment enregistré par un joueur avec un bloc de structure (mode Sauvegarde). Il se bâtit
+	 * comme il a été enregistré, sans style : sa porte doit regarder le nord, comme celles des schémas
+	 * du mod. Avec un lit, c'est une maison ; sinon un atelier. Une plaque de maison le fait déclarer
+	 * une fois fini.
+	 */
+	public static Blueprint fromStructure(Identifier id, StructureTemplate template) {
+		CompoundTag tag = template.save(new CompoundTag());
+		ListTag palette = tag.getListOrEmpty("palette");
+		if (palette.size() == 0) {
+			// Des blocs à variantes : plusieurs palettes, on prend la première.
+			palette = tag.getListOrEmpty("palettes").getListOrEmpty(0);
+		}
+		List<String> states = new ArrayList<>();
+		for (int i = 0; i < palette.size(); i++) {
+			states.add(stateOf(palette.getCompoundOrEmpty(i)));
+		}
+		List<Cell> cells = new ArrayList<>();
+		boolean bed = false;
+		ListTag blocks = tag.getListOrEmpty("blocks");
+		for (int i = 0; i < blocks.size(); i++) {
+			CompoundTag block = blocks.getCompoundOrEmpty(i);
+			int index = block.getIntOr("state", -1);
+			if (index < 0 || index >= states.size()) {
+				continue;
+			}
+			String state = states.get(index);
+			// Le bloc de structure lui-même ne se bâtit pas.
+			if (state.startsWith("minecraft:structure_block") || state.startsWith("minecraft:jigsaw")) {
+				continue;
+			}
+			bed |= state.matches("[a-z0-9_.-]+:[a-z0-9_]*bed(\\[.*)?");
+			ListTag pos = block.getListOrEmpty("pos");
+			cells.add(new Cell(pos.getIntOr(0, 0), pos.getIntOr(1, 0), pos.getIntOr(2, 0), state));
+		}
+		Vec3i size = template.getSize();
+		return new Blueprint(id, bed ? "house" : "workshop", size.getX(), size.getY(), size.getZ(),
+				List.copyOf(cells), Optional.empty(), TownTier.VILLAGE, false);
+	}
+
+	/** « minecraft:oak_door[facing=north,half=lower] », d'après une entrée de palette. */
+	private static String stateOf(CompoundTag entry) {
+		String name = entry.getStringOr("Name", "minecraft:air");
+		CompoundTag properties = entry.getCompoundOrEmpty("Properties");
+		if (properties.keySet().isEmpty()) {
+			return name;
+		}
+		List<String> pairs = new ArrayList<>();
+		for (String key : new java.util.TreeSet<>(properties.keySet())) {
+			pairs.add(key + "=" + properties.getStringOr(key, ""));
+		}
+		return name + "[" + String.join(",", pairs) + "]";
 	}
 
 	public static Blueprint parse(Identifier id, JsonObject json) {

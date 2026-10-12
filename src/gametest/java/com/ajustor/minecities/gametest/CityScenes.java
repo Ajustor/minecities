@@ -158,9 +158,13 @@ public class CityScenes implements Scene {
 	}
 
 	static String describe(CitizenEntity c) {
-		return "%s faim=%.1f pv=%.0f pos=%s pose=%s métier=%s main=%s poches=%s".formatted(c.getName().getString(),
-				c.hunger(), c.getHealth(), c.blockPosition().toShortString(), c.getPose(),
+		return "%s faim=%.1f pv=%.0f pos=%s pose=%s métier=%s main=%s armure=%s poches=%s".formatted(
+				c.getName().getString(), c.hunger(), c.getHealth(), c.blockPosition().toShortString(), c.getPose(),
 				c.job().map(j -> j.job().serializedName()).orElse("-"), c.getMainHandItem(),
+				java.util.stream.Stream.of(net.minecraft.world.entity.EquipmentSlot.HEAD,
+								net.minecraft.world.entity.EquipmentSlot.CHEST, net.minecraft.world.entity.EquipmentSlot.LEGS,
+								net.minecraft.world.entity.EquipmentSlot.FEET)
+						.map(c::getItemBySlot).filter(st -> !st.isEmpty()).toList(),
 				c.inventory().stream().filter(st -> !st.isEmpty()).toList());
 	}
 

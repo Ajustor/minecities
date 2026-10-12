@@ -773,7 +773,7 @@ class BuilderGoal extends WorkGoal {
 				.ifPresent(p -> TownService.declareBuilt(level, town(), p.pos()));
 		Optional<Blueprint> blueprint = Blueprints.get(level.getServer(), construction.blueprint());
 		TownService.notify(level.getServer(), town(), Component.translatable("message.minecities.builder.done",
-				citizen.getName(), blueprint.<Component>map(b -> Component.translatable(b.translationKey()))
+				citizen.getName(), blueprint.map(Blueprint::displayName)
 						.orElse(Component.literal(construction.blueprint().toString()))));
 		Towns.get(level.getServer()).changed();
 		planFor = null;

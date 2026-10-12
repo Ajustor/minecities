@@ -37,6 +37,8 @@ final class Cooking {
 			new Recipe(ordered(Items.RABBIT, 1, Items.CARROT, 1, Items.POTATO, 1, Items.BROWN_MUSHROOM, 1, Items.BOWL, 1),
 					Items.RABBIT_STEW, 1, false),
 			new Recipe(ordered(Items.PUMPKIN, 1, Items.SUGAR, 1, Items.EGG, 1), Items.PUMPKIN_PIE, 1, true),
+			// Sans sucre, il le fait de la canne que rapporte le fermier.
+			new Recipe(ordered(Items.PUMPKIN, 1, Items.SUGAR_CANE, 1, Items.EGG, 1), Items.PUMPKIN_PIE, 1, true),
 			new Recipe(ordered(Items.BROWN_MUSHROOM, 1, Items.RED_MUSHROOM, 1, Items.BOWL, 1), Items.MUSHROOM_STEW, 1,
 					false),
 			new Recipe(ordered(Items.BEETROOT, 6, Items.BOWL, 1), Items.BEETROOT_SOUP, 1, false),
