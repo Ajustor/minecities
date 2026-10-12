@@ -91,7 +91,8 @@ public class CountrysideScenes implements Scene {
 		waitOrExplain(stage, server -> granary(server, s -> s.is(ItemTags.FISHES)) > 0
 				|| carried(server, Job.FISHERMAN, s -> s.is(ItemTags.FISHES)), 2400, "le pêcheur n'a rien pêché");
 		waitOrExplain(stage, server -> calves(server) > 0, 3600, "l'éleveur n'a pas fait naître de veau",
-				server -> cows(server) + " vaches au pré.");
+				server -> cows(server) + " vaches au pré : " + herd(server) + " ; blé au grenier : "
+						+ granary(server, st -> st.is(Items.WHEAT)) + ".");
 		waitOrExplain(stage, server -> logs(server) == 0, 2400, "le bûcheron n'a pas abattu les arbres",
 				server -> logs(server) + " bûches restantes, à " + remainingLogs(server) + ".");
 		waitOrExplain(stage, server -> granary(server, s -> s.is(ItemTags.LOGS)) > 0, 2400,
@@ -128,6 +129,13 @@ public class CountrysideScenes implements Scene {
 
 	private static int cows(MinecraftServer server) {
 		return server.overworld().getEntitiesOfClass(Cow.class, PASTURE).size();
+	}
+
+	/** Chaque vache : où elle est, si elle est en amour, son âge (le délai avant de pouvoir s'accoupler). */
+	private static String herd(MinecraftServer server) {
+		return server.overworld().getEntitiesOfClass(Cow.class, PASTURE.inflate(32)).stream()
+				.map(c -> c.blockPosition().toShortString() + (c.isInLove() ? " en amour" : "") + " âge " + c.getAge())
+				.toList().toString();
 	}
 
 	/** Les veaux, où qu'ils se soient promenés. */
