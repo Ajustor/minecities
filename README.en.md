@@ -73,7 +73,8 @@ whole mod is translated into French and English.
    levels**: hut (raw logs, flat roof), house (planks, stone, glass, gabled roof), hall (stone bricks,
    bricks, iron, lanterns; Town tier), mansion (polished stone, quartz, stained glass, copper, gold;
    City tier). Every building is dressed: eaves, open shutters, a beam and a dormer window in the
-   gables, a stone or brick chimney with a smoking campfire, a flower pot, a carpet runner in houses.
+   gables, a stone or brick chimney with a smoking campfire, a flower pot, a carpet runner in houses. Each building is also furnished after its trade, more richly at higher
+   levels (crafting table, candle tables, pots, plants, counters, cauldrons, anvils, rails, shelves…).
    Houses gain two beds per level, workshops one workstation, and workers get faster. At
    level 4 workers have master's tools: farmer and miner harvest as with Fortune II, the fisherman
    fishes as with Luck of the Sea III, the smith forges full iron armour for guards. For defence: the **barracks**, the **guard tower** and the

@@ -7,9 +7,9 @@ vanilla : pas de plans imposés ni de huttes préfabriquées. Vous bâtissez com
 reconnaît vos maisons, et des citoyens viennent y vivre. Le village devient ville, puis grande
 ville, puis mégalopole.
 
-> État : **v1.2** (villes, maisons, familles, vingt-trois métiers et leurs filières, de la mine au
+> État : **v1.3** (villes, maisons, familles, vingt-trois métiers et leurs filières, de la mine au
 > bijou et du blé au pain, bâtiments à quatre niveaux et maîtrise du niveau 4, décrets du maire,
-> commerce entre villes, bâtiments décorés, bonheur et repas variés, marché et trésor, paliers qui
+> commerce entre villes, bâtiments décorés et meublés, bonheur et repas variés, marché et trésor, paliers qui
 > débloquent, mairies annexes, fêtes, cloche d'alarme, raids de pillards, écran de l'hôtel de ville,
 > configuration et protections pour les serveurs). La suite est décrite dans [BRIEF.md](BRIEF.md) et [docs/briefs](docs/briefs).
 
@@ -117,7 +117,10 @@ ville, puis mégalopole.
    cuivre, or ; dès la grande ville). Chaque bâtiment est habillé : débord de toit, volets ouverts aux
    fenêtres, poutre et lucarne aux pignons, cheminée de pierre ou de briques où fume un feu de camp,
    pot de fleurs, et dans les maisons un tapis de l'entrée au fond (et une bibliothèque dès le niveau
-   3). Une maison gagne deux lits par niveau (2 à 8), un atelier un poste
+   3). Chaque bâtiment est **meublé** selon son métier, d'autant plus que son niveau est haut : établi,
+   table et bougies, jarres, plantes et coffres dans les maisons ; comptoirs, chaudron et gâteau à la
+   cuisine et à la boulangerie ; enclume et barreaux à la forge ; rails à la mine ; rayonnages à la
+   bibliothèque ; citrouilles et melons à la ferme… (rien qui soit un poste de travail). Une maison gagne deux lits par niveau (2 à 8), un atelier un poste
    (1 à 4), et ses travailleurs vont plus vite (un dixième par niveau). `/ville upgrade` passe au niveau
    suivant. Au niveau 4, les travailleurs ont l'**outillage du maître** : le fermier et le mineur
    récoltent comme avec une Fortune II, le pêcheur pêche comme avec une Chance de la mer III, et le
