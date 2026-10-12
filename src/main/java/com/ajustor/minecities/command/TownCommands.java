@@ -444,7 +444,7 @@ public final class TownCommands {
 				.withStyle(ChatFormatting.GOLD), false);
 		for (Blueprint blueprint : all.values()) {
 			context.getSource().sendSuccess(() -> Component.translatable("command.minecities.blueprints.entry",
-					Component.translatable(blueprint.translationKey()), blueprint.id().toString(),
+					blueprint.displayName(), blueprint.id().toString(),
 					blueprint.width(), blueprint.depth(), blueprint.height(),
 					Component.translatable("blueprint.minecities.kind." + blueprint.kind())), false);
 		}
@@ -467,7 +467,7 @@ public final class TownCommands {
 		BlockPos[] bounds = BuildPlan.bounds(blueprint, origin, rotation);
 		Builds.outline(level, player, bounds[0], bounds[1]);
 		context.getSource().sendSuccess(() -> Component.translatable("command.minecities.build.ordered",
-				Component.translatable(blueprint.translationKey()), Component.translatable(style.translationKey()),
+				blueprint.displayName(), Component.translatable(style.translationKey()),
 				town.name()).withStyle(ChatFormatting.GOLD), false);
 		Builds.describeMaterials(level, town, BuildPlan.of(blueprint, style, origin, rotation), player);
 		if (town.workers(Job.BUILDER) == 0) {

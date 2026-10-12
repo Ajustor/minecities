@@ -147,7 +147,10 @@ version du mod, les autres mods et le temps de jeu.
    tout en haut), l'**atelier de l'inventeur**, l'**infirmerie**, la **mine**, la **forge**, la
    **boulangerie**, la **taillerie de pierre**, la **verrerie**, le **tissage**, le **rucher** et, dès la
    ville, le **marché**, la **joaillerie** et la **bibliothèque** ; chacun a ses quatre niveaux. Les datapacks peuvent ajouter
-   des schémas (`data/<ns>/blueprint/*.json`).
+   des schémas (`data/<ns>/blueprint/*.json`). Vos propres bâtiments aussi : enregistrez-en un avec un
+   **bloc de structure** vanilla (mode Sauvegarde, porte au nord, une plaque de maison à l'intérieur pour
+   qu'il se déclare tout seul) ; quelques secondes après, `/ville build <nom>` le commande, comme
+   `/ville build minecraft:ma_maison`.
 7 bis. **L'entrepôt** : un **registre d'entrepôt** posé dans un bâtiment déclaré en fait l'entrepôt de la
    ville, et tous ses coffres la réserve commune. La nourriture et les émeraudes vont au grenier, tout
    le reste à l'entrepôt. Sans livreur, chacun va lui-même y déposer et y prendre ; avec des livreurs,
@@ -256,7 +259,7 @@ Java 25 est requis (Loom 1.18.3, Minecraft 26.2).
 ./gradlew runClient             # lance le jeu avec le mod
 ./gradlew runGameTest           # les scènes de jeu, vérifiées sur le seul serveur, sans fenêtre (rapide)
 ./gradlew runGameTest -PminecitiesGametest=work   # une scène (city, work, countryside, village, build, family, raid, life, market, robust, industry, crafts,
-council, logistics, guide)
+council, logistics, guide, structures)
 ./gradlew runClientGameTest     # les mêmes scènes dans le vrai jeu, photographiées (build/run/clientGameTest/screenshots), plus styles
 ./gradlew runClientGameTest -PminecitiesFilm   # avec les films image par image (lents)
 python tools/textures/generate.py   # régénère les textures (peaux des citoyens, plaque, œuf)
