@@ -46,6 +46,7 @@ public class MineCities implements ModInitializer {
 		TownCommands.register();
 		TownNetwork.register();
 		Guide.register();
+		com.ajustor.minecities.build.Proposals.register();
 	}
 
 	public static Identifier id(String path) {

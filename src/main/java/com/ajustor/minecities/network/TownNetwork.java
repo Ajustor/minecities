@@ -41,6 +41,7 @@ public final class TownNetwork {
 
 	public static void register() {
 		PayloadTypeRegistry.clientboundPlay().register(OpenTownPayload.TYPE, OpenTownPayload.CODEC);
+		PayloadTypeRegistry.clientboundPlay().register(GhostPayload.TYPE, GhostPayload.CODEC);
 		PayloadTypeRegistry.serverboundPlay().register(TownActionPayload.TYPE, TownActionPayload.CODEC);
 		ServerPlayNetworking.registerGlobalReceiver(TownActionPayload.TYPE,
 				(payload, context) -> act(context.player(), payload));
@@ -97,7 +98,20 @@ public final class TownNetwork {
 				town.citizens(), town.villagers(), town.capacity(), town.homes().size(), town.workstations(),
 				(int) employed, meals, next == null ? "" : next.translationKey(),
 				next == null ? 0 : next.minCitizens(), next == null ? 0 : next.minHouses(),
-				town.canManage(player.getUUID()), life, council(level, town), rows, buildings, requests);
+				town.canManage(player.getUUID()), life, council(level, town), rows, buildings, requests,
+				plans(level, town));
+	}
+
+	/** Les bâtiments qu'on peut commander, chacun à son premier niveau : les ouverts d'abord. */
+	private static List<TownSnapshot.PlanRow> plans(ServerLevel level, Town town) {
+		return com.ajustor.minecities.build.Blueprints.all(level.getServer()).values().stream()
+				.filter(b -> !b.legacy() && b.level() == 1)
+				.sorted(java.util.Comparator.comparingInt((com.ajustor.minecities.build.Blueprint b) -> b.tier().ordinal())
+						.thenComparing(b -> b.id().toString()))
+				.map(b -> new TownSnapshot.PlanRow(b.id().toString(), b.translationKey(), b.id().getPath(), b.width(),
+						b.depth(), b.height(), b.kind(),
+						town.tier().ordinal() < b.tier().ordinal() ? b.tier().translationKey() : ""))
+				.toList();
 	}
 
 	private static TownSnapshot.Council council(ServerLevel level, Town town) {
@@ -133,6 +147,28 @@ public final class TownNetwork {
 			return;
 		}
 		Town town = found.get();
+		if (payload.action().startsWith("plan:")) {
+			// « plan:<style>:<schéma> » : le maire (ou un adjoint) prend le plan de ce bâtiment.
+			if (!town.canManage(player.getUUID())) {
+				return;
+			}
+			String[] parts = payload.action().split(":", 3);
+			Optional<com.ajustor.minecities.build.Blueprint> blueprint = parts.length < 3 ? Optional.empty()
+					: Optional.ofNullable(net.minecraft.resources.Identifier.tryParse(parts[2]))
+					.flatMap(id -> com.ajustor.minecities.build.Blueprints.get(level.getServer(), id));
+			if (blueprint.isEmpty() || town.tier().ordinal() < blueprint.get().tier().ordinal()) {
+				return;
+			}
+			com.ajustor.minecities.build.BuildStyle style = com.ajustor.minecities.build.BuildStyle
+					.fromSerializedName(parts[1]).orElse(com.ajustor.minecities.build.BuildStyle.PLAINS);
+			net.minecraft.world.item.ItemStack stack = com.ajustor.minecities.build.PlanItem.of(blueprint.get(), style);
+			if (!player.getInventory().add(stack)) {
+				player.drop(stack, false);
+			}
+			player.sendSystemMessage(Component.translatable("message.minecities.plan.given",
+					blueprint.get().displayName()).withStyle(ChatFormatting.GOLD));
+			return;
+		}
 		switch (payload.action()) {
 			case "granary" -> {
 				if (level.getBlockEntity(payload.hall()) instanceof TownHallBlockEntity hall) {

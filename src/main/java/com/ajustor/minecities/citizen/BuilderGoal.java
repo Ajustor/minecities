@@ -149,6 +149,8 @@ class BuilderGoal extends WorkGoal {
 
 	/** Combien de blocs à venir il regarde pour choisir le sien. */
 	private static final int WINDOW = 64;
+	/** Jusqu'où il cherche un autre bâtisseur à qui emprunter, autour du chantier. */
+	private static final int LEND_RANGE = 48;
 
 	/**
 	 * Choisit le bloc à poser : celui qu'il a déjà réservé, sinon, parmi les prochains du plan que
@@ -698,6 +700,15 @@ class BuilderGoal extends WorkGoal {
 			cooldown = 20;
 			return;
 		}
+		// Plus rien dans les réserves, mais un autre bâtisseur en a en poche sans en avoir besoin : il
+		// le lui emprunte. Sinon le dernier bloc d'un chantier attendrait sans fin ce que garde un autre.
+		if (source.isEmpty()) {
+			Optional<CitizenEntity> lender = lender(construction, item);
+			if (lender.isPresent()) {
+				borrow(construction, lender.get(), item);
+				return;
+			}
+		}
 		if (source.isEmpty() && saw(construction, item)) {
 			return;
 		}
@@ -727,6 +738,69 @@ class BuilderGoal extends WorkGoal {
 				}
 			});
 		}
+	}
+
+	/**
+	 * Un autre bâtisseur du chantier qui porte ce matériau sans en avoir besoin tout de suite : pour des
+	 * échafaudages, il n'est pas perché dessus ; pour un matériau, aucun des blocs qu'il a réservés ne le
+	 * demande.
+	 */
+	private Optional<CitizenEntity> lender(Construction construction, Item item) {
+		BlockPos site = construction.origin();
+		for (CitizenEntity other : level().getEntitiesOfClass(CitizenEntity.class, new net.minecraft.world.phys.AABB(site)
+						.inflate(LEND_RANGE), o -> o != citizen && o.isAlive()
+						&& o.job().filter(j -> j.job() == Job.BUILDER).isPresent()
+						&& o.townId().equals(citizen.townId()))) {
+			if (other.inventory().stream().noneMatch(s -> s.is(item))) {
+				continue;
+			}
+			boolean busy = item == Items.SCAFFOLDING ? other.getY() > site.getY() + 1.5
+					: claimsNeeding(construction, other, item);
+			if (!busy) {
+				return Optional.of(other);
+			}
+		}
+		return Optional.empty();
+	}
+
+	/** Un des blocs que cet autre bâtisseur a réservés demande-t-il ce matériau ? */
+	private boolean claimsNeeding(Construction construction, CitizenEntity other, Item item) {
+		int end = Math.min(plan.size(), construction.step() + WINDOW);
+		for (int i = construction.step(); i < end; i++) {
+			if (construction.claimant(i).filter(other.getUUID()::equals).isPresent()
+					&& BuildPlan.material(plan.get(i).state()).filter(item::equals).isPresent()) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Va trouver ce bâtisseur et lui prend ce qu'il faut de ce matériau (tous ses échafaudages, ou de
+	 * quoi finir le chantier, une brassée au plus).
+	 */
+	private void borrow(Construction construction, CitizenEntity lender, Item item) {
+		if (citizen.distanceToSqr(lender) > REACH * REACH) {
+			goTo(lender.blockPosition());
+			return;
+		}
+		int wanted = item == Items.SCAFFOLDING ? Integer.MAX_VALUE : Math.max(1, Math.min(HAUL,
+				(int) plan.subList(construction.step(), plan.size()).stream()
+						.filter(p -> BuildPlan.material(p.state()).filter(item::equals).isPresent()).count()));
+		for (ItemStack stack : lender.inventory()) {
+			if (wanted <= 0 || freeSlots() == 0) {
+				break;
+			}
+			if (stack.is(item)) {
+				int moved = Math.min(wanted, stack.getCount());
+				citizen.carry(stack.split(moved));
+				wanted -= moved;
+			}
+		}
+		citizen.getLookControl().setLookAt(lender);
+		lender.getLookControl().setLookAt(citizen);
+		citizen.swing(InteractionHand.MAIN_HAND);
+		cooldown = PACE;
 	}
 
 	/**

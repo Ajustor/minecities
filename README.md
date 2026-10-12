@@ -120,7 +120,11 @@ version du mod, les autres mods et le temps de jeu.
      **golem de neige** (2 blocs de neige et une citrouille).
    Deux postes dans un même atelier font deux travailleurs : les ateliers agrandis en ont deux.
 7. **Faire bâtir** : le maire (ou un adjoint) commande un bâtiment d'après un **schéma**, dans un
-   **style** (plaines, taïga, désert, savane) : `/ville build minecities:house_1 taiga`. Chaque
+   **style** (plaines, taïga, désert, savane). Il prend son **plan** à l'hôtel de ville (onglet
+   **Plans**, où il choisit le style) et le pose au sol, ou tape `/ville build minecities:house_1 taiga` :
+   le **fantôme** du bâtiment apparaît, en transparence, pour lui et les joueurs proches. Accroupi avec
+   le plan (ou `/ville build rotate`), il le tourne ; `/ville build confirm` (ou le bouton du chat) le
+   commande, `/ville build cancel` l'abandonne sans rien dépenser. Le plan resservira. Chaque
    bâtiment a **quatre niveaux**, de plus en plus chers et utiles : 1 **cabane** (rondins, terre
    battue, toit plat), 2 **maison** (planches, pierre, vitres, toit à deux pans), 3 **bâtisse** (pierre
    taillée, briques, fer, lanternes ; dès la ville), 4 **demeure** (pierre polie, quartz, vitraux,
@@ -237,8 +241,10 @@ commandes du maire s'appliquent à la ville où il se trouve.
 | `mayor <joueur>` | maire | passe l'écharpe à un autre joueur |
 | `deputy add\|remove <joueur>` | maire | nomme ou démet un adjoint |
 | `blueprints` | tous | les schémas disponibles |
-| `build <schéma> [style]` | maire, adjoints | commande un chantier devant soi |
-| `build cancel` | maire, adjoints | annule le chantier en cours |
+| `build <schéma> [style]` | maire, adjoints | propose un chantier devant soi, et montre son fantôme |
+| `build rotate` | maire, adjoints | tourne le chantier proposé d'un quart de tour |
+| `build confirm` | maire, adjoints | commande le chantier proposé |
+| `build cancel` | maire, adjoints | abandonne le chantier proposé, sinon annule le chantier en cours |
 | `upgrade` | maire, adjoints | agrandit le bâtiment où l'on se trouve |
 | `festival` | maire, adjoints | offre une fête (4 émeraudes du grenier) |
 | `decree <décret>` | maire, adjoints | prend ou lève un décret (`rationing`, `overtime`, `holiday`) |
@@ -259,7 +265,7 @@ Java 25 est requis (Loom 1.18.3, Minecraft 26.2).
 ./gradlew runClient             # lance le jeu avec le mod
 ./gradlew runGameTest           # les scènes de jeu, vérifiées sur le seul serveur, sans fenêtre (rapide)
 ./gradlew runGameTest -PminecitiesGametest=work   # une scène (city, work, countryside, village, build, family, raid, life, market, robust, industry, crafts,
-council, logistics, guide, structures)
+council, logistics, guide, structures, plans)
 ./gradlew runClientGameTest     # les mêmes scènes dans le vrai jeu, photographiées (build/run/clientGameTest/screenshots), plus styles
 ./gradlew runClientGameTest -PminecitiesFilm   # avec les films image par image (lents)
 python tools/textures/generate.py   # régénère les textures (peaux des citoyens, plaque, œuf)

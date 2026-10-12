@@ -1,6 +1,7 @@
 package com.ajustor.minecities.registry;
 
 import com.ajustor.minecities.MineCities;
+import com.ajustor.minecities.build.PlanItem;
 import com.ajustor.minecities.guide.GuideItem;
 import net.fabricmc.fabric.api.creativetab.v1.FabricCreativeModeTab;
 import net.minecraft.core.Registry;
@@ -45,6 +46,8 @@ public final class McItems {
 			new Item.Properties().stacksTo(16).rarity(Rarity.RARE));
 	/** Le guide de la ville, que chaque joueur reçoit à sa première venue. */
 	public static final Item GUIDE = register("guide", GuideItem::new, new Item.Properties().stacksTo(1));
+	/** Le plan d'un bâtiment, pris à l'hôtel de ville : posé au sol, il montre le fantôme du bâtiment. */
+	public static final Item PLAN = register("plan", PlanItem::new, new Item.Properties().stacksTo(1));
 	public static final Item CITIZEN_SPAWN_EGG = register("citizen_spawn_egg", SpawnEggItem::new,
 			new Item.Properties().spawnEgg(McEntities.CITIZEN));
 

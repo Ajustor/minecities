@@ -406,6 +406,27 @@ GUIDE = ([
     "................"], {"b": "#2f4f9e", "h": "#4f74c8", "s": "#1c2f63", "p": "#efe6cf", "o": "#f2c94c", "r": "#b5462f"})
 
 
+# Le plan d'un bâtiment : une feuille bleue roulée aux deux bouts, une maison tracée en blanc.
+# b papier bleu, d ombre, r rouleau, l traits blancs.
+PLAN = ([
+    "................",
+    ".rr..........rr.",
+    "rddrbbbbbbbbrddr",
+    "rddrbbbbbbbbrddr",
+    "rddrbbbllbbbrddr",
+    "rddrbbllllbbrddr",
+    "rddrbllbbllbrddr",
+    "rddrbbllllbbrddr",
+    "rddrbblbblbbrddr",
+    "rddrbblbllbbrddr",
+    "rddrbbllllbbrddr",
+    "rddrbbbbbbbbrddr",
+    "rddrbbbbbbbbrddr",
+    ".rr..........rr.",
+    "................",
+    "................"], {"b": "#2f6fb5", "d": "#1d4a7c", "r": "#e8e2cf", "l": "#eaf3ff"})
+
+
 def save(img, path):
     path.parent.mkdir(parents=True, exist_ok=True)
     img.save(path)
@@ -425,6 +446,7 @@ def main():
     for name, (rows, palette) in JEWELS.items():
         save(sprite(rows, palette), TEXTURES / f"item/{name}.png")
     save(sprite(*GUIDE), TEXTURES / "item/guide.png")
+    save(sprite(*PLAN), TEXTURES / "item/plan.png")
 
 
 if __name__ == "__main__":
