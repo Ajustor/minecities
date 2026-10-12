@@ -136,9 +136,11 @@ puis un tag `vX.Y.0` qui publie la release.
 9. **v1.2** (fait) — des bâtiments plus travaillés : débords de toit, volets, pignons à poutre et
    lucarne, cheminées qui fument, fenêtres en façade, tapis, pots de fleurs, bibliothèques.
 10. **v1.3** (fait) — des intérieurs meublés selon le métier et le niveau.
-11. **v1.x** — suites du brief 09 (aperçu fantôme, plans, structures enregistrées), styles de
+11. **v1.4** (fait) — brief 12 : l'entrepôt, la navette des livreurs, le charpentier, et les
+    fabrications qui manquaient (cisailles, blocs de fer, fioles, flèches, citrouilles sculptées).
+12. **v1.x** — suites du brief 09 ; la canne à sucre et les citrouilles aux champs (brief 12) (aperçu fantôme, plans, structures enregistrées), styles de
    bâtiments plus travaillés.
-12. **v2** — brief 02 (habitants joueurs, rangs, décrets, élections).
+13. **v2** — brief 02 (habitants joueurs, rangs, décrets, élections).
 
 | # | Brief | Résumé |
 |---|---|---|
@@ -152,4 +154,5 @@ puis un tag `vX.Y.0` qui publie la release.
 | 08 | [Robustesse et multijoueur](docs/briefs/08-robustesse.md) | Fait en v0.8 : configuration, protections, hôtel de ville détruit, disparus ; suite : compatibilité (Jade) |
 | 10 | [Familles, mariages, naissances et animations](docs/briefs/10-familles-animations.md) | Fait en v0.4 : 5 fondateurs, mariages acceptés par le maire, naissances, animations |
 | 11 | [Bâtiments à quatre niveaux et filières](docs/briefs/11-niveaux-et-filieres.md) | v0.9–v1.0 : 4 niveaux de bâtiments, mineur, forgeron, boulanger, joaillier… |
+| 12 | [Entrepôt et logistique](docs/briefs/12-entrepot-logistique.md) | Fait en v1.4 : entrepôt, navette des livreurs, charpentier, fabrications manquantes |
 | 09 | [Bâtisseur et schémas](docs/briefs/09-batisseur-schemas.md) | Fait en v0.3 ; suite : aperçu fantôme, objet plan, schémas enregistrés au bloc de structure |
