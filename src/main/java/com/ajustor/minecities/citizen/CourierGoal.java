@@ -60,7 +60,8 @@ class CourierGoal extends WorkGoal {
 		Optional<CitizenEntity> customer = customer();
 		if (cargo != null && count(cargo) > 0) {
 			if (customer.isEmpty() || customer.get().wanted().filter(cargo::equals).isEmpty()) {
-				// Plus personne n'en veut : retour au grenier.
+				// Plus personne n'en veut : retour au grenier (ce qu'il tient en main aussi).
+				stow();
 				if (deliver(s -> false, 0)) {
 					cargo = null;
 				}
@@ -89,6 +90,7 @@ class CourierGoal extends WorkGoal {
 				ItemStack taken = Stock.take(c, s -> s.is(item), Math.min(LOAD, customer.get().wantedCount()));
 				if (!taken.isEmpty()) {
 					cargo = item;
+					stow();
 					citizen.setItemSlot(EquipmentSlot.MAINHAND, taken.copyWithCount(1));
 					citizen.carry(taken.copyWithCount(taken.getCount() - 1));
 				}
@@ -188,6 +190,15 @@ class CourierGoal extends WorkGoal {
 		return Optional.empty();
 	}
 
+	/** Ce qu'il tient en main passe dans ses poches : rien ne se perd quand il prend autre chose. */
+	private void stow() {
+		ItemStack held = citizen.getMainHandItem();
+		if (!held.isEmpty()) {
+			citizen.setItemSlot(EquipmentSlot.MAINHAND, ItemStack.EMPTY);
+			citizen.carry(held);
+		}
+	}
+
 	/** Le bâtisseur qu'il sert : celui qu'il servait déjà, sinon le plus proche qui attend. */
 	private Optional<CitizenEntity> customer() {
 		if (client != null && level().getEntity(client) instanceof CitizenEntity known && known.isAlive()
@@ -224,8 +235,10 @@ class CourierGoal extends WorkGoal {
 		double dz = citizen.getZ() - customer.getZ();
 		// Au pied du bâtisseur (qui peut être perché sur un échafaudage) : il lui fait passer la
 		// livraison, jusqu'à 10 blocs de haut.
-		if (dx * dx + dz * dz > 3.0 * 3.0 || Math.abs(citizen.getY() - customer.getY()) > 10) {
-			goTo(groundBelow(customer.blockPosition()));
+		// Arrivé au pied du bâtisseur selon goTo (à trois blocs), il donne : sans quoi il resterait
+		// planté là, ni assez près pour donner, ni assez loin pour repartir.
+		if ((dx * dx + dz * dz > 3.0 * 3.0 || Math.abs(citizen.getY() - customer.getY()) > 10)
+				&& !goTo(groundBelow(customer.blockPosition()))) {
 			return;
 		}
 		citizen.getNavigation().stop();

@@ -56,6 +56,16 @@ final class Crafts {
 				net.minecraft.resources.Identifier.withDefaultNamespace(name));
 	}
 
+	/** La bûche dont on tire ces planches (quatre par bûche) ; vide si ce ne sont pas des planches. */
+	static java.util.Optional<net.minecraft.world.item.Item> logOf(net.minecraft.world.item.Item planks) {
+		for (String wood : WOODS) {
+			if (planks == item(wood + "_planks") && item(wood + "_log") != Items.AIR) {
+				return java.util.Optional.of(item(wood + "_log"));
+			}
+		}
+		return java.util.Optional.empty();
+	}
+
 	/** Le charpentier : des planches de chaque essence, des bâtons, des bols (le reste sur commande). */
 	static final List<Craft> CARPENTER = carpenter();
 
