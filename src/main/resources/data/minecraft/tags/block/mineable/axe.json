@@ -4,6 +4,8 @@
     "minecities:town_annex",
     "minecities:mine_winch",
     "minecities:jeweler_bench",
-    "minecities:tanning_rack"
+    "minecities:tanning_rack",
+    "minecities:warehouse_ledger",
+    "minecities:carpenter_bench"
   ]
 }

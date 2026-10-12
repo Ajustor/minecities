@@ -71,7 +71,8 @@ class MinerGoal extends WorkGoal {
 			if (deliver(this::kept, 16)) {
 				// Au grenier, il reprend des bâtons pour ses torches.
 				if (citizen.inventory().stream().noneMatch(s -> s.is(Items.STICK))) {
-					container(town().hall()).ifPresent(c -> citizen.carry(Stock.take(c, s -> s.is(Items.STICK), 8)));
+					find(supplies(), s -> s.is(Items.STICK)).flatMap(this::container)
+							.ifPresent(c -> citizen.carry(Stock.take(c, s -> s.is(Items.STICK), 8)));
 				}
 				rest(40);
 			}

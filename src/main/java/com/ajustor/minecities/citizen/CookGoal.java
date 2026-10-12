@@ -13,6 +13,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Le cuisinier, au fumoir, et le boulanger, au four. Le cuisinier prend au grenier ce qui est cru
@@ -74,7 +75,13 @@ class CookGoal extends WorkGoal {
 	}
 
 	private void fetch() {
-		BlockPos granary = town().hall();
+		// Les ingrédients : dans l'atelier, l'entrepôt (le blé) ou le grenier (la viande crue).
+		Optional<BlockPos> source = find(supplies(), kitchen()::isIngredient);
+		if (source.isEmpty()) {
+			rest(IDLE_LONG);
+			return;
+		}
+		BlockPos granary = source.get();
 		if (!goTo(granary)) {
 			return;
 		}
@@ -130,17 +137,9 @@ class CookGoal extends WorkGoal {
 	}
 
 	private void deliver() {
-		BlockPos granary = town().hall();
-		if (!goTo(granary)) {
-			return;
+		if (deliver(s -> false, 0)) {
+			phase = Phase.FETCH;
 		}
-		container(granary).ifPresent(c -> {
-			List<ItemStack> inventory = citizen.inventory();
-			for (int i = 0; i < inventory.size(); i++) {
-				inventory.set(i, Stock.insert(c, inventory.get(i)));
-			}
-		});
-		phase = Phase.FETCH;
 	}
 
 	/** Allume ou éteint le fumoir (ou le four) pendant qu'il cuisine. */

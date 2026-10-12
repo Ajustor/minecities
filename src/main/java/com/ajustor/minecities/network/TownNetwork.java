@@ -68,9 +68,14 @@ public final class TownNetwork {
 		for (House house : town.houses()) {
 			int sleepers = (int) residents.values().stream().filter(r -> r.bed().filter(house.beds()::contains)
 					.isPresent()).count();
-			buildings.add(new TownSnapshot.BuildingRow(house.plaque(), house.beds().size(), sleepers,
-					house.workstations().stream().map(w -> (w.job().unlockedAt(town.tier()) ? "" : "!")
-							+ w.job().translationKey()).toList(), house.village()));
+			List<String> roles = new ArrayList<>(house.workstations().stream().map(w -> (w.job().unlockedAt(town.tier())
+					? "" : "!") + w.job().translationKey()).toList());
+			if (house.warehouse()) {
+				// L'entrepôt se montre comme tel, avec ses métiers s'il en a.
+				roles.addFirst("screen.minecities.building.warehouse");
+			}
+			buildings.add(new TownSnapshot.BuildingRow(house.plaque(), house.beds().size(), sleepers, roles,
+					house.village()));
 		}
 		List<TownSnapshot.RequestRow> requests = new ArrayList<>();
 		for (MarriageRequest request : town.marriageRequests()) {

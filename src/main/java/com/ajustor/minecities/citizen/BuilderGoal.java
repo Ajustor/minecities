@@ -268,8 +268,7 @@ class BuilderGoal extends WorkGoal {
 		if (clearing) {
 			// Dégager : ce qui était là va au grenier (par ses poches).
 			ItemStack held = tool.isPresent() ? citizen.getMainHandItem() : ItemStack.EMPTY;
-			Block.getDrops(current, level, p.pos(), level.getBlockEntity(p.pos()), citizen, held)
-					.forEach(citizen::carry);
+			drops(level, p.pos(), current, held).forEach(citizen::carry);
 			if (!held.isEmpty()) {
 				held.hurtAndBreak(1, citizen, EquipmentSlot.MAINHAND);
 			}
@@ -298,6 +297,29 @@ class BuilderGoal extends WorkGoal {
 		level.playSound(null, p.pos(), p.state().getSoundType().getPlaceSound(), SoundSource.BLOCKS, 1.0f, 0.9f);
 		construction.markPlaced(index);
 		Towns.get(level.getServer()).changed();
+	}
+
+	/**
+	 * Ce que laisse ce bloc. Un lit ne laisse son objet que par sa tête, une porte que par sa moitié
+	 * basse : démonter l'autre moitié emporte la première sans rien laisser, alors on prend ce que
+	 * laisse celle-là. Sans quoi le lit ou la porte se perdrait.
+	 */
+	private List<ItemStack> drops(ServerLevel level, BlockPos pos, BlockState state, ItemStack held) {
+		List<ItemStack> drops = Block.getDrops(state, level, pos, level.getBlockEntity(pos), citizen, held);
+		if (!drops.isEmpty()) {
+			return drops;
+		}
+		BlockPos other = null;
+		if (state.getBlock() instanceof net.minecraft.world.level.block.BedBlock) {
+			other = pos.relative(net.minecraft.world.level.block.BedBlock.getConnectedDirection(state));
+		} else if (state.hasProperty(BlockStateProperties.DOUBLE_BLOCK_HALF)) {
+			other = state.getValue(BlockStateProperties.DOUBLE_BLOCK_HALF)
+					== net.minecraft.world.level.block.state.properties.DoubleBlockHalf.UPPER ? pos.below() : pos.above();
+		}
+		if (other == null || !level.getBlockState(other).is(state.getBlock())) {
+			return drops;
+		}
+		return Block.getDrops(level.getBlockState(other), level, other, level.getBlockEntity(other), citizen, held);
 	}
 
 	/** L'outil qu'il faut pour retirer ce bloc, s'il en faut un. */
@@ -660,6 +682,9 @@ class BuilderGoal extends WorkGoal {
 			cooldown = 20;
 			return;
 		}
+		if (source.isEmpty() && saw(construction, item)) {
+			return;
+		}
 		if (source.isEmpty()) {
 			int needed = Math.max(1, (int) plan.subList(construction.step(), plan.size()).stream()
 					.filter(p -> BuildPlan.material(p.state()).filter(item::equals).isPresent()).count());
@@ -686,6 +711,43 @@ class BuilderGoal extends WorkGoal {
 				}
 			});
 		}
+	}
+
+	/**
+	 * Plus de planches nulle part : il scie lui-même des bûches de la même essence (celles des poteaux
+	 * qu'il a démontés, ou celles des réserves), quatre planches par bûche. Vrai s'il s'en occupe.
+	 */
+	private boolean saw(Construction construction, Item planks) {
+		Optional<Item> log = Crafts.logOf(planks);
+		if (log.isEmpty()) {
+			return false;
+		}
+		// Les bûches que le chantier pose lui-même restent des bûches.
+		int logsKept = (int) plan.subList(construction.step(), plan.size()).stream()
+				.filter(p -> BuildPlan.material(p.state()).filter(log.get()::equals).isPresent()).count();
+		int spare = count(log.get()) - logsKept;
+		if (spare > 0) {
+			int needed = (int) plan.subList(construction.step(), plan.size()).stream()
+					.filter(p -> BuildPlan.material(p.state()).filter(planks::equals).isPresent()).count();
+			int sawn = Math.min(spare, Math.min(HAUL / 4, (needed + 3) / 4));
+			for (int i = 0; i < sawn; i++) {
+				consume(log.get());
+			}
+			citizen.carry(new ItemStack(planks, sawn * 4));
+			citizen.swing(InteractionHand.MAIN_HAND);
+			level().playSound(null, citizen.blockPosition(), SoundEvents.WOOD_HIT, SoundSource.NEUTRAL, 0.8F, 1.0F);
+			cooldown = 20;
+			return true;
+		}
+		// Il a déjà en poche les bûches du chantier : il va en chercher d'autres à scier.
+		Optional<BlockPos> logs = find(supplies(), s -> s.is(log.get()));
+		if (logs.isEmpty() || spare < 0) {
+			return false;
+		}
+		if (goTo(logs.get())) {
+			container(logs.get()).ifPresent(c -> citizen.carry(Stock.take(c, s -> s.is(log.get()), HAUL / 4)));
+		}
+		return true;
 	}
 
 	private void finish(Construction construction) {

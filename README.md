@@ -7,9 +7,9 @@ vanilla : pas de plans imposés ni de huttes préfabriquées. Vous bâtissez com
 reconnaît vos maisons, et des citoyens viennent y vivre. Le village devient ville, puis grande
 ville, puis mégalopole.
 
-> État : **v1.3** (villes, maisons, familles, vingt-trois métiers et leurs filières, de la mine au
+> État : **v1.4** (villes, maisons, familles, vingt-quatre métiers et leurs filières, de la mine au
 > bijou et du blé au pain, bâtiments à quatre niveaux et maîtrise du niveau 4, décrets du maire,
-> commerce entre villes, bâtiments décorés et meublés, bonheur et repas variés, marché et trésor, paliers qui
+> commerce entre villes, bâtiments décorés et meublés, entrepôt et logistique, bonheur et repas variés, marché et trésor, paliers qui
 > débloquent, mairies annexes, fêtes, cloche d'alarme, raids de pillards, écran de l'hôtel de ville,
 > configuration et protections pour les serveurs). La suite est décrite dans [BRIEF.md](BRIEF.md) et [docs/briefs](docs/briefs).
 
@@ -73,7 +73,11 @@ ville, puis mégalopole.
      il demande à qui se trouve sur son chemin de s'écarter. Plusieurs bâtisseurs se partagent un
      chantier, chacun son bloc.
    - **Table de cartographie → livreur** : il porte aux bâtisseurs les matériaux qu'ils réclament,
-     pour qu'ils ne quittent pas leur chantier.
+     pour qu'ils ne quittent pas leur chantier ; le reste du temps, il fait la navette : il vide les
+     coffres des ateliers de leur production vers l'entrepôt (la nourriture au grenier), et y dépose à
+     l'avance ce que chaque métier consomme.
+   - **Établi de charpentier → charpentier** : planches (de chaque essence), bâtons, bols, et sur
+     commande les portes, barrières, escaliers, dalles et trappes que réclament les bâtisseurs.
    - **Meule → garde** : avec une **épée** (et l'armure qu'il trouve au grenier), il fait sa ronde,
      veille la nuit et se bat contre les monstres du territoire.
    - **Table d'archerie → archer** : avec un **arc** et des flèches, il monte au point le plus haut
@@ -138,6 +142,12 @@ ville, puis mégalopole.
    **boulangerie**, la **taillerie de pierre**, la **verrerie**, le **tissage**, le **rucher** et, dès la
    ville, le **marché**, la **joaillerie** et la **bibliothèque** ; chacun a ses quatre niveaux. Les datapacks peuvent ajouter
    des schémas (`data/<ns>/blueprint/*.json`).
+7 bis. **L'entrepôt** : un **registre d'entrepôt** posé dans un bâtiment déclaré en fait l'entrepôt de la
+   ville, et tous ses coffres la réserve commune. La nourriture et les émeraudes vont au grenier, tout
+   le reste à l'entrepôt. Sans livreur, chacun va lui-même y déposer et y prendre ; avec des livreurs,
+   les travailleurs laissent leur production dans le coffre de leur atelier et les livreurs font les
+   voyages. Le forgeron fait aussi les cisailles (apiculteur) et les blocs de fer (golems), le verrier
+   les fioles, l'archer taille ses flèches (silex, bâton, plume), l'inventeur sculpte ses citrouilles.
 8. **Grandir** : la ville monte de palier avec ses citoyens et ses maisons (feux d'artifice, et la
    liste de ce qui s'ouvre) ; son territoire s'étend. La **ville** ouvre le marché et le marchand ;
    la **grande ville** peut poser 2 **mairies annexes** (4 en mégalopole) : posées sur le territoire
@@ -197,6 +207,8 @@ ville, puis mégalopole.
 - **Établi de joaillier** : vitre, éclat d'améthyste, lingot de fer ; trois planches ; bûche, rien, bûche.
 - **Four de verrier** : brique, rien, brique ; brique, fourneau, brique ; brique, sable, brique.
 - **Séchoir à peaux** : trois bâtons ; bâton, cuir, bâton ; bâton, rien, bâton.
+- **Registre d'entrepôt** : un livre, une plume, un tonneau (en colonne).
+- **Établi de charpentier** : lingot de fer, bâton ; trois planches ; bûche, rien, bûche.
 
 ### Le maire
 
@@ -234,7 +246,7 @@ Java 25 est requis (Loom 1.18.3, Minecraft 26.2).
 ./gradlew runClient             # lance le jeu avec le mod
 ./gradlew runClientGameTest     # scènes en jeu vérifiées et photographiées (build/run/clientGameTest/screenshots)
 ./gradlew runClientGameTest -PminecitiesGametest=work   # une scène (city, work, countryside, village, build, family, raid, life, market, robust, industry, crafts,
-council, styles)
+council, styles, logistics)
 python tools/textures/generate.py   # régénère les textures (peaux des citoyens, plaque, œuf)
 python tools/models/town_hall.py    # régénère le modèle de l'hôtel de ville
 python tools/blueprints/generate.py # régénère les schémas du bâtisseur

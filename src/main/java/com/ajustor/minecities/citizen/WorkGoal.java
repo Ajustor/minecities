@@ -4,6 +4,7 @@ import com.ajustor.minecities.town.House;
 import com.ajustor.minecities.town.Job;
 import com.ajustor.minecities.town.Resident;
 import com.ajustor.minecities.town.Stock;
+import com.ajustor.minecities.town.Storage;
 import com.ajustor.minecities.town.Town;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
@@ -145,8 +146,45 @@ abstract class WorkGoal extends Goal {
 	protected List<BlockPos> supplies() {
 		List<BlockPos> supplies = new ArrayList<>();
 		town().house(employment().workshop()).ifPresent(h -> supplies.addAll(h.containers()));
-		supplies.add(town().hall());
+		// Puis les réserves communes : l'entrepôt, le grenier (brief 12).
+		supplies.addAll(com.ajustor.minecities.town.Storage.stores(town()));
 		return supplies;
+	}
+
+	/** Les contenants chargés de cette liste. */
+	protected List<Container> pool(List<BlockPos> positions) {
+		List<Container> pool = new ArrayList<>();
+		for (BlockPos pos : positions) {
+			container(pos).ifPresent(pool::add);
+		}
+		return pool;
+	}
+
+	/** Combien il y en a en tout dans ces contenants. */
+	protected static int count(List<Container> pool, Predicate<ItemStack> filter) {
+		return pool.stream().mapToInt(c -> Stock.count(c, filter)).sum();
+	}
+
+	/** En prend autant (au plus), d'une même sorte, dans ces contenants l'un après l'autre. */
+	protected static ItemStack take(List<Container> pool, Predicate<ItemStack> filter, int count) {
+		ItemStack all = ItemStack.EMPTY;
+		for (Container c : pool) {
+			while (count > 0) {
+				ItemStack sample = all;
+				ItemStack part = Stock.take(c, s -> filter.test(s) && (sample.isEmpty()
+						|| ItemStack.isSameItemSameComponents(s, sample)), count);
+				if (part.isEmpty()) {
+					break;
+				}
+				if (all.isEmpty()) {
+					all = part;
+				} else {
+					all.grow(part.getCount());
+				}
+				count -= part.getCount();
+			}
+		}
+		return all;
 	}
 
 	/** Le premier contenant de la liste qui a ce qu'on cherche. */
@@ -197,32 +235,79 @@ abstract class WorkGoal extends Goal {
 	}
 
 	/**
-	 * Porte au grenier ce qu'il a dans les poches, en gardant ce que {@code kept} dit de garder (des
-	 * semences, des pousses), {@code keep} de chaque sorte au plus. Renvoie vrai une fois livré.
+	 * Dépose ce qu'il a dans les poches, en gardant ce que {@code kept} dit de garder (des semences, des
+	 * pousses), {@code keep} de chaque sorte au plus (brief 12). Avec des livreurs en ville, il le laisse
+	 * dans le coffre de son atelier (ils feront la navette) ; sinon, il le porte lui-même : la
+	 * nourriture au grenier, le reste à l'entrepôt (au grenier s'il n'y en a pas). Il fait autant de
+	 * voyages qu'il faut. Renvoie vrai une fois tout déposé (ou quand plus rien n'a de place).
 	 */
 	protected boolean deliver(Predicate<ItemStack> kept, int keep) {
-		BlockPos granary = town().hall();
-		if (!goTo(granary)) {
+		java.util.Map<Integer, Integer> spare = spare(kept, keep);
+		if (spare.isEmpty()) {
+			return true;
+		}
+		ItemStack first = citizen.inventory().get(spare.keySet().iterator().next());
+		BlockPos target = depot(first);
+		if (!goTo(target)) {
 			return false;
 		}
-		container(granary).ifPresent(container -> {
-			java.util.Map<net.minecraft.world.item.Item, Integer> held = new java.util.HashMap<>();
-			List<ItemStack> inventory = citizen.inventory();
-			for (ItemStack stack : inventory) {
-				if (stack.isEmpty()) {
+		boolean moved = false;
+		Optional<Container> into = container(target);
+		if (into.isPresent()) {
+			boolean workshop = !Storage.stores(town()).contains(target);
+			for (java.util.Map.Entry<Integer, Integer> e : spare.entrySet()) {
+				ItemStack stack = citizen.inventory().get(e.getKey());
+				if (!workshop && !Storage.depot(level(), town(), stack).equals(target)) {
 					continue;
 				}
-				int keepHere = 0;
-				if (kept.test(stack)) {
-					int already = held.getOrDefault(stack.getItem(), 0);
-					keepHere = Math.min(stack.getCount(), keep - already);
-					held.put(stack.getItem(), already + keepHere);
+				int count = e.getValue();
+				ItemStack rest = Stock.insert(into.get(), stack.copyWithCount(count));
+				if (rest.getCount() < count) {
+					moved = true;
 				}
-				ItemStack rest = Stock.insert(container, stack.copyWithCount(stack.getCount() - keepHere));
-				stack.setCount(keepHere + rest.getCount());
+				stack.setCount(stack.getCount() - count + rest.getCount());
 			}
-		});
-		return true;
+		}
+		// Rien n'a trouvé de place : il garde le reste, plutôt que de tourner en rond.
+		return !moved || spare(kept, keep).isEmpty();
+	}
+
+	/** Ce qu'il peut déposer, case par case (sans ce qu'il garde). */
+	private java.util.Map<Integer, Integer> spare(Predicate<ItemStack> kept, int keep) {
+		java.util.Map<net.minecraft.world.item.Item, Integer> held = new java.util.HashMap<>();
+		java.util.Map<Integer, Integer> spare = new java.util.LinkedHashMap<>();
+		List<ItemStack> inventory = citizen.inventory();
+		for (int i = 0; i < inventory.size(); i++) {
+			ItemStack stack = inventory.get(i);
+			if (stack.isEmpty()) {
+				continue;
+			}
+			int keepHere = 0;
+			if (kept.test(stack)) {
+				int already = held.getOrDefault(stack.getItem(), 0);
+				keepHere = Math.max(0, Math.min(stack.getCount(), keep - already));
+				held.put(stack.getItem(), already + keepHere);
+			}
+			if (stack.getCount() > keepHere) {
+				spare.put(i, stack.getCount() - keepHere);
+			}
+		}
+		return spare;
+	}
+
+	/**
+	 * Où il dépose cette marchandise : le coffre de son atelier si des livreurs font la navette (et qu'il
+	 * y a de la place), sinon la réserve commune qui lui revient.
+	 */
+	private BlockPos depot(ItemStack stack) {
+		if (job != Job.COURIER && town().workers(Job.COURIER) > 0) {
+			for (BlockPos chest : town().house(employment().workshop()).map(House::containers).orElse(List.of())) {
+				if (container(chest).filter(c -> Storage.room(c, stack)).isPresent()) {
+					return chest;
+				}
+			}
+		}
+		return Storage.depot(level(), town(), stack);
 	}
 
 	/** Ce qu'il porte, hors ce qu'il garde ({@code keep} de chaque sorte que {@code kept} retient). */

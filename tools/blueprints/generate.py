@@ -78,6 +78,8 @@ KEY = {
     "x": "minecraft:chiseled_bookshelf[facing=north]",
     "#": "minecraft:bookshelf",
     "N": "minecities:tanning_rack[facing=north]",
+    "!": "minecities:carpenter_bench[facing=north]",
+    "?": "minecities:warehouse_ledger[facing=south]",
     # Le décor (v1.2) : volets, cheminée, tapis, pot de fleurs.
     "(": "{trapdoor}[facing=west,half=top,open=true]",
     ")": "{trapdoor}[facing=east,half=top,open=true]",
@@ -467,6 +469,8 @@ FURNITURE = {
     "apiary": ["@", "@", "2", "T", "@", "2", "6", "@"],
     "tannery": ["3", "2", "T", "@", "3", "2", "A", "@"],
     "library": ["#", "T", "#", "@", "#", "T", "#", "2"],
+    "carpentry": ["P", "P", "2", "A", "T", "@", "P", "2"],
+    "warehouse": ["2", "T", "2", "@", "2", "T", "2", "@"],
 }
 # Combien de meubles à chaque niveau.
 FURNISHED = {1: 2, 2: 3, 3: 5, 4: 8}
@@ -514,6 +518,20 @@ def furnish(level, out, family):
             floor[z][x] = prop
         placed += 1
     return out
+
+
+def warehouse_level(level):
+    """
+    L'entrepôt (brief 12) : son registre près de la porte, et des rangées de coffres le long des murs,
+    quatre de plus à chaque niveau.
+    """
+    w, d = WORKSHOP_SIZES[level]
+    extras = {(w - 2, 1, 1): "?"}
+    spots = [(1, z) for z in range(2, d - 1)] + [(w - 2, z) for z in range(2, d - 1)] \
+        + [(x, d - 2) for x in range(2, w - 2)]
+    for x, z in spots[:4 * level]:
+        extras[(x, 1, z)] = "C"
+    return decorate(level, levelled(level, w, d, extras=extras), w, d, False)
 
 
 def series(prints, name, make, outside=None, ext_width=8, min_tier=None):
@@ -588,6 +606,9 @@ def main():
     series(prints, "weavery", lambda level: workshop_level(level, "z"))
     series(prints, "apiary", lambda level: workshop_level(level, "w"))
     series(prints, "tannery", lambda level: workshop_level(level, "N"))
+    # La logistique (v1.4) : la charpenterie et l'entrepôt.
+    series(prints, "carpentry", lambda level: workshop_level(level, "!"))
+    series(prints, "warehouse", warehouse_level)
     # La bibliothèque (dès la ville) : des bibliothèques ciselées, et des rayonnages le long des murs.
     series(prints, "library", lambda level: workshop_level(level, "x", more={(1, 1, 2): "#", (1, 1, 3): "#",
                                                                                (1, 1, 4): "#"}), min_tier="town")

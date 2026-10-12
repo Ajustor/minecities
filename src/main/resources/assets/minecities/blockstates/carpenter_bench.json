@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "minecities:block/carpenter_bench"
+    },
+    "facing=east": {
+      "model": "minecities:block/carpenter_bench",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "minecities:block/carpenter_bench",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "minecities:block/carpenter_bench",
+      "y": 270
+    }
+  }
+}

@@ -306,6 +306,11 @@ public final class Town {
 		return houses.values().stream().anyMatch(h -> h.beds().contains(bed));
 	}
 
+	/** Les coffres et tonneaux des entrepôts de la ville (brief 12). */
+	public List<BlockPos> warehouseContainers() {
+		return houses.values().stream().filter(House::warehouse).flatMap(h -> h.containers().stream()).toList();
+	}
+
 	/** Une autre maison de la ville a-t-elle déjà ce lit ? */
 	public boolean bedClaimedElsewhere(BlockPos bed, BlockPos plaque) {
 		return houses.values().stream().anyMatch(h -> !h.plaque().equals(plaque) && h.beds().contains(bed));
