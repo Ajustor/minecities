@@ -7,6 +7,7 @@ import com.ajustor.minecities.build.BuildStyle;
 import com.ajustor.minecities.build.Builds;
 import com.ajustor.minecities.build.Construction;
 import com.ajustor.minecities.citizen.CitizenEntity;
+import com.ajustor.minecities.guide.Guide;
 import com.ajustor.minecities.town.Families;
 import com.ajustor.minecities.town.Job;
 import com.ajustor.minecities.town.Decree;
@@ -35,12 +36,17 @@ import net.minecraft.commands.arguments.IdentifierArgument;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.block.Rotation;
+import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.HoverEvent;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.stats.Stats;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -79,6 +85,8 @@ public final class TownCommands {
 				.executes(TownCommands::info)
 				.then(Commands.literal("info").executes(TownCommands::info))
 				.then(Commands.literal("list").executes(TownCommands::list))
+				.then(Commands.literal("guide").executes(TownCommands::guide))
+				.then(Commands.literal("bug").executes(TownCommands::bug))
 				.then(Commands.literal("citizens").executes(TownCommands::citizens))
 				.then(Commands.literal("rename")
 						.then(Commands.argument("name", StringArgumentType.greedyString())
@@ -307,6 +315,34 @@ public final class TownCommands {
 		ServerLevel level = context.getSource().getServer().getLevel(town.dimension());
 		ServerPlayer player = context.getSource().getPlayerOrException();
 		TownService.describe(level != null ? level : context.getSource().getLevel(), town, player);
+		return Command.SINGLE_SUCCESS;
+	}
+
+	private static int guide(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
+		Guide.give(context.getSource().getPlayerOrException());
+		context.getSource().sendSuccess(() -> Component.translatable("command.minecities.guide"), false);
+		return Command.SINGLE_SUCCESS;
+	}
+
+	/**
+	 * Un lien vers le formulaire de signalement du site, prérempli avec ce qui aide à corriger : les
+	 * versions, les autres mods, le temps de jeu, le jour, le mode de jeu et la ville où l'on est.
+	 */
+	private static int bug(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
+		ServerPlayer player = context.getSource().getPlayerOrException();
+		MinecraftServer server = context.getSource().getServer();
+		Map<String, String> fields = Guide.setup();
+		int ticks = player.getStats().getValue(Stats.CUSTOM.get(Stats.PLAY_TIME));
+		fields.put("playtime", String.format(Locale.ROOT, "%.1f", ticks / 72_000.0));
+		fields.put("day", Long.toString(server.overworld().getOverworldClockTime() / 24_000L + 1));
+		fields.put("env", server.isDedicatedServer() ? "server" : server.isPublished() ? "lan" : "solo");
+		Towns.get(server).at(player.level().dimension(), player.blockPosition()).ifPresent(town ->
+				fields.put("town", town.tier().name().toLowerCase(Locale.ROOT) + ", " + town.population()));
+		ClickEvent open = new ClickEvent.OpenUrl(Guide.report(fields));
+		Component link = Component.translatable("command.minecities.bug.link").withStyle(s -> s
+				.withColor(ChatFormatting.AQUA).withUnderlined(true).withClickEvent(open)
+				.withHoverEvent(new HoverEvent.ShowText(Component.translatable("command.minecities.bug.hover"))));
+		context.getSource().sendSuccess(() -> Component.translatable("command.minecities.bug").append(" ").append(link), false);
 		return Command.SINGLE_SUCCESS;
 	}
 
