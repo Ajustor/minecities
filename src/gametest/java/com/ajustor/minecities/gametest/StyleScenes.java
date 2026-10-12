@@ -57,10 +57,20 @@ public class StyleScenes implements FabricClientGameTest {
 			look(sp, 32, Y + 11, z - 20, 32, Y + 3, z + 4);
 			context.waitTicks(30);
 			context.takeScreenshot("styles_4_workshops");
-			// L'intérieur d'une maison de niveau 3.
+			// Les intérieurs : une maison de niveau 3, une demeure, une cuisine et une bibliothèque.
 			look(sp, 2 * STEP_X + 6.5, Y + 2.6, 2.5, 2 * STEP_X + 6.5, Y + 1, 7);
 			context.waitTicks(20);
 			context.takeScreenshot("styles_5_inside");
+			look(sp, 3 * STEP_X + 7.5, Y + 2.8, 2.2, 3 * STEP_X + 5.5, Y + 0.8, 8);
+			context.waitTicks(20);
+			context.takeScreenshot("styles_6_mansion");
+			int row = styles.length * STEP_Z;
+			look(sp, 7.5, Y + 2.8, row + 2.2, 4.5, Y + 0.8, row + 6.5);
+			context.waitTicks(20);
+			context.takeScreenshot("styles_7_kitchen");
+			look(sp, 2 * 18 + 7.5, Y + 2.8, row + 2.2, 2 * 18 + 5, Y + 0.8, row + 6.5);
+			context.waitTicks(20);
+			context.takeScreenshot("styles_8_library");
 		}
 	}
 
