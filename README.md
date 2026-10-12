@@ -242,11 +242,13 @@ commandes du maire s'appliquent à la ville où il se trouve.
 Java 25 est requis (Loom 1.18.3, Minecraft 26.2).
 
 ```sh
-./gradlew build                 # compile, tests unitaires, jar dans build/libs
+./gradlew build                 # compile, tests unitaires, toutes les scènes sans fenêtre, jar dans build/libs
 ./gradlew runClient             # lance le jeu avec le mod
-./gradlew runClientGameTest     # scènes en jeu vérifiées et photographiées (build/run/clientGameTest/screenshots)
-./gradlew runClientGameTest -PminecitiesGametest=work   # une scène (city, work, countryside, village, build, family, raid, life, market, robust, industry, crafts,
-council, styles, logistics)
+./gradlew runGameTest           # les scènes de jeu, vérifiées sur le seul serveur, sans fenêtre (rapide)
+./gradlew runGameTest -PminecitiesGametest=work   # une scène (city, work, countryside, village, build, family, raid, life, market, robust, industry, crafts,
+council, logistics)
+./gradlew runClientGameTest     # les mêmes scènes dans le vrai jeu, photographiées (build/run/clientGameTest/screenshots), plus styles
+./gradlew runClientGameTest -PminecitiesFilm   # avec les films image par image (lents)
 python tools/textures/generate.py   # régénère les textures (peaux des citoyens, plaque, œuf)
 python tools/models/town_hall.py    # régénère le modèle de l'hôtel de ville
 python tools/blueprints/generate.py # régénère les schémas du bâtisseur
