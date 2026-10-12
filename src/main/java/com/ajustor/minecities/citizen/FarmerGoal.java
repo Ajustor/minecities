@@ -2,6 +2,7 @@ package com.ajustor.minecities.citizen;
 
 import com.ajustor.minecities.town.Job;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -9,9 +10,11 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.AttachedStemBlock;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.CropBlock;
+import net.minecraft.world.level.block.StemBlock;
 import net.minecraft.world.level.block.state.BlockState;
 
 import java.util.List;
@@ -20,6 +23,8 @@ import java.util.List;
  * Le fermier, au composteur. Il travaille les champs autour de son atelier : récolte ce qui est
  * mûr (blé, carottes, pommes de terre, betteraves), replante aussitôt, sème la terre labourée
  * restée nue, et porte la récolte au grenier quand ses poches sont pleines ou que le soir vient.
+ * Il coupe aussi la canne à sucre (en laissant le pied, qui repousse) et cueille les citrouilles et
+ * les pastèques au bout de leurs tiges ; il ne sème rien à côté d'une tige, où pousse le fruit.
  * Il lui faut une houe, qui s'use à chaque récolte.
  */
 class FarmerGoal extends WorkGoal {
@@ -79,11 +84,46 @@ class FarmerGoal extends WorkGoal {
 
 	/** Un plant mûr à récolter, ou une terre labourée nue à semer (s'il a de quoi). */
 	private boolean worthIt(BlockPos pos) {
+		if (ripe(pos)) {
+			return true;
+		}
+		return level().getBlockState(pos).isAir() && level().getBlockState(pos.below()).is(Blocks.FARMLAND)
+				&& !nextToStem(pos) && seed(null) >= 0;
+	}
+
+	/**
+	 * Ce qui se récolte en {@code pos} : une culture mûre, une canne à sucre au-dessus de son pied, ou
+	 * une citrouille (une pastèque) qu'une tige a fait pousser.
+	 */
+	private boolean ripe(BlockPos pos) {
 		BlockState state = level().getBlockState(pos);
 		if (state.getBlock() instanceof CropBlock crop) {
 			return crop.isMaxAge(state);
 		}
-		return state.isAir() && level().getBlockState(pos.below()).is(Blocks.FARMLAND) && seed(null) >= 0;
+		if (state.is(Blocks.SUGAR_CANE)) {
+			return level().getBlockState(pos.below()).is(Blocks.SUGAR_CANE);
+		}
+		if (state.is(Blocks.PUMPKIN) || state.is(Blocks.MELON)) {
+			for (Direction side : Direction.Plane.HORIZONTAL) {
+				BlockState stem = level().getBlockState(pos.relative(side));
+				if (stem.getBlock() instanceof AttachedStemBlock
+						&& stem.getValue(AttachedStemBlock.FACING) == side.getOpposite()) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	/** Une case voisine d'une tige de citrouille ou de pastèque : c'est là que pousse le fruit. */
+	private boolean nextToStem(BlockPos pos) {
+		for (Direction side : Direction.Plane.HORIZONTAL) {
+			Block block = level().getBlockState(pos.relative(side)).getBlock();
+			if (block instanceof StemBlock || block instanceof AttachedStemBlock) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/** La parcelle la plus proche qui demande du travail : les récoltes d'abord, puis les semis. */
@@ -97,7 +137,7 @@ class FarmerGoal extends WorkGoal {
 			if (!level().isLoaded(pos) || !worthIt(pos) || !town().contains(level().dimension(), pos)) {
 				continue;
 			}
-			boolean ripe = level().getBlockState(pos).getBlock() instanceof CropBlock;
+			boolean ripe = ripe(pos);
 			double distance = citizen.distanceToSqr(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5);
 			if (ripe && !bestRipe || ripe == bestRipe && distance < bestDistance) {
 				best = pos.immutable();
@@ -113,18 +153,35 @@ class FarmerGoal extends WorkGoal {
 		BlockState state = level.getBlockState(pos);
 		citizen.swing(InteractionHand.MAIN_HAND);
 		citizen.act(Action.HOE, 15);
-		if (state.getBlock() instanceof CropBlock crop && crop.isMaxAge(state)) {
-			ItemStack hoe = citizen.getMainHandItem();
-			List<ItemStack> drops = Block.getDrops(state, level, pos, null, citizen,
-					masterTool(hoe, net.minecraft.world.item.enchantment.Enchantments.FORTUNE, 2));
-			level.levelEvent(2001, pos, Block.getId(state));
-			level.setBlock(pos, Blocks.AIR.defaultBlockState(), Block.UPDATE_ALL);
-			drops.forEach(citizen::carry);
-			hoe.hurtAndBreak(1, citizen, EquipmentSlot.MAINHAND);
-			plant(pos, state.getBlock());
+		if (state.is(Blocks.SUGAR_CANE) && ripe(pos)) {
+			// Toute la tige au-dessus du pied, du haut vers le bas : rien ne tombe par terre.
+			BlockPos top = pos;
+			while (level.getBlockState(top.above()).is(Blocks.SUGAR_CANE)) {
+				top = top.above();
+			}
+			for (BlockPos cut = top; cut.getY() >= pos.getY(); cut = cut.below()) {
+				harvest(cut, level.getBlockState(cut));
+			}
+		} else if (ripe(pos)) {
+			harvest(pos, state);
+			if (state.getBlock() instanceof CropBlock) {
+				plant(pos, state.getBlock());
+			}
 		} else if (state.isAir()) {
 			plant(pos, null);
 		}
+	}
+
+	/** Récolte ce bloc : il en emporte ce qu'il donne, et sa houe s'use. */
+	private void harvest(BlockPos pos, BlockState state) {
+		ServerLevel level = level();
+		ItemStack hoe = citizen.getMainHandItem();
+		List<ItemStack> drops = Block.getDrops(state, level, pos, null, citizen,
+				masterTool(hoe, net.minecraft.world.item.enchantment.Enchantments.FORTUNE, 2));
+		level.levelEvent(2001, pos, Block.getId(state));
+		level.setBlock(pos, Blocks.AIR.defaultBlockState(), Block.UPDATE_ALL);
+		drops.forEach(citizen::carry);
+		hoe.hurtAndBreak(1, citizen, EquipmentSlot.MAINHAND);
 	}
 
 	/** Sème en {@code pos} : la même culture si {@code crop} est donnée, sinon ce qu'il a. */

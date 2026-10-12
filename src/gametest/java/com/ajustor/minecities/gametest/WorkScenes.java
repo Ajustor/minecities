@@ -18,8 +18,10 @@ import net.minecraft.world.Container;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.level.block.AttachedStemBlock;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.CropBlock;
+import net.minecraft.world.level.block.StemBlock;
 import net.minecraft.world.level.block.state.BlockState;
 
 import java.util.Optional;
@@ -33,8 +35,10 @@ import static com.ajustor.minecities.gametest.CityScenes.waitOrExplain;
 /**
  * Les métiers, dans le vrai jeu : une maison de deux lits, un atelier avec un composteur, un fumoir
  * et un coffre, et un champ mûr à côté. Les deux citoyens sont embauchés ; le fermier attend sa
- * houe, puis récolte et replante le champ et porte la récolte au grenier ; le cuisinier cuit la
- * viande crue du grenier et fait du pain avec le blé.
+ * houe, puis récolte et replante le champ et porte la récolte au grenier ; il coupe la canne à sucre
+ * en laissant le pied, cueille citrouilles et pastèques sans toucher aux tiges ni semer là où pousse
+ * le fruit ; le cuisinier cuit la viande crue du grenier, fait du pain avec le blé, et une tarte à la
+ * citrouille avec le sucre de la canne.
  *
  * <p>{@code ./gradlew runClientGameTest -Dminecities.gametest=work}
  */
@@ -47,6 +51,10 @@ public class WorkScenes implements Scene {
 	private static final BlockPos SMOKER = new BlockPos(4, Y, 8);
 	/** Le champ : [10, 14] x [-6, -2], l'eau au centre. */
 	private static final int FIELD_X0 = 10, FIELD_X1 = 14, FIELD_Z0 = -6, FIELD_Z1 = -2;
+	/** La canne à sucre : trois tiges de trois blocs, au bord de l'eau, en x = 16. */
+	private static final int CANE_X = 16, CANE_Z0 = -6, CANE_Z1 = -4;
+	/** Les tiges, en z = -1 : citrouilles en x = 10 et 12, pastèque en x = 14 ; le fruit en z = 0. */
+	private static final int STEM_Z = -1;
 
 	@Override
 	public String name() {
@@ -110,6 +118,21 @@ public class WorkScenes implements Scene {
 		waitOrExplain(stage, server -> ripeCrops(server) == 0, 2400, "le champ n'a pas été récolté");
 		check(stage.compute(server -> youngCrops(server) >= 20 ? null
 				: "le champ n'a pas été replanté : " + youngCrops(server) + " jeunes pousses"));
+		// La canne coupée au pied, les fruits cueillis ; les tiges restent, et rien n'est semé à côté.
+		waitOrExplain(stage, server -> cane(server) == 3 && fruits(server) == 0, 2400,
+				"la canne ou les fruits n'ont pas été récoltés", server -> "canne " + cane(server) + " blocs, fruits "
+						+ fruits(server));
+		check(stage.compute(server -> {
+			ServerLevel level = server.overworld();
+			for (int x = 10; x <= 14; x++) {
+				BlockState state = level.getBlockState(new BlockPos(x, Y, STEM_Z));
+				boolean stem = state.getBlock() instanceof StemBlock || state.getBlock() instanceof AttachedStemBlock;
+				if (x % 2 == 0 ? !stem : !state.isAir()) {
+					return "en x = " + x + ", z = " + STEM_Z + " : " + state;
+				}
+			}
+			return null;
+		}));
 		waitOrExplain(stage, server -> granary(server, Items.CARROT) > 0 || granary(server, Items.WHEAT) > 0
 				|| granary(server, Items.BREAD) > 16, 2400, "la récolte n'est pas arrivée au grenier");
 		stage.look(6, Y + 9, -14, 9, Y, -1);
@@ -120,6 +143,10 @@ public class WorkScenes implements Scene {
 		waitOrExplain(stage, server -> granary(server, Items.COOKED_BEEF) > 0, 2400,
 				"le cuisinier n'a pas cuit la viande");
 		waitOrExplain(stage, server -> granary(server, Items.BREAD) > 16, 3600, "le cuisinier n'a pas fait de pain");
+		waitOrExplain(stage, server -> granary(server, Items.PUMPKIN_PIE) > 0, 3600,
+				"le cuisinier n'a pas fait de tarte à la citrouille", server -> "citrouilles "
+						+ granary(server, Items.PUMPKIN) + ", canne " + granary(server, Items.SUGAR_CANE) + ", œufs "
+						+ granary(server, Items.EGG));
 		stage.look(6, Y + 2, 5.2, 4.5, Y + 0.5, 8);
 		stage.waitTicks(10);
 		stage.shot("work_3_kitchen");
@@ -148,6 +175,31 @@ public class WorkScenes implements Scene {
 
 	private static int youngCrops(MinecraftServer server) {
 		return crops(server, false);
+	}
+
+	/** Les blocs de canne à sucre. */
+	private static int cane(MinecraftServer server) {
+		int count = 0;
+		for (int z = CANE_Z0; z <= CANE_Z1; z++) {
+			for (int y = Y; y < Y + 3; y++) {
+				if (server.overworld().getBlockState(new BlockPos(CANE_X, y, z)).is(Blocks.SUGAR_CANE)) {
+					count++;
+				}
+			}
+		}
+		return count;
+	}
+
+	/** Les citrouilles et pastèques au bout des tiges. */
+	private static int fruits(MinecraftServer server) {
+		int count = 0;
+		for (int x = 10; x <= 14; x += 2) {
+			BlockState state = server.overworld().getBlockState(new BlockPos(x, Y, STEM_Z + 1));
+			if (state.is(Blocks.PUMPKIN) || state.is(Blocks.MELON)) {
+				count++;
+			}
+		}
+		return count;
 	}
 
 	private static int crops(MinecraftServer server, boolean ripe) {
@@ -216,10 +268,31 @@ public class WorkScenes implements Scene {
 				level.setBlockAndUpdate(ground.above(), crop.getStateForAge(crop.getMaxAge()));
 			}
 		}
+		// La canne à sucre : de la terre au bord de l'eau (le sable tomberait), trois blocs de haut.
+		for (int z = CANE_Z0; z <= CANE_Z1; z++) {
+			level.setBlockAndUpdate(new BlockPos(CANE_X + 1, Y - 1, z), Blocks.WATER.defaultBlockState());
+			level.setBlockAndUpdate(new BlockPos(CANE_X, Y - 1, z), Blocks.DIRT.defaultBlockState());
+			for (int y = Y; y < Y + 3; y++) {
+				level.setBlockAndUpdate(new BlockPos(CANE_X, y, z), Blocks.SUGAR_CANE.defaultBlockState());
+			}
+		}
+		// Les tiges, sur une rangée labourée au bord du champ ; entre elles, la terre reste nue.
+		for (int x = 10; x <= 14; x++) {
+			level.setBlockAndUpdate(new BlockPos(x, Y - 1, STEM_Z), Blocks.FARMLAND.defaultBlockState());
+			if (x % 2 == 0) {
+				boolean melon = x == 14;
+				level.setBlockAndUpdate(new BlockPos(x, Y, STEM_Z), (melon ? Blocks.ATTACHED_MELON_STEM
+						: Blocks.ATTACHED_PUMPKIN_STEM).defaultBlockState().setValue(AttachedStemBlock.FACING,
+						net.minecraft.core.Direction.SOUTH));
+				level.setBlockAndUpdate(new BlockPos(x, Y, STEM_Z + 1), (melon ? Blocks.MELON : Blocks.PUMPKIN)
+						.defaultBlockState());
+			}
+		}
 		command(server, "setblock 0 %d 0 minecities:town_hall[facing=north]".formatted(Y));
 		if (level.getBlockEntity(HALL) instanceof TownHallBlockEntity hall) {
 			hall.setItem(0, new ItemStack(Items.BREAD, 16));
 			hall.setItem(1, new ItemStack(Items.BEEF, 6));
+			hall.setItem(2, new ItemStack(Items.EGG, 4));
 		}
 		command(server, "gamemode spectator @p");
 	}
