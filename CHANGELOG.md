@@ -1,5 +1,26 @@
 # Changelog
 
+## 1.7.0 — 2026-10-13
+
+### New features
+
+- The farmer harvests sugar cane (leaving the base) and picks pumpkins and melons, without sowing where the fruit grows
+- The cook makes the sugar for pumpkin pies from sugar cane
+- Your own buildings become blueprints: save them with a structure block (Save mode), then order them with /ville build
+- Before ordering a building, its translucent ghost appears: rotate it, then confirm or cancel
+- The blueprint: taken at the town hall (Plans tab, any style), it is used on the ground to show the building, and can be reused
+- Optional Jade support: a citizen's tooltip shows their hunger and housing, a house plaque's tooltip its last survey.
+- Player residents: ask to settle in a town (/ville join, or by sleeping in one of its beds), the mayor accepts, and sets per rank who may declare a house, open the granary or break buildings (Residents tab).
+- Mayor elections: at the end of the term, when the mayor calls one, or by residents' petition; candidacies, voting in the Election tab or with /ville vote, happy citizens vote for the outgoing mayor, a new round on a tie.
+- Monuments: a megalopolis can build a statue, a fountain and a belfry (one of each); they make citizens happier and give the town appeal.
+- Diseases: cold (rain without a coat), dysentery (rotten flesh, poisonous food) and fever (keeps citizens in bed), all contagious; the doctor treats them with honey, milk or glistering melon; new coat for citizens.
+- Territory map (Map button in the town hall): the territory, annexes and buildings laid flat, with zoom; clicking a building makes it glow.
+- Rare, optional disasters: lightning fires in thunderstorms (citizens put them out with the granary's water buckets), a one-day blight, and earthquakes that hit every town.
+
+### Fixes
+
+- Builders lend each other materials and scaffolding: a site no longer gets stuck on its last block
+- Citizens no longer get stuck at a door: nobody shuts it in another's face, and a stuck citizen steps aside.
 ## 1.6.1 — 2026-10-12
 
 ### Fixes

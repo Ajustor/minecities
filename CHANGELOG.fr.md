@@ -1,5 +1,26 @@
 # Journal des modifications
 
+## 1.7.0 — 2026-10-13
+
+### Nouveautés
+
+- Le fermier récolte la canne à sucre (en laissant le pied) et cueille citrouilles et pastèques, sans semer là où pousse le fruit
+- Le cuisinier fait le sucre de ses tartes à la citrouille avec la canne à sucre
+- Vos propres bâtiments deviennent des schémas : enregistrez-les avec un bloc de structure (mode Sauvegarde), puis commandez-les avec /ville build
+- Avant de commander un bâtiment, son fantôme apparaît en transparence : on le tourne, puis on le valide ou on l'abandonne
+- Le plan : pris à l'hôtel de ville (onglet Plans, style au choix), il se pose au sol pour montrer le bâtiment, et resservira
+- Compatibilité Jade (facultative) : l'infobulle d'un citoyen montre sa faim et son logement, celle d'une plaque de maison son dernier relevé.
+- Habitants joueurs : on demande à s'installer dans une ville (/ville join, ou en dormant dans un de ses lits), le maire accepte, et il règle par rang qui peut déclarer une maison, ouvrir le grenier ou casser les bâtiments (onglet Habitants).
+- Élections du maire : au terme du mandat, à l'appel du maire ou par pétition des habitants ; candidatures, vote dans l'onglet Élection ou par /ville vote, les citoyens heureux votent pour le maire sortant, second tour en cas d'égalité.
+- Monuments : la mégalopole peut bâtir une statue, une fontaine et un beffroi (un de chaque) ; ils rendent les citoyens plus heureux et donnent de l'attrait à la ville.
+- Maladies : rhume (pluie sans manteau), dysenterie (chair putréfiée, aliment empoisonné) et fièvre (qui cloue au lit), contagieuses ; le médecin les soigne avec miel, lait ou pastèque scintillante ; nouveau manteau pour les citoyens.
+- Carte du territoire (bouton Carte de l'hôtel de ville) : le territoire, les annexes et les bâtiments à plat, avec zoom ; un clic sur un bâtiment le fait luire.
+- Catastrophes rares et désactivables : incendie par orage (les citoyens l'éteignent avec les seaux d'eau du grenier), disette d'un jour, tremblement de terre qui frappe toutes les villes.
+
+### Corrections
+
+- À plusieurs, les bâtisseurs se prêtent matériaux et échafaudages : un chantier ne reste plus bloqué sur son dernier bloc
+- Les citoyens ne restent plus plantés devant une porte : on ne la referme plus au nez d'un autre, et un citoyen coincé fait un pas de côté.
 ## 1.6.1 — 2026-10-12
 
 ### Corrections
