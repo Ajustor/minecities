@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "minecraft:crafting_table",
+    "minecraft:bowl"
+  ],
+  "result": {
+    "id": "minecities:cook_station",
+    "count": 1
+  }
+}

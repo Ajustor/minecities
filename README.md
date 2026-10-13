@@ -64,7 +64,13 @@ version du mod, les autres mods et le temps de jeu.
      Heureux, il travaille plus vite et peut avoir des enfants ; malheureux, il traîne ; au plus mal
      pendant un jour, il quitte la ville. Une ville heureuse attire plus vite les villageois.
 6. **Des métiers** : un bâtiment déclaré qui contient un poste de travail vanilla est un atelier,
-   et chaque poste emploie un citoyen.
+   et chaque poste emploie un citoyen. Chaque métier a aussi son **poste du mod** (établi du fermier,
+   établi du bâtisseur, comptoir du marchand…), qui marche comme le bloc vanilla : il se fabrique
+   avec une table de craft et un objet du métier (graines, bol, brique, papier, émeraude…), et un
+   clic droit ouvre son **interface** : ce que fait le métier, si le poste sert (sinon pourquoi :
+   bâtiment non déclaré, palier, eau), son travailleur et ce qui lui manque, « Où ? » pour le voir,
+   et pour le bâtisseur les chantiers et leur avancement. À la fondation, le maire reçoit l'**établi
+   du bâtisseur** : posé dans une maison déclarée, la ville a son premier bâtisseur.
    - **Composteur → fermier** : il lui faut une **houe** (dans un coffre de l'atelier ou au
      grenier). Il récolte les cultures mûres à 16 blocs du composteur, replante, et porte la
      récolte au grenier.
@@ -148,8 +154,9 @@ version du mod, les autres mods et le temps de jeu.
    table et bougies, jarres, plantes et coffres dans les maisons ; comptoirs, chaudron et gâteau à la
    cuisine et à la boulangerie ; enclume et barreaux à la forge ; rails à la mine ; rayonnages à la
    bibliothèque ; citrouilles et melons à la ferme… (rien qui soit un poste de travail). Une maison gagne deux lits par niveau (2 à 8), un atelier un poste
-   (1 à 4), et ses travailleurs vont plus vite (un dixième par niveau). `/ville upgrade` passe au niveau
-   suivant. Au niveau 4, les travailleurs ont l'**outillage du maître** : le fermier et le mineur
+   (1 à 4), et ses travailleurs vont plus vite (un dixième par niveau). `/ville upgrade`, ou le bouton
+   **Améliorer** de l'interface du bâtiment (clic sur sa plaque, ou « Détails » dans l'onglet
+   Bâtiments, qui montre aussi le coût et ce que le grenier en a), passe au niveau suivant. Au niveau 4, les travailleurs ont l'**outillage du maître** : le fermier et le mineur
    récoltent comme avec une Fortune II, le pêcheur pêche comme avec une Chance de la mer III, et le
    forgeron habille les gardes de fer de pied en cap. Le
    bâtiment se place devant lui, porte vers lui ; le bâtisseur dégage le terrain et pose les blocs
@@ -323,7 +330,7 @@ Java 25 est requis (Loom 1.18.3, Minecraft 26.2).
 ./gradlew runClient             # lance le jeu avec le mod
 ./gradlew runGameTest           # les scènes de jeu, vérifiées sur le seul serveur, sans fenêtre (rapide)
 ./gradlew runGameTest -PminecitiesGametest=work   # une scène (city, work, countryside, village, build, family, raid, life, market, robust, industry, crafts,
-council, logistics, guide, structures, plans, jade, residents, elections, monuments, health, map, disasters)
+council, logistics, guide, structures, plans, jade, residents, elections, monuments, health, map, disasters, stations)
 ./gradlew runClientGameTest     # les mêmes scènes dans le vrai jeu, photographiées (build/run/clientGameTest/screenshots), plus styles
 ./gradlew runClientGameTest -PminecitiesFilm   # avec les films image par image (lents)
 python tools/textures/generate.py   # régénère les textures (peaux des citoyens, plaque, œuf)

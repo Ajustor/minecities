@@ -167,6 +167,14 @@ public final class TownService {
 		}
 		player.sendSystemMessage(Component.translatable("message.minecities.found.hint")
 				.withStyle(ChatFormatting.GRAY));
+		// L'établi du bâtisseur, offert : posé dans un bâtiment déclaré, la ville a son premier bâtisseur.
+		ItemStack bench = new ItemStack(com.ajustor.minecities.registry.McItems.STATIONS
+				.get(com.ajustor.minecities.town.Job.BUILDER));
+		if (!player.getInventory().add(bench)) {
+			player.drop(bench, false);
+		}
+		player.sendSystemMessage(Component.translatable("message.minecities.found.builder")
+				.withStyle(ChatFormatting.GRAY));
 		level.playSound(null, pos, SoundEvents.BELL_BLOCK, SoundSource.BLOCKS, 1.0f, 1.0f);
 	}
 
@@ -283,6 +291,13 @@ public final class TownService {
 		settle(level, town);
 		towns.changed();
 		return true;
+	}
+
+	/** Relève de nouveau ce bâtiment (pour son interface) : la ville est mise à jour comme au clic sur la plaque. */
+	public static HouseScanner.Result resurvey(ServerLevel level, Town town, BlockPos plaque) {
+		HouseScanner.Result result = survey(level, town, plaque);
+		Towns.get(level.getServer()).changed();
+		return result;
 	}
 
 	/** Relève le bâtiment et met la ville à jour : enregistré s'il est valide, oublié sinon. */

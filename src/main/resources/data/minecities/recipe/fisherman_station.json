@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "minecraft:crafting_table",
+    "minecraft:string"
+  ],
+  "result": {
+    "id": "minecities:fisherman_station",
+    "count": 1
+  }
+}

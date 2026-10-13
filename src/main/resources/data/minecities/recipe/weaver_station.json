@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "minecraft:crafting_table",
+    "#minecraft:wool"
+  ],
+  "result": {
+    "id": "minecities:weaver_station",
+    "count": 1
+  }
+}

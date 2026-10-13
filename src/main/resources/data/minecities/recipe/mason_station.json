@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "minecraft:crafting_table",
+    "minecraft:cobblestone"
+  ],
+  "result": {
+    "id": "minecities:mason_station",
+    "count": 1
+  }
+}

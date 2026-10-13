@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "minecraft:crafting_table",
+    "minecraft:redstone"
+  ],
+  "result": {
+    "id": "minecities:inventor_station",
+    "count": 1
+  }
+}

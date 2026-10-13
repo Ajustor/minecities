@@ -61,6 +61,17 @@ public final class McItems {
 	public static final Item CITIZEN_SPAWN_EGG = register("citizen_spawn_egg", SpawnEggItem::new,
 			new Item.Properties().spawnEgg(McEntities.CITIZEN));
 
+	/** Les postes de travail du mod, par métier. */
+	public static final java.util.Map<com.ajustor.minecities.town.Job, Item> STATIONS = stations();
+
+	private static java.util.Map<com.ajustor.minecities.town.Job, Item> stations() {
+		java.util.Map<com.ajustor.minecities.town.Job, Item> stations =
+				new java.util.EnumMap<>(com.ajustor.minecities.town.Job.class);
+		McBlocks.STATIONS.forEach((job, block) -> stations.put(job, register(job.stationId(),
+				p -> new BlockItem(block, p), new Item.Properties().useBlockDescriptionPrefix())));
+		return java.util.Collections.unmodifiableMap(stations);
+	}
+
 	public static final ResourceKey<CreativeModeTab> TAB =
 			ResourceKey.create(Registries.CREATIVE_MODE_TAB, MineCities.id("minecities"));
 
@@ -88,6 +99,7 @@ public final class McItems {
 					output.accept(TANNING_RACK);
 					output.accept(WAREHOUSE_LEDGER);
 					output.accept(CARPENTER_BENCH);
+					STATIONS.values().forEach(output::accept);
 					output.accept(AMETHYST_BROOCH);
 					output.accept(GOLD_RING);
 					output.accept(DIADEM);

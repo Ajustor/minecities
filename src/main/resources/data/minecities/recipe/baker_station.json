@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "minecraft:crafting_table",
+    "minecraft:sugar"
+  ],
+  "result": {
+    "id": "minecities:baker_station",
+    "count": 1
+  }
+}

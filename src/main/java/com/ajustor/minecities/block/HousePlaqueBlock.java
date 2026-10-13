@@ -131,8 +131,10 @@ public class HousePlaqueBlock extends HorizontalDirectionalBlock {
 	@Override
 	protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player,
 			BlockHitResult hit) {
-		if (level instanceof ServerLevel serverLevel && player instanceof ServerPlayer serverPlayer) {
-			TownService.declareHouse(serverLevel, pos, serverPlayer);
+		if (level instanceof ServerLevel serverLevel && player instanceof ServerPlayer serverPlayer
+				&& TownService.declareHouse(serverLevel, pos, serverPlayer)) {
+			// Après le relevé, l'interface du bâtiment : son niveau, ses lits, son amélioration.
+			com.ajustor.minecities.network.BuildingNetwork.open(serverLevel, pos, serverPlayer);
 		}
 		return InteractionResult.SUCCESS;
 	}

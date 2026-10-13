@@ -250,6 +250,19 @@ public final class TownNetwork {
 			return;
 		}
 		Town town = found.get();
+		if (payload.action().startsWith("building:")) {
+			// « building:x,y,z » : l'interface de ce bâtiment de la ville.
+			String[] xyz = payload.action().substring("building:".length()).split(",");
+			try {
+				BlockPos plaque = new BlockPos(Integer.parseInt(xyz[0]), Integer.parseInt(xyz[1]), Integer.parseInt(xyz[2]));
+				if (town.house(plaque).isPresent()) {
+					BuildingNetwork.open(level, plaque, player);
+				}
+			} catch (RuntimeException e) {
+				// Une demande mal formée : on l'ignore.
+			}
+			return;
+		}
 		if (payload.action().startsWith("glow:")) {
 			// « glow:x,y,z » : le bâtiment cliqué sur la carte luit quelques secondes.
 			String[] xyz = payload.action().substring("glow:".length()).split(",");

@@ -18,6 +18,12 @@ import net.minecraft.world.level.material.PushReaction;
 import java.util.function.Function;
 
 public final class McBlocks {
+	/** Les métiers qui ont leur poste du mod en plus du bloc vanilla (les autres ont déjà le leur). */
+	private static final java.util.Set<com.ajustor.minecities.town.Job> STATION_JOBS = java.util.EnumSet.complementOf(
+			java.util.EnumSet.of(com.ajustor.minecities.town.Job.MINER, com.ajustor.minecities.town.Job.JEWELER,
+					com.ajustor.minecities.town.Job.GLASSBLOWER, com.ajustor.minecities.town.Job.TANNER,
+					com.ajustor.minecities.town.Job.CARPENTER));
+
 	/** L'hôtel de ville : le poser fonde une ville ; il abrite le grenier commun. */
 	public static final Block TOWN_HALL = register("town_hall", TownHallBlock::new,
 			BlockBehaviour.Properties.of()
@@ -94,6 +100,27 @@ public final class McBlocks {
 					.noOcclusion()
 					.lightLevel(state -> 7)
 					.sound(SoundType.STONE));
+
+	/**
+	 * Les postes de travail du mod, un par métier qui n'en avait pas ({@code <métier>_station}) : ils
+	 * marchent à côté des blocs vanilla, et ouvrent l'interface du poste.
+	 */
+	public static final java.util.Map<com.ajustor.minecities.town.Job, Block> STATIONS = stations();
+
+	private static java.util.Map<com.ajustor.minecities.town.Job, Block> stations() {
+		java.util.Map<com.ajustor.minecities.town.Job, Block> stations =
+				new java.util.EnumMap<>(com.ajustor.minecities.town.Job.class);
+		for (com.ajustor.minecities.town.Job job : com.ajustor.minecities.town.Job.values()) {
+			if (STATION_JOBS.contains(job)) {
+				stations.put(job, register(job.stationId(), WorkstationBlock::new, BlockBehaviour.Properties.of()
+						.mapColor(MapColor.WOOD)
+						.strength(2.0f)
+						.noOcclusion()
+						.sound(SoundType.WOOD)));
+			}
+		}
+		return java.util.Collections.unmodifiableMap(stations);
+	}
 
 	private McBlocks() {
 	}

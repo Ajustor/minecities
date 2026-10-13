@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "minecities:block/doctor_station"
+    },
+    "facing=east": {
+      "model": "minecities:block/doctor_station",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "minecities:block/doctor_station",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "minecities:block/doctor_station",
+      "y": 270
+    }
+  }
+}

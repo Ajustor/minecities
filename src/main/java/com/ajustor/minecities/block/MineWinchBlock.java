@@ -41,6 +41,18 @@ public class MineWinchBlock extends HorizontalDirectionalBlock {
 		return defaultBlockState().setValue(FACING, context.getHorizontalDirection().getOpposite());
 	}
 
+	/** Un clic droit ouvre l'interface du poste du mineur. */
+	@Override
+	protected net.minecraft.world.InteractionResult useWithoutItem(BlockState state, net.minecraft.world.level.Level level,
+			BlockPos pos, net.minecraft.world.entity.player.Player player, net.minecraft.world.phys.BlockHitResult hit) {
+		if (level instanceof net.minecraft.server.level.ServerLevel serverLevel
+				&& player instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
+			return com.ajustor.minecities.network.StationNetwork.open(serverLevel, pos, serverPlayer)
+					? net.minecraft.world.InteractionResult.SUCCESS : net.minecraft.world.InteractionResult.PASS;
+		}
+		return net.minecraft.world.InteractionResult.SUCCESS;
+	}
+
 	@Override
 	protected VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
 		return SHAPE;
