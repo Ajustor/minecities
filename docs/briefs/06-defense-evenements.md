@@ -58,7 +58,13 @@ Suite : raids déclenchés par *Bad Omen*, ravageurs dans les grosses vagues, ma
 - **Fête** (décret du brief 02) : bannières, feux d'artifice, citoyens qui dansent à l'hôtel
   de ville, bonus de bonheur.
 - **Marché** hebdomadaire : un marchand ambulant (vanilla) attiré vers l'hôtel de ville.
-- **Catastrophes** légères et optionnelles : incendie (foudre), disette (hiver ?), à voir.
+- **Catastrophes** (MC-14, `town/Disasters`, `citizen/FirefightGoal`) : incendie (orage, dès la
+  ville ; la foudre met le feu au toit d'un bâtiment déclaré ; les citoyens l'éteignent avec les
+  seaux d'eau du grenier), disette (un jour sans récolte, sauf de quoi ressemer), tremblement de terre
+  (toutes les villes à la fois, dix secondes : des blocs des bâtiments tombent, coups et morts
+  possibles). Rares (une minute sur dix d'orage pour le feu, 1/400 et 1/800 par minute pour les
+  autres), désactivables, au plus une par ville tous les `disaster_spacing_days` jours (le double
+  pour le séisme). Annoncées, visibles dans le résumé, sauvegardées dans la chronique.
 
 ## Critères
 

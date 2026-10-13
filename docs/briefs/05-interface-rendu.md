@@ -15,7 +15,12 @@ et un rendu qui donne envie (modèles Blockbench, citoyens plus variés).
 - Icônes au-dessus des têtes (faim, sans logis, malheureux, blessé) et couvre-chef de chaque métier
   (`client/render/CitizenHatModel`, texture générée `hats.png`).
 
-Suite : carte du territoire, onglet Mairie (brief 02).
+Carte du territoire (MC-13, `client/screen/TownMapScreen`) : le bouton Carte de l'écran de l'hôtel
+de ville ouvre un plan à plat du territoire (disque de l'hôtel de ville et des annexes en service),
+des bâtiments déclarés (couleur selon le genre), des monuments et des chantiers, avec une légende et
+une échelle. Zoom à la molette autour du curseur, déplacement en glissant ; un clic fait luire le
+bâtiment en jeu (`town/Highlights`, des étincelles sur ses arêtes dix secondes). Seule la ville
+consultée y figure.
 
 ## Écran de l'hôtel de ville
 

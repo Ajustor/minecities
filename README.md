@@ -33,7 +33,10 @@ version du mod, les autres mods et le temps de jeu.
 3. **L'hôtel de ville** : un clic ouvre son **écran** : le résumé de la ville (et son bonheur moyen),
    la liste des citoyens (métier, faim, humeur, famille, ce qui leur manque ; « Où ? » les fait luire),
    les **bâtiments**, le **registre** des demandes de mariage, et le **grenier** commun où les citoyens
-   mangent. Accroupi, un clic donne l'état de la ville dans le chat. En entrant sur un territoire, un
+   mangent. Le bouton **Carte** montre le territoire à plat, comme une carte : le disque de l'hôtel
+   de ville et ceux des annexes, chaque bâtiment de la couleur de son genre, et les chantiers. La
+   molette zoome, on fait glisser pour se déplacer, et un clic sur un bâtiment le fait luire en jeu.
+   Accroupi, un clic donne l'état de la ville dans le chat. En entrant sur un territoire, un
    titre vous souhaite la bienvenue ; un hôtel de ville ou une plaque en main, son contour se dessine
    en particules. Une plaque montre le dernier relevé : porte **verte** si le bâtiment est enregistré,
    **rouge** sinon.
@@ -188,6 +191,12 @@ version du mod, les autres mods et le temps de jeu.
 10. **La cloche d'alarme** : sonner une cloche sur le territoire donne l'alerte pour deux minutes :
    les civils rentrent chez eux, les gardes accourent, l'inventeur fait ses golems, et les monstres
    alentour luisent. Sonnée à nouveau, elle lève l'alerte.
+   **Les catastrophes**, rares et désactivables (`disasters`) : par orage, dès la ville, la foudre
+   peut mettre le **feu** au toit d'un bâtiment ; les citoyens accourent avec les **seaux d'eau** du
+   grenier (gardez-en). La **disette** fait perdre les récoltes un jour (les champs ne donnent que de
+   quoi ressemer). Le **tremblement de terre** frappe toutes les villes à la fois : dix secondes de
+   secousses qui font tomber des blocs et blessent. Le feu et les secousses peuvent tuer. Chaque
+   catastrophe est annoncée et se voit dans le résumé ; au plus une par ville tous les dix jours.
 11. **Les fêtes** : le maire offre une fête (`/ville festival` ou le bouton de l'écran) contre
    4 émeraudes du grenier, une tous les trois jours au plus. Les citoyens dansent devant l'hôtel de
    ville sous les feux d'artifice, et sont plus heureux pendant un jour.
@@ -220,6 +229,7 @@ version du mod, les autres mods et le temps de jeu.
 | `market_reserve`, `market_daily_earnings` | 32, 32 | ce que le grenier garde, ce qu'un marchand gagne par jour |
 | `protect_buildings` | faux | dans les villes fondées avant les rangs, seuls le maire et ses adjoints (et les opérateurs) cassent les blocs des bâtiments déclarés ; les villes nouvelles règlent ce droit par rang |
 | `term_days`, `candidacy_days`, `voting_days`, `election_spacing_days` | 7, 1, 1, 3 | le mandat du maire (0 : pas d'élection d'office), les candidatures, le vote, l'écart entre deux élections |
+| `disasters`, `disaster_spacing_days` | vrai, 10 | les catastrophes (incendie, disette, séisme), et le délai minimal entre deux dans une ville (le double pour le séisme) |
 | `hall_grace_minutes` | 10 | un hôtel de ville détruit (explosion…) : le maire a tant de minutes pour le reposer au même endroit, sinon la ville disparaît |
 | `missing_citizen_minutes` | 60 | un citoyen jamais revu depuis tant de minutes, sa maison chargée, est rayé (0 : jamais) |
 | `give_guide` | vrai | chaque joueur reçoit le guide de la ville à sa première venue |
@@ -312,7 +322,7 @@ Java 25 est requis (Loom 1.18.3, Minecraft 26.2).
 ./gradlew runClient             # lance le jeu avec le mod
 ./gradlew runGameTest           # les scènes de jeu, vérifiées sur le seul serveur, sans fenêtre (rapide)
 ./gradlew runGameTest -PminecitiesGametest=work   # une scène (city, work, countryside, village, build, family, raid, life, market, robust, industry, crafts,
-council, logistics, guide, structures, plans, jade, residents, elections, monuments, health)
+council, logistics, guide, structures, plans, jade, residents, elections, monuments, health, map, disasters)
 ./gradlew runClientGameTest     # les mêmes scènes dans le vrai jeu, photographiées (build/run/clientGameTest/screenshots), plus styles
 ./gradlew runClientGameTest -PminecitiesFilm   # avec les films image par image (lents)
 python tools/textures/generate.py   # régénère les textures (peaux des citoyens, plaque, œuf)

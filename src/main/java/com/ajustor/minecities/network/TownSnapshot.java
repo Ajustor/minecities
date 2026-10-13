@@ -20,7 +20,7 @@ import java.util.UUID;
 public record TownSnapshot(BlockPos hall, String name, String tier, int population, int citizens, int villagers,
 		int capacity, int homes, int workstations, int employed, int meals, String nextTier, int nextPopulation,
 		int nextHouses, boolean manager, Life life, Council council, List<CitizenRow> rows, List<BuildingRow> buildings,
-		List<RequestRow> requests, List<PlanRow> plans, Members members, Ballot ballot) {
+		List<RequestRow> requests, List<PlanRow> plans, Members members, Ballot ballot, TownMap map) {
 	/**
 	 * La mairie : le maire, ses adjoints, les décrets (clé de chaque décret, et s'il est en vigueur), les
 	 * villes partenaires (nom, et si l'accord est signé des deux côtés).
@@ -34,7 +34,7 @@ public record TownSnapshot(BlockPos hall, String name, String tier, int populati
 	 * dans combien de ticks sinon, et son prix), l'alerte.
 	 */
 	public record Life(int mood, boolean partying, boolean canCelebrate, long untilFestival, int festivalCost,
-			boolean alarmed, int treasury, int earnedToday, int annexes, int maxAnnexes, int appeal) {
+			boolean alarmed, int treasury, int earnedToday, int annexes, int maxAnnexes, int appeal, String disaster) {
 	}
 
 	/**
@@ -54,6 +54,21 @@ public record TownSnapshot(BlockPos hall, String name, String tier, int populati
 	 */
 	public record Ballot(String phase, long endsIn, long termIn, int round, List<PlayerRow> candidates, boolean voted,
 			int signatures, int needed, boolean signed, long allowedIn, String lastWinner, int lastVotes) {
+	}
+
+	/**
+	 * La carte du territoire (MC-13) : le rayon autour de l'hôtel de ville, les mairies annexes en
+	 * service et leur rayon, et les bâtiments de la ville.
+	 */
+	public record TownMap(int radius, List<BlockPos> annexes, int annexRadius, List<Plot> plots) {
+	}
+
+	/**
+	 * Un bâtiment sur la carte : sa plaque (ou l'origine d'un chantier), son emprise au sol, et son genre
+	 * ({@code home}, {@code workshop}, {@code both}, {@code village}, {@code warehouse}, {@code monument},
+	 * {@code site} pour un chantier en cours).
+	 */
+	public record Plot(BlockPos at, int minX, int minZ, int maxX, int maxZ, String kind) {
 	}
 
 	/** Un joueur de la ville : son UUID, son nom, son rang. */
@@ -120,6 +135,7 @@ public record TownSnapshot(BlockPos hall, String name, String tier, int populati
 		buf.writeVarInt(s.life.annexes());
 		buf.writeVarInt(s.life.maxAnnexes());
 		buf.writeVarInt(s.life.appeal());
+		buf.writeUtf(s.life.disaster());
 		buf.writeUtf(s.council.mayor());
 		writeStrings(buf, s.council.deputies());
 		writeStrings(buf, s.council.decrees());
@@ -184,6 +200,20 @@ public record TownSnapshot(BlockPos hall, String name, String tier, int populati
 		buf.writeVarLong(b.allowedIn());
 		buf.writeUtf(b.lastWinner());
 		buf.writeVarInt(b.lastVotes());
+		TownMap m = s.map;
+		buf.writeVarInt(m.radius());
+		buf.writeVarInt(m.annexes().size());
+		m.annexes().forEach(buf::writeBlockPos);
+		buf.writeVarInt(m.annexRadius());
+		buf.writeVarInt(m.plots().size());
+		for (Plot p : m.plots()) {
+			buf.writeBlockPos(p.at());
+			buf.writeInt(p.minX());
+			buf.writeInt(p.minZ());
+			buf.writeInt(p.maxX());
+			buf.writeInt(p.maxZ());
+			buf.writeUtf(p.kind());
+		}
 	}
 
 	private static void writePlayers(RegistryFriendlyByteBuf buf, List<PlayerRow> list) {
@@ -249,7 +279,8 @@ public record TownSnapshot(BlockPos hall, String name, String tier, int populati
 		int nextHouses = buf.readVarInt();
 		boolean manager = buf.readBoolean();
 		Life life = new Life(buf.readInt(), buf.readBoolean(), buf.readBoolean(), buf.readVarLong(), buf.readVarInt(),
-				buf.readBoolean(), buf.readVarInt(), buf.readVarInt(), buf.readVarInt(), buf.readVarInt(), buf.readVarInt());
+				buf.readBoolean(), buf.readVarInt(), buf.readVarInt(), buf.readVarInt(), buf.readVarInt(), buf.readVarInt(),
+				buf.readUtf());
 		Council council = new Council(buf.readUtf(), readStrings(buf), readStrings(buf), readFlags(buf),
 				readStrings(buf), readFlags(buf));
 		int count = buf.readVarInt();
@@ -287,8 +318,20 @@ public record TownSnapshot(BlockPos hall, String name, String tier, int populati
 		Ballot ballot = new Ballot(buf.readUtf(), buf.readVarLong() - 1, buf.readVarLong() - 1, buf.readVarInt(),
 				readPlayers(buf), buf.readBoolean(), buf.readVarInt(), buf.readVarInt(), buf.readBoolean(),
 				buf.readVarLong(), buf.readUtf(), buf.readVarInt());
+		int radius = buf.readVarInt();
+		int annexCount = buf.readVarInt();
+		List<BlockPos> annexes = new ArrayList<>(annexCount);
+		for (int i = 0; i < annexCount; i++) {
+			annexes.add(buf.readBlockPos());
+		}
+		int annexRadius = buf.readVarInt();
+		int plotCount = buf.readVarInt();
+		List<Plot> plots = new ArrayList<>(plotCount);
+		for (int i = 0; i < plotCount; i++) {
+			plots.add(new Plot(buf.readBlockPos(), buf.readInt(), buf.readInt(), buf.readInt(), buf.readInt(), buf.readUtf()));
+		}
 		return new TownSnapshot(hall, name, tier, population, citizens, villagers, capacity, homes, workstations,
 				employed, meals, nextTier, nextPopulation, nextHouses, manager, life, council, rows, buildings, requests,
-				plans, members, ballot);
+				plans, members, ballot, new TownMap(radius, annexes, annexRadius, plots));
 	}
 }

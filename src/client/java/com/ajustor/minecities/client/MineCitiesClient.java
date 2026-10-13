@@ -22,6 +22,9 @@ public class MineCitiesClient implements ClientModInitializer {
 			// Une décision du maire rafraîchit l'écran déjà ouvert ; sinon on l'ouvre.
 			if (context.client().gui.screen() instanceof TownHallScreen open && open.shows(payload.town())) {
 				open.refresh(payload.town());
+			} else if (context.client().gui.screen() instanceof com.ajustor.minecities.client.screen.TownMapScreen map
+					&& map.shows(payload.town())) {
+				map.refresh(payload.town());
 			} else {
 				context.client().gui.setScreen(new TownHallScreen(payload.town()));
 			}

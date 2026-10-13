@@ -18,8 +18,22 @@ public final class Chronicle {
 			Codec.LONG.optionalFieldOf("alarm_until", 0L).forGetter(c -> c.alarmUntil),
 			Codec.LONG.optionalFieldOf("market_day", 0L).forGetter(c -> c.marketDay),
 			Codec.INT.optionalFieldOf("earned_today", 0).forGetter(c -> c.earnedToday),
-			Codec.LONG.optionalFieldOf("earned_total", 0L).forGetter(c -> c.earnedTotal)
-	).apply(i, Chronicle::new));
+			Codec.LONG.optionalFieldOf("earned_total", 0L).forGetter(c -> c.earnedTotal),
+			Codec.STRING.optionalFieldOf("disaster", "").forGetter(c -> c.disaster),
+			Codec.LONG.optionalFieldOf("disaster_until", 0L).forGetter(c -> c.disasterUntil),
+			Codec.LONG.optionalFieldOf("last_disaster", 0L).forGetter(c -> c.lastDisaster),
+			net.minecraft.core.BlockPos.CODEC.optionalFieldOf("fire_min").forGetter(c -> c.fireMin),
+			net.minecraft.core.BlockPos.CODEC.optionalFieldOf("fire_max").forGetter(c -> c.fireMax)
+	).apply(i, (deaths, festivalAt, alarmUntil, marketDay, earnedToday, earnedTotal, disaster, until, last, min,
+			max) -> {
+		Chronicle chronicle = new Chronicle(deaths, festivalAt, alarmUntil, marketDay, earnedToday, earnedTotal);
+		chronicle.disaster = disaster;
+		chronicle.disasterUntil = until;
+		chronicle.lastDisaster = last;
+		chronicle.fireMin = min;
+		chronicle.fireMax = max;
+		return chronicle;
+	}));
 
 	/** Une mort pèse sur la ville pendant un jour. */
 	public static final long MOURNING = 24000L;
@@ -37,6 +51,14 @@ public final class Chronicle {
 	private long marketDay;
 	private int earnedToday;
 	private long earnedTotal;
+	/** La catastrophe en cours ({@code fire}, {@code blight}, {@code quake} ; vide : aucune) et sa fin. */
+	private String disaster = "";
+	private long disasterUntil;
+	/** Quand la dernière catastrophe a frappé (0 : jamais). */
+	private long lastDisaster;
+	/** Le bâtiment en feu. */
+	private java.util.Optional<net.minecraft.core.BlockPos> fireMin = java.util.Optional.empty();
+	private java.util.Optional<net.minecraft.core.BlockPos> fireMax = java.util.Optional.empty();
 
 	private Chronicle(List<Long> deaths, long festivalAt, long alarmUntil, long marketDay, int earnedToday,
 			long earnedTotal) {
@@ -118,5 +140,56 @@ public final class Chronicle {
 
 	public boolean alarmed(long now) {
 		return now < alarmUntil;
+	}
+
+	// Catastrophes (MC-14)
+
+	/** La catastrophe en cours, si elle n'est pas finie. */
+	public java.util.Optional<String> disaster(long now) {
+		return disaster.isEmpty() || now >= disasterUntil ? java.util.Optional.empty() : java.util.Optional.of(disaster);
+	}
+
+	/** La catastrophe enregistrée, même si son échéance est passée (pour l'annoncer finie). */
+	public String disasterKind() {
+		return disaster;
+	}
+
+	public long disasterUntil() {
+		return disasterUntil;
+	}
+
+	public long lastDisaster() {
+		return lastDisaster;
+	}
+
+	/** Une catastrophe frappe, jusqu'à {@code until}. */
+	public void strike(String kind, long now, long until) {
+		disaster = kind;
+		disasterUntil = until;
+		lastDisaster = now;
+		fireMin = java.util.Optional.empty();
+		fireMax = java.util.Optional.empty();
+	}
+
+	/** Le feu a pris dans ce bâtiment. */
+	public void burning(net.minecraft.core.BlockPos min, net.minecraft.core.BlockPos max) {
+		fireMin = java.util.Optional.of(min.immutable());
+		fireMax = java.util.Optional.of(max.immutable());
+	}
+
+	public java.util.Optional<net.minecraft.core.BlockPos> fireMin() {
+		return fireMin;
+	}
+
+	public java.util.Optional<net.minecraft.core.BlockPos> fireMax() {
+		return fireMax;
+	}
+
+	/** La catastrophe est finie. */
+	public void recover() {
+		disaster = "";
+		disasterUntil = 0L;
+		fireMin = java.util.Optional.empty();
+		fireMax = java.util.Optional.empty();
 	}
 }
