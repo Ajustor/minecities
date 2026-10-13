@@ -21,13 +21,22 @@ import java.util.UUID;
  *
  * @param block  la clé du nom du bloc
  * @param detail le palier attendu (pour {@code locked}), vide sinon
+ * @param manager celui qui regarde gère-t-il la ville (maire, adjoint) ?
+ * @param mine   pour le mineur : l'état du puits ({@code new}, {@code digging}, {@code exhausted},
+ *               {@code closed}), vide sinon
+ * @param ores   pour le mineur : ce que le puits peut encore donner, et ce qu'il a déjà donné
  */
 public record StationSnapshot(BlockPos pos, String block, String job, String town, String status, String detail,
-		List<Worker> workers, List<Site> sites) implements CustomPacketPayload {
+		List<Worker> workers, List<Site> sites, boolean manager, String mine, List<Ore> ores)
+		implements CustomPacketPayload {
 	public static final Type<StationSnapshot> TYPE = new Type<>(MineCities.id("open_station"));
 
 	/** Un travailleur du poste : son nom, ce qu'il fait ({@code working}, {@code sleeping}…), ce qui lui manque. */
 	public record Worker(UUID id, String name, String state, Optional<Component> need) {
+	}
+
+	/** Un minerai du puits : de quoi le montrer, combien il en reste à portée, combien le mineur en a tiré. */
+	public record Ore(net.minecraft.world.item.ItemStack item, int remaining, int mined) {
 	}
 
 	/** Un chantier : le bâtiment, où, combien de blocs posés sur combien, et s'il est fini. */
@@ -62,6 +71,14 @@ public record StationSnapshot(BlockPos pos, String block, String job, String tow
 			buf.writeVarInt(site.placed());
 			buf.writeVarInt(site.total());
 		}
+		buf.writeBoolean(s.manager);
+		buf.writeUtf(s.mine);
+		buf.writeVarInt(s.ores.size());
+		for (Ore ore : s.ores) {
+			net.minecraft.world.item.ItemStack.STREAM_CODEC.encode(buf, ore.item());
+			buf.writeVarInt(ore.remaining());
+			buf.writeVarInt(ore.mined());
+		}
 	}
 
 	private static StationSnapshot read(RegistryFriendlyByteBuf buf) {
@@ -81,7 +98,14 @@ public record StationSnapshot(BlockPos pos, String block, String job, String tow
 		for (int i = 0; i < siteCount; i++) {
 			sites.add(new Site(COMPONENT.decode(buf), buf.readBlockPos(), buf.readVarInt(), buf.readVarInt()));
 		}
-		return new StationSnapshot(pos, block, job, town, status, detail, workers, sites);
+		boolean manager = buf.readBoolean();
+		String mine = buf.readUtf();
+		int oreCount = buf.readVarInt();
+		List<Ore> ores = new ArrayList<>(oreCount);
+		for (int i = 0; i < oreCount; i++) {
+			ores.add(new Ore(net.minecraft.world.item.ItemStack.STREAM_CODEC.decode(buf), buf.readVarInt(), buf.readVarInt()));
+		}
+		return new StationSnapshot(pos, block, job, town, status, detail, workers, sites, manager, mine, ores);
 	}
 
 	@Override
