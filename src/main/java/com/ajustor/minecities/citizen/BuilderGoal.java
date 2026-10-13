@@ -99,7 +99,7 @@ class BuilderGoal extends WorkGoal {
 				Towns.get(level().getServer()).changed();
 				return;
 			}
-			plan = BuildPlan.of(blueprint.get(), construction.style(), construction.origin(), construction.rotation());
+			plan = com.ajustor.minecities.build.Builds.plan(level().getServer(), construction);
 			planFor = construction.id();
 		}
 		// Ses poches se remplissent de ce qu'il dégage : il le porte au grenier quand il ne lui reste

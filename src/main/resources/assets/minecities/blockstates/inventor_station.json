@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "minecities:block/inventor_station"
+    },
+    "facing=east": {
+      "model": "minecities:block/inventor_station",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "minecities:block/inventor_station",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "minecities:block/inventor_station",
+      "y": 270
+    }
+  }
+}

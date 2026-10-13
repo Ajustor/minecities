@@ -4,6 +4,7 @@ import com.ajustor.minecities.network.TownActionPayload;
 import com.ajustor.minecities.network.TownSnapshot;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.core.BlockPos;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -118,7 +119,20 @@ public class TownHallScreen extends Screen {
 				}
 				pager(town.rows().size());
 			}
-			case BUILDINGS -> pager(town.buildings().size());
+			case BUILDINGS -> {
+				// Chaque bâtiment déclaré a son interface : son niveau, son amélioration.
+				int y = top + 54;
+				for (TownSnapshot.BuildingRow row : visible(town.buildings())) {
+					if (!row.monument()) {
+						BlockPos plaque = row.plaque();
+						addRenderableWidget(Button.builder(Component.translatable("screen.minecities.building.details"),
+								b -> send("building:" + plaque.getX() + "," + plaque.getY() + "," + plaque.getZ(),
+										TownActionPayload.NONE)).bounds(left + WIDTH - 66, y, 56, 16).build());
+					}
+					y += ROW;
+				}
+				pager(town.buildings().size());
+			}
 			case COUNCIL -> {
 				if (town.manager()) {
 					TownSnapshot.Council council = town.council();

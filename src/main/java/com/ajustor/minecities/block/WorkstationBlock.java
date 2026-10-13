@@ -13,9 +13,10 @@ import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
 /**
- * Un poste de travail du mod (brief 11), pour les métiers que le vanilla n'a pas prévus : l'établi
- * du joaillier, le four du verrier. Un bloc tourné vers celui qui le pose, avec son modèle ; c'est
- * le relevé du bâtiment qui en fait un emploi.
+ * Un poste de travail du mod (brief 11) : l'établi du joaillier, le four du verrier, et depuis la
+ * v1.8 un poste pour chaque métier, à côté du bloc vanilla. Un bloc tourné vers celui qui le pose,
+ * avec son modèle ; c'est le relevé du bâtiment qui en fait un emploi. Un clic droit ouvre son
+ * interface.
  */
 public class WorkstationBlock extends HorizontalDirectionalBlock {
 	public static final MapCodec<WorkstationBlock> CODEC = simpleCodec(WorkstationBlock::new);
@@ -39,6 +40,18 @@ public class WorkstationBlock extends HorizontalDirectionalBlock {
 	@Override
 	public BlockState getStateForPlacement(BlockPlaceContext context) {
 		return defaultBlockState().setValue(FACING, context.getHorizontalDirection().getOpposite());
+	}
+
+	/** Un clic droit ouvre l'interface du poste : le métier, son travailleur, ce qui manque. */
+	@Override
+	protected net.minecraft.world.InteractionResult useWithoutItem(BlockState state, net.minecraft.world.level.Level level,
+			BlockPos pos, net.minecraft.world.entity.player.Player player, net.minecraft.world.phys.BlockHitResult hit) {
+		if (level instanceof net.minecraft.server.level.ServerLevel serverLevel
+				&& player instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
+			return com.ajustor.minecities.network.StationNetwork.open(serverLevel, pos, serverPlayer)
+					? net.minecraft.world.InteractionResult.SUCCESS : net.minecraft.world.InteractionResult.PASS;
+		}
+		return net.minecraft.world.InteractionResult.SUCCESS;
 	}
 
 	@Override

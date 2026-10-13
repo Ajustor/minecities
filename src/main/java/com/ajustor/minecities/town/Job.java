@@ -132,10 +132,20 @@ public enum Job {
 		return "job.minecities." + serializedName;
 	}
 
+	/** Le poste du mod de ce métier ({@code minecities:<métier>_station}), qui marche à côté du bloc vanilla. */
+	public String stationId() {
+		return serializedName + "_station";
+	}
+
+	/** Ce bloc est-il le poste du mod de ce métier ? (Le pêcheur le veut, lui aussi, au bord de l'eau.) */
+	private boolean station(BlockGetter level, BlockPos pos, BlockState state) {
+		return is(state, stationId()) && (this != FISHERMAN || nearWater(level, pos));
+	}
+
 	/** Le métier dont ce bloc, à cette place, est le poste de travail. */
 	public static Optional<Job> ofWorkstation(BlockGetter level, BlockPos pos, BlockState state) {
 		for (Job job : values()) {
-			if (job.workstation.test(level, pos, state)) {
+			if (job.station(level, pos, state) || job.workstation.test(level, pos, state)) {
 				return Optional.of(job);
 			}
 		}

@@ -6,6 +6,24 @@
     "minecities:jeweler_bench",
     "minecities:tanning_rack",
     "minecities:warehouse_ledger",
-    "minecities:carpenter_bench"
+    "minecities:carpenter_bench",
+    "minecities:farmer_station",
+    "minecities:cook_station",
+    "minecities:lumberjack_station",
+    "minecities:breeder_station",
+    "minecities:fisherman_station",
+    "minecities:builder_station",
+    "minecities:courier_station",
+    "minecities:guard_station",
+    "minecities:archer_station",
+    "minecities:inventor_station",
+    "minecities:doctor_station",
+    "minecities:merchant_station",
+    "minecities:baker_station",
+    "minecities:smith_station",
+    "minecities:mason_station",
+    "minecities:weaver_station",
+    "minecities:beekeeper_station",
+    "minecities:librarian_station"
   ]
 }

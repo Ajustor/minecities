@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "minecraft:crafting_table",
+    "#minecraft:saplings"
+  ],
+  "result": {
+    "id": "minecities:lumberjack_station",
+    "count": 1
+  }
+}

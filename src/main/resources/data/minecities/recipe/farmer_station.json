@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "minecraft:crafting_table",
+    "minecraft:wheat_seeds"
+  ],
+  "result": {
+    "id": "minecities:farmer_station",
+    "count": 1
+  }
+}

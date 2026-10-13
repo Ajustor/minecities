@@ -18,6 +18,18 @@ public class MineCitiesClient implements ClientModInitializer {
 		com.ajustor.minecities.client.render.GhostRenderer.register();
 		Guide.opener = player -> Minecraft.getInstance().gui.setScreen(
 				new BookViewScreen(new BookViewScreen.BookAccess(Guide.pages())));
+		ClientPlayNetworking.registerGlobalReceiver(com.ajustor.minecities.network.StationSnapshot.TYPE,
+				(payload, context) -> context.client().gui.setScreen(
+						new com.ajustor.minecities.client.screen.StationScreen(payload)));
+		ClientPlayNetworking.registerGlobalReceiver(com.ajustor.minecities.network.BuildingSnapshot.TYPE, (payload, context) -> {
+			// Une commande rafraîchit l'interface déjà ouverte ; sinon on l'ouvre.
+			if (context.client().gui.screen() instanceof com.ajustor.minecities.client.screen.BuildingScreen open
+					&& open.shows(payload)) {
+				open.refresh(payload);
+			} else {
+				context.client().gui.setScreen(new com.ajustor.minecities.client.screen.BuildingScreen(payload));
+			}
+		});
 		ClientPlayNetworking.registerGlobalReceiver(OpenTownPayload.TYPE, (payload, context) -> {
 			// Une décision du maire rafraîchit l'écran déjà ouvert ; sinon on l'ouvre.
 			if (context.client().gui.screen() instanceof TownHallScreen open && open.shows(payload.town())) {

@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "minecraft:crafting_table",
+    "minecraft:raw_iron"
+  ],
+  "result": {
+    "id": "minecities:smith_station",
+    "count": 1
+  }
+}
