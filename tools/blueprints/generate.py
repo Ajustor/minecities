@@ -104,6 +104,14 @@ KEY = {
     "y": "minecraft:barrel[facing=north]",
     "<": "{roof_stairs}[facing=east,half=bottom,shape=straight]",
     ">": "{roof_stairs}[facing=west,half=bottom,shape=straight]",
+    # Les monuments (MC-11) : pierre taillée, quartz, or, une cloche.
+    "M": "minecraft:chiseled_quartz_block",
+    "U": "minecraft:smooth_quartz",
+    ",": "minecraft:chiseled_stone_bricks",
+    "'": "minecraft:sea_lantern",
+    "[": "minecraft:bell[attachment=ceiling,facing=north]",
+    "]": "minecraft:lantern[hanging=false]",
+    "0": "minecraft:stone_bricks",
 }
 
 
@@ -223,6 +231,153 @@ def blueprint(name, kind, layers, upgrade=None, door_x=3, tier=None):
         # Le palier où la ville peut le commander (village par défaut).
         data["tier"] = tier
     return name, data
+
+
+def monument(name, layers):
+    """Un monument (MC-11) : pas de perron ni de plaque, ouvert à la mégalopole."""
+    used = {ch for layer in layers for row in layer for ch in row}
+    data = {
+        "kind": "monument",
+        "layers": layers,
+        "key": {ch: KEY[ch] for ch in sorted(used) if ch != "."},
+        "tier": "megalopolis",
+    }
+    return name, data
+
+
+def square(w, ch, inner=None, ring=0):
+    """Une couche de w x w : ch partout, ou seulement sur un anneau (ring = 0 : le bord)."""
+    layer = grid(w, w, inner if inner is not None else ch)
+    for z in range(w):
+        for x in range(w):
+            if inner is not None and ring <= min(x, z, w - 1 - x, w - 1 - z) <= ring:
+                layer[z][x] = ch
+    return layer
+
+
+def statue():
+    """
+    La statue : un socle à degrés (andésite polie, pierre taillée, quartz), et dessus un personnage de
+    quartz qui lève une torche d'or. 7 x 7, coins d'or au pied.
+    """
+    w = 7
+    base = square(w, "X")
+    for x, z in ((0, 0), (6, 0), (0, 6), (6, 6)):
+        base[z][x] = "$"
+    step = grid(w, w, " ")
+    for z in range(1, 6):
+        for x in range(1, 6):
+            step[z][x] = "0"
+    for x, z in ((1, 1), (5, 1), (1, 5), (5, 5)):
+        step[z][x] = ","
+    pedestal = grid(w, w, " ")
+    for z in range(2, 5):
+        for x in range(2, 5):
+            pedestal[z][x] = "U"
+    pedestal[3][3] = "M"
+    layers = [base, step, pedestal]
+
+    def figure(cells):
+        layer = grid(w, w, " ")
+        for (x, z), ch in cells.items():
+            layer[z][x] = ch
+        return layer
+
+    layers.append(figure({(2, 3): "V", (4, 3): "V"}))               # les jambes
+    layers.append(figure({(2, 3): "V", (4, 3): "V"}))
+    # Le buste, le bras gauche le long du corps, le droit levé.
+    layers.append(figure({(1, 3): "U", (2, 3): "U", (3, 3): "U", (4, 3): "U"}))
+    layers.append(figure({(1, 3): "U", (2, 3): "U", (3, 3): "U", (4, 3): "U", (5, 3): "U"}))
+    layers.append(figure({(3, 3): "M", (5, 3): "U"}))               # la tête
+    layers.append(figure({(5, 3): "$"}))                            # la torche d'or
+    return [["".join(r) for r in layer] for layer in layers]
+
+
+def fountain():
+    """
+    La fontaine : un parvis de 9 x 9, un bassin de pierre taillée, une colonne de quartz au milieu de
+    l'eau, et en haut une vasque d'eau entre quatre blocs d'or. Des lanternes aux coins du bassin.
+    """
+    w = 9
+    paving = square(w, "X")
+    paving[4][4] = "'"
+    basin = grid(w, w, " ")
+    for z in range(2, 7):
+        for x in range(2, 7):
+            edge = x in (2, 6) or z in (2, 6)
+            basin[z][x] = "0" if edge else "~"
+    basin[4][4] = "V"
+    for x, z in ((2, 2), (6, 2), (2, 6), (6, 6)):
+        basin[z][x] = ","
+    rim = grid(w, w, " ")
+    rim[4][4] = "V"
+    for x, z in ((2, 2), (6, 2), (2, 6), (6, 6)):
+        rim[z][x] = "]"
+    column = grid(w, w, " ")
+    column[4][4] = "V"
+    cup = grid(w, w, " ")
+    for z in range(3, 6):
+        for x in range(3, 6):
+            cup[z][x] = "U"
+    cup[4][4] = "M"
+    bowl = grid(w, w, " ")
+    for z in range(3, 6):
+        for x in range(3, 6):
+            bowl[z][x] = "U"
+    bowl[4][4] = "~"
+    for x, z in ((3, 3), (5, 3), (3, 5), (5, 5)):
+        bowl[z][x] = "$"
+    layers = [paving, basin, rim, column, cup, bowl]
+    return [["".join(r) for r in layer] for layer in layers]
+
+
+def belfry():
+    """
+    Le beffroi : une tour carrée de 7 x 7 en pierre taillée, chaînée de quartz aux angles, avec une
+    porte au nord ; en haut, la chambre des cloches ouverte sur les quatre côtés, la cloche pendue
+    sous un toit de cuivre en pyramide, et des lanternes.
+    """
+    w = 7
+    layers = [square(w, "X")]
+    for y in range(1, 10):
+        layer = square(w, "0", inner=" ")
+        for x, z in ((0, 0), (6, 0), (0, 6), (6, 6)):
+            layer[z][x] = "V"
+        if y in (1, 2):
+            layer[0][3] = " "  # l'entrée
+        if y in (4, 7):
+            # Des meurtrières de verre au milieu de chaque face.
+            for x, z in ((3, 0), (0, 3), (6, 3), (3, 6)):
+                layer[z][x] = "H"
+        layers.append(layer)
+    # Le plancher de la chambre des cloches, bordé de pierre ciselée.
+    floor = square(w, ",", inner="0")
+    for x, z in ((0, 0), (6, 0), (0, 6), (6, 6)):
+        floor[z][x] = "V"
+    layers.append(floor)
+    # La chambre des cloches : des piliers d'angle, ouverte entre eux.
+    for y in range(3):
+        layer = grid(w, w, " ")
+        for x, z in ((0, 0), (6, 0), (0, 6), (6, 6)):
+            layer[z][x] = "V"
+        if y == 0:
+            for x, z in ((1, 1), (5, 1), (1, 5), (5, 5)):
+                layer[z][x] = "]"
+        if y == 2:
+            layer[3][3] = "["
+        layers.append(layer)
+    # Le toit : une dalle de cuivre, puis une pyramide qui se resserre, une pointe d'or.
+    layers.append(square(w, "Y"))
+    for k in (1, 2):
+        layer = grid(w, w, " ")
+        for z in range(k, w - k):
+            for x in range(k, w - k):
+                layer[z][x] = "Y"
+        layers.append(layer)
+    top = grid(w, w, " ")
+    top[3][3] = "$"
+    layers.append(top)
+    return [["".join(r) for r in layer] for layer in layers]
 
 
 def tower():
@@ -662,6 +817,11 @@ def main():
     prints.append(blueprint("market_large", "workshop", rows(shell(9, 7, 3, extras={(3, 1, 4): "p", (5, 1, 4): "p",
             (1, 1, 5): "y", (2, 1, 5): "y", (7, 1, 5): "y", (6, 1, 5): "y", (7, 1, 1): "C", (1, 1, 1): "t"},
             fine=True)), tier="town"))
+
+    # Les monuments (MC-11) : un de chaque par ville, à la mégalopole.
+    prints.append(monument("statue", statue()))
+    prints.append(monument("fountain", fountain()))
+    prints.append(monument("belfry", belfry()))
 
     upgrades = {"house_small": "house_2", "house_large": "house_3", "manor": "house_4",
                 "barracks": "barracks_2", "barracks_large": "barracks_3", "infirmary": "infirmary_2",

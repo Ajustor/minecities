@@ -58,6 +58,11 @@ public final class Builds {
 		if (town.constructions().stream().anyMatch(c -> !c.done() && c.overlaps(bounds[0], bounds[1]))) {
 			return Optional.of(Component.translatable("message.minecities.build.overlap"));
 		}
+		// Un seul de chaque monument par ville, bâti ou en chantier.
+		if (com.ajustor.minecities.town.Monument.of(blueprint.id()).isPresent()
+				&& town.constructions().stream().anyMatch(c -> c.blueprint().equals(blueprint.id()))) {
+			return Optional.of(Component.translatable("message.minecities.build.monument_once", blueprint.displayName()));
+		}
 		return Optional.empty();
 	}
 

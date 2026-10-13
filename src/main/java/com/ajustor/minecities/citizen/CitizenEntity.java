@@ -635,7 +635,7 @@ public class CitizenEntity extends PathfinderMob {
 				diet.hadDish(), Happiness.expectedVariety(town.get().tier().ordinal()), r.hasHome(), r.isChild(),
 				r.job().isPresent(), hasNeed("tool"), r.spouse().isPresent(), getHealth() < getMaxHealth() / 2,
 				town.get().chronicle().recentDeaths(now), danger, town.get().chronicle().rejoicing(now),
-				town.get().workers(Job.LIBRARIAN) > 0, town.get().decreeMood());
+				town.get().workers(Job.LIBRARIAN) > 0, town.get().decreeMood(), town.get().monuments().size());
 		mood = Happiness.of(factors);
 		entityData.set(MOOD, mood.score());
 		town.get().setMood(getUUID(), mood.score());

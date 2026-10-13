@@ -603,5 +603,13 @@
   "screen.minecities.election.sign": "Signer la pétition (%s/%s)",
   "screen.minecities.election.run": "Me porter candidat",
   "screen.minecities.election.vote": "Voter",
-  "guide.minecities.council.4": "Élections : tous les 7 jours, ou /ville election call (maire), ou une pétition (/ville election sign).\n\nCandidats : /ville election run. Vote : /ville vote. Les citoyens heureux votent pour le maire."
+  "guide.minecities.council.4": "Élections : tous les 7 jours, ou /ville election call (maire), ou une pétition (/ville election sign).\n\nCandidats : /ville election run. Vote : /ville vote. Les citoyens heureux votent pour le maire.",
+  "blueprint.minecities.kind.monument": "monument",
+  "blueprint.minecities.statue": "Statue",
+  "blueprint.minecities.fountain": "Fontaine",
+  "blueprint.minecities.belfry": "Beffroi",
+  "message.minecities.build.monument_once": "La ville a déjà ce monument (%s) : un seul de chaque par ville.",
+  "mood.minecities.monuments": "les monuments de la ville",
+  "screen.minecities.building.monument": "Monument",
+  "screen.minecities.appeal": "Attrait des monuments : %s"
 }

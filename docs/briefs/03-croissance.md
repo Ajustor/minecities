@@ -25,12 +25,17 @@ Mégalopole (75, 30). Rayon 48 → 80 → 128 → 224. Annonce à tous les joueu
 
 ## Ce que chaque palier pourrait débloquer
 
+Les **monuments** (MC-11) sont faits : statue, fontaine et beffroi (`town/Monument`), schémas de
+genre `monument` ouverts à la mégalopole, sans plaque, un de chaque par ville (`Builds.check`). Bâtis
+(chantier fini), ils donnent du bonheur (+1, au plus +2) et de l'attrait (`Town.appeal()`, 1, 1 et
+2), qu'une taverne pourra utiliser pour attirer des nouveaux venus.
+
 | Palier | Débloque |
 |---|---|
 | Village | maisons, fermier, boulanger |
 | Ville | bûcheron, pêcheur, garde, marché ; décrets ; élections (si plusieurs joueurs) |
 | Grande ville | mineur, constructeur, bibliothèque ; **quartiers** ; routes reconnues |
-| Mégalopole | monuments, gare/transports (wagons), ambassades entre villes, titre de « gouverneur » |
+| Mégalopole | monuments (faits, MC-11 : statue, fontaine, beffroi), gare/transports (wagons), ambassades entre villes, titre de « gouverneur » |
 
 ## Pistes
 

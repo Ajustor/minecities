@@ -165,7 +165,10 @@ version du mod, les autres mods et le temps de jeu.
    liste de ce qui s'ouvre) ; son territoire s'étend. La **ville** ouvre le marché et le marchand ;
    la **grande ville** peut poser 2 **mairies annexes** (4 en mégalopole) : posées sur le territoire
    à 40 blocs au moins de l'hôtel de ville, elles l'étendent de 48 blocs autour d'elles et gardent
-   un grenier où mangent les citoyens du quartier. Le **trésor** est l'émeraude du grenier.
+   un grenier où mangent les citoyens du quartier. Le **trésor** est l'émeraude du grenier. La
+   **mégalopole** ouvre les **monuments** : la statue, la fontaine et le beffroi, un de chaque par
+   ville, en pierre polie, quartz et or. Bâtis, ils rendent les citoyens plus heureux (+1, +2 à partir
+   de deux) et donnent de l'**attrait** à la ville (montré dans le résumé).
 9. **Les raids** : une ville d'au moins 8 habitants attire les pillards. Au crépuscule, une fois tous
    les trois jours au plus, un raid peut partir du bord du territoire, comme un raid vanilla : une
    barre de boss, plusieurs vagues de pillards et de vindicateurs qui marchent sur l'hôtel de ville.
@@ -300,7 +303,7 @@ Java 25 est requis (Loom 1.18.3, Minecraft 26.2).
 ./gradlew runClient             # lance le jeu avec le mod
 ./gradlew runGameTest           # les scènes de jeu, vérifiées sur le seul serveur, sans fenêtre (rapide)
 ./gradlew runGameTest -PminecitiesGametest=work   # une scène (city, work, countryside, village, build, family, raid, life, market, robust, industry, crafts,
-council, logistics, guide, structures, plans, jade, residents, elections)
+council, logistics, guide, structures, plans, jade, residents, elections, monuments)
 ./gradlew runClientGameTest     # les mêmes scènes dans le vrai jeu, photographiées (build/run/clientGameTest/screenshots), plus styles
 ./gradlew runClientGameTest -PminecitiesFilm   # avec les films image par image (lents)
 python tools/textures/generate.py   # régénère les textures (peaux des citoyens, plaque, œuf)

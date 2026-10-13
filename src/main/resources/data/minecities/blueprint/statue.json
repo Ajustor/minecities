@@ -1,0 +1,97 @@
+{
+ "kind": "monument",
+ "layers": [
+  [
+   "$XXXXX$",
+   "XXXXXXX",
+   "XXXXXXX",
+   "XXXXXXX",
+   "XXXXXXX",
+   "XXXXXXX",
+   "$XXXXX$"
+  ],
+  [
+   "       ",
+   " ,000, ",
+   " 00000 ",
+   " 00000 ",
+   " 00000 ",
+   " ,000, ",
+   "       "
+  ],
+  [
+   "       ",
+   "       ",
+   "  UUU  ",
+   "  UMU  ",
+   "  UUU  ",
+   "       ",
+   "       "
+  ],
+  [
+   "       ",
+   "       ",
+   "       ",
+   "  V V  ",
+   "       ",
+   "       ",
+   "       "
+  ],
+  [
+   "       ",
+   "       ",
+   "       ",
+   "  V V  ",
+   "       ",
+   "       ",
+   "       "
+  ],
+  [
+   "       ",
+   "       ",
+   "       ",
+   " UUUU  ",
+   "       ",
+   "       ",
+   "       "
+  ],
+  [
+   "       ",
+   "       ",
+   "       ",
+   " UUUUU ",
+   "       ",
+   "       ",
+   "       "
+  ],
+  [
+   "       ",
+   "       ",
+   "       ",
+   "   M U ",
+   "       ",
+   "       ",
+   "       "
+  ],
+  [
+   "       ",
+   "       ",
+   "       ",
+   "     $ ",
+   "       ",
+   "       ",
+   "       "
+  ]
+ ],
+ "key": {
+  " ": "minecraft:air",
+  "$": "minecraft:gold_block",
+  ",": "minecraft:chiseled_stone_bricks",
+  "0": "minecraft:stone_bricks",
+  "M": "minecraft:chiseled_quartz_block",
+  "U": "minecraft:smooth_quartz",
+  "V": "minecraft:quartz_pillar[axis=y]",
+  "X": "minecraft:polished_andesite"
+ },
+ "tier": "megalopolis"
+}

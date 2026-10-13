@@ -44,10 +44,18 @@ public final class Happiness {
 	 * @param festival         une fête dans la ville depuis moins d'un jour
 	 * @param culture          la ville a une bibliothèque, avec son bibliothécaire
 	 * @param decrees          ce que les décrets du maire font au moral
+	 * @param monuments        les monuments bâtis dans la ville
 	 */
 	public record Factors(float hunger, int meals, int variety, boolean dish, int expectedVariety, boolean housed,
 			boolean child, boolean employed, boolean missingTool, boolean married, boolean hurt, int recentDeaths,
-			boolean danger, boolean festival, boolean culture, int decrees) {
+			boolean danger, boolean festival, boolean culture, int decrees, int monuments) {
+		/** Sans monument. */
+		public Factors(float hunger, int meals, int variety, boolean dish, int expectedVariety, boolean housed,
+				boolean child, boolean employed, boolean missingTool, boolean married, boolean hurt, int recentDeaths,
+				boolean danger, boolean festival, boolean culture, int decrees) {
+			this(hunger, meals, variety, dish, expectedVariety, housed, child, employed, missingTool, married, hurt,
+					recentDeaths, danger, festival, culture, decrees, 0);
+		}
 	}
 
 	/** Un facteur et ce qu'il pèse (la clé se traduit en « mood.minecities.<clé> »). */
@@ -115,6 +123,9 @@ public final class Happiness {
 		}
 		if (f.decrees() != 0) {
 			factors.add(new Factor(f.decrees() > 0 ? "decrees_good" : "decrees_bad", f.decrees()));
+		}
+		if (f.monuments() > 0) {
+			factors.add(new Factor("monuments", Math.min(com.ajustor.minecities.town.Monument.MOOD_CAP, f.monuments())));
 		}
 		int score = BASE + factors.stream().mapToInt(Factor::delta).sum();
 		return new Mood(Math.clamp(score, MIN, MAX), List.copyOf(factors));

@@ -603,5 +603,13 @@
   "screen.minecities.election.sign": "Sign the petition (%s/%s)",
   "screen.minecities.election.run": "Run for mayor",
   "screen.minecities.election.vote": "Vote",
-  "guide.minecities.council.4": "Elections: every 7 days, or /ville election call (mayor), or a petition (/ville election sign).\n\nRun: /ville election run. Vote: /ville vote. Happy citizens vote for the mayor."
+  "guide.minecities.council.4": "Elections: every 7 days, or /ville election call (mayor), or a petition (/ville election sign).\n\nRun: /ville election run. Vote: /ville vote. Happy citizens vote for the mayor.",
+  "blueprint.minecities.kind.monument": "monument",
+  "blueprint.minecities.statue": "Statue",
+  "blueprint.minecities.fountain": "Fountain",
+  "blueprint.minecities.belfry": "Belfry",
+  "message.minecities.build.monument_once": "The town already has this monument (%s): one of each per town.",
+  "mood.minecities.monuments": "the town's monuments",
+  "screen.minecities.building.monument": "Monument",
+  "screen.minecities.appeal": "Monuments' appeal: %s"
 }

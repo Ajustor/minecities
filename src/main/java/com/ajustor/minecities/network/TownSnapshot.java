@@ -34,7 +34,7 @@ public record TownSnapshot(BlockPos hall, String name, String tier, int populati
 	 * dans combien de ticks sinon, et son prix), l'alerte.
 	 */
 	public record Life(int mood, boolean partying, boolean canCelebrate, long untilFestival, int festivalCost,
-			boolean alarmed, int treasury, int earnedToday, int annexes, int maxAnnexes) {
+			boolean alarmed, int treasury, int earnedToday, int annexes, int maxAnnexes, int appeal) {
 	}
 
 	/**
@@ -67,9 +67,11 @@ public record TownSnapshot(BlockPos hall, String name, String tier, int populati
 
 	/**
 	 * Un bâtiment : sa plaque, ses lits (et combien sont pris), ses métiers (clés ; « ! » devant un
-	 * métier pas encore ouvert à ce palier), maison de village ou non.
+	 * métier pas encore ouvert à ce palier), maison de village ou non, monument ou non (son nom est
+	 * alors le premier « métier »).
 	 */
-	public record BuildingRow(BlockPos plaque, int beds, int sleepers, List<String> jobs, boolean village) {
+	public record BuildingRow(BlockPos plaque, int beds, int sleepers, List<String> jobs, boolean village,
+			boolean monument) {
 	}
 
 	/** Une demande de mariage en attente. */
@@ -117,6 +119,7 @@ public record TownSnapshot(BlockPos hall, String name, String tier, int populati
 		buf.writeVarInt(s.life.earnedToday());
 		buf.writeVarInt(s.life.annexes());
 		buf.writeVarInt(s.life.maxAnnexes());
+		buf.writeVarInt(s.life.appeal());
 		buf.writeUtf(s.council.mayor());
 		writeStrings(buf, s.council.deputies());
 		writeStrings(buf, s.council.decrees());
@@ -143,6 +146,7 @@ public record TownSnapshot(BlockPos hall, String name, String tier, int populati
 			buf.writeVarInt(building.jobs.size());
 			building.jobs.forEach(buf::writeUtf);
 			buf.writeBoolean(building.village);
+			buf.writeBoolean(building.monument);
 		}
 		buf.writeVarInt(s.requests.size());
 		for (RequestRow request : s.requests) {
@@ -245,7 +249,7 @@ public record TownSnapshot(BlockPos hall, String name, String tier, int populati
 		int nextHouses = buf.readVarInt();
 		boolean manager = buf.readBoolean();
 		Life life = new Life(buf.readInt(), buf.readBoolean(), buf.readBoolean(), buf.readVarLong(), buf.readVarInt(),
-				buf.readBoolean(), buf.readVarInt(), buf.readVarInt(), buf.readVarInt(), buf.readVarInt());
+				buf.readBoolean(), buf.readVarInt(), buf.readVarInt(), buf.readVarInt(), buf.readVarInt(), buf.readVarInt());
 		Council council = new Council(buf.readUtf(), readStrings(buf), readStrings(buf), readFlags(buf),
 				readStrings(buf), readFlags(buf));
 		int count = buf.readVarInt();
@@ -265,7 +269,7 @@ public record TownSnapshot(BlockPos hall, String name, String tier, int populati
 			for (int j = 0; j < jobCount; j++) {
 				jobs.add(buf.readUtf());
 			}
-			buildings.add(new BuildingRow(plaque, beds, sleepers, jobs, buf.readBoolean()));
+			buildings.add(new BuildingRow(plaque, beds, sleepers, jobs, buf.readBoolean(), buf.readBoolean()));
 		}
 		int requestCount = buf.readVarInt();
 		List<RequestRow> requests = new ArrayList<>(requestCount);
