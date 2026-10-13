@@ -359,6 +359,17 @@ public final class TownNetwork {
 				}
 				return;
 			}
+			case "posting" -> {
+				// Le maire (ou un adjoint) renvoie ce citoyen à son poste.
+				if (!town.canManage(player.getUUID())) {
+					return;
+				}
+				com.ajustor.minecities.town.Postings.Outcome outcome = com.ajustor.minecities.town.Postings.send(level, town,
+						payload.request());
+				player.sendSystemMessage(outcome.message().copy().withStyle(outcome.sent() ? ChatFormatting.GREEN
+						: ChatFormatting.RED));
+				return;
+			}
 			case "decree.rationing", "decree.overtime", "decree.holiday" -> {
 				if (!town.canManage(player.getUUID())) {
 					return;

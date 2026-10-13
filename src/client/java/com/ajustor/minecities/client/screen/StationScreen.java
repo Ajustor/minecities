@@ -52,6 +52,9 @@ public class StationScreen extends Screen {
 			addRenderableWidget(Button.builder(Component.translatable("screen.minecities.locate"),
 					b -> ClientPlayNetworking.send(new StationNetwork.ActionPayload(station.pos(), "locate", worker.id())))
 					.bounds(left + WIDTH - 44, y - 2, 34, 16).build());
+			addRenderableWidget(Button.builder(Component.translatable("screen.minecities.posting"),
+					b -> ClientPlayNetworking.send(new StationNetwork.ActionPayload(station.pos(), "posting", worker.id())))
+					.bounds(left + WIDTH - 86, y - 2, 40, 16).build());
 			y += ROW;
 		}
 		addRenderableWidget(Button.builder(Component.translatable("gui.done"), b -> onClose())

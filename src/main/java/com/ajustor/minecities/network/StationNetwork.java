@@ -159,6 +159,18 @@ public final class StationNetwork {
 		if (player.distanceToSqr(Vec3.atCenterOf(payload.pos())) > REACH * REACH) {
 			return;
 		}
+		if (payload.action().equals("posting")) {
+			// Le maire (ou un adjoint) fait revenir le travailleur de ce poste.
+			Optional<Town> town = Towns.get(level.getServer()).at(level.dimension(), payload.pos());
+			if (town.isPresent() && town.get().canManage(player.getUUID()) && snapshot(level, payload.pos())
+					.filter(s -> s.workers().stream().anyMatch(w -> w.id().equals(payload.target()))).isPresent()) {
+				com.ajustor.minecities.town.Postings.Outcome outcome = com.ajustor.minecities.town.Postings.send(level,
+						town.get(), payload.target());
+				player.sendSystemMessage(outcome.message().copy().withStyle(outcome.sent()
+						? net.minecraft.ChatFormatting.GREEN : net.minecraft.ChatFormatting.RED));
+			}
+			return;
+		}
 		if (payload.action().equals("locate") && level.getEntity(payload.target()) instanceof CitizenEntity citizen
 				&& snapshot(level, payload.pos()).filter(s -> s.workers().stream()
 						.anyMatch(w -> w.id().equals(payload.target()))).isPresent()) {

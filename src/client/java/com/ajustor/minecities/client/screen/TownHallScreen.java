@@ -115,6 +115,11 @@ public class TownHallScreen extends Screen {
 				for (TownSnapshot.CitizenRow row : rows) {
 					addRenderableWidget(Button.builder(Component.translatable("screen.minecities.locate"),
 							b -> send("locate", row.id())).bounds(left + WIDTH - 44, y, 34, 16).build());
+					if (town.manager() && !row.job().isEmpty()) {
+						// Le renvoyer à son poste.
+						addRenderableWidget(Button.builder(Component.translatable("screen.minecities.posting"),
+								b -> send("posting", row.id())).bounds(left + WIDTH - 86, y, 40, 16).build());
+					}
 					y += ROW;
 				}
 				pager(town.rows().size());

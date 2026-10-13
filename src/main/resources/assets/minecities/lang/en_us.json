@@ -727,5 +727,10 @@
   "guide.minecities.jobs.6": "Every job also has its mod station: a crafting table and an item of the trade. Right-click: its interface.\n\nOn founding, you get the builder's bench.",
   "screen.minecities.building.no_family": "No blueprint to rebuild this building (guard tower, courier's office…).",
   "screen.minecities.building.replaces": "Built by hand: the builder pulls it down and builds the new one in its place.",
-  "screen.minecities.building.rebuild": "Rebuild: %s"
+  "screen.minecities.building.rebuild": "Rebuild: %s",
+  "screen.minecities.posting": "Post",
+  "message.minecities.posting.sent": "%s is back at their station (%s).",
+  "message.minecities.posting.jobless": "%s has no workstation.",
+  "message.minecities.posting.no_room": "No safe spot near %s's station (%s): clear around it.",
+  "message.minecities.posting.unknown": "This citizen no longer belongs to the town."
 }
