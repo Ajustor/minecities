@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.9.0 — 2026-10-13
+
+### New features
+
+- A "Post" button sends a citizen back to their workstation (Citizens tab, station interface), onto a safe spot, without changing their job.
+- The miner's shaft: its winch shows what it can yield, the miner checks and repairs the way back up before going down, and a worked-out shaft can be sealed from the winch.
+- One blueprint for every building: its screen picks the building and style, and holding it shows the ongoing sites.
+
+### Fixes
+
+- The breeder no longer wastes wheat: two animals in love far apart in the pen walk towards each other.
+- The smith brings guards the armour pieces they need himself, even when the granary is full, and no longer loses a forged piece.
 ## 1.8.0 — 2026-10-13
 
 ### New features

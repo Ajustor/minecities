@@ -1,5 +1,17 @@
 # Journal des modifications
 
+## 1.9.0 — 2026-10-13
+
+### Nouveautés
+
+- Un bouton « Poste » renvoie un citoyen à son poste de travail (onglet Citoyens, interface du poste), sur une case sûre, sans changer son emploi.
+- Le puits du mineur : son treuil montre ce qu'il peut donner, le mineur vérifie et répare son chemin de remontée avant de descendre, et un puits épuisé se rebouche depuis le treuil.
+- Un seul plan pour tous les bâtiments : son interface choisit le bâtiment et le style, et tenu en main il montre les chantiers en cours.
+
+### Corrections
+
+- L'éleveur ne gaspille plus son blé : deux bêtes en amour éloignées dans le pré marchent l'une vers l'autre.
+- Le forgeron porte lui-même aux gardes les pièces d'armure qu'ils attendent, même quand le grenier est plein, et ne perd plus une pièce forgée.
 ## 1.8.0 — 2026-10-13
 
 ### Nouveautés
