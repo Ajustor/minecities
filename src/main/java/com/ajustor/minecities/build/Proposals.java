@@ -243,7 +243,7 @@ public final class Proposals {
 				continue;
 			}
 			if (ghost == null) {
-				ghost = new GhostPayload(proposal.owner, ghost(proposal));
+				ghost = new GhostPayload(proposal.owner, false, ghost(proposal));
 			}
 			if (ServerPlayNetworking.canSend(player, GhostPayload.TYPE)) {
 				ServerPlayNetworking.send(player, ghost);
@@ -254,9 +254,17 @@ public final class Proposals {
 
 	/** Les blocs du fantôme : tout le plan sauf l'air, portes et lits entiers. */
 	public static List<GhostPayload.Block> ghost(Proposal proposal) {
+		return ghost(BuildPlan.of(proposal.blueprint, proposal.style, proposal.origin, proposal.rotation), i -> true);
+	}
+
+	/** Les blocs du fantôme de ce plan, pour ceux que {@code wanted} retient (par leur rang dans le plan). */
+	public static List<GhostPayload.Block> ghost(List<BuildPlan.Placement> plan, java.util.function.IntPredicate wanted) {
 		List<GhostPayload.Block> blocks = new ArrayList<>();
-		for (BuildPlan.Placement p : BuildPlan.of(proposal.blueprint, proposal.style, proposal.origin,
-				proposal.rotation)) {
+		for (int i = 0; i < plan.size(); i++) {
+			if (!wanted.test(i)) {
+				continue;
+			}
+			BuildPlan.Placement p = plan.get(i);
 			BlockState state = p.state();
 			if (state.isAir()) {
 				continue;

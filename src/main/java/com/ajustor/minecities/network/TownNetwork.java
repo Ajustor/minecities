@@ -206,7 +206,7 @@ public final class TownNetwork {
 	}
 
 	/** Les bâtiments qu'on peut commander, chacun à son premier niveau : les ouverts d'abord. */
-	private static List<TownSnapshot.PlanRow> plans(ServerLevel level, Town town) {
+	public static List<TownSnapshot.PlanRow> plans(ServerLevel level, Town town) {
 		return com.ajustor.minecities.build.Blueprints.all(level.getServer()).values().stream()
 				.filter(b -> !b.legacy() && b.level() == 1)
 				.sorted(java.util.Comparator.comparingInt((com.ajustor.minecities.build.Blueprint b) -> b.tier().ordinal())
@@ -240,7 +240,7 @@ public final class TownNetwork {
 		return new TownSnapshot.Council(town.mayorName(), deputies, decrees, decreed, partners, open);
 	}
 
-	private static void act(ServerPlayer player, TownActionPayload payload) {
+	public static void act(ServerPlayer player, TownActionPayload payload) {
 		ServerLevel level = player.level();
 		if (player.distanceToSqr(net.minecraft.world.phys.Vec3.atCenterOf(payload.hall())) > REACH * REACH) {
 			return;
@@ -302,9 +302,17 @@ public final class TownNetwork {
 			}
 			com.ajustor.minecities.build.BuildStyle style = com.ajustor.minecities.build.BuildStyle
 					.fromSerializedName(parts[1]).orElse(com.ajustor.minecities.build.BuildStyle.PLAINS);
-			net.minecraft.world.item.ItemStack stack = com.ajustor.minecities.build.PlanItem.of(blueprint.get(), style);
-			if (!player.getInventory().add(stack)) {
-				player.drop(stack, false);
+			// Un seul plan (MC-23) : celui qu'on a déjà prend ce schéma ; sinon on en reçoit un.
+			Optional<net.minecraft.world.item.ItemStack> owned = PlanNetwork.held(player).or(() -> player.getInventory()
+					.getNonEquipmentItems().stream().filter(s -> s.is(com.ajustor.minecities.registry.McItems.PLAN))
+					.findFirst());
+			if (owned.isPresent()) {
+				com.ajustor.minecities.build.PlanItem.choose(owned.get(), blueprint.get(), style);
+			} else {
+				net.minecraft.world.item.ItemStack stack = com.ajustor.minecities.build.PlanItem.of(blueprint.get(), style);
+				if (!player.getInventory().add(stack)) {
+					player.drop(stack, false);
+				}
 			}
 			player.sendSystemMessage(Component.translatable("message.minecities.plan.given",
 					blueprint.get().displayName()).withStyle(ChatFormatting.GOLD));

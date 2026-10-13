@@ -1,5 +1,6 @@
 package com.ajustor.minecities.build;
 
+import com.ajustor.minecities.network.PlanNetwork;
 import com.ajustor.minecities.registry.McItems;
 import com.ajustor.minecities.town.Town;
 import com.ajustor.minecities.town.Towns;
@@ -24,10 +25,11 @@ import net.minecraft.world.level.block.Rotation;
 import java.util.Optional;
 
 /**
- * Le plan d'un bâtiment (brief 09), pris à l'hôtel de ville (onglet Plans) : il garde son schéma et
- * son style. Posé au sol, il montre le fantôme du bâtiment devant le joueur, porte vers lui ;
- * accroupi, il le tourne. On valide ou on abandonne depuis le chat ({@code /ville build confirm}).
- * Le plan sert autant de fois qu'on veut.
+ * Le plan (brief 09, MC-23) : un seul objet pour tous les bâtiments. Un clic droit dans le vide ouvre
+ * son interface, où l'on choisit le schéma et le style, et où l'on tourne, valide ou abandonne le
+ * chantier proposé. Posé au sol, il montre le fantôme du bâtiment devant le joueur, porte vers lui ;
+ * accroupi, il le tourne. Tenu en main dans la ville, il montre aussi les chantiers en cours. On
+ * valide aussi depuis le chat ({@code /ville build confirm}). Le plan sert autant de fois qu'on veut.
  */
 public class PlanItem extends Item {
 	public PlanItem(Properties properties) {
@@ -37,13 +39,18 @@ public class PlanItem extends Item {
 	/** Un plan de ce schéma, dans ce style. */
 	public static ItemStack of(Blueprint blueprint, BuildStyle style) {
 		ItemStack plan = new ItemStack(McItems.PLAN);
+		choose(plan, blueprint, style);
+		return plan;
+	}
+
+	/** Ce plan prend ce schéma, dans ce style. */
+	public static void choose(ItemStack plan, Blueprint blueprint, BuildStyle style) {
 		CompoundTag tag = new CompoundTag();
 		tag.putString("blueprint", blueprint.id().toString());
 		tag.putString("style", style.serializedName());
 		plan.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
 		plan.set(DataComponents.ITEM_NAME, Component.translatable("item.minecities.plan.named",
 				blueprint.displayName(), Component.translatable(style.translationKey())));
-		return plan;
 	}
 
 	/** Le schéma d'un plan. */
@@ -72,8 +79,9 @@ public class PlanItem extends Item {
 		ItemStack plan = context.getItemInHand();
 		Optional<Blueprint> blueprint = blueprint(plan).flatMap(id -> Blueprints.get(level.getServer(), id));
 		if (blueprint.isEmpty()) {
-			refuse(player, Component.translatable("command.minecities.no_blueprint"));
-			return InteractionResult.FAIL;
+			// Un plan vierge : on choisit d'abord le bâtiment.
+			PlanNetwork.open(level, player);
+			return InteractionResult.SUCCESS;
 		}
 		BlockPos standing = context.getClickedPos().above();
 		Optional<Town> town = Towns.get(level.getServer()).at(level.dimension(), standing);
@@ -90,13 +98,15 @@ public class PlanItem extends Item {
 
 	@Override
 	public InteractionResult use(Level level, Player player, InteractionHand hand) {
-		// Dans le vide, accroupi : tourne le fantôme.
-		if (player instanceof ServerPlayer server && level instanceof ServerLevel serverLevel
-				&& player.isSecondaryUseActive()) {
-			Proposals.rotate(serverLevel, server).ifPresent(refusal -> refuse(server, refusal));
-			return InteractionResult.SUCCESS;
+		// Dans le vide : l'interface du plan ; accroupi, tourne le fantôme.
+		if (player instanceof ServerPlayer server && level instanceof ServerLevel serverLevel) {
+			if (player.isSecondaryUseActive()) {
+				Proposals.rotate(serverLevel, server).ifPresent(refusal -> refuse(server, refusal));
+			} else {
+				PlanNetwork.open(serverLevel, server);
+			}
 		}
-		return InteractionResult.PASS;
+		return InteractionResult.SUCCESS;
 	}
 
 	private static void refuse(ServerPlayer player, Component refusal) {

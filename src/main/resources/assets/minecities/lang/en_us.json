@@ -466,7 +466,7 @@
   "guide.minecities.jobs.4": "Grindstone: guard (sword)\nFletching table: archer (bow)\nSmithing table: inventor\nBrewing stand: doctor\nMine winch: miner (pickaxe)\nBeehive: beekeeper (shears)",
   "guide.minecities.jobs.5": "Tanning rack: tanner\n\nFrom town tier:\nLectern: merchant\nBlast furnace: smith\nJeweler's bench: jeweler\nChiseled bookshelf: librarian",
   "guide.minecities.build": "Commissioning",
-  "guide.minecities.build.1": "Take a blueprint at the town hall (Plans tab) and use it on the ground, or type /ville build <blueprint>.\n\nThe building's ghost appears: rotate it, then confirm.",
+  "guide.minecities.build.1": "Take the blueprint at the town hall (Plans tab): one blueprint for every building. Right-click in the air to choose the building and its style, then use it on the ground, or type /ville build <blueprint>.\n\nThe building's ghost appears: rotate it, then confirm. While you hold it, the ongoing sites show in amber.",
   "guide.minecities.build.2": "Builders clear the ground and place blocks taken from the granary and warehouse. The mayor hears what is missing.\n\nOnce finished, the building registers itself.",
   "guide.minecities.build.3": "Four levels: hut, house, hall, mansion. Inside a building, /ville upgrade improves it.\n\nEach level adds beds or a station, and work goes faster.",
   "guide.minecities.storage": "Warehouse & couriers",
@@ -749,5 +749,16 @@
   "screen.minecities.mine.none": "No ore in reach.",
   "screen.minecities.mine.ore": "%s left, %s mined",
   "screen.minecities.mine.ore_gone": "worked out (%s mined)",
-  "screen.minecities.mine.close": "Seal the shaft"
+  "screen.minecities.mine.close": "Seal the shaft",
+  "screen.minecities.plan.title": "Blueprint — %s",
+  "screen.minecities.plan.blank": "No building chosen: pick one below.",
+  "screen.minecities.plan.current": "Chosen: %s (%s)",
+  "screen.minecities.plan.choose": "Choose",
+  "screen.minecities.plan.rotate": "Rotate",
+  "screen.minecities.plan.confirm": "Confirm",
+  "screen.minecities.plan.cancel": "Abandon",
+  "screen.minecities.plan.hint.place": "Use the blueprint on the ground to see the building; sneak to rotate it.",
+  "screen.minecities.plan.hint.proposal": "A site is proposed: rotate, confirm or abandon it.",
+  "message.minecities.plan.chosen": "Blueprint: %s (%s). Use it on the ground to see the building.",
+  "message.minecities.plan.not_held": "Hold the blueprint in your hand."
 }
