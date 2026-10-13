@@ -161,9 +161,14 @@ public class CityScenes implements Scene {
 		// Ce qu'il fait (ses buts en cours) et où il va : de quoi comprendre un citoyen immobile.
 		String goals = c.runningGoals().toString();
 		net.minecraft.core.BlockPos target = c.getNavigation().getTargetPos();
-		return "%s faim=%.1f pv=%.0f pos=%s pose=%s buts=%s vers=%s métier=%s main=%s armure=%s poches=%s".formatted(
-				c.getName().getString(), c.hunger(), c.getHealth(), c.blockPosition().toShortString(), c.getPose(), goals,
-				c.getNavigation().isDone() || target == null ? "-" : target.toShortString(),
+		net.minecraft.world.level.pathfinder.Path path = c.getNavigation().getPath();
+		String route = path == null ? "aucun" : "%d/%d%s%s".formatted(path.getNextNodeIndex(), path.getNodeCount(),
+				path.isDone() ? " fini" : " prochain " + path.getNextNodePos().toShortString(),
+				path.canReach() ? "" : " inaccessible");
+		return "%s faim=%.1f pv=%.0f pos=%s (%.2f, %.2f, %.2f) pose=%s buts=%s vers=%s chemin=%s métier=%s main=%s armure=%s poches=%s".formatted(
+				c.getName().getString(), c.hunger(), c.getHealth(), c.blockPosition().toShortString(), c.getX(), c.getY(),
+				c.getZ(), c.getPose(), goals, c.getNavigation().isDone() || target == null ? "-" : target.toShortString(),
+				route,
 				c.job().map(j -> j.job().serializedName()).orElse("-"), c.getMainHandItem(),
 				java.util.stream.Stream.of(net.minecraft.world.entity.EquipmentSlot.HEAD,
 								net.minecraft.world.entity.EquipmentSlot.CHEST, net.minecraft.world.entity.EquipmentSlot.LEGS,

@@ -115,7 +115,8 @@ public class WorkScenes implements Scene {
 				1200, "le fermier n'a pas pris la houe");
 		stage.waitTicks(200);
 		stage.shot("work_1_farmer_at_work");
-		waitOrExplain(stage, server -> ripeCrops(server) == 0, 2400, "le champ n'a pas été récolté");
+		waitOrExplain(stage, server -> ripeCrops(server) == 0, 2400, "le champ n'a pas été récolté",
+				server -> "porte de l'atelier " + server.overworld().getBlockState(new BlockPos(6, Y, 3)) + " ;");
 		check(stage.compute(server -> youngCrops(server) >= 20 ? null
 				: "le champ n'a pas été replanté : " + youngCrops(server) + " jeunes pousses"));
 		// La canne coupée au pied, les fruits cueillis ; les tiges restent, et rien n'est semé à côté.

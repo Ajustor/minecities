@@ -43,12 +43,22 @@ final class DoorKeeper {
 		}
 		for (Iterator<BlockPos> it = opened.iterator(); it.hasNext(); ) {
 			BlockPos pos = it.next();
-			if (mob.distanceToSqr(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5) > CLOSE_DISTANCE_SQR) {
+			if (mob.distanceToSqr(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5) > CLOSE_DISTANCE_SQR
+					&& !someoneAt(level, pos)) {
 				if (setOpen(level, pos, false) || !DoorBlock.isWoodenDoor(level, pos)) {
 					it.remove();
 				}
 			}
 		}
+	}
+
+	/**
+	 * Un autre citoyen est-il sur le pas de cette porte ? On ne la lui referme pas au nez : il resterait
+	 * planté devant, à attendre qu'elle s'ouvre.
+	 */
+	private boolean someoneAt(Level level, BlockPos pos) {
+		return !level.getEntitiesOfClass(CitizenEntity.class, new net.minecraft.world.phys.AABB(pos).inflate(1.5),
+				c -> c != mob && c.isAlive()).isEmpty();
 	}
 
 	/** Ouvre ou ferme la porte en bois en {@code pos}, s'il y en a une. Renvoie vrai si c'est fait. */

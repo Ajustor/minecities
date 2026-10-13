@@ -129,6 +129,9 @@ public class CitizenEntity extends PathfinderMob {
 	/** Un besoin non redit depuis une minute et quart est oublié (il a été satisfait). */
 	private static final int NEED_MEMORY = 1500;
 	private int speechTicks;
+	/** Depuis combien de ticks il a un chemin mais ne bouge plus, et où il était alors. */
+	private int jammedTicks;
+	private net.minecraft.world.phys.Vec3 jammedAt = net.minecraft.world.phys.Vec3.ZERO;
 	private int actionTicks;
 	/** Ce qu'il attend d'un livreur (un bâtisseur à court d'un matériau), et combien. */
 	private Item wanted;
@@ -403,6 +406,30 @@ public class CitizenEntity extends PathfinderMob {
 		getNavigation().moveTo(spot.getX() + 0.5, spot.getY(), spot.getZ() + 0.5, 1, speed);
 	}
 
+	/**
+	 * Coincé : il a un chemin, mais ne bouge plus depuis trois secondes (deux citoyens qui se gênent à
+	 * une porte, un coin de mur). Il fait un pas de côté et recalcule son chemin.
+	 */
+	private void unjam() {
+		// Pas sur un échafaudage ni en l'air : un pas de côté l'y ferait tomber.
+		if (getNavigation().isDone() || isSleeping() || isPassenger() || !onGround()) {
+			jammedTicks = 0;
+			return;
+		}
+		if (position().distanceToSqr(jammedAt) > 0.04) {
+			jammedAt = position();
+			jammedTicks = 0;
+			return;
+		}
+		if (++jammedTicks < 60) {
+			return;
+		}
+		jammedTicks = 0;
+		double angle = getRandom().nextDouble() * Math.PI * 2;
+		setDeltaMovement(getDeltaMovement().add(Math.cos(angle) * 0.25, 0, Math.sin(angle) * 0.25));
+		getNavigation().recomputePath();
+	}
+
 	/** À portée de bras de ce bloc (3 blocs, comme un joueur). */
 	public boolean reached(BlockPos target) {
 		return distanceToSqr(target.getX() + 0.5, target.getY() + 0.5, target.getZ() + 0.5) <= 3.0 * 3.0;
@@ -530,6 +557,7 @@ public class CitizenEntity extends PathfinderMob {
 			return;
 		}
 		doors.tick();
+		unjam();
 		if (speechTicks > 0 && --speechTicks == 0) {
 			entityData.set(SPEECH, Optional.empty());
 		}
