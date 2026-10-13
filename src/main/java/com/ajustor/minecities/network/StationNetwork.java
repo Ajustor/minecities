@@ -84,12 +84,17 @@ public final class StationNetwork {
 
 	/** Ouvre l'interface de ce poste ; faux si le bloc n'est le poste d'aucun métier. */
 	public static boolean open(ServerLevel level, BlockPos pos, ServerPlayer player) {
-		Optional<StationSnapshot> snapshot = snapshot(level, pos);
+		Optional<StationSnapshot> snapshot = snapshot(level, pos, player);
 		snapshot.ifPresent(s -> ServerPlayNetworking.send(player, s));
 		return snapshot.isPresent();
 	}
 
 	public static Optional<StationSnapshot> snapshot(ServerLevel level, BlockPos pos) {
+		return snapshot(level, pos, null);
+	}
+
+	/** Ce que l'interface montre de ce poste, à ce joueur (s'il gère la ville, il voit les commandes). */
+	public static Optional<StationSnapshot> snapshot(ServerLevel level, BlockPos pos, ServerPlayer viewer) {
 		BlockState state = level.getBlockState(pos);
 		Optional<Job> found = job(level, pos, state);
 		if (found.isEmpty()) {
@@ -131,8 +136,29 @@ public final class StationNetwork {
 				}
 			}
 		}
-		return Optional.of(new StationSnapshot(pos, state.getBlock().getDescriptionId(), job.serializedName(), town.map(Town::name).orElse(""), status,
-				detail, workers, sites));
+		// Le puits du mineur : son état, ce qu'il peut encore donner et ce qu'il a donné.
+		String mineState = "";
+		List<StationSnapshot.Ore> ores = new ArrayList<>();
+		if (job == Job.MINER && town.isPresent()) {
+			Town t = town.get();
+			Optional<com.ajustor.minecities.town.Mine> existing = t.mine(pos);
+			BlockPos workshop = t.houses().stream().filter(h -> h.workstations().stream().anyMatch(w -> w.pos().equals(pos)))
+					.map(House::plaque).findFirst().orElse(pos);
+			com.ajustor.minecities.town.Mine mine = existing.orElseGet(() -> com.ajustor.minecities.town.Mines.plan(level, t,
+					pos, workshop));
+			mineState = existing.isEmpty() ? "new" : mine.closed() ? "closed" : mine.exhausted() ? "exhausted" : "digging";
+			Map<String, Integer> remaining = mine.closed() ? Map.of() : com.ajustor.minecities.town.Mines.prospect(level, t, mine);
+			java.util.Set<String> keys = new java.util.TreeSet<>(remaining.keySet());
+			keys.addAll(mine.mined().keySet());
+			for (String key : keys) {
+				ores.add(new StationSnapshot.Ore(new net.minecraft.world.item.ItemStack(
+						com.ajustor.minecities.town.Mines.oreItem(key)), remaining.getOrDefault(key, 0),
+						mine.mined().getOrDefault(key, 0)));
+			}
+		}
+		boolean manager = viewer != null && town.filter(t -> t.canManage(viewer.getUUID())).isPresent();
+		return Optional.of(new StationSnapshot(pos, state.getBlock().getDescriptionId(), job.serializedName(),
+				town.map(Town::name).orElse(""), status, detail, workers, sites, manager, mineState, ores));
 	}
 
 	/** Un travailleur : ce qu'il fait, d'après ce qu'on voit de lui. */
@@ -157,6 +183,31 @@ public final class StationNetwork {
 	private static void act(ServerPlayer player, ActionPayload payload) {
 		ServerLevel level = player.level();
 		if (player.distanceToSqr(Vec3.atCenterOf(payload.pos())) > REACH * REACH) {
+			return;
+		}
+		if (payload.action().equals("close_mine")) {
+			// Le maire (ou un adjoint) rebouche le puits épuisé de ce treuil.
+			Optional<Town> town = Towns.get(level.getServer()).at(level.dimension(), payload.pos());
+			Optional<com.ajustor.minecities.town.Mine> mine = town.flatMap(t -> t.mine(payload.pos()));
+			if (town.isPresent() && mine.isPresent() && town.get().canManage(player.getUUID())) {
+				Optional<String> refusal = com.ajustor.minecities.town.Mines.close(level, town.get(), mine.get());
+				player.sendSystemMessage(Component.translatable(refusal.map(r -> "message.minecities.mine.close." + r)
+						.orElse("message.minecities.mine.close.done")).withStyle(refusal.isPresent()
+						? net.minecraft.ChatFormatting.RED : net.minecraft.ChatFormatting.GREEN));
+			}
+			open(level, payload.pos(), player);
+			return;
+		}
+		if (payload.action().equals("posting")) {
+			// Le maire (ou un adjoint) fait revenir le travailleur de ce poste.
+			Optional<Town> town = Towns.get(level.getServer()).at(level.dimension(), payload.pos());
+			if (town.isPresent() && town.get().canManage(player.getUUID()) && snapshot(level, payload.pos())
+					.filter(s -> s.workers().stream().anyMatch(w -> w.id().equals(payload.target()))).isPresent()) {
+				com.ajustor.minecities.town.Postings.Outcome outcome = com.ajustor.minecities.town.Postings.send(level,
+						town.get(), payload.target());
+				player.sendSystemMessage(outcome.message().copy().withStyle(outcome.sent()
+						? net.minecraft.ChatFormatting.GREEN : net.minecraft.ChatFormatting.RED));
+			}
 			return;
 		}
 		if (payload.action().equals("locate") && level.getEntity(payload.target()) instanceof CitizenEntity citizen

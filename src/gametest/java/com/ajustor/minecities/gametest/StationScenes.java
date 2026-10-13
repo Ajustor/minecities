@@ -127,6 +127,50 @@ public class StationScenes implements Scene {
 		}));
 		waitOrExplain(stage, server -> town(server).workers(Job.BUILDER) == 1, 600, "pas de bâtisseur");
 
+		// Renvoyé à son poste (MC-19) : de loin, il arrive près de l'établi, sans changer d'emploi ; un
+		// citoyen sans emploi, ou un poste sans place libre autour, ne part pas.
+		check(stage.compute(server -> {
+			ServerLevel level = server.overworld();
+			Town town = town(server);
+			List<String> wrong = new ArrayList<>();
+			java.util.UUID id = town.residents().entrySet().stream()
+					.filter(e -> e.getValue().job().filter(j -> j.job() == Job.BUILDER).isPresent())
+					.map(Map.Entry::getKey).findFirst().orElseThrow();
+			com.ajustor.minecities.citizen.CitizenEntity builder = (com.ajustor.minecities.citizen.CitizenEntity)
+					level.getEntity(id);
+			BlockPos station = town.resident(id).flatMap(com.ajustor.minecities.town.Resident::job).orElseThrow().station();
+			builder.teleportTo(30.5, Y, 30.5);
+			com.ajustor.minecities.town.Postings.Outcome sent = com.ajustor.minecities.town.Postings.send(level, town,
+					builder.getUUID());
+			if (!sent.sent() || builder.distanceToSqr(station.getX() + 0.5, station.getY(), station.getZ() + 0.5) > 3.5 * 3.5
+					|| !town.resident(id).flatMap(com.ajustor.minecities.town.Resident::job)
+							.map(j -> j.station().equals(station) && j.job() == Job.BUILDER).orElse(false)) {
+				wrong.add("renvoyé : " + sent + " à " + builder.blockPosition().toShortString() + ", poste " + station);
+			}
+			town.residents().entrySet().stream().filter(e -> e.getValue().job().isEmpty()).findFirst().ifPresent(jobless -> {
+				if (com.ajustor.minecities.town.Postings.send(level, town, jobless.getKey()).sent()) {
+					wrong.add("un sans-emploi est parti");
+				}
+			});
+			// Plus de place : tout l'air autour du poste comblé, le temps de l'essai.
+			builder.teleportTo(30.5, Y, 30.5);
+			List<BlockPos> filled = new ArrayList<>();
+			for (BlockPos pos : BlockPos.betweenClosed(station.offset(-2, -1, -2), station.offset(2, 2, 2))) {
+				if (level.getBlockState(pos).isAir()) {
+					filled.add(pos.immutable());
+					level.setBlock(pos, Blocks.GLASS.defaultBlockState(), 2);
+				}
+			}
+			com.ajustor.minecities.town.Postings.Outcome blocked = com.ajustor.minecities.town.Postings.send(level, town,
+					builder.getUUID());
+			filled.forEach(pos -> level.setBlock(pos, Blocks.AIR.defaultBlockState(), 2));
+			if (blocked.sent() || builder.distanceToSqr(30.5, Y, 30.5) > 1) {
+				wrong.add("parti sans place : " + blocked);
+			}
+			com.ajustor.minecities.town.Postings.send(level, town, builder.getUUID());
+			return wrong.isEmpty() ? null : String.join(" ; ", wrong);
+		}));
+
 		// L'interface du poste : il sert, son bâtisseur, le chantier commandé.
 		BlockPos bench = stage.compute(server -> town(server).houses().stream()
 				.flatMap(h -> h.workstations().stream()).filter(w -> w.job() == Job.BUILDER).findFirst().orElseThrow().pos());

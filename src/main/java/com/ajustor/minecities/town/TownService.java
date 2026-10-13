@@ -283,6 +283,16 @@ public final class TownService {
 			for (House.Workstation station : house.workstations()) {
 				player.sendSystemMessage(Component.translatable("message.minecities.house.workstation",
 						Component.translatable(station.job().translationKey())).withStyle(ChatFormatting.GRAY));
+				if (station.job() == Job.MINER) {
+					// Ce que le puits de ce treuil peut donner (MC-20).
+					Mine mine = town.mine(station.pos()).orElseGet(() -> Mines.plan(level, town, station.pos(), plaque));
+					Map<String, Integer> ores = Mines.prospect(level, town, mine);
+					player.sendSystemMessage(ores.isEmpty()
+							? Component.translatable("message.minecities.mine.prospect.none").withStyle(ChatFormatting.GOLD)
+							: Component.translatable("message.minecities.mine.prospect", String.join(", ", ores.entrySet().stream()
+									.map(e -> Component.translatable(Mines.oreItem(e.getKey()).getDescriptionId()).getString()
+											+ " ×" + e.getValue()).toList())).withStyle(ChatFormatting.GRAY));
+				}
 			}
 		} else {
 			player.sendSystemMessage(Component.translatable("message.minecities.house.invalid",

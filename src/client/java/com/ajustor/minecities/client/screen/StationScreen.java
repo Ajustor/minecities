@@ -52,7 +52,20 @@ public class StationScreen extends Screen {
 			addRenderableWidget(Button.builder(Component.translatable("screen.minecities.locate"),
 					b -> ClientPlayNetworking.send(new StationNetwork.ActionPayload(station.pos(), "locate", worker.id())))
 					.bounds(left + WIDTH - 44, y - 2, 34, 16).build());
+			if (station.manager()) {
+				addRenderableWidget(Button.builder(Component.translatable("screen.minecities.posting"),
+						b -> ClientPlayNetworking.send(new StationNetwork.ActionPayload(station.pos(), "posting", worker.id())))
+						.bounds(left + WIDTH - 86, y - 2, 40, 16).build());
+			}
 			y += ROW;
+		}
+		if (station.manager() && station.mine().equals("exhausted")) {
+			addRenderableWidget(Button.builder(Component.translatable("screen.minecities.mine.close"),
+					b -> ClientPlayNetworking.send(new StationNetwork.ActionPayload(station.pos(), "close_mine",
+							new java.util.UUID(0, 0)))).bounds(left + 10, top + HEIGHT - 24, 130, 18).build());
+			addRenderableWidget(Button.builder(Component.translatable("gui.done"), b -> onClose())
+					.bounds(left + WIDTH - 90, top + HEIGHT - 24, 80, 18).build());
+			return;
 		}
 		addRenderableWidget(Button.builder(Component.translatable("gui.done"), b -> onClose())
 				.bounds(left + WIDTH / 2 - 40, top + HEIGHT - 24, 80, 18).build());
@@ -96,6 +109,31 @@ public class StationScreen extends Screen {
 			worker.need().ifPresent(need -> graphics.text(font, Component.literal("« ").append(need).append(" »"),
 					left + 20, needY, BAD, false));
 			y += ROW;
+		}
+		if (!station.mine().isEmpty()) {
+			graphics.text(font, Component.translatable("screen.minecities.mine." + station.mine()), left + 12, y,
+					station.mine().equals("digging") || station.mine().equals("new") ? ACCENT : BAD, false);
+			y += 12;
+			if (station.ores().isEmpty()) {
+				graphics.text(font, Component.translatable("screen.minecities.mine.none"), left + 20, y, FADED, false);
+			}
+			int x = left + 14;
+			for (StationSnapshot.Ore ore : station.ores()) {
+				// Deux colonnes : l'icône, le nom, ce qui reste (et ce qui est extrait).
+				graphics.item(ore.item(), x, y - 4);
+				graphics.text(font, ore.item().getHoverName(), x + 18, y, ore.remaining() > 0 ? INK : FADED, false);
+				Component count = ore.remaining() > 0
+						? Component.translatable("screen.minecities.mine.ore", ore.remaining(), ore.mined())
+						: Component.translatable("screen.minecities.mine.ore_gone", ore.mined());
+				graphics.text(font, count, x + 18, y + 9, ore.remaining() > 0 ? GOOD : BAD, false);
+				if (x == left + 14) {
+					x = left + WIDTH / 2 + 4;
+				} else {
+					x = left + 14;
+					y += 22;
+				}
+			}
+			y += x == left + 14 ? 0 : 22;
 		}
 		if (!station.sites().isEmpty()) {
 			graphics.text(font, Component.translatable("screen.minecities.station.sites"), left + 12, y, ACCENT, false);

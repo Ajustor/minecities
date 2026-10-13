@@ -45,6 +45,10 @@ class MinerGoal extends WorkGoal {
 	private static final int STUCK = 300;
 
 	private int walking;
+	/** Dans combien de pas il refait le compte des minerais à portée. */
+	private int prospectIn;
+	/** Les minerais extraits depuis le dernier pas enregistré. */
+	private final java.util.Map<String, Integer> extracted = new java.util.HashMap<>();
 
 	MinerGoal(CitizenEntity citizen) {
 		super(citizen, Job.MINER);
@@ -84,10 +88,40 @@ class MinerGoal extends WorkGoal {
 			rest(IDLE_LONG);
 			return;
 		}
+		if (mine.closed()) {
+			citizen.complain("mine", Component.translatable("message.minecities.mine.closed", citizen.getName()),
+					Component.translatable("speech.minecities.mine_exhausted"));
+			rest(IDLE_LONG);
+			return;
+		}
+		// De temps en temps, il refait le compte : plus un minerai à portée, la galerie est épuisée.
+		if (!mine.exhausted() && --prospectIn <= 0) {
+			prospectIn = 20;
+			if (com.ajustor.minecities.town.Mines.prospect(level(), town, mine).isEmpty()) {
+				mine = mine.drained();
+				town.putMine(mine);
+				Towns.get(level().getServer()).changed();
+			}
+		}
 		if (mine.exhausted()) {
 			citizen.complain("mine", Component.translatable("message.minecities.mine.exhausted", citizen.getName()),
 					Component.translatable("speech.minecities.mine_exhausted"));
 			rest(IDLE_LONG);
+			return;
+		}
+		// Avant de descendre, le chemin de remontée : il répare la première marche qui ne passe plus, et ne
+		// s'engage pas s'il ne peut pas.
+		Optional<BlockPos> broken = com.ajustor.minecities.town.Mines.broken(level(), mine);
+		if (broken.isPresent()) {
+			if (!goTo(broken.get())) {
+				return;
+			}
+			if (!com.ajustor.minecities.town.Mines.repair(level(), broken.get())) {
+				citizen.complain("mine_blocked", Component.translatable("message.minecities.mine.blocked",
+						citizen.getName(), broken.get().toShortString()),
+						Component.translatable("speech.minecities.mine_blocked"));
+				rest(IDLE_LONG);
+			}
 			return;
 		}
 		// Il descend jusqu'à la face.
@@ -101,7 +135,8 @@ class MinerGoal extends WorkGoal {
 			return;
 		}
 		walking = 0;
-		town.putMine(dig(town, mine));
+		town.putMine(dig(town, mine).extracted(extracted));
+		extracted.clear();
 		Towns.get(level().getServer()).changed();
 		rest(12);
 	}
@@ -113,19 +148,14 @@ class MinerGoal extends WorkGoal {
 
 	/** Ouvre la galerie : l'entrée est dehors, à deux blocs à l'est du bâtiment, au niveau du sol. */
 	private Mine open(Town town) {
-		BlockPos station = employment().station();
-		Optional<House> house = town.house(employment().workshop());
-		int x = house.flatMap(House::max).map(BlockPos::getX).orElse(station.getX() + 4) + 2;
-		int z = station.getZ();
-		int y = level().getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
-		Mine mine = Mine.open(station, new BlockPos(x, y, z));
+		Mine mine = com.ajustor.minecities.town.Mines.plan(level(), town, employment().station(), employment().workshop());
 		town.putMine(mine);
 		return mine;
 	}
 
-	/** La profondeur où l'escalier s'arrête : 40 au plus haut, et seize blocs sous l'entrée au moins. */
+	/** La profondeur où l'escalier s'arrête. */
 	private int depth(Mine mine) {
-		return Math.max(level().getMinY() + 8, Math.min(mine.entrance().getY() - 16, 40));
+		return com.ajustor.minecities.town.Mines.depth(level(), mine);
 	}
 
 	/** Creuse le pas suivant (ou change de couloir s'il ne faut pas) ; renvoie la galerie à jour. */
@@ -222,6 +252,9 @@ class MinerGoal extends WorkGoal {
 				level().removeBlock(pos, false);
 			}
 			return;
+		}
+		if (state.is(ConventionalBlockTags.ORES)) {
+			extracted.merge(com.ajustor.minecities.town.Mines.oreKey(state), 1, Integer::sum);
 		}
 		ItemStack tool = citizen.getMainHandItem();
 		List<ItemStack> drops = Block.getDrops(state, level(), pos, level().getBlockEntity(pos), citizen,

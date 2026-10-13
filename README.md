@@ -123,6 +123,10 @@ version du mod, les autres mods et le temps de jeu.
      mine : un escalier jusqu'à la profondeur des minerais, puis des couloirs ; il suit les filons,
      pose des torches (charbon trouvé et bâtons du grenier), garde un peu de pierre et rapporte les
      minerais. Il ne perce jamais dans l'eau ni la lave, ni sous les maisons, ni hors du territoire.
+     Le treuil (clic droit) dit ce que le puits peut donner (et ce qu'il a donné) ; avant de
+     descendre, le mineur vérifie le chemin de remontée et le répare (un éboulement), et ne s'engage
+     pas s'il est coupé. Plus de minerai à portée : le puits est épuisé, et le maire le rebouche
+     depuis le treuil (pas tant qu'il reste du minerai, ni sur quelqu'un).
    - **Établi de joaillier → joaillier** (dès la ville) : broches d'améthyste (cuivre), bagues
      (or et lapis), diadèmes (or et diamant) ; le marchand les vend 2, 5 et 12 émeraudes pièce.
    - **Tailleur de pierre → maçon** : briques (argile), pierre taillée (pierre), andésite polie,
@@ -331,7 +335,7 @@ Java 25 est requis (Loom 1.18.3, Minecraft 26.2).
 ./gradlew runClient             # lance le jeu avec le mod
 ./gradlew runGameTest           # les scènes de jeu, vérifiées sur le seul serveur, sans fenêtre (rapide)
 ./gradlew runGameTest -PminecitiesGametest=work   # une scène (city, work, countryside, village, build, family, raid, life, market, robust, industry, crafts,
-council, logistics, guide, structures, plans, jade, residents, elections, monuments, health, map, disasters, stations)
+council, logistics, guide, structures, plans, jade, residents, elections, monuments, health, map, disasters, stations, mine)
 ./gradlew runClientGameTest     # les mêmes scènes dans le vrai jeu, photographiées (build/run/clientGameTest/screenshots), plus styles
 ./gradlew runClientGameTest -PminecitiesFilm   # avec les films image par image (lents)
 python tools/textures/generate.py   # régénère les textures (peaux des citoyens, plaque, œuf)
