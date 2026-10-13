@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    "L L",
+    "WWW",
+    "WWW"
+  ],
+  "key": {
+    "L": "minecraft:leather",
+    "W": "#minecraft:wool"
+  },
+  "result": {
+    "id": "minecities:coat",
+    "count": 1
+  }
+}

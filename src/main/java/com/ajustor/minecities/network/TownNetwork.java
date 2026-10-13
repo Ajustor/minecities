@@ -79,7 +79,15 @@ public final class TownNetwork {
 				roles.addFirst("screen.minecities.building.warehouse");
 			}
 			buildings.add(new TownSnapshot.BuildingRow(house.plaque(), house.beds().size(), sleepers, roles,
-					house.village()));
+					house.village(), false));
+		}
+		// Les monuments, après les bâtiments déclarés.
+		for (com.ajustor.minecities.build.Construction construction : town.constructions()) {
+			if (construction.done() && com.ajustor.minecities.town.Monument.of(construction.blueprint()).isPresent()) {
+				buildings.add(new TownSnapshot.BuildingRow(construction.origin(), 0, 0,
+						List.of("blueprint." + construction.blueprint().getNamespace() + "."
+								+ construction.blueprint().getPath()), false, true));
+			}
 		}
 		List<TownSnapshot.RequestRow> requests = new ArrayList<>();
 		for (MarriageRequest request : town.marriageRequests()) {
@@ -96,7 +104,7 @@ public final class TownNetwork {
 				chronicle.partying(now), chronicle.canCelebrate(now), chronicle.untilNextFestival(now), Festivals.cost(),
 				chronicle.alarmed(now) || Raids.underAttack(town.id()),
 				TownService.granary(level, town).map(g -> Stock.count(g, s -> s.is(Items.EMERALD))).orElse(0),
-				chronicle.earnedToday(now), town.activeAnnexes().size(), town.tier().annexes());
+				chronicle.earnedToday(now), town.activeAnnexes().size(), town.tier().annexes(), town.appeal());
 		return new TownSnapshot(town.hall(), town.name(), town.tier().translationKey(), town.population(),
 				town.citizens(), town.villagers(), town.capacity(), town.homes().size(), town.workstations(),
 				(int) employed, meals, next == null ? "" : next.translationKey(),

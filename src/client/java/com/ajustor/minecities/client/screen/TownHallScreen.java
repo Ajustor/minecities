@@ -345,6 +345,10 @@ public class TownHallScreen extends Screen {
 					INK);
 			y += 14;
 		}
+		if (life.appeal() > 0) {
+			line(graphics, Component.translatable("screen.minecities.appeal", life.appeal()), y, ACCENT);
+			y += 14;
+		}
 		if (life.mood() >= 0) {
 			double mood = life.mood() / 10.0;
 			line(graphics, Component.translatable("screen.minecities.mood", String.format("%.1f", mood)), y,
@@ -416,7 +420,8 @@ public class TownHallScreen extends Screen {
 		}
 		int y = top + 56;
 		for (TownSnapshot.BuildingRow building : visible(buildings)) {
-			String kind = building.village() ? "screen.minecities.building.village"
+			String kind = building.monument() ? "screen.minecities.building.monument"
+					: building.village() ? "screen.minecities.building.village"
 					: building.beds() > 0 && !building.jobs().isEmpty() ? "screen.minecities.building.both"
 					: building.beds() > 0 ? "screen.minecities.building.home" : "screen.minecities.building.workshop";
 			graphics.text(font, Component.translatable(kind), left + 14, y, INK, false);

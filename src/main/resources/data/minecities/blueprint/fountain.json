@@ -1,0 +1,85 @@
+{
+ "kind": "monument",
+ "layers": [
+  [
+   "XXXXXXXXX",
+   "XXXXXXXXX",
+   "XXXXXXXXX",
+   "XXXXXXXXX",
+   "XXXX'XXXX",
+   "XXXXXXXXX",
+   "XXXXXXXXX",
+   "XXXXXXXXX",
+   "XXXXXXXXX"
+  ],
+  [
+   "         ",
+   "         ",
+   "  ,000,  ",
+   "  0~~~0  ",
+   "  0~V~0  ",
+   "  0~~~0  ",
+   "  ,000,  ",
+   "         ",
+   "         "
+  ],
+  [
+   "         ",
+   "         ",
+   "  ]   ]  ",
+   "         ",
+   "    V    ",
+   "         ",
+   "  ]   ]  ",
+   "         ",
+   "         "
+  ],
+  [
+   "         ",
+   "         ",
+   "         ",
+   "         ",
+   "    V    ",
+   "         ",
+   "         ",
+   "         ",
+   "         "
+  ],
+  [
+   "         ",
+   "         ",
+   "         ",
+   "   UUU   ",
+   "   UMU   ",
+   "   UUU   ",
+   "         ",
+   "         ",
+   "         "
+  ],
+  [
+   "         ",
+   "         ",
+   "         ",
+   "   $U$   ",
+   "   U~U   ",
+   "   $U$   ",
+   "         ",
+   "         ",
+   "         "
+  ]
+ ],
+ "key": {
+  " ": "minecraft:air",
+  "$": "minecraft:gold_block",
+  "'": "minecraft:sea_lantern",
+  ",": "minecraft:chiseled_stone_bricks",
+  "0": "minecraft:stone_bricks",
+  "M": "minecraft:chiseled_quartz_block",
+  "U": "minecraft:smooth_quartz",
+  "V": "minecraft:quartz_pillar[axis=y]",
+  "X": "minecraft:polished_andesite",
+  "]": "minecraft:lantern[hanging=false]",
+  "~": "minecraft:water"
+ },
+ "tier": "megalopolis"
+}

@@ -1,0 +1,180 @@
+{
+ "kind": "monument",
+ "layers": [
+  [
+   "XXXXXXX",
+   "XXXXXXX",
+   "XXXXXXX",
+   "XXXXXXX",
+   "XXXXXXX",
+   "XXXXXXX",
+   "XXXXXXX"
+  ],
+  [
+   "V00 00V",
+   "0     0",
+   "0     0",
+   "0     0",
+   "0     0",
+   "0     0",
+   "V00000V"
+  ],
+  [
+   "V00 00V",
+   "0     0",
+   "0     0",
+   "0     0",
+   "0     0",
+   "0     0",
+   "V00000V"
+  ],
+  [
+   "V00000V",
+   "0     0",
+   "0     0",
+   "0     0",
+   "0     0",
+   "0     0",
+   "V00000V"
+  ],
+  [
+   "V00H00V",
+   "0     0",
+   "0     0",
+   "H     H",
+   "0     0",
+   "0     0",
+   "V00H00V"
+  ],
+  [
+   "V00000V",
+   "0     0",
+   "0     0",
+   "0     0",
+   "0     0",
+   "0     0",
+   "V00000V"
+  ],
+  [
+   "V00000V",
+   "0     0",
+   "0     0",
+   "0     0",
+   "0     0",
+   "0     0",
+   "V00000V"
+  ],
+  [
+   "V00H00V",
+   "0     0",
+   "0     0",
+   "H     H",
+   "0     0",
+   "0     0",
+   "V00H00V"
+  ],
+  [
+   "V00000V",
+   "0     0",
+   "0     0",
+   "0     0",
+   "0     0",
+   "0     0",
+   "V00000V"
+  ],
+  [
+   "V00000V",
+   "0     0",
+   "0     0",
+   "0     0",
+   "0     0",
+   "0     0",
+   "V00000V"
+  ],
+  [
+   "V,,,,,V",
+   ",00000,",
+   ",00000,",
+   ",00000,",
+   ",00000,",
+   ",00000,",
+   "V,,,,,V"
+  ],
+  [
+   "V     V",
+   " ]   ] ",
+   "       ",
+   "       ",
+   "       ",
+   " ]   ] ",
+   "V     V"
+  ],
+  [
+   "V     V",
+   "       ",
+   "       ",
+   "       ",
+   "       ",
+   "       ",
+   "V     V"
+  ],
+  [
+   "V     V",
+   "       ",
+   "       ",
+   "   [   ",
+   "       ",
+   "       ",
+   "V     V"
+  ],
+  [
+   "YYYYYYY",
+   "YYYYYYY",
+   "YYYYYYY",
+   "YYYYYYY",
+   "YYYYYYY",
+   "YYYYYYY",
+   "YYYYYYY"
+  ],
+  [
+   "       ",
+   " YYYYY ",
+   " YYYYY ",
+   " YYYYY ",
+   " YYYYY ",
+   " YYYYY ",
+   "       "
+  ],
+  [
+   "       ",
+   "       ",
+   "  YYY  ",
+   "  YYY  ",
+   "  YYY  ",
+   "       ",
+   "       "
+  ],
+  [
+   "       ",
+   "       ",
+   "       ",
+   "   $   ",
+   "       ",
+   "       ",
+   "       "
+  ]
+ ],
+ "key": {
+  " ": "minecraft:air",
+  "$": "minecraft:gold_block",
+  ",": "minecraft:chiseled_stone_bricks",
+  "0": "minecraft:stone_bricks",
+  "H": "minecraft:white_stained_glass_pane",
+  "V": "minecraft:quartz_pillar[axis=y]",
+  "X": "minecraft:polished_andesite",
+  "Y": "minecraft:waxed_cut_copper",
+  "[": "minecraft:bell[attachment=ceiling,facing=north]",
+  "]": "minecraft:lantern[hanging=false]"
+ },
+ "tier": "megalopolis"
+}

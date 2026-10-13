@@ -238,6 +238,24 @@ public final class Town {
 		return election;
 	}
 
+	// Monuments
+
+	/** Les monuments bâtis (les chantiers finis de leurs schémas). */
+	public java.util.Set<Monument> monuments() {
+		java.util.Set<Monument> built = java.util.EnumSet.noneOf(Monument.class);
+		for (com.ajustor.minecities.build.Construction construction : constructions) {
+			if (construction.done()) {
+				Monument.of(construction.blueprint()).ifPresent(built::add);
+			}
+		}
+		return built;
+	}
+
+	/** L'attrait de la ville : ce que ses monuments lui donnent. */
+	public int appeal() {
+		return monuments().stream().mapToInt(Monument::appeal).sum();
+	}
+
 	/** Ce joueur appartient-il à la ville (maire, adjoint ou habitant) ? */
 	public boolean isMember(UUID player) {
 		return rank(player) != Membership.Rank.VISITOR;

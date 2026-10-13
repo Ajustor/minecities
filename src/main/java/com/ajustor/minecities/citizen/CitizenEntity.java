@@ -118,6 +118,8 @@ public class CitizenEntity extends PathfinderMob {
 	private int stepAsideUntil;
 	/** Ce qu'il porte : récoltes, ingrédients, semences. */
 	private final NonNullList<ItemStack> inventory = NonNullList.withSize(INVENTORY_SIZE, ItemStack.EMPTY);
+	/** Sa santé : la maladie qu'il couve ou dont il souffre (MC-12). */
+	private Health health = new Health();
 	/** Quand il s'est plaint pour la dernière fois, par motif : une fois par jour au plus. */
 	private final java.util.Map<String, Long> complaints = new java.util.HashMap<>();
 	/** Quand il a dit quoi pour la dernière fois, par réplique. */
@@ -127,6 +129,9 @@ public class CitizenEntity extends PathfinderMob {
 	/** Un besoin non redit depuis une minute et quart est oublié (il a été satisfait). */
 	private static final int NEED_MEMORY = 1500;
 	private int speechTicks;
+	/** Depuis combien de ticks il a un chemin mais ne bouge plus, et où il était alors. */
+	private int jammedTicks;
+	private net.minecraft.world.phys.Vec3 jammedAt = net.minecraft.world.phys.Vec3.ZERO;
 	private int actionTicks;
 	/** Ce qu'il attend d'un livreur (un bâtisseur à court d'un matériau), et combien. */
 	private Item wanted;
@@ -401,6 +406,30 @@ public class CitizenEntity extends PathfinderMob {
 		getNavigation().moveTo(spot.getX() + 0.5, spot.getY(), spot.getZ() + 0.5, 1, speed);
 	}
 
+	/**
+	 * Coincé : il a un chemin, mais ne bouge plus depuis trois secondes (deux citoyens qui se gênent à
+	 * une porte, un coin de mur). Il fait un pas de côté et recalcule son chemin.
+	 */
+	private void unjam() {
+		// Pas sur un échafaudage ni en l'air : un pas de côté l'y ferait tomber.
+		if (getNavigation().isDone() || isSleeping() || isPassenger() || !onGround()) {
+			jammedTicks = 0;
+			return;
+		}
+		if (position().distanceToSqr(jammedAt) > 0.04) {
+			jammedAt = position();
+			jammedTicks = 0;
+			return;
+		}
+		if (++jammedTicks < 60) {
+			return;
+		}
+		jammedTicks = 0;
+		double angle = getRandom().nextDouble() * Math.PI * 2;
+		setDeltaMovement(getDeltaMovement().add(Math.cos(angle) * 0.25, 0, Math.sin(angle) * 0.25));
+		getNavigation().recomputePath();
+	}
+
 	/** À portée de bras de ce bloc (3 blocs, comme un joueur). */
 	public boolean reached(BlockPos target) {
 		return distanceToSqr(target.getX() + 0.5, target.getY() + 0.5, target.getZ() + 0.5) <= 3.0 * 3.0;
@@ -507,6 +536,9 @@ public class CitizenEntity extends PathfinderMob {
 		// Toujours la même chose nourrit moins.
 		setHunger(Hunger.eat(hunger, diet.nutrition(id, properties.nutrition())));
 		diet.eaten(id);
+		if (level() instanceof ServerLevel served) {
+			health.ate(TownService.isTainted(food), served.getGameTime(), new java.util.Random(getRandom().nextLong()));
+		}
 		act(Action.EAT, 20);
 		satisfied("hungry");
 		starvingTicks = 0;
@@ -525,6 +557,7 @@ public class CitizenEntity extends PathfinderMob {
 			return;
 		}
 		doors.tick();
+		unjam();
 		if (speechTicks > 0 && --speechTicks == 0) {
 			entityData.set(SPEECH, Optional.empty());
 		}
@@ -546,6 +579,7 @@ public class CitizenEntity extends PathfinderMob {
 		}
 		drill();
 		if (tickCount % 100 == 0) {
+			sickness(serverLevel);
 			updateMood(serverLevel);
 		}
 		// Un enfant mange deux fois moins.
@@ -566,6 +600,7 @@ public class CitizenEntity extends PathfinderMob {
 		public static final int HOMELESS = 2;
 		public static final int UNHAPPY = 4;
 		public static final int HURT = 8;
+		public static final int SICK = 16;
 
 		private Trouble() {
 		}
@@ -635,7 +670,8 @@ public class CitizenEntity extends PathfinderMob {
 				diet.hadDish(), Happiness.expectedVariety(town.get().tier().ordinal()), r.hasHome(), r.isChild(),
 				r.job().isPresent(), hasNeed("tool"), r.spouse().isPresent(), getHealth() < getMaxHealth() / 2,
 				town.get().chronicle().recentDeaths(now), danger, town.get().chronicle().rejoicing(now),
-				town.get().workers(Job.LIBRARIAN) > 0, town.get().decreeMood());
+				town.get().workers(Job.LIBRARIAN) > 0, town.get().decreeMood(), town.get().monuments().size(),
+				illness().orElse(null));
 		mood = Happiness.of(factors);
 		entityData.set(MOOD, mood.score());
 		town.get().setMood(getUUID(), mood.score());
@@ -651,6 +687,9 @@ public class CitizenEntity extends PathfinderMob {
 		}
 		if (getHealth() < getMaxHealth() / 2) {
 			trouble |= Trouble.HURT;
+		}
+		if (illness().isPresent()) {
+			trouble |= Trouble.SICK;
 		}
 		entityData.set(TROUBLE, trouble);
 		if (mood.score() <= Happiness.MISERABLE) {
@@ -768,7 +807,14 @@ public class CitizenEntity extends PathfinderMob {
 	@Override
 	protected InteractionResult mobInteract(Player player, InteractionHand hand) {
 		ItemStack stack = player.getItemInHand(hand);
-		if (TownService.isFood(stack) && hunger < Hunger.MAX) {
+		if (stack.is(com.ajustor.minecities.registry.McItems.COAT) && !wearsCoat()) {
+			if (!level().isClientSide()) {
+				wear(stack.split(1));
+				say("coat", Component.translatable("speech.minecities.coat"));
+			}
+			return InteractionResult.SUCCESS;
+		}
+		if ((TownService.isFood(stack) || TownService.isTainted(stack)) && hunger < Hunger.MAX) {
 			if (!level().isClientSide()) {
 				eat(stack.copyWithCount(1));
 				stack.consume(1, player);
@@ -802,6 +848,10 @@ public class CitizenEntity extends PathfinderMob {
 		}
 		player.sendSystemMessage(Component.translatable("citizen.minecities.mood", mood(), why)
 				.withStyle(ChatFormatting.AQUA));
+		illness().ifPresent(d -> player.sendSystemMessage(Component.translatable(health.treated()
+						? "citizen.minecities.ill.treated" : "citizen.minecities.ill",
+				Component.translatable(d.translationKey()),
+				Math.max(1, (health.until() - level().getGameTime()) / 1200)).withStyle(ChatFormatting.LIGHT_PURPLE)));
 		// Ce qui lui manque encore, il le redit à qui vient le voir.
 		long now = level().getGameTime();
 		needs.values().removeIf(n -> now - n.since() > NEED_MEMORY);
@@ -854,6 +904,89 @@ public class CitizenEntity extends PathfinderMob {
 		return false;
 	}
 
+	// Santé (MC-12)
+
+	public Health health() {
+		return health;
+	}
+
+	/** La maladie dont il a les symptômes. */
+	public Optional<Disease> illness() {
+		return health.symptoms(level().getGameTime());
+	}
+
+	/** Gardé au lit par sa maladie. */
+	public boolean bedridden() {
+		return illness().filter(Disease::bedridden).isPresent();
+	}
+
+	/** Porte-t-il un manteau ? */
+	public boolean wearsCoat() {
+		return getItemBySlot(EquipmentSlot.CHEST).is(com.ajustor.minecities.registry.McItems.COAT);
+	}
+
+	/** Il enfile ce manteau. */
+	public void wear(ItemStack coat) {
+		setItemSlot(EquipmentSlot.CHEST, coat);
+		setDropChance(EquipmentSlot.CHEST, 2.0f);
+	}
+
+	/** Il attrape cette maladie (s'il n'en a pas déjà une, et n'en est pas protégé). */
+	public boolean infect(Disease disease) {
+		return health.contract(disease, level().getGameTime());
+	}
+
+	/** Le médecin le soigne. */
+	public boolean treat() {
+		boolean treated = health.treat(level().getGameTime());
+		if (treated) {
+			updateSickness();
+		}
+		return treated;
+	}
+
+	private static final Identifier SICK = Identifier.fromNamespaceAndPath("minecities", "sick");
+
+	/**
+	 * Toutes les cinq secondes : il guérit à l'échéance ; sous la pluie sans manteau, il peut prendre
+	 * froid ; malade, il peut le passer à ses voisins ; il traîne le pas.
+	 */
+	private void sickness(ServerLevel level) {
+		long now = level.getGameTime();
+		java.util.random.RandomGenerator random = new java.util.Random(getRandom().nextLong());
+		health.tick(now).ifPresent(cured -> say("recovered", Component.translatable("speech.minecities.recovered",
+				Component.translatable(cured.translationKey()))));
+		health.exposed(level.isRainingAt(blockPosition().above()), wearsCoat(), now, random);
+		Optional<Disease> symptoms = health.symptoms(now);
+		if (symptoms.isPresent()) {
+			for (CitizenEntity other : level.getEntitiesOfClass(CitizenEntity.class, getBoundingBox().inflate(4),
+					c -> c != this && c.isAlive())) {
+				other.health.caught(symptoms.get(), now, random);
+			}
+			if (symptoms.get().bedridden() && !isSleeping()) {
+				say("sick", Component.translatable("speech.minecities.sick." + symptoms.get().serializedName()));
+			}
+		}
+		updateSickness();
+	}
+
+	/** Malade, il marche plus lentement (un quart de moins). */
+	private void updateSickness() {
+		AttributeInstance speed = getAttribute(Attributes.MOVEMENT_SPEED);
+		if (speed == null) {
+			return;
+		}
+		boolean slowed = health.symptoms(level().getGameTime()).isPresent() && !health.treated();
+		if (speed.hasModifier(SICK) != slowed) {
+			if (slowed) {
+				speed.addPermanentModifier(new AttributeModifier(SICK, -0.25,
+						AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL));
+			} else {
+				speed.removeModifier(SICK);
+			}
+		}
+	}
+
 	@Override
 	protected void addAdditionalSaveData(ValueOutput output) {
 		super.addAdditionalSaveData(output);
@@ -867,6 +1000,7 @@ public class CitizenEntity extends PathfinderMob {
 		output.store("diet", com.mojang.serialization.Codec.STRING.listOf(), diet.meals());
 		output.putInt("miserable", miserableTicks);
 		output.putInt("mood", mood());
+		output.store("health", Health.CODEC, health);
 		ContainerHelper.saveAllItems(output.child("inventory"), inventory);
 	}
 
@@ -881,6 +1015,7 @@ public class CitizenEntity extends PathfinderMob {
 		diet = new Diet(input.read("diet", com.mojang.serialization.Codec.STRING.listOf()).orElse(java.util.List.of()));
 		miserableTicks = input.getIntOr("miserable", 0);
 		entityData.set(MOOD, input.getIntOr("mood", Happiness.BASE));
+		health = input.read("health", Health.CODEC).orElseGet(Health::new);
 		inventory.clear();
 		ContainerHelper.loadAllItems(input.childOrEmpty("inventory"), inventory);
 	}

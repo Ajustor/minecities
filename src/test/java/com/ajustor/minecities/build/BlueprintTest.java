@@ -31,10 +31,14 @@ class BlueprintTest {
 				String name = file.getFileName().toString().replace(".json", "");
 				Blueprint blueprint = Blueprint.parse(Identifier.fromNamespaceAndPath("minecities", name),
 						JsonParser.parseString(Files.readString(file)).getAsJsonObject());
+				assertFalse(blueprint.cells().isEmpty());
+				if (blueprint.kind().equals("monument")) {
+					// Un monument ne se déclare pas : ni plaque, ni porte.
+					continue;
+				}
 				assertTrue(blueprint.cells().stream().anyMatch(c -> c.template().startsWith("minecities:house_plaque")),
 						name + " : pas de plaque");
 				assertTrue(blueprint.cells().stream().anyMatch(c -> c.template().contains("{door}")), name + " : pas de porte");
-				assertFalse(blueprint.cells().isEmpty());
 			}
 		}
 	}

@@ -14,7 +14,8 @@ public interface Scene {
 			new BuildScenes(), new FamilyScenes(), new RaidScenes(), new LifeScenes(), new MarketScenes(),
 			new RobustScenes(), new IndustryScenes(), new CraftScenes(), new CouncilScenes(), new StyleScenes(),
 			new LogisticsScenes(), new GuideScenes(), new StructureScenes(), new PlanScenes(),
-			new JadeScenes(), new ResidentScenes(), new ElectionScenes());
+			new JadeScenes(), new ResidentScenes(), new ElectionScenes(),
+			new MonumentScenes(), new HealthScenes());
 
 	/** Son nom, pour {@code -PminecitiesGametest}. */
 	String name();

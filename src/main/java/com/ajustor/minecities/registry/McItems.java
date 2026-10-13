@@ -44,6 +44,16 @@ public final class McItems {
 			new Item.Properties().stacksTo(16).rarity(Rarity.UNCOMMON));
 	public static final Item DIADEM = register("diadem", Item::new,
 			new Item.Properties().stacksTo(16).rarity(Rarity.RARE));
+	/**
+	 * Le manteau (MC-12) : porté par un citoyen, il le garde de la pluie et des rhumes. Le tisserand en
+	 * fait ; un joueur aussi, et peut en donner un à un citoyen.
+	 */
+	public static final Item COAT = register("coat", Item::new, new Item.Properties().stacksTo(1)
+			.component(net.minecraft.core.component.DataComponents.EQUIPPABLE,
+					net.minecraft.world.item.equipment.Equippable.builder(net.minecraft.world.entity.EquipmentSlot.CHEST)
+							.setEquipSound(net.minecraft.sounds.SoundEvents.ARMOR_EQUIP_LEATHER)
+							.setAsset(ResourceKey.create(net.minecraft.world.item.equipment.EquipmentAssets.ROOT_ID,
+									MineCities.id("coat"))).build()));
 	/** Le guide de la ville, que chaque joueur reçoit à sa première venue. */
 	public static final Item GUIDE = register("guide", GuideItem::new, new Item.Properties().stacksTo(1));
 	/** Le plan d'un bâtiment, pris à l'hôtel de ville : posé au sol, il montre le fantôme du bâtiment. */
@@ -68,6 +78,7 @@ public final class McItems {
 				.icon(() -> new ItemStack(TOWN_HALL))
 				.displayItems((parameters, output) -> {
 					output.accept(GUIDE);
+					output.accept(COAT);
 					output.accept(TOWN_HALL);
 					output.accept(HOUSE_PLAQUE);
 					output.accept(TOWN_ANNEX);

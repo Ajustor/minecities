@@ -427,6 +427,53 @@ PLAN = ([
     "................"], {"b": "#2f6fb5", "d": "#1d4a7c", "r": "#e8e2cf", "l": "#eaf3ff"})
 
 
+# Le manteau des citoyens (MC-12) : un manteau de laine brune, boutonné, au col de fourrure.
+COAT = ([
+    "................",
+    "....cc....cc....",
+    "...cbbc..cbbc...",
+    "..cbbbbccbbbbc..",
+    ".cbbbbbbbbbbbbc.",
+    ".cbbbbbkkbbbbbc.",
+    ".cbbbcbbbbcbbbc.",
+    "..bbbcbbkbcbbb..",
+    "..ddbcbbbbcbdd..",
+    "..ddbcbbkbcbdd..",
+    "....bcbbbbcb....",
+    "....bcbbkbcb....",
+    "....bcbbbbcb....",
+    "....bbbbbbbb....",
+    "....dddddddd....",
+    "................",
+], {"b": "#8a5a32", "c": "#d9c7a7", "k": "#3b2a1a", "d": "#6b4426"})
+
+
+def coat_layer():
+    """
+    Le manteau porté (couche d'armure 64 x 32 des humanoïdes) : le buste et les bras en laine brune,
+    un col clair, une rangée de boutons et une ceinture.
+    """
+    rng = random.Random(1212)
+    img = Image.new("RGBA", (64, 32), (0, 0, 0, 0))
+    wool = hexc("#8a5a32")
+    dark = hexc("#6b4426")
+    collar = hexc("#d9c7a7")
+    button = hexc("#3b2a1a")
+    # Le buste (20,16)-(40,32) et les bras (40,16)-(56,32).
+    fill(img, rng, 16, 16, 24, 16, wool)
+    fill(img, rng, 40, 16, 16, 16, wool)
+    # Le col, en haut du devant et du dos ; le dessus des épaules.
+    fill(img, rng, 20, 20, 8, 2, collar, 0.03)
+    fill(img, rng, 32, 20, 8, 2, collar, 0.03)
+    fill(img, rng, 20, 16, 16, 4, collar, 0.03)
+    # Les boutons, au milieu du devant ; la ceinture ; le bas des manches, plus sombre.
+    for y in (23, 25, 27, 29):
+        img.putpixel((23, y), button)
+    fill(img, rng, 16, 28, 24, 1, dark, 0.02)
+    fill(img, rng, 40, 30, 16, 2, dark, 0.02)
+    return img
+
+
 def save(img, path):
     path.parent.mkdir(parents=True, exist_ok=True)
     img.save(path)
@@ -447,6 +494,8 @@ def main():
         save(sprite(rows, palette), TEXTURES / f"item/{name}.png")
     save(sprite(*GUIDE), TEXTURES / "item/guide.png")
     save(sprite(*PLAN), TEXTURES / "item/plan.png")
+    save(sprite(*COAT), TEXTURES / "item/coat.png")
+    save(coat_layer(), TEXTURES / "entity/equipment/humanoid/coat.png")
 
 
 if __name__ == "__main__":

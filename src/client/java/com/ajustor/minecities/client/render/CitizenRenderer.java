@@ -83,7 +83,7 @@ public class CitizenRenderer extends HumanoidMobRenderer<CitizenEntity, CitizenR
 		}
 		MutableComponent icons = Component.empty();
 		for (int bit : new int[]{CitizenEntity.Trouble.HUNGRY, CitizenEntity.Trouble.HOMELESS,
-				CitizenEntity.Trouble.UNHAPPY, CitizenEntity.Trouble.HURT}) {
+				CitizenEntity.Trouble.UNHAPPY, CitizenEntity.Trouble.HURT, CitizenEntity.Trouble.SICK}) {
 			if ((trouble & bit) != 0) {
 				if (!icons.getSiblings().isEmpty()) {
 					icons.append(" ");

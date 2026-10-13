@@ -1,6 +1,7 @@
 package com.ajustor.minecities.citizen;
 
 import com.ajustor.minecities.town.Job;
+import com.ajustor.minecities.town.Stock;
 import com.ajustor.minecities.town.TownService;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
@@ -10,7 +11,9 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.effect.MobEffectCategory;
 import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.phys.AABB;
 
 import java.util.Comparator;
@@ -20,7 +23,10 @@ import java.util.Optional;
 /**
  * Le médecin, à l'alambic (brief 04). Il fait le tour de la ville : il soigne les blessés (deux
  * points de vie toutes les secondes, et les maux comme le poison), et porte à manger à ceux qui
- * meurent de faim, pris au grenier. Sans patient, il prépare ses remèdes à l'alambic.
+ * meurent de faim, pris au grenier. Les malades (MC-12), il les soigne avec le remède de leur
+ * maladie, pris aux réserves : du miel pour le rhume, du lait pour la dysenterie, une tranche de
+ * pastèque scintillante pour la fièvre ; soignés, ils se remettent vite. Sans patient, il prépare
+ * ses remèdes à l'alambic.
  */
 class DoctorGoal extends WorkGoal {
 	/** Il soigne deux points de vie par seconde. */
@@ -45,9 +51,19 @@ class DoctorGoal extends WorkGoal {
 		patient = null;
 	}
 
+	/** Le remède de chaque maladie. */
+	static Item remedy(Disease disease) {
+		return switch (disease) {
+			case COLD -> Items.HONEY_BOTTLE;
+			case DYSENTERY -> Items.MILK_BUCKET;
+			case FEVER -> Items.GLISTERING_MELON_SLICE;
+		};
+	}
+
 	/** A-t-il besoin du médecin ? */
 	static boolean ailing(CitizenEntity c) {
 		return c.isAlive() && (c.getHealth() < c.getMaxHealth() - 1 || c.hunger() <= 0
+				|| c.health().needsCare(c.level().getGameTime())
 				|| c.getActiveEffects().stream().anyMatch(e -> e.getEffect().value().getCategory()
 				== MobEffectCategory.HARMFUL));
 	}
@@ -102,6 +118,26 @@ class DoctorGoal extends WorkGoal {
 			}
 			return;
 		}
+		// Un malade : il prend d'abord son remède aux réserves.
+		Optional<Disease> disease = patient.health().needsCare(level().getGameTime()) ? patient.illness()
+				: Optional.empty();
+		if (disease.isPresent() && carried(remedy(disease.get())).isEmpty()) {
+			Item remedy = remedy(disease.get());
+			Optional<BlockPos> source = find(supplies(), s -> s.is(remedy));
+			if (source.isEmpty()) {
+				Component name = new ItemStack(remedy).getHoverName();
+				citizen.complain("remedy", Component.translatable("message.minecities.doctor.no_remedy",
+						citizen.getName(), name, Component.translatable(disease.get().translationKey())),
+						Component.translatable("speech.minecities.remedy", name));
+				patient = null;
+				rest(IDLE_SHORT);
+				return;
+			}
+			if (goTo(source.get())) {
+				container(source.get()).ifPresent(c -> citizen.carry(Stock.take(c, s -> s.is(remedy), 1)));
+			}
+			return;
+		}
 		if (!goTo(patient.blockPosition())) {
 			return;
 		}
@@ -118,6 +154,20 @@ class DoctorGoal extends WorkGoal {
 			patient.eat(food.get().split(1));
 		}
 		patient.heal(CARE_AMOUNT);
+		if (disease.isPresent()) {
+			carried(remedy(disease.get())).ifPresent(remedy -> {
+				// Le remède pris, il reste le flacon ou le seau.
+				ItemStack left = remedy.is(Items.HONEY_BOTTLE) ? new ItemStack(Items.GLASS_BOTTLE)
+						: remedy.is(Items.MILK_BUCKET) ? new ItemStack(Items.BUCKET) : ItemStack.EMPTY;
+				remedy.shrink(1);
+				if (!left.isEmpty()) {
+					citizen.carry(left.copy());
+				}
+				if (patient.treat()) {
+					patient.say("treated", Component.translatable("speech.minecities.treated"));
+				}
+			});
+		}
 		for (MobEffectInstance effect : List.copyOf(patient.getActiveEffects())) {
 			if (effect.getEffect().value().getCategory() == MobEffectCategory.HARMFUL) {
 				patient.removeEffect(effect.getEffect());
@@ -127,6 +177,10 @@ class DoctorGoal extends WorkGoal {
 				0.3, 0.4, 0.3, 0);
 		level().playSound(null, patient.blockPosition(), SoundEvents.BREWING_STAND_BREW, SoundSource.NEUTRAL, 0.4f,
 				1.6f);
+	}
+
+	private Optional<ItemStack> carried(Item item) {
+		return citizen.inventory().stream().filter(s -> s.is(item)).findFirst();
 	}
 
 	private Optional<ItemStack> carriedFood() {
