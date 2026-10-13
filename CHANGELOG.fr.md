@@ -1,5 +1,11 @@
 # Journal des modifications
 
+## 1.8.0 — 2026-10-13
+
+### Nouveautés
+
+- Un poste du mod pour chaque métier (fabriqué avec une table de craft et un objet du métier), l'établi du bâtisseur offert à la fondation, et des interfaces : celle d'un poste (son travailleur, ce qui manque, les chantiers) et celle d'un bâtiment (niveau, lits, amélioration avec son coût).
+- Un bâtiment fait à la main peut être rebâti au niveau 2 de sa famille depuis son interface : le bâtisseur démolit l'ancien et bâtit le nouveau à sa place.
 ## 1.7.0 — 2026-10-13
 
 ### Nouveautés

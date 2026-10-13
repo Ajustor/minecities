@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.8.0 — 2026-10-13
+
+### New features
+
+- A mod station for every job (crafted from a crafting table and an item of the trade), the builder's bench given on founding, and interfaces: a station's (its worker, what is missing, building sites) and a building's (level, beds, upgrade with its cost).
+- A hand-built building can be rebuilt at level 2 of its family from its interface: the builder pulls down the old one and builds the new one in its place.
 ## 1.7.0 — 2026-10-13
 
 ### New features
