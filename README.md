@@ -33,7 +33,10 @@ version du mod, les autres mods et le temps de jeu.
 3. **L'hôtel de ville** : un clic ouvre son **écran** : le résumé de la ville (et son bonheur moyen),
    la liste des citoyens (métier, faim, humeur, famille, ce qui leur manque ; « Où ? » les fait luire),
    les **bâtiments**, le **registre** des demandes de mariage, et le **grenier** commun où les citoyens
-   mangent. Accroupi, un clic donne l'état de la ville dans le chat. En entrant sur un territoire, un
+   mangent. Le bouton **Carte** montre le territoire à plat, comme une carte : le disque de l'hôtel
+   de ville et ceux des annexes, chaque bâtiment de la couleur de son genre, et les chantiers. La
+   molette zoome, on fait glisser pour se déplacer, et un clic sur un bâtiment le fait luire en jeu.
+   Accroupi, un clic donne l'état de la ville dans le chat. En entrant sur un territoire, un
    titre vous souhaite la bienvenue ; un hôtel de ville ou une plaque en main, son contour se dessine
    en particules. Une plaque montre le dernier relevé : porte **verte** si le bâtiment est enregistré,
    **rouge** sinon.
@@ -312,7 +315,7 @@ Java 25 est requis (Loom 1.18.3, Minecraft 26.2).
 ./gradlew runClient             # lance le jeu avec le mod
 ./gradlew runGameTest           # les scènes de jeu, vérifiées sur le seul serveur, sans fenêtre (rapide)
 ./gradlew runGameTest -PminecitiesGametest=work   # une scène (city, work, countryside, village, build, family, raid, life, market, robust, industry, crafts,
-council, logistics, guide, structures, plans, jade, residents, elections, monuments, health)
+council, logistics, guide, structures, plans, jade, residents, elections, monuments, health, map)
 ./gradlew runClientGameTest     # les mêmes scènes dans le vrai jeu, photographiées (build/run/clientGameTest/screenshots), plus styles
 ./gradlew runClientGameTest -PminecitiesFilm   # avec les films image par image (lents)
 python tools/textures/generate.py   # régénère les textures (peaux des citoyens, plaque, œuf)

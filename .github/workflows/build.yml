@@ -64,7 +64,7 @@ jobs:
       matrix:
         scenes:
           - build
-          - city,work,countryside,village,family,raid,life,market,robust,industry,crafts,council,logistics,guide,structures,plans,jade,residents,elections,monuments,health
+          - city,work,countryside,village,family,raid,life,market,robust,industry,crafts,council,logistics,guide,structures,plans,jade,residents,elections,monuments,health,map
     name: scenes (${{ matrix.scenes == 'build' && 'bâtisseur' || 'les autres' }})
     steps:
       - name: checkout repository

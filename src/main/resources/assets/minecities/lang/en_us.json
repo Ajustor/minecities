@@ -628,5 +628,20 @@
   "speech.minecities.remedy": "I would need: %s.",
   "speech.minecities.treated": "Thank you, doctor, I already feel better.",
   "message.minecities.doctor.no_remedy": "%s, the doctor, has no %s to treat a patient (%s).",
-  "jade.minecities.illness": "Sick: %s"
+  "jade.minecities.illness": "Sick: %s",
+  "screen.minecities.map": "Map",
+  "screen.minecities.map.title": "Map of %s",
+  "screen.minecities.map.back": "Back",
+  "screen.minecities.map.center": "Recenter",
+  "screen.minecities.map.north": "N ↑",
+  "screen.minecities.map.scale": "%s blocks",
+  "screen.minecities.map.hover": "%s (%s): click to see it glow",
+  "screen.minecities.map.kind.home": "House",
+  "screen.minecities.map.kind.workshop": "Workshop",
+  "screen.minecities.map.kind.both": "House and workshop",
+  "screen.minecities.map.kind.village": "Village house",
+  "screen.minecities.map.kind.warehouse": "Warehouse",
+  "screen.minecities.map.kind.monument": "Monument",
+  "screen.minecities.map.kind.site": "Building site",
+  "message.minecities.map.glow": "The building at %s glows for a few seconds."
 }

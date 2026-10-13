@@ -1,5 +1,6 @@
 package com.ajustor.minecities.network;
 
+import net.minecraft.core.BlockPos;
 import com.ajustor.minecities.block.TownHallBlockEntity;
 import com.ajustor.minecities.citizen.CitizenEntity;
 import com.ajustor.minecities.citizen.Hunger;
@@ -110,7 +111,50 @@ public final class TownNetwork {
 				(int) employed, meals, next == null ? "" : next.translationKey(),
 				next == null ? 0 : next.minCitizens(), next == null ? 0 : next.minHouses(),
 				town.canManage(player.getUUID()), life, council(level, town), rows, buildings, requests,
-				plans(level, town), members(town, player), ballot(level, town, player));
+				plans(level, town), members(town, player), ballot(level, town, player), map(town));
+	}
+
+	/** La carte du territoire : seulement cette ville, dans sa dimension. */
+	public static TownSnapshot.TownMap map(Town town) {
+		List<TownSnapshot.Plot> plots = new ArrayList<>();
+		for (House house : town.houses()) {
+			BlockPos min = house.min().orElse(house.plaque().offset(-2, 0, -2));
+			BlockPos max = house.max().orElse(house.plaque().offset(2, 0, 2));
+			String kind = house.warehouse() ? "warehouse" : house.village() ? "village"
+					: !house.beds().isEmpty() && !house.workstations().isEmpty() ? "both"
+					: !house.beds().isEmpty() ? "home" : "workshop";
+			plots.add(new TownSnapshot.Plot(house.plaque(), min.getX(), min.getZ(), max.getX(), max.getZ(), kind));
+		}
+		for (com.ajustor.minecities.build.Construction c : town.constructions()) {
+			boolean monument = com.ajustor.minecities.town.Monument.of(c.blueprint()).isPresent();
+			// Un chantier fini est déjà un bâtiment déclaré, sauf un monument (qui n'a pas de plaque).
+			if (!c.done() || monument) {
+				plots.add(new TownSnapshot.Plot(c.origin(), c.min().getX(), c.min().getZ(), c.max().getX(),
+						c.max().getZ(), c.done() ? "monument" : "site"));
+			}
+		}
+		return new TownSnapshot.TownMap(town.radius(), town.activeAnnexes(), Town.ANNEX_RADIUS, plots);
+	}
+
+	/** Le bâtiment de la ville qui commence en {@code at} luit ; faux s'il n'y en a pas. */
+	public static boolean glow(ServerLevel level, Town town, ServerPlayer player, BlockPos at) {
+		Optional<BlockPos[]> bounds = bounds(town, at);
+		bounds.ifPresent(b -> {
+			com.ajustor.minecities.town.Highlights.add(level, b[0], b[1]);
+			player.sendSystemMessage(Component.translatable("message.minecities.map.glow", at.toShortString()));
+		});
+		return bounds.isPresent();
+	}
+
+	/** Le bâtiment de la carte qui commence en {@code at} : sa plaque, ou l'origine de son chantier. */
+	private static Optional<BlockPos[]> bounds(Town town, BlockPos at) {
+		Optional<House> house = town.house(at);
+		if (house.isPresent()) {
+			return Optional.of(new BlockPos[]{house.get().min().orElse(at.offset(-2, -1, -2)),
+					house.get().max().orElse(at.offset(2, 3, 2))});
+		}
+		return town.constructions().stream().filter(c -> c.origin().equals(at)).findFirst()
+				.map(c -> new BlockPos[]{c.min(), c.max()});
 	}
 
 	/** L'élection, vue par ce joueur. */
@@ -205,6 +249,17 @@ public final class TownNetwork {
 			return;
 		}
 		Town town = found.get();
+		if (payload.action().startsWith("glow:")) {
+			// « glow:x,y,z » : le bâtiment cliqué sur la carte luit quelques secondes.
+			String[] xyz = payload.action().substring("glow:".length()).split(",");
+			try {
+				glow(level, town, player, new BlockPos(Integer.parseInt(xyz[0]), Integer.parseInt(xyz[1]),
+						Integer.parseInt(xyz[2])));
+			} catch (RuntimeException e) {
+				// Une demande mal formée : on l'ignore.
+			}
+			return;
+		}
 		if (payload.action().startsWith("permission:")) {
 			// « permission:<rang>:<droit> » : le maire donne ou retire ce droit à l'habitant ou au visiteur.
 			String[] parts = payload.action().split(":", 3);

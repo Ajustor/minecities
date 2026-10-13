@@ -95,6 +95,9 @@ public class TownHallScreen extends Screen {
 		}
 		addRenderableWidget(Button.builder(Component.translatable("screen.minecities.granary"),
 				b -> send("granary", TownActionPayload.NONE)).bounds(left + 10, top + HEIGHT - 26, 62, 18).build());
+		addRenderableWidget(Button.builder(Component.translatable("screen.minecities.map"),
+				b -> minecraft.gui.setScreen(new TownMapScreen(town, this))).bounds(left + 76, top + HEIGHT - 26, 50, 18)
+				.build());
 		switch (tab) {
 			case SUMMARY -> {
 				if (town.manager()) {

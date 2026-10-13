@@ -41,6 +41,7 @@ public class MineCities implements ModInitializer {
 		Raids.register();
 		Festivals.register();
 		Alarms.register();
+		com.ajustor.minecities.town.Highlights.register();
 		Borders.register();
 		Trade.register();
 		TownCommands.register();
