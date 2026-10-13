@@ -118,6 +118,11 @@ class SmithGoal extends WorkGoal {
 			case DECIDE -> decide();
 			case WORK -> work();
 			case DELIVER -> {
+				// Une pièce d'armure qu'un garde attend : il la lui porte et l'en habille, sans passer par le
+				// grenier (plein, il ne pourrait pas l'y déposer, et le garde ne l'aurait jamais).
+				if (dress()) {
+					return;
+				}
 				if (deliver(s -> false, 0)) {
 					phase = Phase.DECIDE;
 					rest(100);
@@ -223,7 +228,17 @@ class SmithGoal extends WorkGoal {
 		timer = 0;
 		citizen.swing(InteractionHand.MAIN_HAND);
 		if (forging != null) {
-			citizen.inventory().clear();
+			// Il use ses matériaux, et seulement eux : le reste de ses poches (une pièce pas encore livrée) reste.
+			forging.materials().forEach((item, n) -> {
+				int left = n;
+				for (ItemStack stack : citizen.inventory()) {
+					if (left > 0 && stack.is(item)) {
+						int used = Math.min(left, stack.getCount());
+						stack.shrink(used);
+						left -= used;
+					}
+				}
+			});
 			citizen.carry(new ItemStack(forging.result()));
 			level().playSound(null, station, SoundEvents.ANVIL_USE, SoundSource.BLOCKS, 0.6f, 1.0f);
 			citizen.say("forged", Component.translatable("speech.minecities.forged",
@@ -244,6 +259,40 @@ class SmithGoal extends WorkGoal {
 		}
 		light(false);
 		phase = Phase.DELIVER;
+	}
+
+	/**
+	 * Habille un garde qui attend la pièce d'armure qu'il porte. Vrai tant qu'il s'en occupe (en route,
+	 * ou s'il vient d'en habiller un) ; faux s'il n'a rien à porter à un garde.
+	 */
+	private boolean dress() {
+		for (ItemStack stack : citizen.inventory()) {
+			net.minecraft.world.item.equipment.Equippable equippable = stack.get(net.minecraft.core.component.DataComponents.EQUIPPABLE);
+			if (stack.isEmpty() || equippable == null || equippable.slot().getType() != EquipmentSlot.Type.HUMANOID_ARMOR) {
+				continue;
+			}
+			EquipmentSlot slot = equippable.slot();
+			BlockPos hall = town().hall();
+			int r = town().radius();
+			Optional<CitizenEntity> guard = level().getEntitiesOfClass(CitizenEntity.class, new AABB(hall).inflate(r, 48, r),
+					g -> g.isAlive() && g.townId().filter(town().id()::equals).isPresent()
+							&& g.job().filter(j -> j.job() == Job.GUARD).isPresent() && g.getItemBySlot(slot).isEmpty())
+					.stream().min(java.util.Comparator.comparingDouble(citizen::distanceToSqr));
+			if (guard.isEmpty()) {
+				continue;
+			}
+			if (citizen.distanceToSqr(guard.get()) > 2.5 * 2.5) {
+				citizen.getNavigation().moveTo(guard.get(), speed());
+				return true;
+			}
+			citizen.getNavigation().stop();
+			guard.get().setItemSlot(slot, stack.split(1));
+			citizen.swing(InteractionHand.MAIN_HAND);
+			level().playSound(null, guard.get().blockPosition(), SoundEvents.ARMOR_EQUIP_IRON.value(), SoundSource.NEUTRAL,
+					0.8f, 1.0f);
+			return true;
+		}
+		return false;
 	}
 
 	/** Allume ou éteint le haut fourneau pendant qu'il travaille. */
