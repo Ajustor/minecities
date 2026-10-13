@@ -209,7 +209,8 @@ public class PlanScenes implements Scene {
 			if (!PlanItem.blueprint(plan).filter(HOUSE::equals).isPresent() || PlanItem.style(plan) != BuildStyle.DESERT) {
 				return "le choix : " + PlanItem.blueprint(plan) + " " + PlanItem.style(plan);
 			}
-			// L'onglet Plans ne donne pas un second plan : il choisit celui qu'on a.
+			// L'onglet Plans ne donne pas un second plan : il choisit celui qu'on a (à portée de l'hôtel de ville).
+			player.teleportTo(0.5, Y, 3.5);
 			TownNetwork.act(player, new TownActionPayload(HALL, "plan:taiga:" + HOUSE, TownActionPayload.NONE));
 			long plans = player.getInventory().getNonEquipmentItems().stream().filter(s -> s.is(McItems.PLAN)).count();
 			return plans == 1 && PlanItem.style(player.getMainHandItem()) == BuildStyle.TAIGA ? null
