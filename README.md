@@ -7,7 +7,8 @@ vanilla : pas de plans imposés ni de huttes préfabriquées. Vous bâtissez com
 reconnaît vos maisons, et des citoyens viennent y vivre. Le village devient ville, puis grande
 ville, puis mégalopole.
 
-> État : **v1.6** (guide de la ville et formulaire de signalement, villes, maisons, familles, vingt-quatre métiers et leurs filières, de la mine au
+> État : **v1.7** (habitants joueurs et rangs, élections du maire, monuments, maladies et manteau,
+> carte du territoire, catastrophes, infobulles Jade, guide de la ville et formulaire de signalement, villes, maisons, familles, vingt-quatre métiers et leurs filières, de la mine au
 > bijou et du blé au pain, bâtiments à quatre niveaux et maîtrise du niveau 4, décrets du maire,
 > commerce entre villes, bâtiments décorés et meublés, entrepôt et logistique, bonheur et repas variés, marché et trésor, paliers qui
 > débloquent, mairies annexes, fêtes, cloche d'alarme, raids de pillards, écran de l'hôtel de ville,
