@@ -4,6 +4,8 @@ import com.ajustor.minecities.block.TownHallBlockEntity;
 import com.ajustor.minecities.citizen.CitizenEntity;
 import com.ajustor.minecities.citizen.Hunger;
 import com.ajustor.minecities.town.Chronicle;
+import com.ajustor.minecities.town.Election;
+import com.ajustor.minecities.town.Elections;
 import com.ajustor.minecities.town.Families;
 import com.ajustor.minecities.town.Festivals;
 import com.ajustor.minecities.town.House;
@@ -100,7 +102,24 @@ public final class TownNetwork {
 				(int) employed, meals, next == null ? "" : next.translationKey(),
 				next == null ? 0 : next.minCitizens(), next == null ? 0 : next.minHouses(),
 				town.canManage(player.getUUID()), life, council(level, town), rows, buildings, requests,
-				plans(level, town), members(town, player));
+				plans(level, town), members(town, player), ballot(level, town, player));
+	}
+
+	/** L'élection, vue par ce joueur. */
+	private static TownSnapshot.Ballot ballot(ServerLevel level, Town town, ServerPlayer player) {
+		Election election = town.election();
+		long now = level.getGameTime();
+		List<TownSnapshot.PlayerRow> candidates = election.candidates().stream()
+				.map(e -> new TownSnapshot.PlayerRow(e.getKey(), e.getValue(), town.rank(e.getKey()).serializedName()))
+				.toList();
+		return new TownSnapshot.Ballot(election.phase().serializedName(),
+				election.phase() == Election.Phase.NONE ? -1 : Math.max(0, election.phaseEnds() - now),
+				election.termEnds() > 0 && election.phase() == Election.Phase.NONE
+						? Math.max(0, election.termEnds() - now) : -1,
+				election.round(), candidates, election.hasVoted(player.getUUID()),
+				(int) election.petition().stream().filter(town::isMember).count(), Elections.signaturesNeeded(town),
+				election.petition().contains(player.getUUID()), Elections.untilAllowed(town, now),
+				election.lastWinner().orElse(""), election.lastVotes());
 	}
 
 	/** Les joueurs de la ville : le maire, ses adjoints, les habitants ; les demandes ; les droits. */
@@ -223,6 +242,16 @@ public final class TownNetwork {
 				return;
 			}
 			case "join" -> TownService.requestJoin(level.getServer(), town, player);
+			case "election.call", "election.sign", "election.run", "vote" -> {
+				Optional<Elections.Refusal> refusal = switch (payload.action()) {
+					case "election.call" -> Elections.call(level, town, player);
+					case "election.sign" -> Elections.sign(level, town, player);
+					case "election.run" -> Elections.run(level, town, player);
+					default -> Elections.cast(level, town, player, payload.request());
+				};
+				refusal.ifPresent(r -> player.sendSystemMessage(Component.translatable(r.translationKey(),
+						Math.max(1, Elections.untilAllowed(town, level.getGameTime()) / 1200)).withStyle(ChatFormatting.RED)));
+			}
 			case "leave" -> TownService.leave(level.getServer(), town, player);
 			case "resident.accept", "resident.refuse" -> {
 				if (!town.canManage(player.getUUID())) {

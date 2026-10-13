@@ -10,6 +10,8 @@ import com.ajustor.minecities.build.Proposals;
 import com.ajustor.minecities.citizen.CitizenEntity;
 import com.ajustor.minecities.guide.Guide;
 import com.ajustor.minecities.town.Families;
+import com.ajustor.minecities.town.Election;
+import com.ajustor.minecities.town.Elections;
 import com.ajustor.minecities.town.Job;
 import com.ajustor.minecities.town.Membership;
 import com.ajustor.minecities.town.Decree;
@@ -135,6 +137,22 @@ public final class TownCommands {
 														.map(Membership.Permission::serializedName), b))
 										.then(Commands.argument("allowed", com.mojang.brigadier.arguments.BoolArgumentType.bool())
 												.executes(TownCommands::permission)))))
+				.then(Commands.literal("election")
+						.executes(TownCommands::election)
+						.then(Commands.literal("call").executes(c -> elect(c, "call")))
+						.then(Commands.literal("sign").executes(c -> elect(c, "sign")))
+						.then(Commands.literal("run").executes(c -> elect(c, "run"))))
+				.then(Commands.literal("vote")
+						.then(Commands.argument("candidate", StringArgumentType.word())
+								.suggests((c, b) -> {
+									try {
+										return SharedSuggestionProvider.suggest(memberTown(c).election().candidates()
+												.stream().map(Map.Entry::getValue), b);
+									} catch (CommandSyntaxException e) {
+										return b.buildFuture();
+									}
+								})
+								.executes(TownCommands::vote)))
 				.then(Commands.literal("blueprints").executes(TownCommands::blueprints))
 				.then(Commands.literal("build")
 						.then(Commands.literal("cancel").executes(TownCommands::cancelBuild))
@@ -546,6 +564,95 @@ public final class TownCommands {
 		} catch (CommandSyntaxException e) {
 			return builder.buildFuture();
 		}
+	}
+
+	// Élections
+
+	/** La ville dont le joueur fait partie : celle où il se trouve, sinon la sienne. */
+	private static Town memberTown(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
+		ServerPlayer player = context.getSource().getPlayerOrException();
+		Towns towns = Towns.get(context.getSource().getServer());
+		Optional<Town> here = towns.at(context.getSource().getLevel().dimension(), player.blockPosition())
+				.filter(t -> t.isMember(player.getUUID()));
+		return here.or(() -> towns.memberOf(player.getUUID()).stream().findFirst()).orElseThrow(NO_TOWN::create);
+	}
+
+	/** Où en est l'élection de la ville. */
+	private static int election(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
+		Town town = here(context);
+		Election election = town.election();
+		long now = context.getSource().getLevel().getGameTime();
+		CommandSourceStack source = context.getSource();
+		if (election.termEnds() > 0 && election.phase() == Election.Phase.NONE) {
+			source.sendSuccess(() -> Component.translatable("command.minecities.election.term", town.mayorName(),
+					minutes(election.termEnds() - now)), false);
+		}
+		election.lastWinner().ifPresent(w -> source.sendSuccess(() -> Component.translatable(
+				"command.minecities.election.last", w, election.lastVotes()), false));
+		switch (election.phase()) {
+			case NONE -> source.sendSuccess(() -> Component.translatable("command.minecities.election.none",
+					election.petition().size(), Elections.signaturesNeeded(town)), false);
+			case CANDIDACY -> source.sendSuccess(() -> Component.translatable("command.minecities.election.candidacy",
+					names(election), minutes(election.phaseEnds() - now)), false);
+			case VOTING -> source.sendSuccess(() -> Component.translatable("command.minecities.election.voting",
+					election.round(), names(election), minutes(election.phaseEnds() - now)), false);
+		}
+		return Command.SINGLE_SUCCESS;
+	}
+
+	private static String names(Election election) {
+		return String.join(", ", election.candidates().stream().map(Map.Entry::getValue).toList());
+	}
+
+	/** Des ticks de jeu en minutes (au moins une). */
+	private static long minutes(long ticks) {
+		return Math.max(1, ticks / 1200);
+	}
+
+	/** Le maire ouvre une élection, un habitant signe la pétition, un joueur se porte candidat. */
+	private static int elect(CommandContext<CommandSourceStack> context, String what) throws CommandSyntaxException {
+		ServerPlayer player = context.getSource().getPlayerOrException();
+		Town town = memberTown(context);
+		ServerLevel level = context.getSource().getServer().getLevel(town.dimension());
+		if (level == null) {
+			return 0;
+		}
+		Optional<Elections.Refusal> refusal = switch (what) {
+			case "call" -> Elections.call(level, town, player);
+			case "sign" -> Elections.sign(level, town, player);
+			default -> Elections.run(level, town, player);
+		};
+		return refused(context, town, refusal, level.getGameTime());
+	}
+
+	private static int refused(CommandContext<CommandSourceStack> context, Town town, Optional<Elections.Refusal> refusal,
+			long now) {
+		if (refusal.isEmpty()) {
+			return Command.SINGLE_SUCCESS;
+		}
+		context.getSource().sendFailure(Component.translatable(refusal.get().translationKey(),
+				minutes(Elections.untilAllowed(town, now))));
+		return 0;
+	}
+
+	/** Le joueur vote pour ce candidat. */
+	private static int vote(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
+		ServerPlayer player = context.getSource().getPlayerOrException();
+		Town town = memberTown(context);
+		ServerLevel level = context.getSource().getServer().getLevel(town.dimension());
+		String name = StringArgumentType.getString(context, "candidate");
+		Optional<UUID> candidate = town.election().candidates().stream().filter(e -> e.getValue().equalsIgnoreCase(name))
+				.map(Map.Entry::getKey).findFirst();
+		if (level == null || candidate.isEmpty()) {
+			context.getSource().sendFailure(Component.translatable(Elections.Refusal.NOT_CANDIDATE.translationKey()));
+			return 0;
+		}
+		Optional<Elections.Refusal> refusal = Elections.cast(level, town, player, candidate.get());
+		if (refusal.isEmpty()) {
+			context.getSource().sendSuccess(() -> Component.translatable("command.minecities.election.voted", name),
+					false);
+		}
+		return refused(context, town, refusal, level.getGameTime());
 	}
 
 	/** Le maire donne ou retire un droit à l'habitant ou au visiteur. */

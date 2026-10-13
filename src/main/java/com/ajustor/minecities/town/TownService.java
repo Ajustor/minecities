@@ -435,6 +435,7 @@ public final class TownService {
 				}
 				continue;
 			}
+			Elections.tick(level, town, now);
 			// Les bâtiments sont relevés à leur tour, quelques-uns à chaque passage.
 			Map<BlockPos, Long> surveyed = LAST_SURVEY.computeIfAbsent(town.id(), id -> new HashMap<>());
 			int budget = SURVEYS_PER_PASS;

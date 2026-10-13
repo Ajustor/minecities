@@ -18,22 +18,16 @@ vocabulaire municipal et un peu de jeu politique.
   visiteur ; le maire règle par rang (onglet Habitants, ou `/ville permission`) trois droits :
   déclarer une maison, ouvrir le grenier, casser les bâtiments déclarés. Par défaut l'habitant
   déclare et ouvre le grenier, le visiteur rien ; les villes d'avant gardent tout ouvert.
+- Élections (MC-17) : mandat de `term_days` jours (7) ; au terme, ou quand le maire le décide
+  (`/ville election call`), ou par une pétition de la moitié des habitants (`/ville election sign`),
+  un jour de candidatures (`run`) puis un jour de vote (onglet Élection, `/ville vote`). Pas plus
+  d'une élection tous les 3 jours. Les citoyens votent avec une chance égale à leur bonheur (heureux
+  pour le sortant, malheureux contre), leur voix pèse autant que celle d'un joueur. Égalité : on
+  revote entre les ex æquo. Seul joueur, ou sans adversaire : réélu d'office. Pas d'intérim
+  automatique (décision du 2026-10-13 : un maire absent, les habitants passent par la pétition).
 - Seul le maire peut démolir l'hôtel de ville ; maire et adjoints reçoivent les nouvelles.
 
 ## À faire
-
-### Élections (pas avant la v2, réponse à la question 14)
-
-Le maire ou les habitants pourront **déclencher** une élection ; d'ici là, le maire reste le
-fondateur ou celui à qui il a passé l'écharpe.
-
-- Mandat de N jours de jeu (réglable, défaut 7). À la fin, élection : tout habitant joueur peut se
-  porter candidat pendant 1 jour ; vote via l'écran de l'hôtel de ville (ou un **bulletin**
-  objet à déposer dans l'urne = l'hôtel de ville, plus vanilla).
-- **Les citoyens PNJ votent aussi** selon leur bonheur (brief 04) : le maire sortant récolte les
-  voix des citoyens heureux. Mécanique simple et lisible qui récompense la bonne gestion.
-- Ville d'un seul joueur : pas d'élection (ou réélection automatique).
-- Si le maire est absent N jours, un adjoint assure l'intérim.
 
 ### Décrets (lois municipales)
 Des choix simples avec des effets lisibles, pris par le maire dans l'écran de l'hôtel de ville :

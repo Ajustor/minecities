@@ -16,7 +16,7 @@ import java.util.List;
  * son moral, ses fêtes, l'alerte), ses citoyens (métier, faim, humeur, famille, ce qui leur manque ;
  * un bouton les fait luire pour les retrouver), ses bâtiments, le registre où le maire accepte ou
  * refuse les demandes de mariage, la mairie, les joueurs de la ville (habitants, demandes pour s'y
- * installer, droits de chaque rang) et les plans des bâtiments qu'il peut commander (dans le style
+ * installer, droits de chaque rang), l'élection du maire (pétition, candidatures, vote) et les plans des bâtiments qu'il peut commander (dans le style
  * choisi). Un bouton ouvre le grenier.
  */
 public class TownHallScreen extends Screen {
@@ -40,7 +40,7 @@ public class TownHallScreen extends Screen {
 	private static final int ACCENT = 0xFF8A5A1E;
 	private static final int FESTIVE = 0xFF9C27B0;
 
-	public enum Tab { SUMMARY, CITIZENS, BUILDINGS, REGISTRY, COUNCIL, RESIDENTS, PLANS }
+	public enum Tab { SUMMARY, CITIZENS, BUILDINGS, REGISTRY, COUNCIL, RESIDENTS, ELECTION, PLANS }
 
 	private static final String[] STYLES = {"plains", "taiga", "desert", "savanna"};
 
@@ -89,9 +89,9 @@ public class TownHallScreen extends Screen {
 				label = Component.translatable("screen.minecities.tab.registry_count", town.requests().size());
 			}
 			Button button = addRenderableWidget(Button.builder(label, b -> select(t))
-					.bounds(x, top + 26, 55, 18).build());
+					.bounds(x, top + 26, 49, 18).build());
 			button.active = tab != t;
-			x += 57;
+			x += 50;
 		}
 		addRenderableWidget(Button.builder(Component.translatable("screen.minecities.granary"),
 				b -> send("granary", TownActionPayload.NONE)).bounds(left + 10, top + HEIGHT - 26, 62, 18).build());
@@ -150,6 +150,7 @@ public class TownHallScreen extends Screen {
 				pager(town.plans().size(), PLAN_ROWS);
 			}
 			case RESIDENTS -> residentWidgets();
+			case ELECTION -> electionWidgets();
 			case REGISTRY -> {
 				if (town.manager()) {
 					int y = top + 56;
@@ -217,6 +218,53 @@ public class TownHallScreen extends Screen {
 		pager(members().size(), MEMBER_ROWS);
 	}
 
+	/** L'onglet Élection : ouvrir l'élection, signer la pétition, se porter candidat, voter. */
+	private void electionWidgets() {
+		TownSnapshot.Ballot ballot = town.ballot();
+		String rank = town.members().rank();
+		boolean member = !rank.equals("visitor");
+		switch (ballot.phase()) {
+			case "none" -> {
+				if (rank.equals("mayor")) {
+					Button call = addRenderableWidget(Button.builder(Component.translatable("screen.minecities.election.call"),
+							b -> send("election.call", TownActionPayload.NONE))
+							.bounds(left + WIDTH - 170, top + HEIGHT - 26, 160, 18).build());
+					call.active = ballot.allowedIn() == 0;
+				} else if (member) {
+					Button sign = addRenderableWidget(Button.builder(Component.translatable("screen.minecities.election.sign",
+									ballot.signatures(), ballot.needed()),
+							b -> send("election.sign", TownActionPayload.NONE))
+							.bounds(left + WIDTH - 170, top + HEIGHT - 26, 160, 18).build());
+					sign.active = ballot.allowedIn() == 0 && !ballot.signed();
+				}
+			}
+			case "candidacy" -> {
+				if (member && ballot.candidates().stream().noneMatch(c -> c.id().equals(self()))) {
+					addRenderableWidget(Button.builder(Component.translatable("screen.minecities.election.run"),
+							b -> send("election.run", TownActionPayload.NONE))
+							.bounds(left + WIDTH - 170, top + HEIGHT - 26, 160, 18).build());
+				}
+			}
+			case "voting" -> {
+				if (member && !ballot.voted()) {
+					int y = top + 104;
+					for (TownSnapshot.PlayerRow candidate : ballot.candidates().stream().limit(MEMBER_ROWS + 1).toList()) {
+						addRenderableWidget(Button.builder(Component.translatable("screen.minecities.election.vote"),
+								b -> send("vote", candidate.id())).bounds(left + WIDTH - 90, y - 3, 80, 14).build());
+						y += MEMBER_ROW;
+					}
+				}
+			}
+			default -> {
+			}
+		}
+	}
+
+	/** Le joueur qui regarde l'écran. */
+	private java.util.UUID self() {
+		return minecraft != null && minecraft.player != null ? minecraft.player.getUUID() : TownActionPayload.NONE;
+	}
+
 	private <T> List<T> visible(List<T> all) {
 		return visible(all, ROWS);
 	}
@@ -261,6 +309,7 @@ public class TownHallScreen extends Screen {
 			case REGISTRY -> registry(graphics);
 			case COUNCIL -> council(graphics);
 			case RESIDENTS -> residents(graphics);
+			case ELECTION -> election(graphics);
 			case PLANS -> plans(graphics);
 		}
 		super.extractRenderState(graphics, mouseX, mouseY, a);
@@ -460,6 +509,64 @@ public class TownHallScreen extends Screen {
 				}
 			}
 		}
+	}
+
+	/** Le mandat, le dernier élu, puis l'élection en cours : la pétition, les candidats, le vote. */
+	private void election(GuiGraphicsExtractor graphics) {
+		TownSnapshot.Ballot ballot = town.ballot();
+		int y = top + 58;
+		line(graphics, Component.translatable("screen.minecities.council.mayor", town.council().mayor()), y, INK);
+		y += 14;
+		if (ballot.termIn() >= 0) {
+			line(graphics, Component.translatable("screen.minecities.election.term", minutes(ballot.termIn())), y, FADED);
+			y += 14;
+		}
+		if (!ballot.lastWinner().isEmpty()) {
+			line(graphics, Component.translatable("screen.minecities.election.last", ballot.lastWinner(),
+					ballot.lastVotes()), y, FADED);
+		}
+		y = top + 90;
+		switch (ballot.phase()) {
+			case "none" -> {
+				line(graphics, Component.translatable("screen.minecities.election.none"), y, ACCENT);
+				y += 14;
+				line(graphics, Component.translatable("screen.minecities.election.petition", ballot.signatures(),
+						ballot.needed()), y, FADED);
+				y += 14;
+				if (ballot.allowedIn() > 0) {
+					line(graphics, Component.translatable("screen.minecities.election.too_soon",
+							minutes(ballot.allowedIn())), y, FADED);
+				}
+			}
+			case "candidacy" -> {
+				line(graphics, Component.translatable("screen.minecities.election.candidacy", minutes(ballot.endsIn())),
+						y, ACCENT);
+				candidates(graphics, ballot, y + 14);
+			}
+			case "voting" -> {
+				line(graphics, Component.translatable("screen.minecities.election.voting", ballot.round(),
+						minutes(ballot.endsIn())), y, ACCENT);
+				candidates(graphics, ballot, y + 14);
+				if (ballot.voted()) {
+					line(graphics, Component.translatable("screen.minecities.election.voted"), top + HEIGHT - 50, GOOD);
+				}
+			}
+			default -> {
+			}
+		}
+	}
+
+	private void candidates(GuiGraphicsExtractor graphics, TownSnapshot.Ballot ballot, int y) {
+		for (TownSnapshot.PlayerRow candidate : ballot.candidates().stream().limit(MEMBER_ROWS + 1).toList()) {
+			graphics.text(font, Component.literal(candidate.name()), left + 22, y, INK, false);
+			graphics.text(font, Component.translatable("rank.minecities." + candidate.rank()), left + 160, y, FADED, false);
+			y += MEMBER_ROW;
+		}
+	}
+
+	/** Des ticks de jeu en minutes, au moins une. */
+	private static long minutes(long ticks) {
+		return Math.max(1, ticks / 1200);
 	}
 
 	/** Les plans : nom, dimensions, maison ou atelier, et le palier qu'attend un plan fermé. */

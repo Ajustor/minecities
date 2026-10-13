@@ -207,6 +207,7 @@ version du mod, les autres mods et le temps de jeu.
 | `festival_cost` | 4 | le prix d'une fête, en émeraudes |
 | `market_reserve`, `market_daily_earnings` | 32, 32 | ce que le grenier garde, ce qu'un marchand gagne par jour |
 | `protect_buildings` | faux | dans les villes fondées avant les rangs, seuls le maire et ses adjoints (et les opérateurs) cassent les blocs des bâtiments déclarés ; les villes nouvelles règlent ce droit par rang |
+| `term_days`, `candidacy_days`, `voting_days`, `election_spacing_days` | 7, 1, 1, 3 | le mandat du maire (0 : pas d'élection d'office), les candidatures, le vote, l'écart entre deux élections |
 | `hall_grace_minutes` | 10 | un hôtel de ville détruit (explosion…) : le maire a tant de minutes pour le reposer au même endroit, sinon la ville disparaît |
 | `missing_citizen_minutes` | 60 | un citoyen jamais revu depuis tant de minutes, sa maison chargée, est rayé (0 : jamais) |
 | `give_guide` | vrai | chaque joueur reçoit le guide de la ville à sa première venue |
@@ -247,6 +248,14 @@ défaut, l'habitant déclare et ouvre le grenier, le visiteur rien ; le maire et
 les droits. Les villes fondées avant les rangs gardent les droits d'avant (tout le monde déclare et
 ouvre le grenier).
 
+**Élections.** Le mandat du maire dure 7 jours de jeu ; à son terme, une élection s'ouvre. Le maire
+peut aussi en ouvrir une à tout moment, et les habitants par une pétition signée par la moitié
+d'entre eux ; pas plus d'une élection tous les 3 jours. Un jour de candidatures (le maire sortant est
+candidat d'office), puis un jour de vote dans l'onglet Élection ou par `/ville vote`. Chaque joueur
+de la ville vote une fois ; les citoyens aussi, avec une chance égale à leur bonheur : les heureux
+pour le maire sortant, les autres contre lui, et leur voix pèse autant. En cas d'égalité, on revote
+entre les ex æquo. Seul joueur de sa ville, ou sans adversaire, le maire est réélu d'office.
+
 | Commande (`/minecities` ou `/ville`) | Qui | Effet |
 |---|---|---|
 | `info` | tous | état de la ville où l'on se trouve (ou que l'on gère) |
@@ -261,6 +270,11 @@ ouvre le grenier).
 | `resident accept\|refuse <joueur>` | maire, adjoints | répond à une demande |
 | `resident remove <joueur>` | maire, adjoints | renvoie un habitant |
 | `permission resident\|visitor declare\|granary\|break true\|false` | maire | donne ou retire un droit |
+| `election` | tous | le mandat, la pétition, l'élection en cours |
+| `election call` | maire | ouvre une élection |
+| `election sign` | habitants, adjoints | signe la pétition pour une élection |
+| `election run` | joueurs de la ville | se porte candidat, pendant les candidatures |
+| `vote <candidat>` | joueurs de la ville | vote, une fois par tour |
 | `blueprints` | tous | les schémas disponibles |
 | `build <schéma> [style]` | maire, adjoints | propose un chantier devant soi, et montre son fantôme |
 | `build rotate` | maire, adjoints | tourne le chantier proposé d'un quart de tour |
@@ -286,7 +300,7 @@ Java 25 est requis (Loom 1.18.3, Minecraft 26.2).
 ./gradlew runClient             # lance le jeu avec le mod
 ./gradlew runGameTest           # les scènes de jeu, vérifiées sur le seul serveur, sans fenêtre (rapide)
 ./gradlew runGameTest -PminecitiesGametest=work   # une scène (city, work, countryside, village, build, family, raid, life, market, robust, industry, crafts,
-council, logistics, guide, structures, plans, jade, residents)
+council, logistics, guide, structures, plans, jade, residents, elections)
 ./gradlew runClientGameTest     # les mêmes scènes dans le vrai jeu, photographiées (build/run/clientGameTest/screenshots), plus styles
 ./gradlew runClientGameTest -PminecitiesFilm   # avec les films image par image (lents)
 python tools/textures/generate.py   # régénère les textures (peaux des citoyens, plaque, œuf)
