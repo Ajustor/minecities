@@ -362,6 +362,10 @@ public class TownHallScreen extends Screen {
 			line(graphics, Component.translatable("screen.minecities.alarmed"), y, BAD);
 			y += 14;
 		}
+		if (!life.disaster().isEmpty()) {
+			line(graphics, Component.translatable("screen.minecities.disaster." + life.disaster()), y, BAD);
+			y += 14;
+		}
 		if (life.partying()) {
 			line(graphics, Component.translatable("screen.minecities.partying"), y, FESTIVE);
 			y += 14;

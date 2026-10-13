@@ -643,5 +643,18 @@
   "screen.minecities.map.kind.warehouse": "Warehouse",
   "screen.minecities.map.kind.monument": "Monument",
   "screen.minecities.map.kind.site": "Building site",
-  "message.minecities.map.glow": "The building at %s glows for a few seconds."
+  "message.minecities.map.glow": "The building at %s glows for a few seconds.",
+  "message.minecities.disaster.fire": "Lightning set fire to the building at %s! Fire: the granary needs water buckets.",
+  "message.minecities.disaster.fire.over": "The fire is out.",
+  "message.minecities.disaster.blight": "Blight: the harvest is lost, the fields will yield nothing for a day.",
+  "message.minecities.disaster.blight.over": "The blight is over: the fields yield again.",
+  "message.minecities.disaster.quake": "Earthquake! Blocks fall from the buildings.",
+  "message.minecities.disaster.quake.over": "The ground is still again. Check the damage.",
+  "message.minecities.disaster.quake.world": "The ground shakes under every town!",
+  "speech.minecities.fire": "Fire!",
+  "speech.minecities.fire_bucket": "A water bucket! The granary needs some!",
+  "speech.minecities.blight": "The harvest is lost…",
+  "screen.minecities.disaster.fire": "Fire in town!",
+  "screen.minecities.disaster.blight": "Blight: the fields yield nothing.",
+  "screen.minecities.disaster.quake": "The ground is shaking!"
 }

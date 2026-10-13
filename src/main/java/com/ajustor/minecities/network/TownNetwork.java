@@ -105,7 +105,8 @@ public final class TownNetwork {
 				chronicle.partying(now), chronicle.canCelebrate(now), chronicle.untilNextFestival(now), Festivals.cost(),
 				chronicle.alarmed(now) || Raids.underAttack(town.id()),
 				TownService.granary(level, town).map(g -> Stock.count(g, s -> s.is(Items.EMERALD))).orElse(0),
-				chronicle.earnedToday(now), town.activeAnnexes().size(), town.tier().annexes(), town.appeal());
+				chronicle.earnedToday(now), town.activeAnnexes().size(), town.tier().annexes(), town.appeal(),
+				chronicle.disaster(now).orElse(""));
 		return new TownSnapshot(town.hall(), town.name(), town.tier().translationKey(), town.population(),
 				town.citizens(), town.villagers(), town.capacity(), town.homes().size(), town.workstations(),
 				(int) employed, meals, next == null ? "" : next.translationKey(),

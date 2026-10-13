@@ -58,6 +58,12 @@ public final class McConfig {
 	 */
 	@SerializedName("protect_buildings")
 	public boolean protectBuildings = false;
+	/** Les catastrophes (incendie par orage, disette, tremblement de terre) frappent-elles les villes ? */
+	@SerializedName("disasters")
+	public boolean disasters = true;
+	/** Pas plus d'une catastrophe par ville en tant de jours de jeu (le tremblement de terre : le double). */
+	@SerializedName("disaster_spacing_days")
+	public int disasterSpacingDays = 10;
 	/** Le mandat du maire dure tant de jours de jeu ; à son terme, une élection (0 : pas d'élection d'office). */
 	@SerializedName("term_days")
 	public int termDays = 7;

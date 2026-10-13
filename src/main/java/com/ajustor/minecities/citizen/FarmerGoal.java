@@ -178,6 +178,12 @@ class FarmerGoal extends WorkGoal {
 		ItemStack hoe = citizen.getMainHandItem();
 		List<ItemStack> drops = Block.getDrops(state, level, pos, null, citizen,
 				masterTool(hoe, net.minecraft.world.item.enchantment.Enchantments.FORTUNE, 2));
+		if (com.ajustor.minecities.town.Disasters.blighted(town(), level.getGameTime())) {
+			// La disette : la récolte est perdue, il ne garde que de quoi ressemer.
+			drops = drops.stream().filter(d -> d.getItem() instanceof net.minecraft.world.item.BlockItem b
+					&& b.getBlock() == state.getBlock()).limit(1).map(d -> d.copyWithCount(1)).toList();
+			citizen.say("blight", net.minecraft.network.chat.Component.translatable("speech.minecities.blight"));
+		}
 		level.levelEvent(2001, pos, Block.getId(state));
 		level.setBlock(pos, Blocks.AIR.defaultBlockState(), Block.UPDATE_ALL);
 		drops.forEach(citizen::carry);

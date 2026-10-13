@@ -643,5 +643,18 @@
   "screen.minecities.map.kind.warehouse": "Entrepôt",
   "screen.minecities.map.kind.monument": "Monument",
   "screen.minecities.map.kind.site": "Chantier",
-  "message.minecities.map.glow": "Le bâtiment en %s luit quelques secondes."
+  "message.minecities.map.glow": "Le bâtiment en %s luit quelques secondes.",
+  "message.minecities.disaster.fire": "La foudre a mis le feu au bâtiment en %s ! Au feu : il faut des seaux d'eau au grenier.",
+  "message.minecities.disaster.fire.over": "L'incendie est éteint.",
+  "message.minecities.disaster.blight": "Disette : la récolte est perdue, les champs ne donneront rien pendant un jour.",
+  "message.minecities.disaster.blight.over": "La disette est passée : les champs donnent de nouveau.",
+  "message.minecities.disaster.quake": "Tremblement de terre ! Des blocs tombent des bâtiments.",
+  "message.minecities.disaster.quake.over": "La terre s'est calmée. Relevez les dégâts.",
+  "message.minecities.disaster.quake.world": "La terre tremble sous toutes les villes !",
+  "speech.minecities.fire": "Au feu !",
+  "speech.minecities.fire_bucket": "Un seau d'eau ! Il en faut au grenier !",
+  "speech.minecities.blight": "La récolte est perdue…",
+  "screen.minecities.disaster.fire": "Incendie en cours !",
+  "screen.minecities.disaster.blight": "Disette : les champs ne donnent rien.",
+  "screen.minecities.disaster.quake": "La terre tremble !"
 }
