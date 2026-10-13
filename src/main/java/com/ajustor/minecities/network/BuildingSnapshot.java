@@ -26,10 +26,12 @@ import java.util.Optional;
  * @param next     le nom du niveau suivant (vide s'il n'y en a pas)
  * @param refusal  pourquoi on ne peut pas l'améliorer (vide si on peut)
  * @param manager  celui qui regarde peut-il commander l'amélioration ?
+ * @param rebuild  fait à la main : l'amélioration le rebâtit au niveau 2 de sa famille, à sa place
  */
 public record BuildingSnapshot(BlockPos plaque, String town, String kind, boolean valid, Component status, int level,
 		int beds, int sleepers, List<String> jobs, int placed, int total, Optional<Component> next,
-		Optional<Component> refusal, List<Material> materials, boolean manager) implements CustomPacketPayload {
+		Optional<Component> refusal, List<Material> materials, boolean manager, boolean rebuild)
+		implements CustomPacketPayload {
 	public static final Type<BuildingSnapshot> TYPE = new Type<>(MineCities.id("open_building"));
 
 	/** Un matériau de l'amélioration : l'objet, combien il en faut, combien le grenier en a. */
@@ -65,6 +67,7 @@ public record BuildingSnapshot(BlockPos plaque, String town, String kind, boolea
 			buf.writeVarInt(m.stocked());
 		}
 		buf.writeBoolean(s.manager);
+		buf.writeBoolean(s.rebuild);
 	}
 
 	private static BuildingSnapshot read(RegistryFriendlyByteBuf buf) {
@@ -91,7 +94,7 @@ public record BuildingSnapshot(BlockPos plaque, String town, String kind, boolea
 			materials.add(new Material(ItemStack.STREAM_CODEC.decode(buf), buf.readVarInt(), buf.readVarInt()));
 		}
 		return new BuildingSnapshot(plaque, town, kind, valid, status, level, beds, sleepers, jobs, placed, total, next,
-				refusal, materials, buf.readBoolean());
+				refusal, materials, buf.readBoolean(), buf.readBoolean());
 	}
 
 	@Override

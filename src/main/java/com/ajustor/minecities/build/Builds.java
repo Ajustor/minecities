@@ -66,6 +66,108 @@ public final class Builds {
 		return Optional.empty();
 	}
 
+	/**
+	 * Le plan complet d'un chantier : d'abord, s'il remplace un bâtiment fait à la main, l'air partout
+	 * où l'ancien était et où le nouveau ne pose rien ; puis le plan du schéma. Vide si le schéma a disparu.
+	 */
+	public static List<BuildPlan.Placement> plan(net.minecraft.server.MinecraftServer server, Construction construction) {
+		Optional<Blueprint> blueprint = Blueprints.get(server, construction.blueprint());
+		if (blueprint.isEmpty()) {
+			return List.of();
+		}
+		List<BuildPlan.Placement> plan = BuildPlan.of(blueprint.get(), construction.style(), construction.origin(),
+				construction.rotation());
+		Optional<BlockPos[]> clearing = construction.clearing();
+		if (clearing.isEmpty()) {
+			return plan;
+		}
+		java.util.Set<BlockPos> planned = new java.util.HashSet<>();
+		plan.forEach(p -> planned.add(p.pos()));
+		List<BuildPlan.Placement> full = new java.util.ArrayList<>();
+		// Du haut vers le bas : le toit tombe avant les murs.
+		BlockPos lo = clearing.get()[0];
+		BlockPos hi = clearing.get()[1];
+		for (int y = hi.getY(); y >= lo.getY(); y--) {
+			for (int x = lo.getX(); x <= hi.getX(); x++) {
+				for (int z = lo.getZ(); z <= hi.getZ(); z++) {
+					BlockPos pos = new BlockPos(x, y, z);
+					// Le sol reste : le nouveau bâtiment s'y pose.
+					if (!planned.contains(pos) && y > lo.getY()) {
+						full.add(new BuildPlan.Placement(pos, net.minecraft.world.level.block.Blocks.AIR.defaultBlockState()));
+					}
+				}
+			}
+		}
+		full.addAll(plan);
+		return full;
+	}
+
+	/** Les familles de schémas des ateliers, par métier : un bâtiment fait main se rebâtit dans la sienne. */
+	private static final java.util.Map<com.ajustor.minecities.town.Job, String> FAMILIES = java.util.Map.ofEntries(
+			java.util.Map.entry(com.ajustor.minecities.town.Job.FARMER, "farm"),
+			java.util.Map.entry(com.ajustor.minecities.town.Job.COOK, "kitchen"),
+			java.util.Map.entry(com.ajustor.minecities.town.Job.LUMBERJACK, "sawmill"),
+			java.util.Map.entry(com.ajustor.minecities.town.Job.BREEDER, "barn"),
+			java.util.Map.entry(com.ajustor.minecities.town.Job.FISHERMAN, "fishery"),
+			java.util.Map.entry(com.ajustor.minecities.town.Job.BUILDER, "builder_hut"),
+			java.util.Map.entry(com.ajustor.minecities.town.Job.GUARD, "barracks"),
+			java.util.Map.entry(com.ajustor.minecities.town.Job.INVENTOR, "inventor_workshop"),
+			java.util.Map.entry(com.ajustor.minecities.town.Job.DOCTOR, "infirmary"),
+			java.util.Map.entry(com.ajustor.minecities.town.Job.MERCHANT, "market"),
+			java.util.Map.entry(com.ajustor.minecities.town.Job.BAKER, "bakery"),
+			java.util.Map.entry(com.ajustor.minecities.town.Job.SMITH, "smithy"),
+			java.util.Map.entry(com.ajustor.minecities.town.Job.MINER, "mine"),
+			java.util.Map.entry(com.ajustor.minecities.town.Job.JEWELER, "jeweler_workshop"),
+			java.util.Map.entry(com.ajustor.minecities.town.Job.MASON, "masonry"),
+			java.util.Map.entry(com.ajustor.minecities.town.Job.GLASSBLOWER, "glassworks"),
+			java.util.Map.entry(com.ajustor.minecities.town.Job.WEAVER, "weavery"),
+			java.util.Map.entry(com.ajustor.minecities.town.Job.BEEKEEPER, "apiary"),
+			java.util.Map.entry(com.ajustor.minecities.town.Job.LIBRARIAN, "library"),
+			java.util.Map.entry(com.ajustor.minecities.town.Job.TANNER, "tannery"),
+			java.util.Map.entry(com.ajustor.minecities.town.Job.CARPENTER, "carpentry"));
+
+	/**
+	 * Le schéma qui remplacerait ce bâtiment fait à la main (qui compte pour le niveau 1) : le niveau 2
+	 * de sa famille. Ce qui a des lits devient une maison, un entrepôt un entrepôt, un atelier sans lit
+	 * l'atelier de son premier métier. Vide s'il n'y a pas de famille (une tour de garde, un bureau de livreur…).
+	 */
+	public static Optional<Blueprint> replacement(net.minecraft.server.MinecraftServer server, com.ajustor.minecities.town.House house) {
+		String family = house.warehouse() ? "warehouse" : !house.beds().isEmpty() ? "house"
+				: !house.workstations().isEmpty() ? FAMILIES.get(house.workstations().getFirst().job()) : null;
+		return family == null ? Optional.empty()
+				: Blueprints.get(server, net.minecraft.resources.Identifier.fromNamespaceAndPath("minecities", family + "_2"));
+	}
+
+	/** Où poser le schéma de remplacement : centré sur l'ancien bâtiment, posé sur son sol, porte au nord. */
+	public static BlockPos replacementOrigin(Blueprint blueprint, com.ajustor.minecities.town.House house) {
+		BlockPos min = house.min().orElse(house.plaque());
+		BlockPos max = house.max().orElse(house.plaque());
+		int cx = (min.getX() + max.getX()) / 2;
+		int cz = (min.getZ() + max.getZ()) / 2;
+		return new BlockPos(cx - blueprint.width() / 2, min.getY(), cz - blueprint.depth() / 2);
+	}
+
+	/** Rebâtit au niveau 2 le bâtiment fait à la main de cette plaque. Renvoie le refus, s'il y en a un. */
+	public static Optional<Component> rebuild(ServerLevel level, Town town, BlockPos plaque) {
+		Optional<com.ajustor.minecities.town.House> house = town.house(plaque);
+		if (house.isEmpty() || house.get().min().isEmpty() || house.get().max().isEmpty()) {
+			return Optional.of(Component.translatable("message.minecities.build.not_built"));
+		}
+		Optional<Blueprint> next = replacement(level.getServer(), house.get());
+		if (next.isEmpty()) {
+			return Optional.of(Component.translatable("screen.minecities.building.no_family"));
+		}
+		BlockPos origin = replacementOrigin(next.get(), house.get());
+		Optional<Component> refusal = check(level, town, next.get(), origin, Rotation.NONE);
+		if (refusal.isPresent()) {
+			return refusal;
+		}
+		town.order(Construction.rebuild(next.get(), BuildStyle.PLAINS, origin, Rotation.NONE, house.get().min().get(),
+				house.get().max().get()));
+		Towns.get(level.getServer()).changed();
+		return Optional.empty();
+	}
+
 	/** Agrandit le bâtiment bâti par la ville à cet endroit, d'après le schéma qui lui succède. */
 	public static Optional<Component> upgrade(ServerLevel level, Town town, BlockPos where) {
 		Optional<Construction> built = town.builtAt(where);

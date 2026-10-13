@@ -148,7 +148,7 @@ public final class StationNetwork {
 	/** Un chantier : son nom, et combien de blocs de son plan sont posés. */
 	private static StationSnapshot.Site site(ServerLevel level, Construction c) {
 		Optional<com.ajustor.minecities.build.Blueprint> blueprint = Blueprints.get(level.getServer(), c.blueprint());
-		int total = blueprint.map(b -> BuildPlan.of(b, c.style(), c.origin(), c.rotation()).size()).orElse(0);
+		int total = com.ajustor.minecities.build.Builds.plan(level.getServer(), c).size();
 		Component name = blueprint.<Component>map(com.ajustor.minecities.build.Blueprint::displayName)
 				.orElse(Component.literal(c.blueprint().getPath()));
 		return new StationSnapshot.Site(name, c.origin(), Math.min(c.step(), total), total);

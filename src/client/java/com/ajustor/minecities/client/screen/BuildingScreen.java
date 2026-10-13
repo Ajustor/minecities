@@ -13,6 +13,7 @@ import net.minecraft.network.chat.MutableComponent;
  * L'interface d'un bâtiment : ce qu'il est, son niveau, ses lits et ses postes, son dernier relevé ;
  * le chantier en cours à sa place ; et son amélioration, avec le niveau suivant, ce qu'il coûte et
  * ce que le grenier en a déjà, ou ce qui l'empêche. Le maire (ou un adjoint) la commande d'un bouton.
+ * Un bâtiment fait à la main se rebâtit au niveau 2 de sa famille, à sa place.
  */
 public class BuildingScreen extends Screen {
 	private static final int WIDTH = 300;
@@ -53,7 +54,8 @@ public class BuildingScreen extends Screen {
 		left = (width - WIDTH) / 2;
 		top = (height - HEIGHT) / 2;
 		if (building.manager() && building.next().isPresent()) {
-			Button upgrade = addRenderableWidget(Button.builder(Component.translatable("screen.minecities.building.upgrade",
+			Button upgrade = addRenderableWidget(Button.builder(Component.translatable(building.rebuild()
+									? "screen.minecities.building.rebuild" : "screen.minecities.building.upgrade",
 							building.next().get()),
 					b -> ClientPlayNetworking.send(new BuildingNetwork.ActionPayload(building.plaque(), "upgrade")))
 					.bounds(left + 10, top + HEIGHT - 26, 190, 18).build());
@@ -101,7 +103,13 @@ public class BuildingScreen extends Screen {
 		if (building.next().isPresent()) {
 			graphics.text(font, Component.translatable("screen.minecities.building.next", building.next().get()),
 					left + 12, y, ACCENT, false);
-			y += 13;
+			y += 11;
+			if (building.rebuild()) {
+				// Fait à la main : le bâtisseur le démolit pour bâtir le nouveau à sa place.
+				graphics.text(font, Component.translatable("screen.minecities.building.replaces"), left + 12, y, BAD, false);
+				y += 11;
+			}
+			y += 2;
 			for (BuildingSnapshot.Material m : building.materials()) {
 				graphics.item(m.item(), left + 14, y - 4);
 				graphics.text(font, m.item().getHoverName(), left + 34, y, INK, false);

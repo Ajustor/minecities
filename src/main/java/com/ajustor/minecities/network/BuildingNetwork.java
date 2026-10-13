@@ -99,9 +99,7 @@ public final class BuildingNetwork {
 		int placed = -1;
 		int total = 0;
 		if (site.isPresent()) {
-			Optional<Blueprint> b = Blueprints.get(level.getServer(), site.get().blueprint());
-			total = b.map(x -> BuildPlan.of(x, site.get().style(), site.get().origin(), site.get().rotation()).size())
-					.orElse(0);
+			total = Builds.plan(level.getServer(), site.get()).size();
 			placed = Math.min(site.get().step(), total);
 		}
 		// L'amélioration : le niveau suivant du schéma d'après lequel la ville l'a bâti.
@@ -109,8 +107,20 @@ public final class BuildingNetwork {
 		Optional<Component> refusal;
 		List<BuildingSnapshot.Material> materials = new ArrayList<>();
 		Optional<Construction> built = town.builtAt(plaque);
+		boolean rebuild = built.isEmpty();
 		if (built.isEmpty()) {
-			refusal = Optional.of(Component.translatable("screen.minecities.building.handmade"));
+			// Fait à la main : il se rebâtit au niveau 2 de sa famille, à sa place.
+			Optional<Blueprint> replacement = house.flatMap(h -> Builds.replacement(level.getServer(), h));
+			if (house.isEmpty() || replacement.isEmpty()) {
+				refusal = Optional.of(Component.translatable("screen.minecities.building.no_family"));
+			} else {
+				next = Optional.of(replacement.get().displayName());
+				BlockPos origin = Builds.replacementOrigin(replacement.get(), house.get());
+				refusal = site.isPresent() ? Optional.of(Component.translatable("screen.minecities.building.in_progress"))
+						: Builds.check(level, town, replacement.get(), origin, net.minecraft.world.level.block.Rotation.NONE);
+				materials(level, town, BuildPlan.of(replacement.get(), com.ajustor.minecities.build.BuildStyle.PLAINS,
+						origin, net.minecraft.world.level.block.Rotation.NONE), materials);
+			}
 		} else {
 			Optional<Blueprint> upgrade = Blueprints.get(level.getServer(), built.get().blueprint())
 					.flatMap(Blueprint::upgrade).flatMap(id -> Blueprints.get(level.getServer(), id));
@@ -120,18 +130,23 @@ public final class BuildingNetwork {
 				next = Optional.of(upgrade.get().displayName());
 				refusal = site.isPresent() ? Optional.of(Component.translatable("screen.minecities.building.in_progress"))
 						: Builds.check(level, town, upgrade.get(), built.get().origin(), built.get().rotation());
-				Map<Item, Integer> needs = BuildPlan.materials(BuildPlan.of(upgrade.get(), built.get().style(),
-						built.get().origin(), built.get().rotation()));
-				Optional<com.ajustor.minecities.block.TownHallBlockEntity> granary = TownService.granary(level, town);
-				needs.entrySet().stream().sorted(Map.Entry.<Item, Integer>comparingByValue(Comparator.reverseOrder()))
-						.limit(MATERIALS).forEach(e -> materials.add(new BuildingSnapshot.Material(
-								new ItemStack(e.getKey()), e.getValue(),
-								granary.map(g -> Stock.count(g, s -> s.is(e.getKey()))).orElse(0))));
+				materials(level, town, BuildPlan.of(upgrade.get(), built.get().style(), built.get().origin(),
+						built.get().rotation()), materials);
 			}
 		}
 		return Optional.of(new BuildingSnapshot(plaque, town.name(), kind, house.isPresent(), status,
 				town.buildingLevel(plaque), beds, sleepers, jobs, placed, total, next, refusal, materials,
-				town.canManage(player.getUUID())));
+				town.canManage(player.getUUID()), rebuild));
+	}
+
+	/** Les matériaux d'un plan, les plus nombreux d'abord, face à ce que le grenier en a. */
+	private static void materials(ServerLevel level, Town town, List<BuildPlan.Placement> plan,
+			List<BuildingSnapshot.Material> out) {
+		Map<Item, Integer> needs = BuildPlan.materials(plan);
+		Optional<com.ajustor.minecities.block.TownHallBlockEntity> granary = TownService.granary(level, town);
+		needs.entrySet().stream().sorted(Map.Entry.<Item, Integer>comparingByValue(Comparator.reverseOrder()))
+				.limit(MATERIALS).forEach(e -> out.add(new BuildingSnapshot.Material(new ItemStack(e.getKey()),
+						e.getValue(), granary.map(g -> Stock.count(g, s -> s.is(e.getKey()))).orElse(0))));
 	}
 
 	private static void act(ServerPlayer player, ActionPayload payload) {
@@ -143,7 +158,8 @@ public final class BuildingNetwork {
 			return;
 		}
 		if (payload.action().equals("upgrade") && town.get().canManage(player.getUUID())) {
-			Optional<Component> refusal = Builds.upgrade(level, town.get(), payload.plaque());
+			Optional<Component> refusal = town.get().builtAt(payload.plaque()).isPresent()
+					? Builds.upgrade(level, town.get(), payload.plaque()) : Builds.rebuild(level, town.get(), payload.plaque());
 			player.sendSystemMessage(refusal.map(r -> r.copy().withStyle(ChatFormatting.RED))
 					.orElse(Component.translatable("message.minecities.building.upgrading").withStyle(ChatFormatting.GREEN)));
 		}

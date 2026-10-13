@@ -172,8 +172,9 @@ public class StationScenes implements Scene {
 			ServerPlayer mayor = mayor(server);
 			List<String> wrong = new ArrayList<>();
 			BuildingSnapshot handmade = BuildingNetwork.snapshot(level, PLAQUE, mayor).orElseThrow();
-			if (!handmade.valid() || handmade.level() != 1 || handmade.next().isPresent() || handmade.refusal().isEmpty()) {
-				wrong.add("à la main : " + handmade);
+			if (!handmade.valid() || handmade.level() != 1 || handmade.next().isEmpty() || !handmade.rebuild()
+					|| handmade.materials().isEmpty()) {
+				wrong.add("à la main : " + handmade.next() + " " + handmade.rebuild() + " " + handmade.refusal());
 			}
 			// Une maison bâtie par la ville (posée d'un coup, chantier fini).
 			Construction built = Construction.order(Blueprints.get(server, Identifier.fromNamespaceAndPath("minecities",
@@ -198,9 +199,15 @@ public class StationScenes implements Scene {
 
 		// En images : la rangée des postes, l'interface de l'établi, puis celle de la maison bâtie.
 		stage.client(mc -> hideGui(mc, true));
-		stage.look(-9, Y + 3.5, ROW_Z + 7, -9, Y, ROW_Z);
-		stage.waitTicks(20);
-		stage.shot("stations_0_row");
+		// Les dix-huit postes, chacun de près.
+		int index = 0;
+		for (Job job : McBlocks.STATIONS.keySet()) {
+			double cx = -18 + 2 * index + 0.5;
+			stage.look(cx + 1.3, Y + 1.7, ROW_Z + 2.2, cx, Y + 0.75, ROW_Z + 0.5);
+			stage.waitTicks(index == 0 ? 20 : 4);
+			stage.shot("stations_0_" + job.serializedName());
+			index++;
+		}
 		StationSnapshot station = stage.compute(server -> StationNetwork.snapshot(server.overworld(), bench).orElseThrow());
 		stage.client(mc -> {
 			hideGui(mc, false);
@@ -217,6 +224,30 @@ public class StationScenes implements Scene {
 			mc.gui.setScreen(null);
 			hideGui(mc, true);
 		});
+
+		// Fait à la main : rebâti au niveau 2, l'ancien dégagé d'abord (du toit vers le sol).
+		check(stage.compute(server -> {
+			ServerLevel level = server.overworld();
+			Town town = town(server);
+			House handmade = town.house(PLAQUE).orElseThrow();
+			Optional<net.minecraft.network.chat.Component> refusal = Builds.rebuild(level, town, PLAQUE);
+			Optional<Construction> site = town.constructions().stream().filter(c -> !c.done() && c.clearing().isPresent())
+					.findFirst();
+			if (refusal.isPresent() || site.isEmpty()) {
+				return "rebâtir : " + refusal;
+			}
+			List<com.ajustor.minecities.build.BuildPlan.Placement> plan = Builds.plan(server, site.get());
+			int blueprint = com.ajustor.minecities.build.BuildPlan.of(Blueprints.get(server, site.get().blueprint())
+					.orElseThrow(), site.get().style(), site.get().origin(), site.get().rotation()).size();
+			boolean clearsFirst = plan.subList(0, plan.size() - blueprint).stream().allMatch(p -> p.state().isAir())
+					&& plan.getFirst().pos().getY() >= plan.get(plan.size() - blueprint - 1).pos().getY();
+			boolean covers = site.get().contains(handmade.min().orElseThrow()) && site.get().contains(handmade.max().orElseThrow());
+			town.cancel(site.get());
+			return plan.size() > blueprint && clearsFirst && covers
+					&& site.get().blueprint().getPath().equals("house_2") ? null
+					: "le plan : " + plan.size() + " contre " + blueprint + ", dégage d'abord " + clearsFirst + ", couvre "
+							+ covers + ", " + site.get().blueprint();
+		}));
 
 		// L'amélioration commandée : un chantier s'ouvre à sa place.
 		check(stage.compute(server -> {

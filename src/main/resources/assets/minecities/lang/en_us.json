@@ -720,10 +720,12 @@
   "screen.minecities.building.next": "Upgrade: %s",
   "screen.minecities.building.material": "%s / %s",
   "screen.minecities.building.upgrade": "Upgrade: %s",
-  "screen.minecities.building.handmade": "Built by hand: only buildings the town built can be upgraded.",
   "screen.minecities.building.top": "At the highest level.",
   "screen.minecities.building.in_progress": "A building site is already under way here.",
   "screen.minecities.building.details": "Details",
   "message.minecities.building.upgrading": "Upgrade ordered: the builder starts as soon as the granary has the materials.",
-  "guide.minecities.jobs.6": "Every job also has its mod station: a crafting table and an item of the trade. Right-click: its interface.\n\nOn founding, you get the builder's bench."
+  "guide.minecities.jobs.6": "Every job also has its mod station: a crafting table and an item of the trade. Right-click: its interface.\n\nOn founding, you get the builder's bench.",
+  "screen.minecities.building.no_family": "No blueprint to rebuild this building (guard tower, courier's office…).",
+  "screen.minecities.building.replaces": "Built by hand: the builder pulls it down and builds the new one in its place.",
+  "screen.minecities.building.rebuild": "Rebuild: %s"
 }

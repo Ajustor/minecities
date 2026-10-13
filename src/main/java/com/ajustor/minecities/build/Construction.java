@@ -31,10 +31,16 @@ public final class Construction {
 			BlockPos.CODEC.fieldOf("max").forGetter(c -> c.max),
 			Codec.INT.optionalFieldOf("step", 0).forGetter(c -> c.step),
 			Codec.BOOL.optionalFieldOf("done", false).forGetter(c -> c.done),
-			BlockPos.CODEC.listOf().optionalFieldOf("scaffolding", List.of()).forGetter(c -> List.copyOf(c.scaffolding))
-	).apply(i, (id, blueprint, style, origin, rotation, min, max, step, done, scaffolding) -> new Construction(id,
-			blueprint, BuildStyle.fromSerializedName(style).orElse(BuildStyle.PLAINS), origin, rotation, min, max, step,
-			done, scaffolding)));
+			BlockPos.CODEC.listOf().optionalFieldOf("scaffolding", List.of()).forGetter(c -> List.copyOf(c.scaffolding)),
+			BlockPos.CODEC.optionalFieldOf("clear_min").forGetter(c -> c.clearMin),
+			BlockPos.CODEC.optionalFieldOf("clear_max").forGetter(c -> c.clearMax)
+	).apply(i, (id, blueprint, style, origin, rotation, min, max, step, done, scaffolding, clearMin, clearMax) -> {
+		Construction c = new Construction(id, blueprint, BuildStyle.fromSerializedName(style).orElse(BuildStyle.PLAINS),
+				origin, rotation, min, max, step, done, scaffolding);
+		c.clearMin = clearMin;
+		c.clearMax = clearMax;
+		return c;
+	}));
 
 	private final UUID id;
 	private final Identifier blueprint;
@@ -45,6 +51,9 @@ public final class Construction {
 	private final BlockPos max;
 	private int step;
 	private boolean done;
+	/** Un bâtiment fait à la main que ce chantier remplace : le bâtisseur le dégage d'abord. */
+	private Optional<BlockPos> clearMin = Optional.empty();
+	private Optional<BlockPos> clearMax = Optional.empty();
 	/** Les échafaudages que le bâtisseur a montés, à démonter avant de finir. */
 	private final List<BlockPos> scaffolding;
 	/** Les blocs du plan déjà faits au-delà de {@code step} (non sauvegardé : on les revoit au besoin). */
@@ -70,6 +79,30 @@ public final class Construction {
 		BlockPos[] bounds = BuildPlan.bounds(blueprint, origin, rotation);
 		return new Construction(UUID.randomUUID(), blueprint.id(), style, origin, rotation, bounds[0], bounds[1], 0,
 				false, List.of());
+	}
+
+	/**
+	 * Rebâtir à la place d'un bâtiment fait à la main (de {@code oldMin} à {@code oldMax}) : l'emprise
+	 * couvre l'ancien et le nouveau, et l'ancien est dégagé d'abord.
+	 */
+	public static Construction rebuild(Blueprint blueprint, BuildStyle style, BlockPos origin, Rotation rotation,
+			BlockPos oldMin, BlockPos oldMax) {
+		BlockPos[] bounds = BuildPlan.bounds(blueprint, origin, rotation);
+		BlockPos min = new BlockPos(Math.min(bounds[0].getX(), oldMin.getX()), Math.min(bounds[0].getY(), oldMin.getY()),
+				Math.min(bounds[0].getZ(), oldMin.getZ()));
+		BlockPos max = new BlockPos(Math.max(bounds[1].getX(), oldMax.getX()), Math.max(bounds[1].getY(), oldMax.getY()),
+				Math.max(bounds[1].getZ(), oldMax.getZ()));
+		Construction c = new Construction(UUID.randomUUID(), blueprint.id(), style, origin, rotation, min, max, 0, false,
+				List.of());
+		c.clearMin = Optional.of(oldMin.immutable());
+		c.clearMax = Optional.of(oldMax.immutable());
+		return c;
+	}
+
+	/** Le bâtiment à dégager avant de bâtir, s'il y en a un (de, à). */
+	public Optional<BlockPos[]> clearing() {
+		return clearMin.isPresent() && clearMax.isPresent()
+				? Optional.of(new BlockPos[]{clearMin.get(), clearMax.get()}) : Optional.empty();
 	}
 
 	public UUID id() {

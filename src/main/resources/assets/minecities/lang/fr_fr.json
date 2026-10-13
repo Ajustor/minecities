@@ -720,10 +720,12 @@
   "screen.minecities.building.next": "Amélioration : %s",
   "screen.minecities.building.material": "%s / %s",
   "screen.minecities.building.upgrade": "Améliorer : %s",
-  "screen.minecities.building.handmade": "Bâti à la main : seuls les bâtiments bâtis par la ville s'améliorent.",
   "screen.minecities.building.top": "Au plus haut niveau.",
   "screen.minecities.building.in_progress": "Un chantier est déjà en cours ici.",
   "screen.minecities.building.details": "Détails",
   "message.minecities.building.upgrading": "Amélioration commandée : le bâtisseur s'y met dès que le grenier a les matériaux.",
-  "guide.minecities.jobs.6": "Chaque métier a aussi son poste du mod : une table de craft et un objet du métier. Clic droit : son interface.\n\nÀ la fondation, vous recevez l'établi du bâtisseur."
+  "guide.minecities.jobs.6": "Chaque métier a aussi son poste du mod : une table de craft et un objet du métier. Clic droit : son interface.\n\nÀ la fondation, vous recevez l'établi du bâtisseur.",
+  "screen.minecities.building.no_family": "Pas de schéma pour rebâtir ce bâtiment (tour de garde, bureau du livreur…).",
+  "screen.minecities.building.replaces": "Fait à la main : le bâtisseur le démolit et bâtit le nouveau à sa place.",
+  "screen.minecities.building.rebuild": "Rebâtir : %s"
 }
