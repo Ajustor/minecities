@@ -30,8 +30,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Le fantôme des bâtiments proposés (brief 09) : les blocs du plan, dessinés avec leur texture mais
- * en transparence et teintés de bleu, là où le bâtiment s'élèvera. Les blocs déjà en place ne se
- * dessinent pas.
+ * en transparence et teintés de bleu, là où le bâtiment s'élèvera. Les chantiers en cours (MC-23),
+ * montrés à qui tient le plan, sont teintés d'ambre. Les blocs déjà en place ne se dessinent pas.
  */
 public final class GhostRenderer {
 	/** Au-delà, on ne dessine pas le fantôme. */
@@ -40,11 +40,15 @@ public final class GhostRenderer {
 	private static final int GREEN = 205;
 	private static final int BLUE = 255;
 	private static final int ALPHA = 130;
+	/** La teinte des chantiers en cours : ambre. */
+	private static final int SITE_RED = 255;
+	private static final int SITE_GREEN = 190;
+	private static final int SITE_BLUE = 90;
 	private static final Direction[] SIDES = {Direction.DOWN, Direction.UP, Direction.NORTH, Direction.SOUTH,
 			Direction.WEST, Direction.EAST, null};
 
-	/** Les fantômes affichés, par joueur qui les propose. */
-	private static final Map<UUID, List<GhostPayload.Block>> GHOSTS = new ConcurrentHashMap<>();
+	/** Les fantômes affichés, par joueur qui les propose (ou par chantier). */
+	private static final Map<UUID, GhostPayload> GHOSTS = new ConcurrentHashMap<>();
 
 	private GhostRenderer() {
 	}
@@ -54,7 +58,7 @@ public final class GhostRenderer {
 			if (payload.blocks().isEmpty()) {
 				GHOSTS.remove(payload.owner());
 			} else {
-				GHOSTS.put(payload.owner(), List.copyOf(payload.blocks()));
+				GHOSTS.put(payload.owner(), new GhostPayload(payload.owner(), payload.site(), List.copyOf(payload.blocks())));
 			}
 		});
 		ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> GHOSTS.clear());
@@ -63,7 +67,12 @@ public final class GhostRenderer {
 
 	/** Combien de fantômes sont affichés (pour les scènes). */
 	public static int count() {
-		return GHOSTS.size();
+		return (int) GHOSTS.values().stream().filter(g -> !g.site()).count();
+	}
+
+	/** Combien de chantiers en cours sont affichés (pour les scènes). */
+	public static int sites() {
+		return (int) GHOSTS.values().stream().filter(GhostPayload::site).count();
 	}
 
 	private static void submit(LevelRenderContext context) {
@@ -77,15 +86,22 @@ public final class GhostRenderer {
 		}
 		Vec3 camera = context.levelState().cameraRenderState.pos;
 		List<GhostPayload.Block> blocks = new ArrayList<>();
-		for (List<GhostPayload.Block> ghost : GHOSTS.values()) {
-			for (GhostPayload.Block block : ghost) {
+		List<GhostPayload.Block> sites = new ArrayList<>();
+		for (GhostPayload ghost : GHOSTS.values()) {
+			for (GhostPayload.Block block : ghost.blocks()) {
 				BlockPos pos = block.pos();
 				if (camera.distanceToSqr(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5) <= VIEW * VIEW
 						&& !level.getBlockState(pos).equals(block.state())) {
-					blocks.add(block);
+					(ghost.site() ? sites : blocks).add(block);
 				}
 			}
 		}
+		draw(context, minecraft, camera, blocks, RED, GREEN, BLUE);
+		draw(context, minecraft, camera, sites, SITE_RED, SITE_GREEN, SITE_BLUE);
+	}
+
+	private static void draw(LevelRenderContext context, Minecraft minecraft, Vec3 camera,
+			List<GhostPayload.Block> blocks, int red, int green, int blue) {
 		if (blocks.isEmpty()) {
 			return;
 		}
@@ -105,7 +121,7 @@ public final class GhostRenderer {
 						for (BlockStateModelPart part : parts) {
 							for (Direction side : SIDES) {
 								for (BakedQuad quad : part.getQuads(side)) {
-									quad(pose, consumer, quad, x, y, z);
+									quad(pose, consumer, quad, x, y, z, red, green, blue);
 								}
 							}
 						}
@@ -113,13 +129,14 @@ public final class GhostRenderer {
 				});
 	}
 
-	private static void quad(PoseStack.Pose pose, VertexConsumer consumer, BakedQuad quad, float x, float y, float z) {
+	private static void quad(PoseStack.Pose pose, VertexConsumer consumer, BakedQuad quad, float x, float y, float z,
+			int red, int green, int blue) {
 		Direction facing = quad.direction();
 		for (int i = 0; i < 4; i++) {
 			Vector3fc corner = quad.position(i);
 			long uv = quad.packedUV(i);
 			consumer.addVertex(pose, x + corner.x(), y + corner.y(), z + corner.z())
-					.setColor(RED, GREEN, BLUE, ALPHA)
+					.setColor(red, green, blue, ALPHA)
 					.setUv(UVPair.unpackU(uv), UVPair.unpackV(uv))
 					.setOverlay(OverlayTexture.NO_OVERLAY)
 					.setLight(LightCoordsUtil.FULL_BRIGHT)

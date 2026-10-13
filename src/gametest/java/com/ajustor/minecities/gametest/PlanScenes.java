@@ -7,8 +7,11 @@ import com.ajustor.minecities.build.BuildStyle;
 import com.ajustor.minecities.build.PlanItem;
 import com.ajustor.minecities.build.Proposals;
 import com.ajustor.minecities.client.render.GhostRenderer;
+import com.ajustor.minecities.client.screen.PlanScreen;
 import com.ajustor.minecities.client.screen.TownHallScreen;
 import com.ajustor.minecities.network.GhostPayload;
+import com.ajustor.minecities.network.PlanNetwork;
+import com.ajustor.minecities.network.TownActionPayload;
 import com.ajustor.minecities.network.TownNetwork;
 import com.ajustor.minecities.network.TownSnapshot;
 import com.ajustor.minecities.registry.McItems;
@@ -43,7 +46,10 @@ import static com.ajustor.minecities.gametest.CityScenes.hideGui;
  * {@code rotate} le tourne sur place, {@code cancel} l'abandonne sans rien poser. Un plan pris à
  * l'hôtel de ville, posé au sol, propose son bâtiment dans son style ; {@code confirm} le commande, et
  * le plan reste en main. Qui n'est ni maire ni adjoint ne peut rien proposer. L'onglet Plans montre
- * les bâtiments, fermés ou non à ce palier. Avec fenêtre : le fantôme et l'onglet.
+ * les bâtiments, fermés ou non à ce palier. Le plan est unique (MC-23) : vierge, son interface
+ * choisit le bâtiment et le style (pas un bâtiment fermé), l'onglet Plans choisit celui qu'on a au
+ * lieu d'en donner un autre ; tenu en main, il montre les chantiers en cours. Avec fenêtre : le
+ * fantôme, l'onglet, les chantiers et l'interface du plan.
  *
  * <p>{@code ./gradlew runGameTest -PminecitiesGametest=plans}
  */
@@ -185,7 +191,58 @@ public class PlanScenes implements Scene {
 			return Proposals.of(player.getUUID()).isEmpty() ? null : "la proposition reste après confirmation";
 		}));
 
-		// Qui n'est ni maire ni adjoint ne propose rien.
+		// Le plan unique : vierge, son interface choisit le bâtiment et le style, pas un bâtiment fermé.
+		check(stage.compute(server -> {
+			ServerLevel level = server.overworld();
+			ServerPlayer player = player(server);
+			player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(McItems.PLAN));
+			PlanNetwork.PlanSnapshot blank = PlanNetwork.snapshot(level, player).orElse(null);
+			if (blank == null || !blank.blueprint().isEmpty() || !blank.manager() || blank.plans().isEmpty()) {
+				return "l'interface du plan vierge : " + blank;
+			}
+			PlanNetwork.act(player, "select:desert:" + MARKET);
+			if (PlanItem.blueprint(player.getMainHandItem()).isPresent()) {
+				return "un bâtiment fermé a été choisi";
+			}
+			PlanNetwork.act(player, "select:desert:" + HOUSE);
+			ItemStack plan = player.getMainHandItem();
+			if (!PlanItem.blueprint(plan).filter(HOUSE::equals).isPresent() || PlanItem.style(plan) != BuildStyle.DESERT) {
+				return "le choix : " + PlanItem.blueprint(plan) + " " + PlanItem.style(plan);
+			}
+			// L'onglet Plans ne donne pas un second plan : il choisit celui qu'on a.
+			TownNetwork.act(player, new TownActionPayload(HALL, "plan:taiga:" + HOUSE, TownActionPayload.NONE));
+			long plans = player.getInventory().getNonEquipmentItems().stream().filter(s -> s.is(McItems.PLAN)).count();
+			return plans == 1 && PlanItem.style(player.getMainHandItem()) == BuildStyle.TAIGA ? null
+					: plans + " plans, style " + PlanItem.style(player.getMainHandItem());
+		}));
+
+		// Tenu en main, le plan montre le chantier en cours ; posé, plus rien.
+		stage.run(server -> PlanNetwork.show(player(server)));
+		stage.waitTicks(10);
+		stage.client(mc -> check(GhostRenderer.sites() == 1 ? null : "chantiers montrés : " + GhostRenderer.sites()));
+		stage.look(0.5, Y + 6, 2, 0.5, Y + 1, 16);
+		stage.waitTicks(20);
+		stage.shot("plans_4_sites");
+		PlanNetwork.PlanSnapshot shown = stage.compute(server -> PlanNetwork.snapshot(server.overworld(),
+				player(server)).orElseThrow());
+		stage.client(mc -> {
+			hideGui(mc, false);
+			mc.gui.setScreen(new PlanScreen(shown));
+		});
+		stage.waitTicks(3);
+		stage.shot("plans_5_screen");
+		stage.client(mc -> {
+			mc.gui.setScreen(null);
+			hideGui(mc, true);
+		});
+		stage.run(server -> {
+			player(server).setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);
+			PlanNetwork.show(player(server));
+		});
+		stage.waitTicks(10);
+		stage.client(mc -> check(GhostRenderer.sites() == 0 ? null : "les chantiers restent sans plan en main"));
+
+		// Qui n'est ni maire ni adjoint ne propose rien, ni ne choisit.
 		check(stage.compute(server -> {
 			ServerPlayer player = player(server);
 			Town town = town(server);
@@ -194,8 +251,12 @@ public class PlanScenes implements Scene {
 			town.setMayor(UUID.randomUUID(), "quelqu'un");
 			int result = run(server, player, "ville build " + HOUSE);
 			boolean proposed = Proposals.of(player.getUUID()).isPresent();
+			player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(McItems.PLAN));
+			PlanNetwork.act(player, "select:plains:" + HOUSE);
+			boolean chosen = PlanItem.blueprint(player.getMainHandItem()).isPresent();
 			town.setMayor(mayor, name);
-			return result == 0 && !proposed ? null : "un simple joueur a proposé un chantier";
+			return result == 0 && !proposed && !chosen ? null
+					: "un simple joueur a proposé un chantier (" + proposed + ") ou choisi un plan (" + chosen + ")";
 		}));
 	}
 

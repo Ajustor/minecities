@@ -21,6 +21,9 @@ public class MineCitiesClient implements ClientModInitializer {
 		ClientPlayNetworking.registerGlobalReceiver(com.ajustor.minecities.network.StationSnapshot.TYPE,
 				(payload, context) -> context.client().gui.setScreen(
 						new com.ajustor.minecities.client.screen.StationScreen(payload)));
+		ClientPlayNetworking.registerGlobalReceiver(com.ajustor.minecities.network.PlanNetwork.PlanSnapshot.TYPE,
+				(payload, context) -> context.client().gui.setScreen(
+						new com.ajustor.minecities.client.screen.PlanScreen(payload)));
 		ClientPlayNetworking.registerGlobalReceiver(com.ajustor.minecities.network.BuildingSnapshot.TYPE, (payload, context) -> {
 			// Une commande rafraîchit l'interface déjà ouverte ; sinon on l'ouvre.
 			if (context.client().gui.screen() instanceof com.ajustor.minecities.client.screen.BuildingScreen open

@@ -466,7 +466,7 @@
   "guide.minecities.jobs.4": "Meule : garde (épée)\nTable d'archerie : archer (arc)\nTable de forge : inventeur\nAlambic : médecin\nTreuil de mine : mineur (pioche)\nRuche : apiculteur (cisailles)",
   "guide.minecities.jobs.5": "Séchoir à peaux : tanneur\n\nDès la ville :\nPupitre : marchand\nHaut fourneau : forgeron\nÉtabli de joaillier : joaillier\nBibliothèque ciselée : bibliothécaire",
   "guide.minecities.build": "Faire bâtir",
-  "guide.minecities.build.1": "Prenez un plan à l'hôtel de ville (onglet Plans) et posez-le au sol, ou tapez /ville build <schéma>.\n\nLe fantôme du bâtiment apparaît : tournez-le, puis validez.",
+  "guide.minecities.build.1": "Prenez le plan à l'hôtel de ville (onglet Plans) : un seul plan pour tous les bâtiments. Clic droit dans le vide pour choisir le bâtiment et son style, puis posez-le au sol, ou tapez /ville build <schéma>.\n\nLe fantôme du bâtiment apparaît : tournez-le, puis validez. Tant que vous le tenez, les chantiers en cours se montrent en ambre.",
   "guide.minecities.build.2": "Les bâtisseurs dégagent le terrain et posent les blocs pris au grenier et à l'entrepôt. Le maire est prévenu de ce qui manque.\n\nFini, le bâtiment se déclare tout seul.",
   "guide.minecities.build.3": "Quatre niveaux : cabane, maison, bâtisse, demeure. Dans un bâtiment, /ville upgrade l'améliore.\n\nChaque niveau ajoute des lits ou un poste, et fait travailler plus vite.",
   "guide.minecities.storage": "Entrepôt et livreurs",
@@ -749,5 +749,16 @@
   "screen.minecities.mine.none": "Aucun minerai à portée.",
   "screen.minecities.mine.ore": "reste %s, extrait %s",
   "screen.minecities.mine.ore_gone": "épuisé (extrait %s)",
-  "screen.minecities.mine.close": "Reboucher le puits"
+  "screen.minecities.mine.close": "Reboucher le puits",
+  "screen.minecities.plan.title": "Plan — %s",
+  "screen.minecities.plan.blank": "Aucun bâtiment choisi : choisissez-en un ci-dessous.",
+  "screen.minecities.plan.current": "Choisi : %s (%s)",
+  "screen.minecities.plan.choose": "Choisir",
+  "screen.minecities.plan.rotate": "Tourner",
+  "screen.minecities.plan.confirm": "Valider",
+  "screen.minecities.plan.cancel": "Abandonner",
+  "screen.minecities.plan.hint.place": "Posez le plan au sol pour voir le bâtiment ; accroupi, il tourne.",
+  "screen.minecities.plan.hint.proposal": "Un chantier est proposé : tournez-le, validez-le ou abandonnez-le.",
+  "message.minecities.plan.chosen": "Plan : %s (%s). Posez-le au sol pour voir le bâtiment.",
+  "message.minecities.plan.not_held": "Tenez le plan en main."
 }
