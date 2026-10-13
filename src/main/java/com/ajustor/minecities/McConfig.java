@@ -52,8 +52,9 @@ public final class McConfig {
 	@SerializedName("market_daily_earnings")
 	public int marketDailyEarnings = 32;
 	/**
-	 * Les bâtiments déclarés sont-ils protégés : seuls le maire et ses adjoints y cassent des blocs (et
-	 * les plaques) ? Désactivé par défaut, pour rester vanilla.
+	 * Pour les villes fondées avant les rangs d'habitants : leurs bâtiments déclarés sont-ils protégés
+	 * (seuls le maire et ses adjoints y cassent des blocs et les plaques) ? Désactivé par défaut, comme
+	 * avant. Les villes nouvelles règlent ce droit par rang, dans l'onglet Habitants de l'hôtel de ville.
 	 */
 	@SerializedName("protect_buildings")
 	public boolean protectBuildings = false;

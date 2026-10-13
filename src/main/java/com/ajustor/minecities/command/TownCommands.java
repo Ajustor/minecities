@@ -11,6 +11,7 @@ import com.ajustor.minecities.citizen.CitizenEntity;
 import com.ajustor.minecities.guide.Guide;
 import com.ajustor.minecities.town.Families;
 import com.ajustor.minecities.town.Job;
+import com.ajustor.minecities.town.Membership;
 import com.ajustor.minecities.town.Decree;
 import com.ajustor.minecities.town.Festivals;
 import com.ajustor.minecities.town.Trade;
@@ -102,6 +103,38 @@ public final class TownCommands {
 						.then(Commands.literal("remove")
 								.then(Commands.argument("player", EntityArgument.player())
 										.executes(c -> deputy(c, false)))))
+				.then(Commands.literal("join")
+						.executes(c -> join(c, Optional.empty()))
+						.then(Commands.argument("town", StringArgumentType.greedyString())
+								.suggests((c, b) -> {
+									for (Town t : Towns.get(c.getSource().getServer()).all()) {
+										b.suggest(t.name());
+									}
+									return b.buildFuture();
+								})
+								.executes(c -> join(c, Optional.of(StringArgumentType.getString(c, "town"))))))
+				.then(Commands.literal("leave").executes(TownCommands::leave))
+				.then(Commands.literal("resident")
+						.executes(TownCommands::residents)
+						.then(Commands.literal("accept").then(Commands.argument("player", StringArgumentType.word())
+								.suggests((c, b) -> suggestPlayers(c, b, true))
+								.executes(c -> answer(c, "accept"))))
+						.then(Commands.literal("refuse").then(Commands.argument("player", StringArgumentType.word())
+								.suggests((c, b) -> suggestPlayers(c, b, true))
+								.executes(c -> answer(c, "refuse"))))
+						.then(Commands.literal("remove").then(Commands.argument("player", StringArgumentType.word())
+								.suggests((c, b) -> suggestPlayers(c, b, false))
+								.executes(c -> answer(c, "remove")))))
+				.then(Commands.literal("permission")
+						.then(Commands.argument("rank", StringArgumentType.word())
+								.suggests((c, b) -> SharedSuggestionProvider.suggest(List.of(
+										Membership.Rank.RESIDENT.serializedName(), Membership.Rank.VISITOR.serializedName()), b))
+								.then(Commands.argument("permission", StringArgumentType.word())
+										.suggests((c, b) -> SharedSuggestionProvider.suggest(
+												java.util.Arrays.stream(Membership.Permission.values())
+														.map(Membership.Permission::serializedName), b))
+										.then(Commands.argument("allowed", com.mojang.brigadier.arguments.BoolArgumentType.bool())
+												.executes(TownCommands::permission)))))
 				.then(Commands.literal("blueprints").executes(TownCommands::blueprints))
 				.then(Commands.literal("build")
 						.then(Commands.literal("cancel").executes(TownCommands::cancelBuild))
@@ -423,6 +456,115 @@ public final class TownCommands {
 		context.getSource().sendSuccess(() -> Component.translatable(key, target.getDisplayName(), town.name()), true);
 		target.sendSystemMessage(Component.translatable(key, target.getDisplayName(), town.name())
 				.withStyle(ChatFormatting.GOLD));
+		return Command.SINGLE_SUCCESS;
+	}
+
+	// Habitants joueurs
+
+	/** Demande à s'installer dans la ville nommée, ou dans celle où l'on se trouve. */
+	private static int join(CommandContext<CommandSourceStack> context, Optional<String> name)
+			throws CommandSyntaxException {
+		ServerPlayer player = context.getSource().getPlayerOrException();
+		Towns towns = Towns.get(context.getSource().getServer());
+		Town town = (name.isPresent() ? towns.byName(name.get())
+				: towns.at(context.getSource().getLevel().dimension(), player.blockPosition())).orElseThrow(NO_TOWN::create);
+		return TownService.requestJoin(context.getSource().getServer(), town, player) ? Command.SINGLE_SUCCESS : 0;
+	}
+
+	/** Quitte sa ville (le maire passe d'abord l'écharpe). */
+	private static int leave(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
+		ServerPlayer player = context.getSource().getPlayerOrException();
+		List<Town> mine = Towns.get(context.getSource().getServer()).memberOf(player.getUUID());
+		Optional<Town> town = mine.stream().filter(t -> !t.mayor().equals(player.getUUID())).findFirst();
+		if (town.isEmpty()) {
+			context.getSource().sendFailure(Component.translatable(mine.isEmpty() ? "command.minecities.leave.none"
+					: "command.minecities.leave.mayor"));
+			return 0;
+		}
+		return TownService.leave(context.getSource().getServer(), town.get(), player) ? Command.SINGLE_SUCCESS : 0;
+	}
+
+	/** Les joueurs de la ville (là où l'on est, sinon celle qu'on gère), les demandes et les droits. */
+	private static int residents(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
+		Town town = here(context);
+		Membership membership = town.membership();
+		CommandSourceStack source = context.getSource();
+		source.sendSuccess(() -> Component.translatable("command.minecities.resident.title", town.name())
+				.withStyle(ChatFormatting.GOLD), false);
+		source.sendSuccess(() -> Component.translatable("command.minecities.resident.row",
+				Component.translatable(Membership.Rank.MAYOR.translationKey()), town.mayorName()), false);
+		for (Map.Entry<UUID, String> resident : membership.residentList()) {
+			Membership.Rank rank = town.rank(resident.getKey());
+			source.sendSuccess(() -> Component.translatable("command.minecities.resident.row",
+					Component.translatable(rank.translationKey()), resident.getValue()), false);
+		}
+		for (Map.Entry<UUID, String> request : membership.requests()) {
+			source.sendSuccess(() -> Component.translatable("command.minecities.resident.request", request.getValue())
+					.withStyle(ChatFormatting.AQUA), false);
+		}
+		for (Membership.Rank rank : List.of(Membership.Rank.RESIDENT, Membership.Rank.VISITOR)) {
+			Component allowed = membership.permissions(rank).isEmpty()
+					? Component.translatable("command.minecities.resident.nothing")
+					: Component.literal(String.join(", ", membership.permissions(rank).stream()
+							.map(p -> Component.translatable(p.translationKey()).getString()).toList()));
+			source.sendSuccess(() -> Component.translatable("command.minecities.resident.rights",
+					Component.translatable(rank.translationKey()), allowed).withStyle(ChatFormatting.GRAY), false);
+		}
+		return Command.SINGLE_SUCCESS;
+	}
+
+	/** Le maire ou un adjoint accepte, refuse une demande, ou renvoie un habitant. */
+	private static int answer(CommandContext<CommandSourceStack> context, String what) throws CommandSyntaxException {
+		Town town = here(context);
+		ServerPlayer player = context.getSource().getPlayerOrException();
+		if (!town.canManage(player.getUUID())) {
+			context.getSource().sendFailure(Component.translatable("command.minecities.resident.not_manager"));
+			return 0;
+		}
+		String name = StringArgumentType.getString(context, "player");
+		List<Map.Entry<UUID, String>> among = what.equals("remove") ? town.membership().residentList()
+				: town.membership().requests();
+		Optional<UUID> target = among.stream().filter(e -> e.getValue().equalsIgnoreCase(name)).map(Map.Entry::getKey)
+				.findFirst();
+		MinecraftServer server = context.getSource().getServer();
+		boolean done = target.isPresent() && (what.equals("remove") ? TownService.expel(server, town, target.get())
+				: TownService.answerJoin(server, town, target.get(), what.equals("accept")));
+		if (!done) {
+			context.getSource().sendFailure(Component.translatable("command.minecities.resident.unknown", name));
+			return 0;
+		}
+		return Command.SINGLE_SUCCESS;
+	}
+
+	private static java.util.concurrent.CompletableFuture<com.mojang.brigadier.suggestion.Suggestions> suggestPlayers(
+			CommandContext<CommandSourceStack> context, com.mojang.brigadier.suggestion.SuggestionsBuilder builder,
+			boolean requests) {
+		try {
+			Membership membership = here(context).membership();
+			return SharedSuggestionProvider.suggest((requests ? membership.requests() : membership.residentList())
+					.stream().map(Map.Entry::getValue), builder);
+		} catch (CommandSyntaxException e) {
+			return builder.buildFuture();
+		}
+	}
+
+	/** Le maire donne ou retire un droit à l'habitant ou au visiteur. */
+	private static int permission(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
+		Town town = mayorTown(context);
+		Optional<Membership.Rank> rank = Membership.Rank.fromSerializedName(StringArgumentType.getString(context, "rank"))
+				.filter(r -> r == Membership.Rank.RESIDENT || r == Membership.Rank.VISITOR);
+		Optional<Membership.Permission> permission = Membership.Permission.fromSerializedName(
+				StringArgumentType.getString(context, "permission"));
+		if (rank.isEmpty() || permission.isEmpty()) {
+			context.getSource().sendFailure(Component.translatable("command.minecities.permission.unknown"));
+			return 0;
+		}
+		boolean allowed = com.mojang.brigadier.arguments.BoolArgumentType.getBool(context, "allowed");
+		town.membership().set(rank.get(), permission.get(), allowed);
+		Towns.get(context.getSource().getServer()).changed();
+		context.getSource().sendSuccess(() -> Component.translatable(allowed ? "command.minecities.permission.granted"
+				: "command.minecities.permission.revoked", Component.translatable(permission.get().translationKey()),
+				Component.translatable(rank.get().translationKey()), town.name()), true);
 		return Command.SINGLE_SUCCESS;
 	}
 

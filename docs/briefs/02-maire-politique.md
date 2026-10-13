@@ -12,17 +12,15 @@ vocabulaire municipal et un peu de jeu politique.
   et faire d'autres joueurs les maires ou adjoints de ses villes.
 - Adjoints (`/ville deputy add|remove`), passation (`/ville mayor <joueur>`), renommage ; les
   commandes du maire visent la ville où il se trouve.
-- Grenier ouvert à tous, déclaration des maisons ouverte à tous (questions 8 et 10).
+- Habitants joueurs (MC-16) : on demande à s'installer (`/ville join`, ou en dormant dans un lit
+  d'une maison déclarée), le maire ou un adjoint accepte (`/ville resident accept|refuse`), on part
+  par `/ville leave`. Un joueur n'est habitant que d'une ville. Rangs maire, adjoint, habitant,
+  visiteur ; le maire règle par rang (onglet Habitants, ou `/ville permission`) trois droits :
+  déclarer une maison, ouvrir le grenier, casser les bâtiments déclarés. Par défaut l'habitant
+  déclare et ouvre le grenier, le visiteur rien ; les villes d'avant gardent tout ouvert.
 - Seul le maire peut démolir l'hôtel de ville ; maire et adjoints reçoivent les nouvelles.
 
 ## À faire
-
-### Habitants joueurs
-- Un joueur peut **s'installer** dans une ville (`/ville join`, ou en dormant dans un lit d'une
-  maison déclarée ?). Il devient **habitant** : il peut déclarer des maisons, ouvrir le grenier,
-  voter. Les autres joueurs sont des visiteurs (règles d'accès au grenier à trancher).
-- Rangs : maire, adjoint, habitant, visiteur. Permissions par rang réglables par le maire
-  (grenier, déclarer une maison, casser les blocs des bâtiments déclarés…).
 
 ### Élections (pas avant la v2, réponse à la question 14)
 

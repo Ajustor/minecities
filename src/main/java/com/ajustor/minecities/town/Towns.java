@@ -67,6 +67,11 @@ public final class Towns extends SavedData {
 		return towns.values().stream().filter(t -> t.mayor().equals(player)).toList();
 	}
 
+	/** Les villes dont un joueur fait partie : maire, adjoint ou habitant. */
+	public List<Town> memberOf(UUID player) {
+		return towns.values().stream().filter(t -> t.isMember(player)).toList();
+	}
+
 	/** Les villes qu'un joueur gère, comme maire ou adjoint. */
 	public List<Town> managedBy(UUID player) {
 		return towns.values().stream().filter(t -> t.canManage(player)).toList();

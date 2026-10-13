@@ -77,6 +77,11 @@ public final class TownService {
 
 	public static void register() {
 		ServerTickEvents.END_SERVER_TICK.register(TownService::tick);
+		net.fabricmc.fabric.api.entity.event.v1.EntitySleepEvents.START_SLEEPING.register((entity, bed) -> {
+			if (entity instanceof ServerPlayer player) {
+				sleptIn(player, bed);
+			}
+		});
 		PlayerBlockBreakEvents.BEFORE.register((level, player, pos, state, blockEntity) -> {
 			if (!(level instanceof ServerLevel serverLevel)) {
 				return true;
@@ -97,16 +102,15 @@ public final class TownService {
 	}
 
 	/**
-	 * Avec la protection des bâtiments (réglage), seuls le maire et ses adjoints (et les opérateurs)
-	 * cassent les blocs d'un bâtiment déclaré.
+	 * Ne casse les blocs d'un bâtiment déclaré que celui dont le rang en a le droit (le maire et ses
+	 * adjoints toujours, les opérateurs aussi).
 	 */
 	private static boolean mayBreak(ServerLevel level, Player player, BlockPos pos) {
-		if (!com.ajustor.minecities.McConfig.get().protectBuildings
-				|| net.minecraft.commands.Commands.LEVEL_GAMEMASTERS.check(player.permissions())) {
+		if (net.minecraft.commands.Commands.LEVEL_GAMEMASTERS.check(player.permissions())) {
 			return true;
 		}
 		for (Town town : Towns.get(level.getServer()).all()) {
-			if (town.dimension().equals(level.dimension()) && !town.canManage(player.getUUID())
+			if (town.dimension().equals(level.dimension()) && !town.may(player.getUUID(), Membership.Permission.BREAK)
 					&& town.houses().stream().anyMatch(h -> h.encloses(pos))) {
 				player.sendSystemMessage(Component.translatable("message.minecities.protected", town.name())
 						.withStyle(ChatFormatting.RED));
@@ -244,16 +248,24 @@ public final class TownService {
 
 	// Maisons
 
-	/** Relève la maison de cette plaque, l'enregistre (ou l'oublie) et en informe le joueur. */
-	public static void declareHouse(ServerLevel level, BlockPos plaque, ServerPlayer player) {
+	/**
+	 * Relève la maison de cette plaque, l'enregistre (ou l'oublie) et en informe le joueur. Faux si son
+	 * rang ne lui permet pas de déclarer une maison dans cette ville.
+	 */
+	public static boolean declareHouse(ServerLevel level, BlockPos plaque, ServerPlayer player) {
 		Towns towns = Towns.get(level.getServer());
 		Optional<Town> found = towns.at(level.dimension(), plaque);
 		if (found.isEmpty()) {
 			player.sendSystemMessage(Component.translatable("message.minecities.house.no_town")
 					.withStyle(ChatFormatting.RED));
-			return;
+			return true;
 		}
 		Town town = found.get();
+		if (!town.may(player.getUUID(), Membership.Permission.DECLARE)) {
+			player.sendSystemMessage(Component.translatable("message.minecities.house.forbidden", town.name(),
+					Component.translatable(town.rank(player.getUUID()).translationKey())).withStyle(ChatFormatting.RED));
+			return false;
+		}
 		HouseScanner.Result result = survey(level, town, plaque);
 		if (result.valid()) {
 			House house = town.house(plaque).orElseThrow();
@@ -270,6 +282,7 @@ public final class TownService {
 		}
 		settle(level, town);
 		towns.changed();
+		return true;
 	}
 
 	/** Relève le bâtiment et met la ville à jour : enregistré s'il est valide, oublié sinon. */
@@ -675,6 +688,124 @@ public final class TownService {
 		}
 		level.playSound(null, town.hall(), SoundEvents.BELL_BLOCK, SoundSource.BLOCKS, 1.0f, 0.8f);
 		Towns.get(level.getServer()).changed();
+	}
+
+	/** Peut-il ouvrir le grenier de la ville (l'hôtel de ville ou une annexe) ? Sinon, il le lui dit. */
+	public static boolean mayOpenGranary(ServerPlayer player, Town town) {
+		if (town.may(player.getUUID(), Membership.Permission.GRANARY)) {
+			return true;
+		}
+		player.sendSystemMessage(Component.translatable("message.minecities.granary.forbidden", town.name(),
+				Component.translatable(town.rank(player.getUUID()).translationKey())).withStyle(ChatFormatting.RED));
+		return false;
+	}
+
+	// Habitants joueurs
+
+	/**
+	 * Le joueur demande à s'installer dans la ville : le maire ou un adjoint accepte ou refuse. On
+	 * n'appartient qu'à une ville à la fois.
+	 */
+	public static boolean requestJoin(MinecraftServer server, Town town, ServerPlayer player) {
+		UUID id = player.getUUID();
+		if (town.isMember(id)) {
+			player.sendSystemMessage(Component.translatable("message.minecities.join.already", town.name())
+					.withStyle(ChatFormatting.GOLD));
+			return false;
+		}
+		Optional<Town> other = Towns.get(server).memberOf(id).stream().findFirst();
+		if (other.isPresent()) {
+			player.sendSystemMessage(Component.translatable("message.minecities.join.elsewhere", other.get().name())
+					.withStyle(ChatFormatting.RED));
+			return false;
+		}
+		String name = player.getGameProfile().name();
+		if (!town.membership().request(id, name)) {
+			player.sendSystemMessage(Component.translatable("message.minecities.join.pending", town.name())
+					.withStyle(ChatFormatting.GOLD));
+			return false;
+		}
+		Towns.get(server).changed();
+		player.sendSystemMessage(Component.translatable("message.minecities.join.sent", town.name())
+				.withStyle(ChatFormatting.GREEN));
+		notify(server, town, Component.translatable("message.minecities.join.request", name).append(" ")
+				.append(Component.translatable("message.minecities.join.how").withStyle(style -> style
+						.withColor(ChatFormatting.AQUA)
+						.withClickEvent(new net.minecraft.network.chat.ClickEvent.SuggestCommand(
+								"/ville resident accept " + name)))));
+		return true;
+	}
+
+	/** Le maire ou un adjoint accepte (ou refuse) la demande de ce joueur. Faux s'il n'y en avait pas. */
+	public static boolean answerJoin(MinecraftServer server, Town town, UUID player, boolean accept) {
+		Optional<String> name = town.membership().requests().stream().filter(e -> e.getKey().equals(player))
+				.map(Map.Entry::getValue).findFirst();
+		if (name.isEmpty()) {
+			return false;
+		}
+		// Entre-temps, il s'est peut-être installé ailleurs.
+		Optional<Town> other = Towns.get(server).memberOf(player).stream().findFirst();
+		town.membership().dropRequest(player);
+		boolean joined = accept && other.isEmpty();
+		if (joined) {
+			town.membership().addResident(player, name.get());
+		}
+		Towns.get(server).changed();
+		ServerPlayer online = server.getPlayerList().getPlayer(player);
+		if (online != null) {
+			String key = joined ? "message.minecities.join.accepted"
+					: other.isPresent() ? "message.minecities.join.elsewhere" : "message.minecities.join.refused";
+			online.sendSystemMessage(Component.translatable(key, other.map(Town::name).orElse(town.name()))
+					.withStyle(joined ? ChatFormatting.GREEN : ChatFormatting.RED));
+		}
+		notify(server, town, Component.translatable(joined ? "message.minecities.resident.welcome"
+				: "message.minecities.resident.turned_away", name.get()));
+		return true;
+	}
+
+	/** Le joueur quitte la ville (habitant ou adjoint) ; le maire doit d'abord passer l'écharpe. */
+	public static boolean leave(MinecraftServer server, Town town, ServerPlayer player) {
+		UUID id = player.getUUID();
+		if (town.mayor().equals(id) || !town.isMember(id)) {
+			return false;
+		}
+		town.removeDeputy(id);
+		town.membership().removeResident(id);
+		Towns.get(server).changed();
+		player.sendSystemMessage(Component.translatable("message.minecities.leave.done", town.name())
+				.withStyle(ChatFormatting.GOLD));
+		notify(server, town, Component.translatable("message.minecities.resident.left", player.getGameProfile().name()));
+		return true;
+	}
+
+	/** Le maire ou un adjoint renvoie un habitant (un adjoint, c'est au maire de le démettre d'abord). */
+	public static boolean expel(MinecraftServer server, Town town, UUID player) {
+		Optional<String> name = town.membership().residentList().stream().filter(e -> e.getKey().equals(player))
+				.map(Map.Entry::getValue).findFirst();
+		if (name.isEmpty() || !town.membership().removeResident(player)) {
+			return false;
+		}
+		Towns.get(server).changed();
+		ServerPlayer online = server.getPlayerList().getPlayer(player);
+		if (online != null) {
+			online.sendSystemMessage(Component.translatable("message.minecities.resident.expelled", town.name())
+					.withStyle(ChatFormatting.RED));
+		}
+		notify(server, town, Component.translatable("message.minecities.resident.removed", name.get()));
+		return true;
+	}
+
+	/** Dormir dans le lit d'une maison déclarée d'une ville dont on n'est pas : c'est demander à y vivre. */
+	private static void sleptIn(ServerPlayer player, BlockPos bed) {
+		if (!(player.level() instanceof ServerLevel level)) {
+			return;
+		}
+		Towns towns = Towns.get(level.getServer());
+		towns.at(level.dimension(), bed)
+				.filter(t -> t.houses().stream().anyMatch(h -> h.beds().contains(bed) || h.encloses(bed)))
+				.filter(t -> !t.isMember(player.getUUID()) && !t.membership().hasRequested(player.getUUID()))
+				.filter(t -> towns.memberOf(player.getUUID()).isEmpty())
+				.ifPresent(t -> requestJoin(level.getServer(), t, player));
 	}
 
 	/** Prévient le maire et ses adjoints connectés. */

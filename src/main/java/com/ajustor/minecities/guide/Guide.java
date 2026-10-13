@@ -44,7 +44,7 @@ public final class Guide {
 
 	private static final List<Chapter> CHAPTERS = List.of(new Chapter("found", 3), new Chapter("house", 2),
 			new Chapter("citizens", 4), new Chapter("jobs", 5), new Chapter("build", 3), new Chapter("storage", 2),
-			new Chapter("growth", 2), new Chapter("defense", 2), new Chapter("council", 2),
+			new Chapter("growth", 2), new Chapter("defense", 2), new Chapter("council", 3),
 			new Chapter("commands", 2), new Chapter("help", 1));
 
 	/** Ouvre le livre, sur le client : branché par le client, rien sur un serveur dédié. */
