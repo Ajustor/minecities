@@ -29,8 +29,14 @@ refusée (`TownService.UNHEALTHY`).
 - Affichage : humeur au clic droit (avec ses facteurs), dans l'écran, et une icône au-dessus de la
   tête d'un citoyen qui va mal.
 
-Suite : maladies légères (si la nourriture manque), décrets du maire (brief 02) qui pèsent sur le
-bonheur, lumière et surpeuplement des maisons.
+- Maladies (MC-12, `citizen/Disease`, `citizen/Health`) : rhume (pluie sans manteau), dysenterie
+  (chair putréfiée, aliment empoisonné : un affamé en mange faute de mieux), fièvre (pluie, plus
+  rarement ; elle cloue au lit). Incubation, durée, contagion entre voisins, moral et rythme de
+  travail propres à chacune ; pas de mort. Le médecin soigne avec un remède (miel, lait, pastèque
+  scintillante) : la convalescence est courte. Guéri, on est protégé deux jours. Le manteau
+  (`McItems.COAT`, porté sur le buste) protège de la pluie : recette, tisserand, ou donné d'un clic.
+
+Suite : décrets du maire (brief 02) qui pèsent sur le bonheur, lumière et surpeuplement des maisons.
 
 ## Pistes d'origine
 

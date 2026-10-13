@@ -50,7 +50,8 @@ public class EatGoal extends Goal {
 		if (town.isEmpty() || resident.isEmpty()) {
 			return false;
 		}
-		List<BlockPos> pantries = TownService.pantries(level, town.get(), resident.get());
+		// Affamé, il mangerait même du gâté.
+		List<BlockPos> pantries = TownService.pantries(level, town.get(), resident.get(), citizen.hunger() <= 0);
 		if (pantries.isEmpty()) {
 			cooldown = NOTHING_COOLDOWN;
 			citizen.need("hungry", Component.translatable("speech.minecities.hungry"));
@@ -105,7 +106,18 @@ public class EatGoal extends Goal {
 			pantry = null;
 			return;
 		}
+		// Un manteau au grenier, et il n'en a pas : il le prend en passant.
+		if (!citizen.wearsCoat()) {
+			ItemStack coat = com.ajustor.minecities.town.Stock.take(container,
+					s -> s.is(com.ajustor.minecities.registry.McItems.COAT), 1);
+			if (!coat.isEmpty()) {
+				citizen.wear(coat);
+			}
+		}
 		ItemStack food = TownService.takeFood(container, citizen.diet());
+		if (food.isEmpty() && citizen.hunger() <= 0) {
+			food = TownService.takeTainted(container);
+		}
 		if (food.isEmpty()) {
 			pantry = null;
 			return;

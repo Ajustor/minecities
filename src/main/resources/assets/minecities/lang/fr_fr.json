@@ -611,5 +611,22 @@
   "message.minecities.build.monument_once": "La ville a déjà ce monument (%s) : un seul de chaque par ville.",
   "mood.minecities.monuments": "les monuments de la ville",
   "screen.minecities.building.monument": "Monument",
-  "screen.minecities.appeal": "Attrait des monuments : %s"
+  "screen.minecities.appeal": "Attrait des monuments : %s",
+  "item.minecities.coat": "Manteau",
+  "disease.minecities.cold": "rhume",
+  "disease.minecities.dysentery": "dysenterie",
+  "disease.minecities.fever": "fièvre",
+  "mood.minecities.sick_cold": "enrhumé",
+  "mood.minecities.sick_dysentery": "la dysenterie",
+  "mood.minecities.sick_fever": "fiévreux",
+  "hud.minecities.trouble.16": "☣ malade",
+  "citizen.minecities.ill": "Malade : %s, encore %s min sans soins.",
+  "citizen.minecities.ill.treated": "Soigné (%s), il se remet : encore %s min.",
+  "speech.minecities.recovered": "Ça va mieux, c'est passé (%s) !",
+  "speech.minecities.sick.fever": "J'ai de la fièvre… je reste au lit.",
+  "speech.minecities.coat": "Merci, il me tiendra au chaud !",
+  "speech.minecities.remedy": "Il me faudrait : %s.",
+  "speech.minecities.treated": "Merci, docteur, je me sens déjà mieux.",
+  "message.minecities.doctor.no_remedy": "%s, le médecin, n'a pas de %s pour soigner un malade (%s).",
+  "jade.minecities.illness": "Malade : %s"
 }

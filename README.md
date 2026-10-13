@@ -89,7 +89,16 @@ version du mod, les autres mods et le temps de jeu.
    - **Table d'archerie → archer** : avec un **arc** et des flèches, il monte au point le plus haut
      près de sa table (le haut d'une tour de garde) et tire sur les monstres jusqu'à 24 blocs.
    - **Alambic → médecin** : il soigne les blessés (et les empoisonnés) et porte à manger, pris au
-     grenier, à ceux qui meurent de faim.
+     grenier, à ceux qui meurent de faim. Il soigne aussi les **malades**, avec le remède de leur
+     maladie pris aux réserves : du miel pour le **rhume**, du lait pour la **dysenterie**, une
+     tranche de pastèque scintillante pour la **fièvre**.
+   - **Les maladies** : sous la pluie sans **manteau**, on prend un rhume (plus rarement la fièvre) ;
+     de la chair putréfiée ou un aliment empoisonné (qu'un affamé mange faute de mieux) donnent la
+     dysenterie. Chaque maladie couve d'abord, puis se déclare (☣ au-dessus de la tête), passe aux
+     voisins, pèse sur le moral et ralentit le travail ; la fièvre cloue au lit. On n'en meurt pas ;
+     on guérit seul avec le temps, bien plus vite une fois soigné, et l'on en est protégé deux jours.
+     Le **manteau** (cuir et laine, ou fait par le tisserand) se prend au grenier, ou se donne d'un
+     clic droit.
    - **Pupitre → marchand** (dès la ville) : il achète, avec les émeraudes du grenier, l'outil qu'un
      travailleur réclame (houe, hache, pioche, pelle, canne, épée, arc), des flèches, du pain si le
      grenier est vide ; sinon il vend au cours des villageois ce que le grenier a en trop (au-delà de
@@ -303,7 +312,7 @@ Java 25 est requis (Loom 1.18.3, Minecraft 26.2).
 ./gradlew runClient             # lance le jeu avec le mod
 ./gradlew runGameTest           # les scènes de jeu, vérifiées sur le seul serveur, sans fenêtre (rapide)
 ./gradlew runGameTest -PminecitiesGametest=work   # une scène (city, work, countryside, village, build, family, raid, life, market, robust, industry, crafts,
-council, logistics, guide, structures, plans, jade, residents, elections, monuments)
+council, logistics, guide, structures, plans, jade, residents, elections, monuments, health)
 ./gradlew runClientGameTest     # les mêmes scènes dans le vrai jeu, photographiées (build/run/clientGameTest/screenshots), plus styles
 ./gradlew runClientGameTest -PminecitiesFilm   # avec les films image par image (lents)
 python tools/textures/generate.py   # régénère les textures (peaux des citoyens, plaque, œuf)

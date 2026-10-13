@@ -51,7 +51,7 @@ abstract class WorkGoal extends Goal {
 	private boolean onDuty() {
 		Optional<Town> town = citizen.town();
 		if (citizen.job().filter(j -> j.job() == job).isEmpty() || town.isEmpty() || citizen.isSleeping()
-				|| citizen.hunger() < Hunger.HUNGRY || !(citizen.level() instanceof ServerLevel)) {
+				|| citizen.hunger() < Hunger.HUNGRY || citizen.bedridden() || !(citizen.level() instanceof ServerLevel)) {
 			return false;
 		}
 		if (job.defends()) {
@@ -109,7 +109,10 @@ abstract class WorkGoal extends Goal {
 		// fait gagner du temps (un dixième par niveau).
 		float level = citizen.job().map(j -> town().buildingLevel(j.workshop())).orElse(1);
 		float workshop = Math.max(0.6f, 1.1f - 0.1f * level);
-		idleUntil = citizen.level().getGameTime() + Math.round(ticks * Happiness.workPace(citizen.mood()) * workshop);
+		// Malade, il traîne encore.
+		double sick = citizen.illness().map(Disease::pace).orElse(1.0);
+		idleUntil = citizen.level().getGameTime() + Math.round(ticks * Happiness.workPace(citizen.mood()) * workshop
+				* sick);
 	}
 
 	protected ServerLevel level() {

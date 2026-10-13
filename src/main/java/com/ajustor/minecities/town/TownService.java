@@ -826,17 +826,48 @@ public final class TownService {
 				? Optional.of(hall) : Optional.empty();
 	}
 
+	/** La chair putréfiée et les aliments empoisonnés : affamé, on en mange, et l'on tombe malade (MC-12). */
+	private static final Set<net.minecraft.world.item.Item> TAINTED = Set.of(Items.ROTTEN_FLESH, Items.POISONOUS_POTATO, Items.SPIDER_EYE);
+
+	public static boolean isTainted(ItemStack stack) {
+		return TAINTED.contains(stack.getItem());
+	}
+
 	public static boolean isFood(ItemStack stack) {
 		return stack.has(DataComponents.FOOD) && !UNHEALTHY.contains(stack.getItem());
 	}
 
 	public static boolean hasFood(Container container) {
+		return hasFood(container, false);
+	}
+
+	/** Y a-t-il à manger ? Affamé ({@code desperate}), même du gâté. */
+	public static boolean hasFood(Container container, boolean desperate) {
 		for (int i = 0; i < container.getContainerSize(); i++) {
-			if (isFood(container.getItem(i))) {
+			ItemStack stack = container.getItem(i);
+			if (isFood(stack) || desperate && isTainted(stack)) {
 				return true;
 			}
 		}
 		return false;
+	}
+
+	/**
+	 * Faute de mieux, un affamé prend de la chair putréfiée ou un aliment empoisonné. Vide s'il y a
+	 * autre chose à manger, ou rien.
+	 */
+	public static ItemStack takeTainted(Container container) {
+		if (hasFood(container)) {
+			return ItemStack.EMPTY;
+		}
+		for (int i = 0; i < container.getContainerSize(); i++) {
+			if (isTainted(container.getItem(i))) {
+				ItemStack taken = container.removeItem(i, 1);
+				container.setChanged();
+				return taken;
+			}
+		}
+		return ItemStack.EMPTY;
 	}
 
 	public static int countMeals(Container container) {
@@ -890,6 +921,11 @@ public final class TownService {
 	 * maison, puis le grenier de l'hôtel de ville.
 	 */
 	public static List<BlockPos> pantries(ServerLevel level, Town town, Resident resident) {
+		return pantries(level, town, resident, false);
+	}
+
+	/** Les garde-manger ; affamé ({@code desperate}), aussi ceux où il ne reste que du gâté. */
+	public static List<BlockPos> pantries(ServerLevel level, Town town, Resident resident, boolean desperate) {
 		List<BlockPos> pantries = new ArrayList<>();
 		resident.home().flatMap(town::house).ifPresent(h -> pantries.addAll(h.containers()));
 		// Le grenier de l'annexe du quartier, s'il est plus près de chez lui que l'hôtel de ville.
@@ -897,7 +933,7 @@ public final class TownService {
 		town.activeAnnexes().stream().filter(a -> a.distSqr(from) < town.hall().distSqr(from)).forEach(pantries::add);
 		pantries.add(town.hall());
 		return pantries.stream().filter(p -> level.isLoaded(p) && level.getBlockEntity(p) instanceof Container c
-				&& hasFood(c)).toList();
+				&& hasFood(c, desperate)).toList();
 	}
 
 	// Affichage

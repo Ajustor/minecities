@@ -45,16 +45,25 @@ public final class Happiness {
 	 * @param culture          la ville a une bibliothèque, avec son bibliothécaire
 	 * @param decrees          ce que les décrets du maire font au moral
 	 * @param monuments        les monuments bâtis dans la ville
+	 * @param illness          la maladie dont il souffre (null : aucune)
 	 */
 	public record Factors(float hunger, int meals, int variety, boolean dish, int expectedVariety, boolean housed,
 			boolean child, boolean employed, boolean missingTool, boolean married, boolean hurt, int recentDeaths,
-			boolean danger, boolean festival, boolean culture, int decrees, int monuments) {
+			boolean danger, boolean festival, boolean culture, int decrees, int monuments, Disease illness) {
+		/** En bonne santé. */
+		public Factors(float hunger, int meals, int variety, boolean dish, int expectedVariety, boolean housed,
+				boolean child, boolean employed, boolean missingTool, boolean married, boolean hurt, int recentDeaths,
+				boolean danger, boolean festival, boolean culture, int decrees, int monuments) {
+			this(hunger, meals, variety, dish, expectedVariety, housed, child, employed, missingTool, married, hurt,
+					recentDeaths, danger, festival, culture, decrees, monuments, null);
+		}
+
 		/** Sans monument. */
 		public Factors(float hunger, int meals, int variety, boolean dish, int expectedVariety, boolean housed,
 				boolean child, boolean employed, boolean missingTool, boolean married, boolean hurt, int recentDeaths,
 				boolean danger, boolean festival, boolean culture, int decrees) {
 			this(hunger, meals, variety, dish, expectedVariety, housed, child, employed, missingTool, married, hurt,
-					recentDeaths, danger, festival, culture, decrees, 0);
+					recentDeaths, danger, festival, culture, decrees, 0, null);
 		}
 	}
 
@@ -108,6 +117,9 @@ public final class Happiness {
 		// La santé et la sécurité.
 		if (f.hurt()) {
 			factors.add(new Factor("hurt", -1));
+		}
+		if (f.illness() != null) {
+			factors.add(new Factor("sick_" + f.illness().serializedName(), f.illness().mood()));
 		}
 		if (f.recentDeaths() > 0) {
 			factors.add(new Factor("mourning", -Math.min(2, f.recentDeaths())));

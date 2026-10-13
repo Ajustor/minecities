@@ -49,7 +49,7 @@ public class SleepInBedGoal extends Goal {
 
 	@Override
 	public boolean canUse() {
-		if (!isNight(citizen.level()) || citizen.isDefender()) {
+		if (!isNight(citizen.level()) && !citizen.bedridden() || citizen.isDefender()) {
 			return false;
 		}
 		Optional<BlockPos> target = citizen.bed();
@@ -62,7 +62,7 @@ public class SleepInBedGoal extends Goal {
 
 	@Override
 	public boolean canContinueToUse() {
-		return isNight(citizen.level()) && bed != null && citizen.bed().filter(bed::equals).isPresent()
+		return (isNight(citizen.level()) || citizen.bedridden()) && bed != null && citizen.bed().filter(bed::equals).isPresent()
 				&& bedAvailable(bed);
 	}
 

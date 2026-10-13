@@ -611,5 +611,22 @@
   "message.minecities.build.monument_once": "The town already has this monument (%s): one of each per town.",
   "mood.minecities.monuments": "the town's monuments",
   "screen.minecities.building.monument": "Monument",
-  "screen.minecities.appeal": "Monuments' appeal: %s"
+  "screen.minecities.appeal": "Monuments' appeal: %s",
+  "item.minecities.coat": "Coat",
+  "disease.minecities.cold": "cold",
+  "disease.minecities.dysentery": "dysentery",
+  "disease.minecities.fever": "fever",
+  "mood.minecities.sick_cold": "has a cold",
+  "mood.minecities.sick_dysentery": "dysentery",
+  "mood.minecities.sick_fever": "feverish",
+  "hud.minecities.trouble.16": "☣ sick",
+  "citizen.minecities.ill": "Sick: %s, %s more min without care.",
+  "citizen.minecities.ill.treated": "Treated for %s, recovering (%s more min).",
+  "speech.minecities.recovered": "I feel better, it's gone (%s)!",
+  "speech.minecities.sick.fever": "I have a fever… I'm staying in bed.",
+  "speech.minecities.coat": "Thanks, it will keep me warm!",
+  "speech.minecities.remedy": "I would need: %s.",
+  "speech.minecities.treated": "Thank you, doctor, I already feel better.",
+  "message.minecities.doctor.no_remedy": "%s, the doctor, has no %s to treat a patient (%s).",
+  "jade.minecities.illness": "Sick: %s"
 }

@@ -13,33 +13,41 @@ import net.minecraft.network.codec.StreamCodec;
 import java.util.List;
 
 /**
- * Ce que les mods d'infobulle (Jade) montrent d'un citoyen : sa faim et s'il est logé. Le serveur le
- * relève, le client l'affiche ; rien ici ne dépend de Jade, pour que le mod se charge sans lui.
+ * Ce que les mods d'infobulle (Jade) montrent d'un citoyen : sa faim, s'il est logé, et sa maladie
+ * (vide s'il va bien). Le serveur le relève, le client l'affiche ; rien ici ne dépend de Jade, pour
+ * que le mod se charge sans lui.
  */
-public record CitizenInfo(Hunger.State hunger, boolean housed) {
+public record CitizenInfo(Hunger.State hunger, boolean housed, String illness) {
 	public static final StreamCodec<ByteBuf, CitizenInfo> STREAM_CODEC = StreamCodec.composite(
 			ByteBufCodecs.VAR_INT, info -> info.hunger().ordinal(),
 			ByteBufCodecs.BOOL, CitizenInfo::housed,
-			(hunger, housed) -> new CitizenInfo(
-					Hunger.State.values()[Math.clamp(hunger, 0, Hunger.State.values().length - 1)], housed));
+			ByteBufCodecs.STRING_UTF8, CitizenInfo::illness,
+			(hunger, housed, illness) -> new CitizenInfo(
+					Hunger.State.values()[Math.clamp(hunger, 0, Hunger.State.values().length - 1)], housed, illness));
 
 	/** L'état du citoyen, côté serveur : la ville seule sait où il loge. */
 	public static CitizenInfo of(CitizenEntity citizen) {
-		return new CitizenInfo(Hunger.state(citizen.hunger()), citizen.resident().flatMap(Resident::home).isPresent());
+		return new CitizenInfo(Hunger.state(citizen.hunger()), citizen.resident().flatMap(Resident::home).isPresent(),
+				citizen.illness().map(com.ajustor.minecities.citizen.Disease::translationKey).orElse(""));
 	}
 
-	/** Les lignes de l'infobulle : la faim, puis le logement. */
+	/** Les lignes de l'infobulle : la faim, le logement, puis la maladie. */
 	public List<Component> lines() {
 		ChatFormatting color = switch (hunger) {
 			case STARVING -> ChatFormatting.RED;
 			case HUNGRY -> ChatFormatting.GOLD;
 			default -> ChatFormatting.GREEN;
 		};
-		return List.of(
+		List<Component> lines = new java.util.ArrayList<>(List.of(
 				Component.translatable("jade.minecities.hunger",
 						Component.translatable(hunger.translationKey()).withStyle(color)),
 				housed ? Component.translatable("jade.minecities.housed").withStyle(ChatFormatting.GREEN)
-						: Component.translatable("jade.minecities.homeless").withStyle(ChatFormatting.RED));
+						: Component.translatable("jade.minecities.homeless").withStyle(ChatFormatting.RED)));
+		if (!illness.isEmpty()) {
+			lines.add(Component.translatable("jade.minecities.illness", Component.translatable(illness))
+					.withStyle(ChatFormatting.LIGHT_PURPLE));
+		}
+		return lines;
 	}
 
 	/** La ligne d'une plaque de maison : l'état de son dernier relevé, comme la couleur de sa porte. */

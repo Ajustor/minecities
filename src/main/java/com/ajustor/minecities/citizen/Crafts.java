@@ -41,10 +41,12 @@ final class Crafts {
 			new Craft(List.of(of(Items.GLASS, 6)), new ItemStack(Items.GLASS_PANE, 16), 64),
 			new Craft(List.of(new Input(s -> s.is(ItemTags.SMELTS_TO_GLASS), 1)), new ItemStack(Items.GLASS), 64));
 
-	/** Le tisserand : la laine (de la ficelle), et des lits pour les maisons. */
+	/** Le tisserand : la laine (de la ficelle), des lits pour les maisons, des manteaux contre la pluie. */
 	static final List<Craft> WEAVER = List.of(
 			new Craft(List.of(new Input(s -> s.is(ItemTags.WOOL), 3), new Input(s -> s.is(ItemTags.PLANKS), 3)),
 					new ItemStack(Items.BED.white()), 8),
+			new Craft(List.of(new Input(s -> s.is(ItemTags.WOOL), 6), of(Items.LEATHER, 2)),
+					new ItemStack(McItems.COAT), 8),
 			new Craft(List.of(of(Items.STRING, 4)), new ItemStack(Items.WOOL.white()), 32));
 
 	/** Les essences de bois que le charpentier sait travailler. */
