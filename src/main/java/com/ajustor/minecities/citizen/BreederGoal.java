@@ -177,6 +177,16 @@ class BreederGoal extends WorkGoal {
 		target.setInLove(null);
 		level().sendParticles(ParticleTypes.HEART, target.getX(), target.getY() + target.getBbHeight(), target.getZ(),
 				3, 0.3, 0.2, 0.3, 0);
+		// Deux bêtes en amour ne se cherchent qu'à huit blocs : si l'autre est plus loin dans le pré, elles
+		// marchent l'une vers l'autre, sinon le blé est perdu quand l'amour passe.
+		Animal fed = target;
+		herd().stream().filter(a -> a != fed && a.getType() == fed.getType() && a.isInLove())
+				.min(Comparator.comparingDouble(fed::distanceToSqr))
+				.filter(partner -> partner.distanceToSqr(fed) > 3 * 3)
+				.ifPresent(partner -> {
+					fed.getNavigation().moveTo(partner, 1.0);
+					partner.getNavigation().moveTo(fed, 1.0);
+				});
 		target = null;
 	}
 
