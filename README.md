@@ -206,7 +206,8 @@ version du mod, les autres mods et le temps de jeu.
 | `raids`, `raid_min_population`, `raid_odds`, `raid_spacing_days` | vrai, 8, 3, 3 | les raids de pillards |
 | `festival_cost` | 4 | le prix d'une fête, en émeraudes |
 | `market_reserve`, `market_daily_earnings` | 32, 32 | ce que le grenier garde, ce qu'un marchand gagne par jour |
-| `protect_buildings` | faux | seuls le maire et ses adjoints (et les opérateurs) cassent les blocs des bâtiments déclarés |
+| `protect_buildings` | faux | dans les villes fondées avant les rangs, seuls le maire et ses adjoints (et les opérateurs) cassent les blocs des bâtiments déclarés ; les villes nouvelles règlent ce droit par rang |
+| `term_days`, `candidacy_days`, `voting_days`, `election_spacing_days` | 7, 1, 1, 3 | le mandat du maire (0 : pas d'élection d'office), les candidatures, le vote, l'écart entre deux élections |
 | `hall_grace_minutes` | 10 | un hôtel de ville détruit (explosion…) : le maire a tant de minutes pour le reposer au même endroit, sinon la ville disparaît |
 | `missing_citizen_minutes` | 60 | un citoyen jamais revu depuis tant de minutes, sa maison chargée, est rayé (0 : jamais) |
 | `give_guide` | vrai | chaque joueur reçoit le guide de la ville à sa première venue |
@@ -238,6 +239,23 @@ adjoints. Seul le maire peut démolir l'hôtel de ville (et la ville disparaît 
 adjoints sont prévenus des arrivées, des morts, des embauches et des outils qui manquent. Les
 commandes du maire s'appliquent à la ville où il se trouve.
 
+Les autres joueurs sont des **visiteurs**. Pour devenir **habitant**, on demande à s'installer
+(`/ville join`, le bouton de l'onglet Habitants, ou en dormant dans un lit d'une maison de la ville) ;
+le maire ou un adjoint accepte. On n'est habitant que d'une ville à la fois. Le maire règle, dans
+l'onglet Habitants de l'hôtel de ville, ce que l'habitant et le visiteur ont le droit de faire :
+déclarer une maison, ouvrir le grenier (et les annexes), casser les blocs des bâtiments déclarés. Par
+défaut, l'habitant déclare et ouvre le grenier, le visiteur rien ; le maire et ses adjoints ont tous
+les droits. Les villes fondées avant les rangs gardent les droits d'avant (tout le monde déclare et
+ouvre le grenier).
+
+**Élections.** Le mandat du maire dure 7 jours de jeu ; à son terme, une élection s'ouvre. Le maire
+peut aussi en ouvrir une à tout moment, et les habitants par une pétition signée par la moitié
+d'entre eux ; pas plus d'une élection tous les 3 jours. Un jour de candidatures (le maire sortant est
+candidat d'office), puis un jour de vote dans l'onglet Élection ou par `/ville vote`. Chaque joueur
+de la ville vote une fois ; les citoyens aussi, avec une chance égale à leur bonheur : les heureux
+pour le maire sortant, les autres contre lui, et leur voix pèse autant. En cas d'égalité, on revote
+entre les ex æquo. Seul joueur de sa ville, ou sans adversaire, le maire est réélu d'office.
+
 | Commande (`/minecities` ou `/ville`) | Qui | Effet |
 |---|---|---|
 | `info` | tous | état de la ville où l'on se trouve (ou que l'on gère) |
@@ -246,6 +264,17 @@ commandes du maire s'appliquent à la ville où il se trouve.
 | `rename <nom>` | maire | renomme la ville |
 | `mayor <joueur>` | maire | passe l'écharpe à un autre joueur |
 | `deputy add\|remove <joueur>` | maire | nomme ou démet un adjoint |
+| `join [ville]` | tous | demande à s'installer dans cette ville (ou celle où l'on est) |
+| `leave` | habitants, adjoints | quitte sa ville |
+| `resident` | tous | les joueurs de la ville, les demandes, les droits de chaque rang |
+| `resident accept\|refuse <joueur>` | maire, adjoints | répond à une demande |
+| `resident remove <joueur>` | maire, adjoints | renvoie un habitant |
+| `permission resident\|visitor declare\|granary\|break true\|false` | maire | donne ou retire un droit |
+| `election` | tous | le mandat, la pétition, l'élection en cours |
+| `election call` | maire | ouvre une élection |
+| `election sign` | habitants, adjoints | signe la pétition pour une élection |
+| `election run` | joueurs de la ville | se porte candidat, pendant les candidatures |
+| `vote <candidat>` | joueurs de la ville | vote, une fois par tour |
 | `blueprints` | tous | les schémas disponibles |
 | `build <schéma> [style]` | maire, adjoints | propose un chantier devant soi, et montre son fantôme |
 | `build rotate` | maire, adjoints | tourne le chantier proposé d'un quart de tour |
@@ -271,7 +300,7 @@ Java 25 est requis (Loom 1.18.3, Minecraft 26.2).
 ./gradlew runClient             # lance le jeu avec le mod
 ./gradlew runGameTest           # les scènes de jeu, vérifiées sur le seul serveur, sans fenêtre (rapide)
 ./gradlew runGameTest -PminecitiesGametest=work   # une scène (city, work, countryside, village, build, family, raid, life, market, robust, industry, crafts,
-council, logistics, guide, structures, plans)
+council, logistics, guide, structures, plans, jade, residents, elections)
 ./gradlew runClientGameTest     # les mêmes scènes dans le vrai jeu, photographiées (build/run/clientGameTest/screenshots), plus styles
 ./gradlew runClientGameTest -PminecitiesFilm   # avec les films image par image (lents)
 python tools/textures/generate.py   # régénère les textures (peaux des citoyens, plaque, œuf)

@@ -78,8 +78,16 @@ public class TownAnnexBlock extends BaseEntityBlock {
 	@Override
 	protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player,
 			BlockHitResult hit) {
-		if (!level.isClientSide() && level.getBlockEntity(pos) instanceof TownAnnexBlockEntity annex) {
-			player.openMenu(annex);
+		if (level instanceof net.minecraft.server.level.ServerLevel serverLevel
+				&& player instanceof net.minecraft.server.level.ServerPlayer serverPlayer
+				&& level.getBlockEntity(pos) instanceof TownAnnexBlockEntity annex) {
+			// L'annexe est un grenier : le rang du joueur doit le lui ouvrir.
+			boolean allowed = com.ajustor.minecities.town.Towns.get(serverLevel.getServer()).all().stream()
+					.filter(t -> t.dimension().equals(level.dimension()) && t.annexes().contains(pos)).findFirst()
+					.map(t -> com.ajustor.minecities.town.TownService.mayOpenGranary(serverPlayer, t)).orElse(true);
+			if (allowed) {
+				player.openMenu(annex);
+			}
 		}
 		return InteractionResult.SUCCESS;
 	}

@@ -4,6 +4,8 @@ import com.ajustor.minecities.block.TownHallBlockEntity;
 import com.ajustor.minecities.citizen.CitizenEntity;
 import com.ajustor.minecities.citizen.Hunger;
 import com.ajustor.minecities.town.Chronicle;
+import com.ajustor.minecities.town.Election;
+import com.ajustor.minecities.town.Elections;
 import com.ajustor.minecities.town.Families;
 import com.ajustor.minecities.town.Festivals;
 import com.ajustor.minecities.town.House;
@@ -11,6 +13,7 @@ import com.ajustor.minecities.town.Raids;
 import com.ajustor.minecities.town.Stock;
 import net.minecraft.world.item.Items;
 import com.ajustor.minecities.town.MarriageRequest;
+import com.ajustor.minecities.town.Membership;
 import com.ajustor.minecities.town.Resident;
 import com.ajustor.minecities.town.Town;
 import com.ajustor.minecities.town.TownService;
@@ -99,7 +102,54 @@ public final class TownNetwork {
 				(int) employed, meals, next == null ? "" : next.translationKey(),
 				next == null ? 0 : next.minCitizens(), next == null ? 0 : next.minHouses(),
 				town.canManage(player.getUUID()), life, council(level, town), rows, buildings, requests,
-				plans(level, town));
+				plans(level, town), members(town, player), ballot(level, town, player));
+	}
+
+	/** L'élection, vue par ce joueur. */
+	private static TownSnapshot.Ballot ballot(ServerLevel level, Town town, ServerPlayer player) {
+		Election election = town.election();
+		long now = level.getGameTime();
+		List<TownSnapshot.PlayerRow> candidates = election.candidates().stream()
+				.map(e -> new TownSnapshot.PlayerRow(e.getKey(), e.getValue(), town.rank(e.getKey()).serializedName()))
+				.toList();
+		return new TownSnapshot.Ballot(election.phase().serializedName(),
+				election.phase() == Election.Phase.NONE ? -1 : Math.max(0, election.phaseEnds() - now),
+				election.termEnds() > 0 && election.phase() == Election.Phase.NONE
+						? Math.max(0, election.termEnds() - now) : -1,
+				election.round(), candidates, election.hasVoted(player.getUUID()),
+				(int) election.petition().stream().filter(town::isMember).count(), Elections.signaturesNeeded(town),
+				election.petition().contains(player.getUUID()), Elections.untilAllowed(town, now),
+				election.lastWinner().orElse(""), election.lastVotes());
+	}
+
+	/** Les joueurs de la ville : le maire, ses adjoints, les habitants ; les demandes ; les droits. */
+	private static TownSnapshot.Members members(Town town, ServerPlayer player) {
+		Membership membership = town.membership();
+		List<TownSnapshot.PlayerRow> players = new ArrayList<>();
+		players.add(new TownSnapshot.PlayerRow(town.mayor(), town.mayorName(), Membership.Rank.MAYOR.serializedName()));
+		for (UUID deputy : town.deputies()) {
+			ServerPlayer online = player.level().getServer().getPlayerList().getPlayer(deputy);
+			String name = online != null ? online.getGameProfile().name()
+					: membership.residents().getOrDefault(deputy, deputy.toString().substring(0, 8));
+			players.add(new TownSnapshot.PlayerRow(deputy, name, Membership.Rank.DEPUTY.serializedName()));
+		}
+		for (Map.Entry<UUID, String> resident : membership.residentList()) {
+			if (town.rank(resident.getKey()) == Membership.Rank.RESIDENT) {
+				players.add(new TownSnapshot.PlayerRow(resident.getKey(), resident.getValue(),
+						Membership.Rank.RESIDENT.serializedName()));
+			}
+		}
+		List<TownSnapshot.PlayerRow> requests = membership.requests().stream()
+				.map(e -> new TownSnapshot.PlayerRow(e.getKey(), e.getValue(), Membership.Rank.VISITOR.serializedName()))
+				.toList();
+		List<Boolean> resident = new ArrayList<>();
+		List<Boolean> visitor = new ArrayList<>();
+		for (Membership.Permission permission : Membership.Permission.values()) {
+			resident.add(membership.permissions(Membership.Rank.RESIDENT).contains(permission));
+			visitor.add(membership.permissions(Membership.Rank.VISITOR).contains(permission));
+		}
+		return new TownSnapshot.Members(town.rank(player.getUUID()).serializedName(),
+				membership.hasRequested(player.getUUID()), players, requests, resident, visitor);
 	}
 
 	/** Les bâtiments qu'on peut commander, chacun à son premier niveau : les ouverts d'abord. */
@@ -147,6 +197,20 @@ public final class TownNetwork {
 			return;
 		}
 		Town town = found.get();
+		if (payload.action().startsWith("permission:")) {
+			// « permission:<rang>:<droit> » : le maire donne ou retire ce droit à l'habitant ou au visiteur.
+			String[] parts = payload.action().split(":", 3);
+			if (parts.length == 3 && town.mayor().equals(player.getUUID())) {
+				Membership.Rank.fromSerializedName(parts[1]).ifPresent(rank -> Membership.Permission
+						.fromSerializedName(parts[2]).ifPresent(permission -> {
+							town.membership().set(rank, permission, !town.membership().permissions(rank)
+									.contains(permission));
+							Towns.get(level.getServer()).changed();
+						}));
+			}
+			open(level, town, player);
+			return;
+		}
 		if (payload.action().startsWith("plan:")) {
 			// « plan:<style>:<schéma> » : le maire (ou un adjoint) prend le plan de ce bâtiment.
 			if (!town.canManage(player.getUUID())) {
@@ -171,10 +235,36 @@ public final class TownNetwork {
 		}
 		switch (payload.action()) {
 			case "granary" -> {
-				if (level.getBlockEntity(payload.hall()) instanceof TownHallBlockEntity hall) {
+				if (TownService.mayOpenGranary(player, town)
+						&& level.getBlockEntity(payload.hall()) instanceof TownHallBlockEntity hall) {
 					player.openMenu(hall);
 				}
 				return;
+			}
+			case "join" -> TownService.requestJoin(level.getServer(), town, player);
+			case "election.call", "election.sign", "election.run", "vote" -> {
+				Optional<Elections.Refusal> refusal = switch (payload.action()) {
+					case "election.call" -> Elections.call(level, town, player);
+					case "election.sign" -> Elections.sign(level, town, player);
+					case "election.run" -> Elections.run(level, town, player);
+					default -> Elections.cast(level, town, player, payload.request());
+				};
+				refusal.ifPresent(r -> player.sendSystemMessage(Component.translatable(r.translationKey(),
+						Math.max(1, Elections.untilAllowed(town, level.getGameTime()) / 1200)).withStyle(ChatFormatting.RED)));
+			}
+			case "leave" -> TownService.leave(level.getServer(), town, player);
+			case "resident.accept", "resident.refuse" -> {
+				if (!town.canManage(player.getUUID())) {
+					return;
+				}
+				TownService.answerJoin(level.getServer(), town, payload.request(),
+						payload.action().equals("resident.accept"));
+			}
+			case "resident.remove" -> {
+				if (!town.canManage(player.getUUID())) {
+					return;
+				}
+				TownService.expel(level.getServer(), town, payload.request());
 			}
 			case "locate" -> {
 				// Le citoyen luit quelques secondes, et l'on dit où il est.

@@ -20,7 +20,7 @@ import java.util.UUID;
 public record TownSnapshot(BlockPos hall, String name, String tier, int population, int citizens, int villagers,
 		int capacity, int homes, int workstations, int employed, int meals, String nextTier, int nextPopulation,
 		int nextHouses, boolean manager, Life life, Council council, List<CitizenRow> rows, List<BuildingRow> buildings,
-		List<RequestRow> requests, List<PlanRow> plans) {
+		List<RequestRow> requests, List<PlanRow> plans, Members members, Ballot ballot) {
 	/**
 	 * La mairie : le maire, ses adjoints, les décrets (clé de chaque décret, et s'il est en vigueur), les
 	 * villes partenaires (nom, et si l'accord est signé des deux côtés).
@@ -35,6 +35,29 @@ public record TownSnapshot(BlockPos hall, String name, String tier, int populati
 	 */
 	public record Life(int mood, boolean partying, boolean canCelebrate, long untilFestival, int festivalCost,
 			boolean alarmed, int treasury, int earnedToday, int annexes, int maxAnnexes) {
+	}
+
+	/**
+	 * Les joueurs de la ville (onglet Habitants) : le rang de celui qui regarde (et s'il a demandé à
+	 * s'installer), les joueurs de la ville avec leur rang, les demandes en attente, et les droits de
+	 * l'habitant et du visiteur (dans l'ordre de {@code Membership.Permission}).
+	 */
+	public record Members(String rank, boolean requested, List<PlayerRow> players, List<PlayerRow> requests,
+			List<Boolean> resident, List<Boolean> visitor) {
+	}
+
+	/**
+	 * L'élection (onglet Élection) : la phase ({@code none}, {@code candidacy}, {@code voting}), le temps
+	 * qui lui reste et celui du mandat (en ticks, -1 sans échéance), le tour, les candidats, si celui qui
+	 * regarde a voté, la pétition (signatures, celles qu'il faut, s'il a signé), le temps avant qu'une
+	 * élection puisse s'ouvrir, et le dernier élu (vide si aucun) avec ses voix.
+	 */
+	public record Ballot(String phase, long endsIn, long termIn, int round, List<PlayerRow> candidates, boolean voted,
+			int signatures, int needed, boolean signed, long allowedIn, String lastWinner, int lastVotes) {
+	}
+
+	/** Un joueur de la ville : son UUID, son nom, son rang. */
+	public record PlayerRow(UUID id, String name, String rank) {
 	}
 
 	/** Un citoyen : nom, métier et faim (clés), logé ou non, conjoint, enfant, humeur (-1 si inconnue), besoin. */
@@ -138,6 +161,43 @@ public record TownSnapshot(BlockPos hall, String name, String tier, int populati
 			buf.writeUtf(plan.kind);
 			buf.writeUtf(plan.locked);
 		}
+		buf.writeUtf(s.members.rank());
+		buf.writeBoolean(s.members.requested());
+		writePlayers(buf, s.members.players());
+		writePlayers(buf, s.members.requests());
+		writeFlags(buf, s.members.resident());
+		writeFlags(buf, s.members.visitor());
+		Ballot b = s.ballot;
+		buf.writeUtf(b.phase());
+		buf.writeVarLong(b.endsIn() + 1);
+		buf.writeVarLong(b.termIn() + 1);
+		buf.writeVarInt(b.round());
+		writePlayers(buf, b.candidates());
+		buf.writeBoolean(b.voted());
+		buf.writeVarInt(b.signatures());
+		buf.writeVarInt(b.needed());
+		buf.writeBoolean(b.signed());
+		buf.writeVarLong(b.allowedIn());
+		buf.writeUtf(b.lastWinner());
+		buf.writeVarInt(b.lastVotes());
+	}
+
+	private static void writePlayers(RegistryFriendlyByteBuf buf, List<PlayerRow> list) {
+		buf.writeVarInt(list.size());
+		for (PlayerRow row : list) {
+			UUIDUtil.STREAM_CODEC.encode(buf, row.id);
+			buf.writeUtf(row.name);
+			buf.writeUtf(row.rank);
+		}
+	}
+
+	private static List<PlayerRow> readPlayers(RegistryFriendlyByteBuf buf) {
+		int n = buf.readVarInt();
+		List<PlayerRow> list = new ArrayList<>(n);
+		for (int i = 0; i < n; i++) {
+			list.add(new PlayerRow(UUIDUtil.STREAM_CODEC.decode(buf), buf.readUtf(), buf.readUtf()));
+		}
+		return list;
 	}
 
 	private static void writeStrings(RegistryFriendlyByteBuf buf, List<String> list) {
@@ -218,8 +278,13 @@ public record TownSnapshot(BlockPos hall, String name, String tier, int populati
 			plans.add(new PlanRow(buf.readUtf(), buf.readUtf(), buf.readUtf(), buf.readVarInt(), buf.readVarInt(),
 					buf.readVarInt(), buf.readUtf(), buf.readUtf()));
 		}
+		Members members = new Members(buf.readUtf(), buf.readBoolean(), readPlayers(buf), readPlayers(buf),
+				readFlags(buf), readFlags(buf));
+		Ballot ballot = new Ballot(buf.readUtf(), buf.readVarLong() - 1, buf.readVarLong() - 1, buf.readVarInt(),
+				readPlayers(buf), buf.readBoolean(), buf.readVarInt(), buf.readVarInt(), buf.readBoolean(),
+				buf.readVarLong(), buf.readUtf(), buf.readVarInt());
 		return new TownSnapshot(hall, name, tier, population, citizens, villagers, capacity, homes, workstations,
 				employed, meals, nextTier, nextPopulation, nextHouses, manager, life, council, rows, buildings, requests,
-				plans);
+				plans, members, ballot);
 	}
 }

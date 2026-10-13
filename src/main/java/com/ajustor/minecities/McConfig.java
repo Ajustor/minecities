@@ -52,11 +52,24 @@ public final class McConfig {
 	@SerializedName("market_daily_earnings")
 	public int marketDailyEarnings = 32;
 	/**
-	 * Les bâtiments déclarés sont-ils protégés : seuls le maire et ses adjoints y cassent des blocs (et
-	 * les plaques) ? Désactivé par défaut, pour rester vanilla.
+	 * Pour les villes fondées avant les rangs d'habitants : leurs bâtiments déclarés sont-ils protégés
+	 * (seuls le maire et ses adjoints y cassent des blocs et les plaques) ? Désactivé par défaut, comme
+	 * avant. Les villes nouvelles règlent ce droit par rang, dans l'onglet Habitants de l'hôtel de ville.
 	 */
 	@SerializedName("protect_buildings")
 	public boolean protectBuildings = false;
+	/** Le mandat du maire dure tant de jours de jeu ; à son terme, une élection (0 : pas d'élection d'office). */
+	@SerializedName("term_days")
+	public int termDays = 7;
+	/** Les candidatures durent tant de jours de jeu. */
+	@SerializedName("candidacy_days")
+	public int candidacyDays = 1;
+	/** Le vote (et chaque nouveau tour en cas d'égalité) dure tant de jours de jeu. */
+	@SerializedName("voting_days")
+	public int votingDays = 1;
+	/** Pas de nouvelle élection, à la demande du maire ou par pétition, avant tant de jours après la précédente. */
+	@SerializedName("election_spacing_days")
+	public int electionSpacingDays = 3;
 	/**
 	 * Un hôtel de ville détruit autrement que par le maire (explosion, commande) : la ville attend
 	 * qu'on en repose un au même endroit pendant tant de minutes avant de disparaître.

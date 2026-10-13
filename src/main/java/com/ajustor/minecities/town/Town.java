@@ -29,7 +29,7 @@ import java.util.UUID;
 public final class Town {
 	/** L'état civil de la ville (à part : un codec ne prend que 16 champs à la fois). */
 	private record Head(UUID id, String name, ResourceKey<Level> dimension, BlockPos hall, UUID mayor,
-			String mayorName, List<UUID> deputies, long founded) {
+			String mayorName, List<UUID> deputies, long founded, Membership membership, Election election) {
 		static final MapCodec<Head> CODEC = RecordCodecBuilder.mapCodec(i -> i.group(
 				UUIDUtil.CODEC.fieldOf("id").forGetter(Head::id),
 				Codec.STRING.fieldOf("name").forGetter(Head::name),
@@ -38,13 +38,15 @@ public final class Town {
 				UUIDUtil.CODEC.fieldOf("mayor").forGetter(Head::mayor),
 				Codec.STRING.optionalFieldOf("mayor_name", "").forGetter(Head::mayorName),
 				UUIDUtil.CODEC.listOf().optionalFieldOf("deputies", List.of()).forGetter(Head::deputies),
-				Codec.LONG.optionalFieldOf("founded", 0L).forGetter(Head::founded)
+				Codec.LONG.optionalFieldOf("founded", 0L).forGetter(Head::founded),
+				Membership.CODEC.forGetter(Head::membership),
+				Election.CODEC.forGetter(Head::election)
 		).apply(i, Head::new));
 	}
 
 	public static final Codec<Town> CODEC = RecordCodecBuilder.create(i -> i.group(
 			Head.CODEC.forGetter(t -> new Head(t.id, t.name, t.dimension, t.hall, t.mayor, t.mayorName,
-					List.copyOf(t.deputies), t.founded)),
+					List.copyOf(t.deputies), t.founded, t.membership, t.election)),
 			House.CODEC.listOf().optionalFieldOf("houses", List.of()).forGetter(t -> List.copyOf(t.houses.values())),
 			Codec.unboundedMap(UUIDUtil.STRING_CODEC, Resident.CODEC).optionalFieldOf("residents", Map.of())
 					.forGetter(t -> t.residents),
@@ -77,6 +79,8 @@ public final class Town {
 		mines.forEach(m -> town.mines.put(m.station(), m));
 		decrees.forEach(d -> Decree.fromSerializedName(d).ifPresent(town.decrees::add));
 		town.partners.addAll(partners);
+		town.membership = head.membership();
+		town.election = head.election();
 		return town;
 	}));
 
@@ -126,6 +130,10 @@ public final class Town {
 	private final List<BlockPos> annexes = new ArrayList<>();
 	/** Ce qui s'est passé dans la ville : morts, fêtes, alerte. */
 	private final Chronicle chronicle;
+	/** Les joueurs de la ville : habitants, demandes, droits de chaque rang. */
+	private Membership membership = Membership.founded();
+	/** Le mandat du maire et l'élection en cours. */
+	private Election election = Election.none();
 	/** L'humeur de chaque citoyen, à son dernier calcul (non sauvegardé : l'entité la recalcule). */
 	private final Map<UUID, Integer> moods = new HashMap<>();
 
@@ -207,6 +215,37 @@ public final class Town {
 	/** Le maire et ses adjoints gèrent la ville. */
 	public boolean canManage(UUID player) {
 		return mayor.equals(player) || deputies.contains(player);
+	}
+
+	// Joueurs
+
+	public Membership membership() {
+		return membership;
+	}
+
+	/** Le rang de ce joueur dans la ville. */
+	public Membership.Rank rank(UUID player) {
+		if (mayor.equals(player)) {
+			return Membership.Rank.MAYOR;
+		}
+		if (deputies.contains(player)) {
+			return Membership.Rank.DEPUTY;
+		}
+		return membership.isResident(player) ? Membership.Rank.RESIDENT : Membership.Rank.VISITOR;
+	}
+
+	public Election election() {
+		return election;
+	}
+
+	/** Ce joueur appartient-il à la ville (maire, adjoint ou habitant) ? */
+	public boolean isMember(UUID player) {
+		return rank(player) != Membership.Rank.VISITOR;
+	}
+
+	/** Ce joueur a-t-il ce droit dans la ville ? */
+	public boolean may(UUID player, Membership.Permission permission) {
+		return membership.permissions(rank(player)).contains(permission);
 	}
 
 	public long founded() {

@@ -121,8 +121,10 @@ public class HousePlaqueBlock extends HorizontalDirectionalBlock {
 	@Override
 	public void setPlacedBy(Level level, BlockPos pos, BlockState state, LivingEntity placer, ItemStack stack) {
 		super.setPlacedBy(level, pos, state, placer, stack);
-		if (level instanceof ServerLevel serverLevel && placer instanceof ServerPlayer player) {
-			TownService.declareHouse(serverLevel, pos, player);
+		if (level instanceof ServerLevel serverLevel && placer instanceof ServerPlayer player
+				&& !TownService.declareHouse(serverLevel, pos, player)) {
+			// Son rang ne lui permet pas de déclarer de maison ici : la plaque lui revient.
+			serverLevel.destroyBlock(pos, !player.isCreative());
 		}
 	}
 

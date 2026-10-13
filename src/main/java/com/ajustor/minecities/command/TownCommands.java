@@ -10,7 +10,10 @@ import com.ajustor.minecities.build.Proposals;
 import com.ajustor.minecities.citizen.CitizenEntity;
 import com.ajustor.minecities.guide.Guide;
 import com.ajustor.minecities.town.Families;
+import com.ajustor.minecities.town.Election;
+import com.ajustor.minecities.town.Elections;
 import com.ajustor.minecities.town.Job;
+import com.ajustor.minecities.town.Membership;
 import com.ajustor.minecities.town.Decree;
 import com.ajustor.minecities.town.Festivals;
 import com.ajustor.minecities.town.Trade;
@@ -102,6 +105,54 @@ public final class TownCommands {
 						.then(Commands.literal("remove")
 								.then(Commands.argument("player", EntityArgument.player())
 										.executes(c -> deputy(c, false)))))
+				.then(Commands.literal("join")
+						.executes(c -> join(c, Optional.empty()))
+						.then(Commands.argument("town", StringArgumentType.greedyString())
+								.suggests((c, b) -> {
+									for (Town t : Towns.get(c.getSource().getServer()).all()) {
+										b.suggest(t.name());
+									}
+									return b.buildFuture();
+								})
+								.executes(c -> join(c, Optional.of(StringArgumentType.getString(c, "town"))))))
+				.then(Commands.literal("leave").executes(TownCommands::leave))
+				.then(Commands.literal("resident")
+						.executes(TownCommands::residents)
+						.then(Commands.literal("accept").then(Commands.argument("player", StringArgumentType.word())
+								.suggests((c, b) -> suggestPlayers(c, b, true))
+								.executes(c -> answer(c, "accept"))))
+						.then(Commands.literal("refuse").then(Commands.argument("player", StringArgumentType.word())
+								.suggests((c, b) -> suggestPlayers(c, b, true))
+								.executes(c -> answer(c, "refuse"))))
+						.then(Commands.literal("remove").then(Commands.argument("player", StringArgumentType.word())
+								.suggests((c, b) -> suggestPlayers(c, b, false))
+								.executes(c -> answer(c, "remove")))))
+				.then(Commands.literal("permission")
+						.then(Commands.argument("rank", StringArgumentType.word())
+								.suggests((c, b) -> SharedSuggestionProvider.suggest(List.of(
+										Membership.Rank.RESIDENT.serializedName(), Membership.Rank.VISITOR.serializedName()), b))
+								.then(Commands.argument("permission", StringArgumentType.word())
+										.suggests((c, b) -> SharedSuggestionProvider.suggest(
+												java.util.Arrays.stream(Membership.Permission.values())
+														.map(Membership.Permission::serializedName), b))
+										.then(Commands.argument("allowed", com.mojang.brigadier.arguments.BoolArgumentType.bool())
+												.executes(TownCommands::permission)))))
+				.then(Commands.literal("election")
+						.executes(TownCommands::election)
+						.then(Commands.literal("call").executes(c -> elect(c, "call")))
+						.then(Commands.literal("sign").executes(c -> elect(c, "sign")))
+						.then(Commands.literal("run").executes(c -> elect(c, "run"))))
+				.then(Commands.literal("vote")
+						.then(Commands.argument("candidate", StringArgumentType.word())
+								.suggests((c, b) -> {
+									try {
+										return SharedSuggestionProvider.suggest(memberTown(c).election().candidates()
+												.stream().map(Map.Entry::getValue), b);
+									} catch (CommandSyntaxException e) {
+										return b.buildFuture();
+									}
+								})
+								.executes(TownCommands::vote)))
 				.then(Commands.literal("blueprints").executes(TownCommands::blueprints))
 				.then(Commands.literal("build")
 						.then(Commands.literal("cancel").executes(TownCommands::cancelBuild))
@@ -423,6 +474,204 @@ public final class TownCommands {
 		context.getSource().sendSuccess(() -> Component.translatable(key, target.getDisplayName(), town.name()), true);
 		target.sendSystemMessage(Component.translatable(key, target.getDisplayName(), town.name())
 				.withStyle(ChatFormatting.GOLD));
+		return Command.SINGLE_SUCCESS;
+	}
+
+	// Habitants joueurs
+
+	/** Demande à s'installer dans la ville nommée, ou dans celle où l'on se trouve. */
+	private static int join(CommandContext<CommandSourceStack> context, Optional<String> name)
+			throws CommandSyntaxException {
+		ServerPlayer player = context.getSource().getPlayerOrException();
+		Towns towns = Towns.get(context.getSource().getServer());
+		Town town = (name.isPresent() ? towns.byName(name.get())
+				: towns.at(context.getSource().getLevel().dimension(), player.blockPosition())).orElseThrow(NO_TOWN::create);
+		return TownService.requestJoin(context.getSource().getServer(), town, player) ? Command.SINGLE_SUCCESS : 0;
+	}
+
+	/** Quitte sa ville (le maire passe d'abord l'écharpe). */
+	private static int leave(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
+		ServerPlayer player = context.getSource().getPlayerOrException();
+		List<Town> mine = Towns.get(context.getSource().getServer()).memberOf(player.getUUID());
+		Optional<Town> town = mine.stream().filter(t -> !t.mayor().equals(player.getUUID())).findFirst();
+		if (town.isEmpty()) {
+			context.getSource().sendFailure(Component.translatable(mine.isEmpty() ? "command.minecities.leave.none"
+					: "command.minecities.leave.mayor"));
+			return 0;
+		}
+		return TownService.leave(context.getSource().getServer(), town.get(), player) ? Command.SINGLE_SUCCESS : 0;
+	}
+
+	/** Les joueurs de la ville (là où l'on est, sinon celle qu'on gère), les demandes et les droits. */
+	private static int residents(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
+		Town town = here(context);
+		Membership membership = town.membership();
+		CommandSourceStack source = context.getSource();
+		source.sendSuccess(() -> Component.translatable("command.minecities.resident.title", town.name())
+				.withStyle(ChatFormatting.GOLD), false);
+		source.sendSuccess(() -> Component.translatable("command.minecities.resident.row",
+				Component.translatable(Membership.Rank.MAYOR.translationKey()), town.mayorName()), false);
+		for (Map.Entry<UUID, String> resident : membership.residentList()) {
+			Membership.Rank rank = town.rank(resident.getKey());
+			source.sendSuccess(() -> Component.translatable("command.minecities.resident.row",
+					Component.translatable(rank.translationKey()), resident.getValue()), false);
+		}
+		for (Map.Entry<UUID, String> request : membership.requests()) {
+			source.sendSuccess(() -> Component.translatable("command.minecities.resident.request", request.getValue())
+					.withStyle(ChatFormatting.AQUA), false);
+		}
+		for (Membership.Rank rank : List.of(Membership.Rank.RESIDENT, Membership.Rank.VISITOR)) {
+			Component allowed = membership.permissions(rank).isEmpty()
+					? Component.translatable("command.minecities.resident.nothing")
+					: Component.literal(String.join(", ", membership.permissions(rank).stream()
+							.map(p -> Component.translatable(p.translationKey()).getString()).toList()));
+			source.sendSuccess(() -> Component.translatable("command.minecities.resident.rights",
+					Component.translatable(rank.translationKey()), allowed).withStyle(ChatFormatting.GRAY), false);
+		}
+		return Command.SINGLE_SUCCESS;
+	}
+
+	/** Le maire ou un adjoint accepte, refuse une demande, ou renvoie un habitant. */
+	private static int answer(CommandContext<CommandSourceStack> context, String what) throws CommandSyntaxException {
+		Town town = here(context);
+		ServerPlayer player = context.getSource().getPlayerOrException();
+		if (!town.canManage(player.getUUID())) {
+			context.getSource().sendFailure(Component.translatable("command.minecities.resident.not_manager"));
+			return 0;
+		}
+		String name = StringArgumentType.getString(context, "player");
+		List<Map.Entry<UUID, String>> among = what.equals("remove") ? town.membership().residentList()
+				: town.membership().requests();
+		Optional<UUID> target = among.stream().filter(e -> e.getValue().equalsIgnoreCase(name)).map(Map.Entry::getKey)
+				.findFirst();
+		MinecraftServer server = context.getSource().getServer();
+		boolean done = target.isPresent() && (what.equals("remove") ? TownService.expel(server, town, target.get())
+				: TownService.answerJoin(server, town, target.get(), what.equals("accept")));
+		if (!done) {
+			context.getSource().sendFailure(Component.translatable("command.minecities.resident.unknown", name));
+			return 0;
+		}
+		return Command.SINGLE_SUCCESS;
+	}
+
+	private static java.util.concurrent.CompletableFuture<com.mojang.brigadier.suggestion.Suggestions> suggestPlayers(
+			CommandContext<CommandSourceStack> context, com.mojang.brigadier.suggestion.SuggestionsBuilder builder,
+			boolean requests) {
+		try {
+			Membership membership = here(context).membership();
+			return SharedSuggestionProvider.suggest((requests ? membership.requests() : membership.residentList())
+					.stream().map(Map.Entry::getValue), builder);
+		} catch (CommandSyntaxException e) {
+			return builder.buildFuture();
+		}
+	}
+
+	// Élections
+
+	/** La ville dont le joueur fait partie : celle où il se trouve, sinon la sienne. */
+	private static Town memberTown(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
+		ServerPlayer player = context.getSource().getPlayerOrException();
+		Towns towns = Towns.get(context.getSource().getServer());
+		Optional<Town> here = towns.at(context.getSource().getLevel().dimension(), player.blockPosition())
+				.filter(t -> t.isMember(player.getUUID()));
+		return here.or(() -> towns.memberOf(player.getUUID()).stream().findFirst()).orElseThrow(NO_TOWN::create);
+	}
+
+	/** Où en est l'élection de la ville. */
+	private static int election(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
+		Town town = here(context);
+		Election election = town.election();
+		long now = context.getSource().getLevel().getGameTime();
+		CommandSourceStack source = context.getSource();
+		if (election.termEnds() > 0 && election.phase() == Election.Phase.NONE) {
+			source.sendSuccess(() -> Component.translatable("command.minecities.election.term", town.mayorName(),
+					minutes(election.termEnds() - now)), false);
+		}
+		election.lastWinner().ifPresent(w -> source.sendSuccess(() -> Component.translatable(
+				"command.minecities.election.last", w, election.lastVotes()), false));
+		switch (election.phase()) {
+			case NONE -> source.sendSuccess(() -> Component.translatable("command.minecities.election.none",
+					election.petition().size(), Elections.signaturesNeeded(town)), false);
+			case CANDIDACY -> source.sendSuccess(() -> Component.translatable("command.minecities.election.candidacy",
+					names(election), minutes(election.phaseEnds() - now)), false);
+			case VOTING -> source.sendSuccess(() -> Component.translatable("command.minecities.election.voting",
+					election.round(), names(election), minutes(election.phaseEnds() - now)), false);
+		}
+		return Command.SINGLE_SUCCESS;
+	}
+
+	private static String names(Election election) {
+		return String.join(", ", election.candidates().stream().map(Map.Entry::getValue).toList());
+	}
+
+	/** Des ticks de jeu en minutes (au moins une). */
+	private static long minutes(long ticks) {
+		return Math.max(1, ticks / 1200);
+	}
+
+	/** Le maire ouvre une élection, un habitant signe la pétition, un joueur se porte candidat. */
+	private static int elect(CommandContext<CommandSourceStack> context, String what) throws CommandSyntaxException {
+		ServerPlayer player = context.getSource().getPlayerOrException();
+		Town town = memberTown(context);
+		ServerLevel level = context.getSource().getServer().getLevel(town.dimension());
+		if (level == null) {
+			return 0;
+		}
+		Optional<Elections.Refusal> refusal = switch (what) {
+			case "call" -> Elections.call(level, town, player);
+			case "sign" -> Elections.sign(level, town, player);
+			default -> Elections.run(level, town, player);
+		};
+		return refused(context, town, refusal, level.getGameTime());
+	}
+
+	private static int refused(CommandContext<CommandSourceStack> context, Town town, Optional<Elections.Refusal> refusal,
+			long now) {
+		if (refusal.isEmpty()) {
+			return Command.SINGLE_SUCCESS;
+		}
+		context.getSource().sendFailure(Component.translatable(refusal.get().translationKey(),
+				minutes(Elections.untilAllowed(town, now))));
+		return 0;
+	}
+
+	/** Le joueur vote pour ce candidat. */
+	private static int vote(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
+		ServerPlayer player = context.getSource().getPlayerOrException();
+		Town town = memberTown(context);
+		ServerLevel level = context.getSource().getServer().getLevel(town.dimension());
+		String name = StringArgumentType.getString(context, "candidate");
+		Optional<UUID> candidate = town.election().candidates().stream().filter(e -> e.getValue().equalsIgnoreCase(name))
+				.map(Map.Entry::getKey).findFirst();
+		if (level == null || candidate.isEmpty()) {
+			context.getSource().sendFailure(Component.translatable(Elections.Refusal.NOT_CANDIDATE.translationKey()));
+			return 0;
+		}
+		Optional<Elections.Refusal> refusal = Elections.cast(level, town, player, candidate.get());
+		if (refusal.isEmpty()) {
+			context.getSource().sendSuccess(() -> Component.translatable("command.minecities.election.voted", name),
+					false);
+		}
+		return refused(context, town, refusal, level.getGameTime());
+	}
+
+	/** Le maire donne ou retire un droit à l'habitant ou au visiteur. */
+	private static int permission(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
+		Town town = mayorTown(context);
+		Optional<Membership.Rank> rank = Membership.Rank.fromSerializedName(StringArgumentType.getString(context, "rank"))
+				.filter(r -> r == Membership.Rank.RESIDENT || r == Membership.Rank.VISITOR);
+		Optional<Membership.Permission> permission = Membership.Permission.fromSerializedName(
+				StringArgumentType.getString(context, "permission"));
+		if (rank.isEmpty() || permission.isEmpty()) {
+			context.getSource().sendFailure(Component.translatable("command.minecities.permission.unknown"));
+			return 0;
+		}
+		boolean allowed = com.mojang.brigadier.arguments.BoolArgumentType.getBool(context, "allowed");
+		town.membership().set(rank.get(), permission.get(), allowed);
+		Towns.get(context.getSource().getServer()).changed();
+		context.getSource().sendSuccess(() -> Component.translatable(allowed ? "command.minecities.permission.granted"
+				: "command.minecities.permission.revoked", Component.translatable(permission.get().translationKey()),
+				Component.translatable(rank.get().translationKey()), town.name()), true);
 		return Command.SINGLE_SUCCESS;
 	}
 
