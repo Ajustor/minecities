@@ -141,7 +141,6 @@
   "screen.minecities.tab.summary": "Summary",
   "screen.minecities.tab.citizens": "Citizens",
   "screen.minecities.tab.registry": "Registry",
-  "screen.minecities.tab.registry_count": "Registry (%s)",
   "screen.minecities.granary": "Granary",
   "screen.minecities.title": "%s — %s",
   "screen.minecities.population": "Population: %s (%s citizens, %s villagers)",
@@ -466,9 +465,10 @@
   "guide.minecities.jobs.4": "Grindstone: guard (sword)\nFletching table: archer (bow)\nSmithing table: inventor\nBrewing stand: doctor\nMine winch: miner (pickaxe)\nBeehive: beekeeper (shears)",
   "guide.minecities.jobs.5": "Tanning rack: tanner\n\nFrom town tier:\nLectern: merchant\nBlast furnace: smith\nJeweler's bench: jeweler\nChiseled bookshelf: librarian",
   "guide.minecities.build": "Commissioning",
-  "guide.minecities.build.1": "Take the blueprint at the town hall (Plans tab): one blueprint for every building. Right-click in the air to choose the building and its style, then use it on the ground, or type /ville build <blueprint>.\n\nThe building's ghost appears: rotate it, then confirm. While you hold it, the ongoing sites show in amber.",
-  "guide.minecities.build.2": "Builders clear the ground and place blocks taken from the granary and warehouse. The mayor hears what is missing.\n\nOnce finished, the building registers itself.",
-  "guide.minecities.build.3": "Four levels: hut, house, hall, mansion. Inside a building, /ville upgrade improves it.\n\nEach level adds beds or a station, and work goes faster.",
+  "guide.minecities.build.1": "Take the blueprint at the town hall (Plans tab): one blueprint for every building.\n\nRight-click in the air: choose the building and its style. Then use it on the ground, or type /ville build <blueprint>.",
+  "guide.minecities.build.2": "The building's ghost appears: rotate it (sneaking), then confirm or abandon it, from the blueprint or the chat.\n\nWhile you hold the blueprint, ongoing sites show in amber.",
+  "guide.minecities.build.3": "Builders clear the ground and place blocks taken from the granary and warehouse. The mayor hears what is missing.\n\nOnce finished, the building registers itself.",
+  "guide.minecities.build.4": "Four levels: hut, house, hall, mansion. Inside a building, /ville upgrade improves it.\n\nEach level adds beds or a station, and work goes faster.",
   "guide.minecities.storage": "Warehouse & couriers",
   "guide.minecities.storage.1": "A warehouse ledger placed in a registered building makes it the warehouse: its chests are the common store.\n\nFood and emeralds go to the granary.",
   "guide.minecities.storage.2": "With couriers, workers leave their output in their workshop: couriers store it and bring builders what they ask for.",
@@ -760,5 +760,8 @@
   "screen.minecities.plan.hint.place": "Use the blueprint on the ground to see the building; sneak to rotate it.",
   "screen.minecities.plan.hint.proposal": "A site is proposed: rotate, confirm or abandon it.",
   "message.minecities.plan.chosen": "Blueprint: %s (%s). Use it on the ground to see the building.",
-  "message.minecities.plan.not_held": "Hold the blueprint in your hand."
+  "message.minecities.plan.not_held": "Hold the blueprint in your hand.",
+  "screen.minecities.building.upgrade.button": "Upgrade",
+  "screen.minecities.building.rebuild.button": "Rebuild",
+  "screen.minecities.building.more": "… and %s more"
 }

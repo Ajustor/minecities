@@ -141,7 +141,6 @@
   "screen.minecities.tab.summary": "Résumé",
   "screen.minecities.tab.citizens": "Citoyens",
   "screen.minecities.tab.registry": "Registre",
-  "screen.minecities.tab.registry_count": "Registre (%s)",
   "screen.minecities.granary": "Grenier",
   "screen.minecities.title": "%s — %s",
   "screen.minecities.population": "Population : %s (%s citoyens, %s villageois)",
@@ -466,9 +465,10 @@
   "guide.minecities.jobs.4": "Meule : garde (épée)\nTable d'archerie : archer (arc)\nTable de forge : inventeur\nAlambic : médecin\nTreuil de mine : mineur (pioche)\nRuche : apiculteur (cisailles)",
   "guide.minecities.jobs.5": "Séchoir à peaux : tanneur\n\nDès la ville :\nPupitre : marchand\nHaut fourneau : forgeron\nÉtabli de joaillier : joaillier\nBibliothèque ciselée : bibliothécaire",
   "guide.minecities.build": "Faire bâtir",
-  "guide.minecities.build.1": "Prenez le plan à l'hôtel de ville (onglet Plans) : un seul plan pour tous les bâtiments. Clic droit dans le vide pour choisir le bâtiment et son style, puis posez-le au sol, ou tapez /ville build <schéma>.\n\nLe fantôme du bâtiment apparaît : tournez-le, puis validez. Tant que vous le tenez, les chantiers en cours se montrent en ambre.",
-  "guide.minecities.build.2": "Les bâtisseurs dégagent le terrain et posent les blocs pris au grenier et à l'entrepôt. Le maire est prévenu de ce qui manque.\n\nFini, le bâtiment se déclare tout seul.",
-  "guide.minecities.build.3": "Quatre niveaux : cabane, maison, bâtisse, demeure. Dans un bâtiment, /ville upgrade l'améliore.\n\nChaque niveau ajoute des lits ou un poste, et fait travailler plus vite.",
+  "guide.minecities.build.1": "Prenez le plan à l'hôtel de ville (onglet Plans) : un seul plan pour tous les bâtiments.\n\nClic droit dans le vide : choisissez le bâtiment et son style. Puis posez le plan au sol, ou tapez /ville build <schéma>.",
+  "guide.minecities.build.2": "Le fantôme du bâtiment apparaît : tournez-le (accroupi), puis validez ou abandonnez, depuis le plan ou le chat.\n\nTant que vous tenez le plan, les chantiers en cours se montrent en ambre.",
+  "guide.minecities.build.3": "Les bâtisseurs dégagent le terrain et posent les blocs pris au grenier et à l'entrepôt. Le maire est prévenu de ce qui manque.\n\nFini, le bâtiment se déclare tout seul.",
+  "guide.minecities.build.4": "Quatre niveaux : cabane, maison, bâtisse, demeure. Dans un bâtiment, /ville upgrade l'améliore.\n\nChaque niveau ajoute des lits ou un poste, et fait travailler plus vite.",
   "guide.minecities.storage": "Entrepôt et livreurs",
   "guide.minecities.storage.1": "Un registre d'entrepôt posé dans un bâtiment déclaré en fait l'entrepôt : ses coffres sont la réserve commune.\n\nNourriture et émeraudes vont au grenier.",
   "guide.minecities.storage.2": "Avec des livreurs, les travailleurs laissent leur production à l'atelier : les livreurs la rangent et apportent aux bâtisseurs ce qu'ils réclament.",
@@ -760,5 +760,8 @@
   "screen.minecities.plan.hint.place": "Posez le plan au sol pour voir le bâtiment ; accroupi, il tourne.",
   "screen.minecities.plan.hint.proposal": "Un chantier est proposé : tournez-le, validez-le ou abandonnez-le.",
   "message.minecities.plan.chosen": "Plan : %s (%s). Posez-le au sol pour voir le bâtiment.",
-  "message.minecities.plan.not_held": "Tenez le plan en main."
+  "message.minecities.plan.not_held": "Tenez le plan en main.",
+  "screen.minecities.building.upgrade.button": "Améliorer",
+  "screen.minecities.building.rebuild.button": "Rebâtir",
+  "screen.minecities.building.more": "… et %s autres"
 }

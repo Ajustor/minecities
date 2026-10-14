@@ -166,9 +166,10 @@ public class TownMapScreen extends Screen {
 		graphics.text(font, Component.translatable("screen.minecities.map.scale", bar), right - 10 - (int) (bar * scale),
 				bottom - 18, INK, false);
 		legend(graphics);
-		hovered.ifPresent(plot -> graphics.text(font, Component.translatable("screen.minecities.map.hover",
+		// L'infobulle du jeu : elle se place d'elle-même dans l'écran.
+		hovered.ifPresent(plot -> graphics.setTooltipForNextFrame(font, Component.translatable("screen.minecities.map.hover",
 				Component.translatable("screen.minecities.map.kind." + plot.kind()), plot.at().toShortString()),
-				mouseX + 8, mouseY - 4, 0xFFFFFFFF, true));
+				mouseX, mouseY));
 		super.extractRenderState(graphics, mouseX, mouseY, a);
 	}
 

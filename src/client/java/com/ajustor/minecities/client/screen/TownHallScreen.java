@@ -29,6 +29,8 @@ public class TownHallScreen extends Screen {
 	private static final int ROW = 22;
 	/** Les joueurs de la ville : quatre lignes, au-dessus des droits de chaque rang. */
 	private static final int MEMBER_ROWS = 4;
+	/** Un décret : son nom, puis son effet dessous. */
+	private static final int DECREE_ROW = 22;
 	private static final int MEMBER_ROW = 16;
 	/** Les droits, dans l'ordre de {@code Membership.Permission}. */
 	private static final String[] PERMISSIONS = {"declare", "granary", "break"};
@@ -86,9 +88,6 @@ public class TownHallScreen extends Screen {
 		int x = left + 10;
 		for (Tab t : Tab.values()) {
 			Component label = Component.translatable("screen.minecities.tab." + t.name().toLowerCase());
-			if (t == Tab.REGISTRY && !town.requests().isEmpty()) {
-				label = Component.translatable("screen.minecities.tab.registry_count", town.requests().size());
-			}
 			Button button = addRenderableWidget(Button.builder(label, b -> select(t))
 					.bounds(x, top + 26, 49, 18).build());
 			button.active = tab != t;
@@ -102,10 +101,11 @@ public class TownHallScreen extends Screen {
 		switch (tab) {
 			case SUMMARY -> {
 				if (town.manager()) {
-					Button festival = addRenderableWidget(Button.builder(Component.translatable(
-									"screen.minecities.festival", town.life().festivalCost()),
+					Component label = Component.translatable("screen.minecities.festival", town.life().festivalCost());
+					int w = Math.max(160, font.width(label) + 16);
+					Button festival = addRenderableWidget(Button.builder(label,
 							b -> send("festival", TownActionPayload.NONE))
-							.bounds(left + WIDTH - 170, top + HEIGHT - 26, 160, 18).build());
+							.bounds(left + WIDTH - 10 - w, top + HEIGHT - 26, w, 18).build());
 					festival.active = town.life().canCelebrate();
 				}
 			}
@@ -148,8 +148,8 @@ public class TownHallScreen extends Screen {
 						addRenderableWidget(Button.builder(Component.translatable(on ? "screen.minecities.decree.lift"
 										: "screen.minecities.decree.take"),
 								b -> send("decree." + decree, TownActionPayload.NONE))
-								.bounds(left + WIDTH - 90, y - 4, 80, 16).build());
-						y += 18;
+								.bounds(left + WIDTH - 90, y, 80, 16).build());
+						y += DECREE_ROW;
 					}
 				}
 			}
@@ -335,6 +335,14 @@ public class TownHallScreen extends Screen {
 			case PLANS -> plans(graphics);
 		}
 		super.extractRenderState(graphics, mouseX, mouseY, a);
+		// Les demandes en attente : une pastille sur l'onglet du registre.
+		if (!town.requests().isEmpty()) {
+			String count = String.valueOf(town.requests().size());
+			int bx = left + 10 + Tab.REGISTRY.ordinal() * 50 + 49 - font.width(count) - 3;
+			int by = top + 23;
+			graphics.fill(bx - 2, by - 1, bx + font.width(count) + 2, by + 9, BAD);
+			graphics.text(font, count, bx, by, 0xFFFFFFFF, false);
+		}
 	}
 
 	private void line(GuiGraphicsExtractor graphics, Component text, int y, int color) {
@@ -452,9 +460,12 @@ public class TownHallScreen extends Screen {
 					: building.beds() > 0 ? "screen.minecities.building.home" : "screen.minecities.building.workshop";
 			graphics.text(font, Component.translatable(kind), left + 14, y, INK, false);
 			graphics.text(font, Component.literal(building.plaque().toShortString()), left + 140, y, FADED, false);
+			int x = left + 22;
 			if (building.beds() > 0) {
-				graphics.text(font, Component.translatable("screen.minecities.building.beds", building.sleepers(),
-						building.beds()), left + 250, y, building.sleepers() < building.beds() ? GOOD : FADED, false);
+				Component beds = Component.translatable("screen.minecities.building.beds", building.sleepers(),
+						building.beds());
+				graphics.text(font, beds, x, y + 10, building.sleepers() < building.beds() ? GOOD : FADED, false);
+				x += font.width(beds) + 10;
 			}
 			if (!building.jobs().isEmpty()) {
 				MutableComponent jobs = Component.empty();
@@ -465,7 +476,7 @@ public class TownHallScreen extends Screen {
 					jobs.append(job.startsWith("!") ? Component.translatable("screen.minecities.job_locked",
 							Component.translatable(job.substring(1))) : Component.translatable(job));
 				}
-				graphics.text(font, jobs, left + 22, y + 10, ACCENT, false);
+				graphics.text(font, jobs, x, y + 10, ACCENT, false);
 			}
 			y += ROW;
 		}
@@ -488,8 +499,8 @@ public class TownHallScreen extends Screen {
 			graphics.text(font, Component.literal(on ? "● " : "○ ").append(decree), left + 22, y, on ? GOOD : FADED,
 					false);
 			graphics.text(font, Component.translatable("decree.minecities." + council.decrees().get(i) + ".effect"),
-					left + 130, y, FADED, false);
-			y += 18;
+					left + 34, y + 10, FADED, false);
+			y += DECREE_ROW;
 		}
 		y += 4;
 		line(graphics, Component.translatable("screen.minecities.council.trade"), y, ACCENT);
@@ -611,12 +622,13 @@ public class TownHallScreen extends Screen {
 		for (TownSnapshot.PlanRow plan : visible(plans, PLAN_ROWS)) {
 			graphics.text(font, Component.translatableWithFallback(plan.key(), plan.fallback()), left + 14, y,
 					plan.locked().isEmpty() ? INK : FADED, false);
-			graphics.text(font, Component.translatable("screen.minecities.plans.size", plan.width(), plan.depth(),
-					plan.height()), left + 170, y, FADED, false);
+			// Sous le nom : maison ou atelier (ou le palier attendu), puis les dimensions.
 			Component detail = plan.locked().isEmpty()
 					? Component.translatable("blueprint.minecities.kind." + plan.kind())
 					: Component.translatable("screen.minecities.plans.locked", Component.translatable(plan.locked()));
 			graphics.text(font, detail, left + 22, y + 9, plan.locked().isEmpty() ? ACCENT : BAD, false);
+			graphics.text(font, Component.translatable("screen.minecities.plans.size", plan.width(), plan.depth(),
+					plan.height()), left + 22 + Math.max(110, font.width(detail) + 10), y + 9, FADED, false);
 			y += ROW;
 		}
 		if (!town.manager()) {

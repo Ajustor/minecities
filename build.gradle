@@ -128,13 +128,17 @@ fabricApi {
 	}
 }
 
-// -PminecitiesGametest=city,work : ne joue que ces scènes ; -PminecitiesFilm : les films image par image.
+// -PminecitiesGametest=city,work : ne joue que ces scènes ; -PminecitiesFilm : les films image par image ;
+// -PminecitiesLang=fr_fr : les captures dans cette langue.
 loom.runs.matching { it.name == 'clientGameTest' || it.name == 'gameTest' }.configureEach {
 	if (project.hasProperty('minecitiesGametest')) {
 		vmArg "-Dminecities.gametest=${project.property('minecitiesGametest')}"
 	}
 	if (project.hasProperty('minecitiesFilm')) {
 		vmArg '-Dminecities.film=true'
+	}
+	if (project.hasProperty('minecitiesLang')) {
+		vmArg "-Dminecities.lang=${project.property('minecitiesLang')}"
 	}
 }
 
