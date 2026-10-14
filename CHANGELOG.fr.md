@@ -1,5 +1,10 @@
 # Journal des modifications
 
+## 1.9.1 — 2026-10-14
+
+### Corrections
+
+- Les menus du mod ne débordent plus, en français non plus : écran des bâtiments, hôtel de ville, bâtisseur, carte et guide.
 ## 1.9.0 — 2026-10-13
 
 ### Nouveautés

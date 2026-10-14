@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.9.1 — 2026-10-14
+
+### Fixes
+
+- Mod screens no longer overflow, in French either: building screen, town hall, builder, map and guide.
 ## 1.9.0 — 2026-10-13
 
 ### New features
