@@ -269,6 +269,20 @@ public class StationScenes implements Scene {
 			hideGui(mc, true);
 		});
 
+		// En image : un bâtiment fait à la main (beaucoup de matériaux, et l'avertissement).
+		BuildingSnapshot byHand = stage.compute(server -> BuildingNetwork.snapshot(server.overworld(), PLAQUE,
+				mayor(server)).orElseThrow());
+		stage.client(mc -> {
+			hideGui(mc, false);
+			mc.gui.setScreen(new BuildingScreen(byHand));
+		});
+		stage.waitTicks(3);
+		stage.shot("stations_3_handmade");
+		stage.client(mc -> {
+			mc.gui.setScreen(null);
+			hideGui(mc, true);
+		});
+
 		// Fait à la main : rebâti au niveau 2, l'ancien dégagé d'abord (du toit vers le sol).
 		check(stage.compute(server -> {
 			ServerLevel level = server.overworld();
@@ -303,6 +317,19 @@ public class StationScenes implements Scene {
 			return refusal.isEmpty() && b.placed() >= 0 && b.refusal().isPresent() ? null
 					: "amélioration : " + refusal + ", chantier " + b.placed() + ", " + b.refusal();
 		}));
+		// En image : le chantier commandé, l'amélioration refusée tant qu'il dure.
+		BuildingSnapshot ordered = stage.compute(server -> BuildingNetwork.snapshot(server.overworld(),
+				RaidScenes.plaque(server.overworld(), BUILT).orElseThrow(), mayor(server)).orElseThrow());
+		stage.client(mc -> {
+			hideGui(mc, false);
+			mc.gui.setScreen(new BuildingScreen(ordered));
+		});
+		stage.waitTicks(3);
+		stage.shot("stations_4_in_progress");
+		stage.client(mc -> {
+			mc.gui.setScreen(null);
+			hideGui(mc, true);
+		});
 	}
 
 	/** Une case libre sur le sol de la maison, loin des lits. */

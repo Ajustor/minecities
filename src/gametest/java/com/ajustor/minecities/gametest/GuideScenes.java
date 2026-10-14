@@ -52,7 +52,7 @@ public class GuideScenes implements Scene {
 			check(server.getRecipeManager().byKey(ResourceKey.create(Registries.RECIPE, MineCities.id("guide")))
 					.isPresent(), "la recette du guide manque");
 			List<Component> pages = Guide.pages();
-			check(pages.size() == 33, "le guide a " + pages.size() + " pages");
+			check(pages.size() == 34, "le guide a " + pages.size() + " pages");
 			List<String> missing = new ArrayList<>();
 			List<Integer> targets = new ArrayList<>();
 			List<String> links = new ArrayList<>();
@@ -89,7 +89,9 @@ public class GuideScenes implements Scene {
 			}
 		}
 		stage.client(mc -> {
-			Language.inject(ClientLanguage.loadFrom(mc.getResourceManager(), List.of("en_us"), false));
+			// La langue du jeu revient (-PminecitiesLang peut en avoir choisi une autre).
+			Language.inject(ClientLanguage.loadFrom(mc.getResourceManager(),
+					List.of("en_us", mc.getLanguageManager().getSelected()), false));
 			mc.gui.setScreen(null);
 			hideGui(mc, false);
 		});

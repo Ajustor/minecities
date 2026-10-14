@@ -139,9 +139,10 @@ public class StationScreen extends Screen {
 			graphics.text(font, Component.translatable("screen.minecities.station.sites"), left + 12, y, ACCENT, false);
 			y += 12;
 			for (StationSnapshot.Site site : station.sites().stream().limit(MAX_SITES).toList()) {
-				graphics.text(font, site.name(), left + 20, y, INK, false);
 				int bar = 80;
 				int x = left + WIDTH - 20 - bar;
+				graphics.text(font, Component.literal(clip(site.name().getString(), x - 64 - 6 - (left + 20))), left + 20, y,
+						INK, false);
 				int done = site.total() == 0 ? 0 : bar * site.placed() / site.total();
 				graphics.fill(x, y + 1, x + bar, y + 7, 0xFFB8AA88);
 				graphics.fill(x, y + 1, x + done, y + 7, GOOD);
@@ -151,6 +152,11 @@ public class StationScreen extends Screen {
 			}
 		}
 		super.extractRenderState(graphics, mouseX, mouseY, a);
+	}
+
+	/** Ce texte, coupé (avec « … ») pour tenir dans cette largeur. */
+	private String clip(String text, int width) {
+		return font.width(text) <= width ? text : font.plainSubstrByWidth(text, width - font.width("…")) + "…";
 	}
 
 	@Override
