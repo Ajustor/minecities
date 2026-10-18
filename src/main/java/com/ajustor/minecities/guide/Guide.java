@@ -1,6 +1,7 @@
 package com.ajustor.minecities.guide;
 
 import com.ajustor.minecities.McConfig;
+import com.ajustor.minecities.MineCities;
 import com.ajustor.minecities.compat.EntityCompat;
 import com.ajustor.minecities.registry.McItems;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
@@ -13,6 +14,7 @@ import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.RecipeHolder;
 
 import java.net.URI;
 import java.net.URLEncoder;
@@ -56,7 +58,21 @@ public final class Guide {
 	}
 
 	public static void register() {
-		ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> welcome(handler.getPlayer()));
+		ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
+			teachRecipes(handler.getPlayer());
+			welcome(handler.getPlayer());
+		});
+	}
+
+	/**
+	 * Le joueur connaît toutes les recettes du mod : sans mod de recettes (JEI, EMI), le livre de recettes
+	 * montre l'hôtel de ville, la plaque, les postes… À chaque venue, pour les mondes d'avant et les
+	 * recettes ajoutées depuis.
+	 */
+	public static void teachRecipes(ServerPlayer player) {
+		java.util.List<RecipeHolder<?>> ours = player.level().getServer().getRecipeManager().getRecipes().stream()
+				.filter(holder -> holder.id().identifier().getNamespace().equals(MineCities.MOD_ID)).toList();
+		player.awardRecipes(ours);
 	}
 
 	/** À sa première venue, le joueur reçoit son guide ; vrai s'il vient de le recevoir. */
