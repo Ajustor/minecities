@@ -57,7 +57,6 @@ public final class Raids {
 	private static final long TIMEOUT = 24000L;
 
 	private static final Map<UUID, Raid> ACTIVE = new HashMap<>();
-	private static final Map<UUID, Long> LAST = new HashMap<>();
 	private static int ticks;
 
 	/** Un raid en cours sur une ville. */
@@ -90,7 +89,6 @@ public final class Raids {
 		ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
 			ACTIVE.values().forEach(r -> r.bar.removeAllPlayers());
 			ACTIVE.clear();
-			LAST.clear();
 		});
 	}
 
@@ -118,7 +116,8 @@ public final class Raids {
 		long time = Math.floorMod(level.getOverworldClockTime(), 24000L);
 		long now = level.getGameTime();
 		boolean dusk = time >= 13000 && time < 13100;
-		if (dusk && now - LAST.getOrDefault(town.id(), now - spacing) >= spacing
+		long last = town.chronicle().lastRaid() >= 0 ? town.chronicle().lastRaid() : now - spacing;
+		if (dusk && now - last >= spacing
 				&& level.getRandom().nextInt(Math.max(1, config.raidOdds)) == 0) {
 			start(level, town);
 		}
@@ -182,7 +181,7 @@ public final class Raids {
 		if (now - raid.started > TIMEOUT) {
 			level.getServer().getPlayerList().broadcastSystemMessage(Component.translatable(
 					"message.minecities.raid.fled", town.name()).withStyle(ChatFormatting.GOLD), false);
-			LAST.put(town.id(), now);
+			town.chronicle().raided(now);
 			stop(level.getServer(), town.id());
 			return;
 		}
@@ -272,7 +271,7 @@ public final class Raids {
 		}
 		// La victoire se fête.
 		Festivals.celebrate(level, town, "message.minecities.festival.victory");
-		LAST.put(town.id(), level.getGameTime());
+		town.chronicle().raided(level.getGameTime());
 		raid.bar.removeAllPlayers();
 		ACTIVE.remove(town.id());
 	}
