@@ -281,6 +281,13 @@ public final class TownCommands {
 			context.getSource().sendSuccess(() -> Component.translatable("command.minecities.admin.tier.auto",
 					town.name()), true);
 		} else {
+			// Une faute de frappe n'impose pas le village en silence.
+			if (java.util.Arrays.stream(TownTier.values()).noneMatch(t -> t.serializedName().equals(name))) {
+				context.getSource().sendFailure(Component.translatable("command.minecities.admin.tier.unknown", name,
+						String.join(", ", java.util.Arrays.stream(TownTier.values()).map(TownTier::serializedName)
+								.toList())));
+				return 0;
+			}
 			TownTier tier = TownTier.fromSerializedName(name);
 			town.forceTier(Optional.of(tier));
 			context.getSource().sendSuccess(() -> Component.translatable("command.minecities.admin.tier",
@@ -453,6 +460,17 @@ public final class TownCommands {
 		Town town = mayorTown(context);
 		ServerPlayer successor = EntityArgument.getPlayer(context, "player");
 		Towns towns = Towns.get(context.getSource().getServer());
+		if (town.election().phase() != com.ajustor.minecities.town.Election.Phase.NONE) {
+			context.getSource().sendFailure(Component.translatable("command.minecities.mayor.election"));
+			return 0;
+		}
+		if (!town.isMember(successor.getUUID())) {
+			context.getSource().sendFailure(Component.translatable("command.minecities.not_member",
+					successor.getDisplayName(), town.name()));
+			return 0;
+		}
+		// L'ancien maire reste habitant de sa ville.
+		town.membership().addResident(town.mayor(), town.mayorName());
 		town.setMayor(successor.getUUID(), successor.getGameProfile().name());
 		towns.changed();
 		context.getSource().getServer().getPlayerList().broadcastSystemMessage(Component.translatable(
@@ -464,6 +482,11 @@ public final class TownCommands {
 	private static int deputy(CommandContext<CommandSourceStack> context, boolean add) throws CommandSyntaxException {
 		Town town = mayorTown(context);
 		ServerPlayer target = EntityArgument.getPlayer(context, "player");
+		if (add && !town.isMember(target.getUUID())) {
+			context.getSource().sendFailure(Component.translatable("command.minecities.not_member",
+					target.getDisplayName(), town.name()));
+			return 0;
+		}
 		boolean changed = add ? town.addDeputy(target.getUUID()) : town.removeDeputy(target.getUUID());
 		if (!changed) {
 			context.getSource().sendFailure(Component.translatable("command.minecities.deputy.unchanged"));

@@ -182,6 +182,15 @@ public final class TownService {
 		}
 		Component customName = stack.get(DataComponents.CUSTOM_NAME);
 		String name = customName != null ? customName.getString() : uniqueName(towns, level);
+		// Deux villes ne portent pas le même nom : /ville join et /ville trade les désignent par lui.
+		if (towns.byName(name).isPresent()) {
+			String base = name;
+			int n = 2;
+			while (towns.byName(base + " " + n).isPresent()) {
+				n++;
+			}
+			name = base + " " + n;
+		}
 		Town town = Town.found(name, level.dimension(), pos, player.getUUID(), player.getGameProfile().name(),
 				level.getGameTime());
 		towns.add(town);
