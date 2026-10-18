@@ -723,6 +723,15 @@ public class CitizenEntity extends PathfinderMob {
 		if (town.get().chronicle().tavernOpen(now)) {
 			extra.add(new Happiness.Factor("tavern", 1));
 		}
+		// Le logis (MC-64) : une belle maison réjouit ; s'y entasser, ou y dormir dans le noir, pèse.
+		r.home().flatMap(town.get()::house).ifPresent(house -> {
+			long occupants = town.get().residents().values().stream()
+					.filter(o -> o.home().filter(house.plaque()::equals).isPresent()).count();
+			BlockPos bed = r.bed().orElse(house.plaque()).above();
+			int light = level.isLoaded(bed) ? level.getBrightness(net.minecraft.world.level.LightLayer.BLOCK, bed)
+					: Happiness.DARK;
+			extra.addAll(Happiness.home(town.get().buildingLevel(house.plaque()), occupants, house.beds().size(), light));
+		});
 		mood = Happiness.of(factors, extra);
 		entityData.set(MOOD, mood.score());
 		town.get().setMood(getUUID(), mood.score());
