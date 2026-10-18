@@ -22,7 +22,7 @@
   "house.minecities.status.already_declared": "another plaque already declares this house",
   "message.minecities.prefix": "[%s] ",
   "message.minecities.found": "%s founded the town of %s!",
-  "message.minecities.found.hint": "Build houses with beds and a door, hang a house plaque inside, and stock the town hall granary: citizens will come.",
+  "message.minecities.found.hint": "Citizens come on their own up to %s residents; beyond that, the town needs a tavern and its taverner. House them: houses with beds, a door and a house plaque. Feed them: the Granary button of the town hall opens the granary.",
   "message.minecities.found.too_close": "Too close to %s: you are %s blocks from its town hall, %s are needed. Move away to the %s.",
   "direction.minecities.north": "north",
   "direction.minecities.south": "south",

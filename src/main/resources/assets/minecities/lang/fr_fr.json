@@ -22,7 +22,7 @@
   "house.minecities.status.already_declared": "une autre plaque déclare déjà cette maison",
   "message.minecities.prefix": "[%s] ",
   "message.minecities.found": "%s a fondé la ville de %s !",
-  "message.minecities.found.hint": "Construisez des maisons avec des lits et une porte, accrochez-y une plaque de maison, et garnissez le grenier de l'hôtel de ville : les citoyens viendront.",
+  "message.minecities.found.hint": "Des citoyens viennent d'eux-mêmes jusqu'à %s habitants ; au-delà, il faut une taverne et son tavernier. Logez-les : maisons avec lits et porte, et une plaque de maison. Nourrissez-les : le bouton Grenier de l'hôtel de ville ouvre le grenier.",
   "message.minecities.found.too_close": "Trop près de %s : vous êtes à %s blocs de son hôtel de ville, il en faut %s. Éloignez-vous vers %s.",
   "direction.minecities.north": "le nord",
   "direction.minecities.south": "le sud",

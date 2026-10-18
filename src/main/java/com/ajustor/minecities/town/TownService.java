@@ -219,7 +219,7 @@ public final class TownService {
 			player.sendSystemMessage(Component.translatable("message.minecities.found.village", town.villagers(),
 					Component.translatable(town.tier().translationKey())).withStyle(ChatFormatting.GREEN));
 		}
-		player.sendSystemMessage(Component.translatable("message.minecities.found.hint")
+		player.sendSystemMessage(Component.translatable("message.minecities.found.hint", Families.minimum())
 				.withStyle(ChatFormatting.GRAY));
 		// L'établi du bâtisseur, offert une fois par joueur (fonder, démonter et refonder n'en donne pas
 		// d'autres) : posé dans un bâtiment déclaré, la ville a son premier bâtisseur.
@@ -672,7 +672,10 @@ public final class TownService {
 		Towns.get(level.getServer()).changed();
 	}
 
-	/** Un nouveau citoyen arrive à l'hôtel de ville, attiré par un lit libre et un grenier garni. */
+	/**
+	 * Un nouveau citoyen arrive à l'hôtel de ville : d'eux-mêmes jusqu'au minimum d'habitants, puis attirés
+	 * par la taverne (voir {@link Families#growth}).
+	 */
 	public static Optional<CitizenEntity> immigrate(ServerLevel level, Town town) {
 		BlockPos spot = arrivalSpot(level, town);
 		CitizenEntity citizen = McEntities.CITIZEN.create(level, EntitySpawnReason.EVENT);
