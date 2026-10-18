@@ -124,7 +124,12 @@ public final class Trade {
 			}
 			int paid = price(item, delivered);
 			Stock.take(to, s -> s.is(Items.EMERALD), paid);
-			Stock.insert(from, new ItemStack(Items.EMERALD, paid));
+			// Le grenier du vendeur plein : ce qui n'y entre pas retourne à l'acheteur, au lieu de disparaître.
+			ItemStack unpaid = Stock.insert(from, new ItemStack(Items.EMERALD, paid));
+			if (!unpaid.isEmpty()) {
+				Stock.insert(to, unpaid);
+				paid -= unpaid.getCount();
+			}
 			seller.chronicle().earn(server.overworld().getGameTime(), paid);
 			Component message = Component.translatable("message.minecities.trade.caravan", seller.name(), delivered,
 					Component.translatable(item.getDescriptionId()), buyer.name(), paid);

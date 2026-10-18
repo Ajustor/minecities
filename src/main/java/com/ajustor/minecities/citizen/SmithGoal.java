@@ -331,6 +331,8 @@ class SmithGoal extends WorkGoal {
 			}
 			citizen.getNavigation().stop();
 			guard.get().setItemSlot(slot, stack.split(1));
+			// Comme l'armure qu'il prend lui-même : le garde tué la lâche, elle n'est pas perdue.
+			guard.get().setDropChance(slot, 2.0f);
 			EntityCompat.swing(citizen, InteractionHand.MAIN_HAND);
 			level().playSound(null, guard.get().blockPosition(), SoundEvents.ARMOR_EQUIP_IRON.value(), SoundSource.NEUTRAL,
 					0.8f, 1.0f);
