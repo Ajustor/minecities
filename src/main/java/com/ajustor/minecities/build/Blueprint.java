@@ -5,10 +5,14 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.ajustor.minecities.town.TownTier;
 import net.minecraft.core.Vec3i;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.NbtUtils;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.Property;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
 
 import java.util.ArrayList;
@@ -117,18 +121,24 @@ public record Blueprint(Identifier id, String kind, int width, int height, int d
 				List.copyOf(cells), Optional.empty(), TownTier.VILLAGE, false);
 	}
 
-	/** « minecraft:oak_door[facing=north,half=lower] », d'après une entrée de palette. */
+	/**
+	 * « minecraft:oak_door[facing=north,half=lower] », d'après une entrée de palette. Le jeu la lit lui-même :
+	 * les noms de ses champs changent d'une version de Minecraft à l'autre (Name devenu id en 26.3).
+	 */
 	private static String stateOf(CompoundTag entry) {
-		String name = entry.getStringOr("Name", "minecraft:air");
-		CompoundTag properties = entry.getCompoundOrEmpty("Properties");
-		if (properties.keySet().isEmpty()) {
+		BlockState state = NbtUtils.readBlockState(BuiltInRegistries.BLOCK, entry);
+		String name = BuiltInRegistries.BLOCK.getKey(state.getBlock()).toString();
+		if (state.getProperties().isEmpty()) {
 			return name;
 		}
 		List<String> pairs = new ArrayList<>();
-		for (String key : new java.util.TreeSet<>(properties.keySet())) {
-			pairs.add(key + "=" + properties.getStringOr(key, ""));
-		}
+		state.getProperties().stream().sorted(java.util.Comparator.comparing(Property::getName))
+				.forEach(property -> pairs.add(property.getName() + "=" + valueOf(state, property)));
 		return name + "[" + String.join(",", pairs) + "]";
+	}
+
+	private static <T extends Comparable<T>> String valueOf(BlockState state, Property<T> property) {
+		return property.getName(state.getValue(property));
 	}
 
 	public static Blueprint parse(Identifier id, JsonObject json) {

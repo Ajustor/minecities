@@ -10,7 +10,7 @@ import java.util.List;
  */
 public interface Scene {
 	/** Toutes les scènes, dans l'ordre où elles se jouent. */
-	List<Scene> ALL = List.of(new CityScenes(), new WorkScenes(), new CountrysideScenes(), new VillageScenes(),
+	List<Scene> ALL = List.of(new DataScenes(), new CityScenes(), new WorkScenes(), new CountrysideScenes(), new VillageScenes(),
 			new BuildScenes(), new FamilyScenes(), new RaidScenes(), new LifeScenes(), new MarketScenes(),
 			new RobustScenes(), new IndustryScenes(), new CraftScenes(), new CouncilScenes(), new StyleScenes(),
 			new LogisticsScenes(), new GuideScenes(), new StructureScenes(), new PlanScenes(),

@@ -34,17 +34,21 @@ import java.util.Optional;
  * ville dans le chat. Seul le maire peut le casser, et la ville disparaît avec lui.
  */
 public class TownHallBlock extends BaseEntityBlock {
+	//? if <26.3 {
 	public static final MapCodec<TownHallBlock> CODEC = simpleCodec(TownHallBlock::new);
+	//?}
 
 	public TownHallBlock(Properties properties) {
 		super(properties);
 		registerDefaultState(stateDefinition.any().setValue(HorizontalDirectionalBlock.FACING, Direction.NORTH));
 	}
 
+	//? if <26.3 {
 	@Override
 	protected MapCodec<? extends BaseEntityBlock> codec() {
 		return CODEC;
 	}
+	//?}
 
 	@Override
 	protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {

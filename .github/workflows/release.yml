@@ -51,7 +51,10 @@ jobs:
             echo "## English"
             sed '1d' RELEASE.en.md
             echo
-            echo "Minecraft 26.2 · Fabric Loader ≥ 0.19.3 · Fabric API · Java 25"
+            versions=$(ls build/libs/minecities-*.jar | grep -v -- '-sources\.jar$' | sed -E 's/.*\+([0-9.]+)\.jar$/\1/' | sort -uV | paste -sd ',' | sed 's/,/, /g')
+            echo "Minecraft $versions · Fabric Loader ≥ 0.19.3 · Fabric API · Java 25"
+            echo
+            echo "Un jar par version de Minecraft : prendre \`minecities-<version>+<minecraft>.jar\`."
           } > RELEASE.md
       - name: publish GitHub Release
         uses: softprops/action-gh-release@v2
@@ -60,7 +63,7 @@ jobs:
           body_path: RELEASE.md
           prerelease: ${{ contains(github.ref_name, '-') }}
           files: |
-            build/libs/minecities-*+26.2.jar
+            build/libs/minecities-*.jar
             !build/libs/*-sources.jar
       - name: back to master
         run: |

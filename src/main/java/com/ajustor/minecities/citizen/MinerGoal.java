@@ -1,5 +1,6 @@
 package com.ajustor.minecities.citizen;
 
+import com.ajustor.minecities.compat.EntityCompat;
 import com.ajustor.minecities.town.House;
 import com.ajustor.minecities.town.Job;
 import com.ajustor.minecities.town.Mine;
@@ -176,7 +177,7 @@ class MinerGoal extends WorkGoal {
 		}
 		citizen.getLookControl().setLookAt(target.getX() + 0.5, target.getY() + 1, target.getZ() + 0.5);
 		citizen.act(Action.CHOP, 15);
-		citizen.swing(InteractionHand.MAIN_HAND);
+		EntityCompat.swing(citizen, InteractionHand.MAIN_HAND);
 		for (BlockPos pos : column) {
 			mineBlock(pos);
 			for (Direction d : Direction.values()) {

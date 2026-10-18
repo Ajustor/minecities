@@ -28,17 +28,21 @@ import net.minecraft.world.phys.BlockHitResult;
  * quartier mangent. Le maire la pose sur le territoire, assez loin de l'hôtel de ville.
  */
 public class TownAnnexBlock extends BaseEntityBlock {
+	//? if <26.3 {
 	public static final MapCodec<TownAnnexBlock> CODEC = simpleCodec(TownAnnexBlock::new);
+	//?}
 
 	public TownAnnexBlock(Properties properties) {
 		super(properties);
 		registerDefaultState(stateDefinition.any().setValue(HorizontalDirectionalBlock.FACING, Direction.NORTH));
 	}
 
+	//? if <26.3 {
 	@Override
 	protected MapCodec<? extends BaseEntityBlock> codec() {
 		return CODEC;
 	}
+	//?}
 
 	@Override
 	protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {

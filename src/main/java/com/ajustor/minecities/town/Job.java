@@ -1,5 +1,6 @@
 package com.ajustor.minecities.town;
 
+import com.ajustor.minecities.compat.BlockCompat;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.tags.BlockTags;
@@ -163,7 +164,7 @@ public enum Job {
 
 	/** Posé seul au sol : un sol plein dessous, rien de plein dessus. */
 	private static boolean standsAlone(BlockGetter level, BlockPos pos) {
-		return !level.getBlockState(pos.above()).blocksMotion() && level.getBlockState(pos.below()).blocksMotion();
+		return !BlockCompat.blocksMotion(level.getBlockState(pos.above())) && BlockCompat.blocksMotion(level.getBlockState(pos.below()));
 	}
 
 	private static boolean nearWater(BlockGetter level, BlockPos pos) {

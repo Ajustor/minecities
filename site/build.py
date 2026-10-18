@@ -106,6 +106,11 @@ def changelog(name, missing):
     return markdown(md)
 
 
+def minecraft_of(jar):
+    """La version de Minecraft d'un jar du mod : ce qui suit le « + » de son nom."""
+    return jar.rsplit("+", 1)[-1].removesuffix(".jar") if "+" in jar else ""
+
+
 def releases(data, fr):
     if not data:
         return "<p>" + ("Aucune version publiée pour l'instant." if fr else "No release published yet.") + "</p>"
@@ -118,11 +123,14 @@ def releases(data, fr):
         pre = r.get("prerelease")
         badge = ('<span class="badge pre">' + ("préversion" if fr else "pre-release") + "</span>") if pre \
             else ('<span class="badge">' + ("stable" if fr else "stable") + "</span>")
-        jars = [a for a in r.get("assets", []) if a.get("name", "").endswith(".jar")]
-        link = (f'<a class="button" href="{html.escape(jars[0]["browser_download_url"])}">'
-                + ("Télécharger" if fr else "Download") + f" {html.escape(jars[0]['name'])}</a>") if jars \
-            else f'<a href="{html.escape(r.get("html_url", REPO))}">GitHub</a>'
-        details = ("Minecraft 26.2 · Fabric Loader ≥ 0.19.3 · Fabric API · Java 25")
+        # Un jar par version de Minecraft (minecities-1.10.0+26.3.jar).
+        jars = sorted((a for a in r.get("assets", []) if a.get("name", "").endswith(".jar")
+                       and not a["name"].endswith("-sources.jar")), key=lambda a: minecraft_of(a["name"]))
+        link = " ".join(f'<a class="button" href="{html.escape(a["browser_download_url"])}">'
+                        + ("Télécharger" if fr else "Download") + f" {html.escape(a['name'])}</a>" for a in jars) \
+            or f'<a href="{html.escape(r.get("html_url", REPO))}">GitHub</a>'
+        versions = ", ".join(minecraft_of(a["name"]) for a in jars) or "26.2"
+        details = f"Minecraft {versions} · Fabric Loader ≥ 0.19.3 · Fabric API · Java 25\"
         out.append(f'<div class="release"><h2>{tag} {badge}</h2><p>{date} · {details}</p><p>{link}</p></div>')
     return "\n".join(out)
 
@@ -130,30 +138,30 @@ def releases(data, fr):
 INSTALL_FR = """
 <ol>
 <li>Installez <strong>Java 25</strong> ou plus récent (le lanceur officiel le fournit).</li>
-<li>Installez <a href="https://fabricmc.net/use/installer/">Fabric Loader</a> (0.19.3 ou plus) pour <strong>Minecraft 26.2</strong>.</li>
-<li>Téléchargez <a href="https://modrinth.com/mod/fabric-api">Fabric API</a> pour 26.2 et le jar du mod depuis la page <a href="releases.html">Versions</a>.</li>
+<li>Installez <a href="https://fabricmc.net/use/installer/">Fabric Loader</a> (0.19.3 ou plus) pour <strong>Minecraft 26.2 ou 26.3</strong>.</li>
+<li>Téléchargez <a href="https://modrinth.com/mod/fabric-api">Fabric API</a> pour votre version de Minecraft, et le jar du mod de la même version (<code>minecities-…+26.3.jar</code> pour 26.3) depuis la page <a href="releases.html">Versions</a>.</li>
 <li>Placez les deux jars dans le dossier <code>mods</code> de votre installation, puis lancez le profil Fabric.</li>
 </ol>
 <h2>Problèmes fréquents</h2>
 <ul>
 <li><strong>Le jeu refuse de démarrer, « Java 25 requis »</strong> : le profil utilise un Java trop ancien ; choisissez Java 25 dans les réglages du profil.</li>
 <li><strong>« Fabric API manquant »</strong> : le mod en dépend ; ajoutez-le au dossier <code>mods</code>.</li>
-<li><strong>Mauvaise version de Minecraft</strong> : le mod cible 26.2 uniquement.</li>
+<li><strong>Mauvaise version de Minecraft</strong> : chaque jar du mod ne marche qu'avec la version de Minecraft écrite après le « + » de son nom.</li>
 <li><strong>Serveur</strong> : le même jar s'installe sur le serveur ; chaque joueur doit aussi l'avoir.</li>
 </ul>
 """
 INSTALL_EN = """
 <ol>
 <li>Install <strong>Java 25</strong> or newer (the official launcher ships it).</li>
-<li>Install <a href="https://fabricmc.net/use/installer/">Fabric Loader</a> (0.19.3 or newer) for <strong>Minecraft 26.2</strong>.</li>
-<li>Download <a href="https://modrinth.com/mod/fabric-api">Fabric API</a> for 26.2 and the mod jar from the <a href="releases.html">Releases</a> page.</li>
+<li>Install <a href="https://fabricmc.net/use/installer/">Fabric Loader</a> (0.19.3 or newer) for <strong>Minecraft 26.2 or 26.3</strong>.</li>
+<li>Download <a href="https://modrinth.com/mod/fabric-api">Fabric API</a> for your Minecraft version, and the mod jar for that same version (<code>minecities-…+26.3.jar</code> for 26.3) from the <a href="releases.html">Releases</a> page.</li>
 <li>Put both jars in your installation's <code>mods</code> folder, then launch the Fabric profile.</li>
 </ol>
 <h2>Common problems</h2>
 <ul>
 <li><strong>The game won't start, "Java 25 required"</strong>: the profile uses an old Java; pick Java 25 in the profile settings.</li>
 <li><strong>"Missing Fabric API"</strong>: the mod depends on it; add it to the <code>mods</code> folder.</li>
-<li><strong>Wrong Minecraft version</strong>: the mod targets 26.2 only.</li>
+<li><strong>Wrong Minecraft version</strong>: each mod jar only works with the Minecraft version written after the "+" in its name.</li>
 <li><strong>Server</strong>: the same jar goes on the server; every player needs it too.</li>
 </ul>
 """

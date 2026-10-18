@@ -1,5 +1,6 @@
 package com.ajustor.minecities.citizen;
 
+import com.ajustor.minecities.compat.EntityCompat;
 import com.ajustor.minecities.town.Job;
 import com.ajustor.minecities.town.Stock;
 import com.ajustor.minecities.town.TownService;
@@ -148,7 +149,7 @@ class DoctorGoal extends WorkGoal {
 			return;
 		}
 		care = 0;
-		citizen.swing(InteractionHand.MAIN_HAND);
+		EntityCompat.swing(citizen, InteractionHand.MAIN_HAND);
 		Optional<ItemStack> food = carriedFood();
 		if (patient.hunger() <= 0 && food.isPresent()) {
 			patient.eat(food.get().split(1));

@@ -1,5 +1,7 @@
 package com.ajustor.minecities.citizen;
 
+import com.ajustor.minecities.compat.BlockCompat;
+import com.ajustor.minecities.compat.EntityCompat;
 import com.ajustor.minecities.town.Job;
 import com.ajustor.minecities.town.Stock;
 import net.minecraft.core.BlockPos;
@@ -137,7 +139,7 @@ class CourierGoal extends WorkGoal {
 				inventory.set(i, Stock.insert(c, inventory.get(i)));
 			}
 		});
-		citizen.swing(InteractionHand.MAIN_HAND);
+		EntityCompat.swing(citizen, InteractionHand.MAIN_HAND);
 		haul = null;
 	}
 
@@ -222,7 +224,7 @@ class CourierGoal extends WorkGoal {
 	/** Le sol sous ce point : la première case libre au-dessus d'un bloc plein, en descendant. */
 	private BlockPos groundBelow(BlockPos pos) {
 		BlockPos at = pos;
-		for (int i = 0; i < 16 && !level().getBlockState(at.below()).blocksMotion(); i++) {
+		for (int i = 0; i < 16 && !BlockCompat.blocksMotion(level().getBlockState(at.below())); i++) {
 			at = at.below();
 		}
 		return at;
@@ -262,7 +264,7 @@ class CourierGoal extends WorkGoal {
 			// Ses poches sont pleines : le bâtisseur va faire de la place ; le livreur attend.
 			return;
 		}
-		citizen.swing(InteractionHand.MAIN_HAND);
+		EntityCompat.swing(citizen, InteractionHand.MAIN_HAND);
 		citizen.say("delivered", Component.translatable("speech.minecities.delivered", given,
 				cargo.getName(new ItemStack(cargo))));
 		customer.clearRequest();

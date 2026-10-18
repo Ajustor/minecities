@@ -1,6 +1,7 @@
 package com.ajustor.minecities.guide;
 
 import com.ajustor.minecities.McConfig;
+import com.ajustor.minecities.compat.EntityCompat;
 import com.ajustor.minecities.registry.McItems;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.loader.api.FabricLoader;
@@ -72,7 +73,7 @@ public final class Guide {
 	public static void give(ServerPlayer player) {
 		ItemStack guide = new ItemStack(McItems.GUIDE);
 		if (!player.getInventory().add(guide)) {
-			player.drop(guide, false);
+			EntityCompat.drop(player, guide);
 		}
 	}
 

@@ -1,5 +1,7 @@
 package com.ajustor.minecities.citizen;
 
+import com.ajustor.minecities.compat.BlockCompat;
+import com.ajustor.minecities.compat.EntityCompat;
 import com.ajustor.minecities.town.Job;
 import com.ajustor.minecities.town.Stock;
 import net.minecraft.core.BlockPos;
@@ -149,7 +151,7 @@ class ArcherGoal extends WorkGoal {
 		arrow.shoot(dx, dy + horizontal * 0.2, dz, 1.6f, 3.0f);
 		level().addFreshEntity(arrow);
 		level().playSound(null, citizen.blockPosition(), SoundEvents.ARROW_SHOOT, SoundSource.NEUTRAL, 1.0f, 1.0f);
-		citizen.swing(InteractionHand.MAIN_HAND);
+		EntityCompat.swing(citizen, InteractionHand.MAIN_HAND);
 		arrows.shrink(1);
 		bow.hurtAndBreak(1, citizen, EquipmentSlot.MAINHAND);
 	}
@@ -162,7 +164,7 @@ class ArcherGoal extends WorkGoal {
 		BlockPos best = null;
 		for (BlockPos pos : BlockPos.betweenClosed(station.offset(-3, 0, -3), station.offset(3, 16, 3))) {
 			if (level().getBlockState(pos).isAir() && level().getBlockState(pos.above()).isAir()
-					&& level().getBlockState(pos.below()).blocksMotion()
+					&& BlockCompat.blocksMotion(level().getBlockState(pos.below()))
 					&& (best == null || pos.getY() > best.getY())) {
 				best = pos.immutable();
 			}

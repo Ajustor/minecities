@@ -1,5 +1,6 @@
 package com.ajustor.minecities.network;
 
+import com.ajustor.minecities.compat.EntityCompat;
 import net.minecraft.core.BlockPos;
 import com.ajustor.minecities.block.TownHallBlockEntity;
 import com.ajustor.minecities.citizen.CitizenEntity;
@@ -311,7 +312,7 @@ public final class TownNetwork {
 			} else {
 				net.minecraft.world.item.ItemStack stack = com.ajustor.minecities.build.PlanItem.of(blueprint.get(), style);
 				if (!player.getInventory().add(stack)) {
-					player.drop(stack, false);
+					EntityCompat.drop(player, stack);
 				}
 			}
 			player.sendSystemMessage(Component.translatable("message.minecities.plan.given",

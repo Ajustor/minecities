@@ -1,5 +1,6 @@
 package com.ajustor.minecities.citizen;
 
+import com.ajustor.minecities.compat.EntityCompat;
 import com.ajustor.minecities.town.Disasters;
 import com.ajustor.minecities.town.Stock;
 import com.ajustor.minecities.town.Storage;
@@ -133,7 +134,7 @@ class FirefightGoal extends Goal {
 		if (target != null && within(target)) {
 			citizen.getNavigation().stop();
 			citizen.getLookControl().setLookAt(target.getX() + 0.5, target.getY() + 0.5, target.getZ() + 0.5);
-			citizen.swing(InteractionHand.MAIN_HAND);
+			EntityCompat.swing(citizen, InteractionHand.MAIN_HAND);
 			Disasters.douse(level, target);
 			target = null;
 			recheck = 10;

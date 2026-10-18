@@ -1,5 +1,6 @@
 package com.ajustor.minecities.citizen;
 
+import com.ajustor.minecities.compat.EntityCompat;
 import com.ajustor.minecities.town.Job;
 import com.ajustor.minecities.town.Stock;
 import net.minecraft.core.BlockPos;
@@ -145,7 +146,7 @@ class BeekeeperGoal extends WorkGoal {
 			level().playSound(null, pos, SoundEvents.BEEHIVE_SHEAR, SoundSource.BLOCKS, 1.0f, 1.0f);
 		}
 		level().setBlockAndUpdate(pos, state.setValue(BeehiveBlock.HONEY_LEVEL, 0));
-		citizen.swing(InteractionHand.MAIN_HAND);
+		EntityCompat.swing(citizen, InteractionHand.MAIN_HAND);
 		citizen.act(Action.FEED, 20);
 		level().sendParticles(ParticleTypes.FALLING_HONEY, pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, 6,
 				0.3, 0.3, 0.3, 0);

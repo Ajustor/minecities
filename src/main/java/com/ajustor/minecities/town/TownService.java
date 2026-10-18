@@ -3,6 +3,8 @@ package com.ajustor.minecities.town;
 import com.ajustor.minecities.block.HousePlaqueBlock;
 import com.ajustor.minecities.block.TownHallBlockEntity;
 import com.ajustor.minecities.citizen.CitizenEntity;
+import com.ajustor.minecities.compat.BlockCompat;
+import com.ajustor.minecities.compat.EntityCompat;
 import com.ajustor.minecities.registry.McBlocks;
 import com.ajustor.minecities.registry.McEntities;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
@@ -139,7 +141,7 @@ public final class TownService {
 					.withStyle(ChatFormatting.RED));
 			level.removeBlock(pos, false);
 			if (!player.isCreative()) {
-				player.getInventory().placeItemBackInInventory(stack.copyWithCount(1));
+				EntityCompat.placeBack(player, stack.copyWithCount(1));
 			}
 			return;
 		}
@@ -149,7 +151,7 @@ public final class TownService {
 					neighbour.get().name()).withStyle(ChatFormatting.RED));
 			level.removeBlock(pos, false);
 			if (!player.isCreative()) {
-				player.getInventory().placeItemBackInInventory(stack.copyWithCount(1));
+				EntityCompat.placeBack(player, stack.copyWithCount(1));
 			}
 			return;
 		}
@@ -171,7 +173,7 @@ public final class TownService {
 		ItemStack bench = new ItemStack(com.ajustor.minecities.registry.McItems.STATIONS
 				.get(com.ajustor.minecities.town.Job.BUILDER));
 		if (!player.getInventory().add(bench)) {
-			player.drop(bench, false);
+			EntityCompat.drop(player, bench);
 		}
 		player.sendSystemMessage(Component.translatable("message.minecities.found.builder")
 				.withStyle(ChatFormatting.GRAY));
@@ -231,7 +233,7 @@ public final class TownService {
 					.withStyle(ChatFormatting.RED));
 			level.removeBlock(pos, false);
 			if (!player.isCreative()) {
-				player.getInventory().placeItemBackInInventory(stack.copyWithCount(1));
+				EntityCompat.placeBack(player, stack.copyWithCount(1));
 			}
 			return;
 		}
@@ -389,7 +391,7 @@ public final class TownService {
 		if (state.is(McBlocks.HOUSE_PLAQUE)) {
 			return HouseScanner.Cell.PLAQUE;
 		}
-		return state.blocksMotion() ? HouseScanner.Cell.SOLID : HouseScanner.Cell.OPEN;
+		return BlockCompat.blocksMotion(state) ? HouseScanner.Cell.SOLID : HouseScanner.Cell.OPEN;
 	}
 
 	/** Un chantier fini : sa plaque déclare le bâtiment, sans joueur pour l'entendre. */

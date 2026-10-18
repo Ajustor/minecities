@@ -63,3 +63,8 @@ skills-lock.json
 !.dev.vars.example
 .env*
 !.env.example
+
+# nœuds de Stonecutter (une version de Minecraft chacun)
+
+/versions/*/build/
+/versions/*/run/

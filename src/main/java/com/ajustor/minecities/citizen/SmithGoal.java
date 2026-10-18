@@ -1,5 +1,6 @@
 package com.ajustor.minecities.citizen;
 
+import com.ajustor.minecities.compat.EntityCompat;
 import com.ajustor.minecities.town.Job;
 import com.ajustor.minecities.town.Stock;
 import net.minecraft.core.BlockPos;
@@ -226,7 +227,7 @@ class SmithGoal extends WorkGoal {
 			return;
 		}
 		timer = 0;
-		citizen.swing(InteractionHand.MAIN_HAND);
+		EntityCompat.swing(citizen, InteractionHand.MAIN_HAND);
 		if (forging != null) {
 			// Il use ses matériaux, et seulement eux : le reste de ses poches (une pièce pas encore livrée) reste.
 			forging.materials().forEach((item, n) -> {
@@ -287,7 +288,7 @@ class SmithGoal extends WorkGoal {
 			}
 			citizen.getNavigation().stop();
 			guard.get().setItemSlot(slot, stack.split(1));
-			citizen.swing(InteractionHand.MAIN_HAND);
+			EntityCompat.swing(citizen, InteractionHand.MAIN_HAND);
 			level().playSound(null, guard.get().blockPosition(), SoundEvents.ARMOR_EQUIP_IRON.value(), SoundSource.NEUTRAL,
 					0.8f, 1.0f);
 			return true;

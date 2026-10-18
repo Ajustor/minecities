@@ -1,5 +1,7 @@
 package com.ajustor.minecities.citizen;
 
+import com.ajustor.minecities.compat.EntityCompat;
+import com.ajustor.minecities.compat.SoundCompat;
 import com.ajustor.minecities.town.Job;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
@@ -167,9 +169,9 @@ class LumberjackGoal extends WorkGoal {
 			return;
 		}
 		Block species = level.getBlockState(base).getBlock();
-		citizen.swing(InteractionHand.MAIN_HAND);
+		EntityCompat.swing(citizen, InteractionHand.MAIN_HAND);
 		citizen.act(Action.CHOP, 30);
-		level.playSound(null, base, SoundEvents.AXE_STRIP, SoundSource.BLOCKS, 1.0f, 0.8f);
+		level.playSound(null, base, SoundCompat.AXE_STRIP, SoundSource.BLOCKS, 1.0f, 0.8f);
 		for (BlockPos pos : logs) {
 			ItemStack axe = citizen.getMainHandItem();
 			if (axe.isEmpty()) {

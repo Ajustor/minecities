@@ -1,5 +1,6 @@
 package com.ajustor.minecities.citizen;
 
+import com.ajustor.minecities.compat.EntityCompat;
 import com.ajustor.minecities.town.Job;
 import com.ajustor.minecities.town.Stock;
 import net.minecraft.core.BlockPos;
@@ -172,7 +173,7 @@ class BreederGoal extends WorkGoal {
 				break;
 			}
 		}
-		citizen.swing(InteractionHand.MAIN_HAND);
+		EntityCompat.swing(citizen, InteractionHand.MAIN_HAND);
 		citizen.act(Action.FEED, 20);
 		target.setInLove(null);
 		level().sendParticles(ParticleTypes.HEART, target.getX(), target.getY() + target.getBbHeight(), target.getZ(),
@@ -233,7 +234,7 @@ class BreederGoal extends WorkGoal {
 			follow(target);
 			return;
 		}
-		citizen.swing(InteractionHand.MAIN_HAND);
+		EntityCompat.swing(citizen, InteractionHand.MAIN_HAND);
 		target.hurtServer(level(), level().damageSources().mobAttack(citizen), Float.MAX_VALUE);
 		target = null;
 		task = Task.NONE;
