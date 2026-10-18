@@ -682,6 +682,13 @@ class BuilderGoal extends WorkGoal {
 		}
 	}
 
+	/** Depuis quand il attend le livreur, et jusqu'à quand il va lui-même chercher ses matériaux. */
+	private long requestedAt;
+	private long selfServeUntil;
+	/** Il attend le livreur une minute au plus ; puis y va lui-même pendant deux minutes. */
+	private static final int COURIER_PATIENCE = 1200;
+	private static final int SELF_SERVE = 2400;
+
 	/** Va chercher un matériau ; s'il n'y en a nulle part, prévient le maire et attend. */
 	private void fetch(Construction construction, Item item) {
 		if (freeSlots() == 0) {
@@ -690,7 +697,10 @@ class BuilderGoal extends WorkGoal {
 		}
 		Optional<BlockPos> source = find(supplies(), s -> s.is(item));
 		// Un livreur dans la ville : le bâtisseur reste sur son chantier et lui réclame le matériau.
-		if (source.isPresent() && town().workers(Job.COURIER) > 0 && citizen.wanted().isEmpty()) {
+		long now = level().getGameTime();
+		if (source.isPresent() && town().workers(Job.COURIER) > 0 && citizen.wanted().isEmpty()
+				&& now >= selfServeUntil) {
+			requestedAt = now;
 			int needed = (int) plan.subList(construction.step(), plan.size()).stream()
 					.filter(p -> BuildPlan.material(p.state()).filter(item::equals).isPresent()).count();
 			citizen.request(item, Math.max(1, Math.min(HAUL, needed)));
@@ -698,8 +708,15 @@ class BuilderGoal extends WorkGoal {
 					Math.max(1, Math.min(HAUL, needed)), item.getName(new ItemStack(item))));
 		}
 		if (citizen.wanted().filter(item::equals).isPresent()) {
-			cooldown = 20;
-			return;
+			if (now - requestedAt <= COURIER_PATIENCE) {
+				cooldown = 20;
+				return;
+			}
+			// Le livreur ne vient pas (alité, affamé, coincé) : il cesse de l'attendre et y va lui-même
+			// pendant un moment.
+			citizen.clearRequest();
+			citizen.satisfied("wait:" + item);
+			selfServeUntil = now + SELF_SERVE;
 		}
 		// Plus rien dans les réserves, mais un autre bâtisseur en a en poche sans en avoir besoin : il
 		// le lui emprunte. Sinon le dernier bloc d'un chantier attendrait sans fin ce que garde un autre.
