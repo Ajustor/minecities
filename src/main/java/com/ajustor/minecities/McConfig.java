@@ -42,6 +42,12 @@ public final class McConfig {
 	/** Au moins tant de jours entre deux raids sur une même ville. */
 	@SerializedName("raid_spacing_days")
 	public int raidSpacingDays = 3;
+	/**
+	 * Le budget (MC-57) : l'impôt du matin dans la boîte à impôts, le salaire des gardes et des archers,
+	 * des émeraudes pour les chantiers à partir du niveau 2.
+	 */
+	@SerializedName("budget")
+	public boolean budget = true;
 	/** Ce que coûte une fête, en émeraudes. */
 	@SerializedName("festival_cost")
 	public int festivalCost = 4;

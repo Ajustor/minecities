@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "": {
+      "model": "minecities:block/tax_box"
+    }
+  }
+}

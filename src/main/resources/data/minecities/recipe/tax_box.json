@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "IEI",
+    "PCP",
+    "PPP"
+  ],
+  "key": {
+    "I": "minecraft:iron_ingot",
+    "E": "minecraft:emerald",
+    "P": "minecraft:dark_oak_planks",
+    "C": "minecraft:chest"
+  },
+  "result": {
+    "id": "minecities:tax_box",
+    "count": 1
+  }
+}

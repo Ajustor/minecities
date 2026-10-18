@@ -238,7 +238,10 @@ public final class TownNetwork {
 				open.add(com.ajustor.minecities.town.Trade.trading(town, other));
 			}
 		}
-		return new TownSnapshot.Council(town.mayorName(), deputies, decrees, decreed, partners, open);
+		com.ajustor.minecities.town.Budget.Ledger ledger = town.chronicle().ledger();
+		return new TownSnapshot.Council(town.mayorName(), deputies, decrees, decreed, partners, open,
+				com.ajustor.minecities.McConfig.get().budget, ledger.rate().serializedName(), ledger.rate().emeralds(),
+				ledger.taxes(), ledger.wages(), ledger.works(), com.ajustor.minecities.town.Budget.inTaxBox(level, town));
 	}
 
 	public static void act(ServerPlayer player, TownActionPayload payload) {
@@ -378,6 +381,13 @@ public final class TownNetwork {
 				player.sendSystemMessage(outcome.message().copy().withStyle(outcome.sent() ? ChatFormatting.GREEN
 						: ChatFormatting.RED));
 				return;
+			}
+			case "tax.next" -> {
+				// Le maire (ou un adjoint) change le taux de l'impôt.
+				if (!town.canManage(player.getUUID())) {
+					return;
+				}
+				com.ajustor.minecities.town.Budget.nextRate(level, town);
 			}
 			case "decree.rationing", "decree.overtime", "decree.holiday" -> {
 				if (!town.canManage(player.getUUID())) {

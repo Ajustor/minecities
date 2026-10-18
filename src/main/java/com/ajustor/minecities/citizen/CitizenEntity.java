@@ -674,7 +674,7 @@ public class CitizenEntity extends PathfinderMob {
 				town.get().chronicle().recentDeaths(now), danger, town.get().chronicle().rejoicing(now),
 				town.get().workers(Job.LIBRARIAN) > 0, town.get().decreeMood(), town.get().monuments().size(),
 				illness().orElse(null));
-		mood = Happiness.of(factors);
+		mood = Happiness.of(factors, com.ajustor.minecities.town.Budget.mood(town.get(), getUUID(), r.isChild()));
 		entityData.set(MOOD, mood.score());
 		town.get().setMood(getUUID(), mood.score());
 		int trouble = 0;

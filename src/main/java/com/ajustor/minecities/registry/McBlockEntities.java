@@ -1,6 +1,7 @@
 package com.ajustor.minecities.registry;
 
 import com.ajustor.minecities.MineCities;
+import com.ajustor.minecities.block.TaxBoxBlockEntity;
 import com.ajustor.minecities.block.TownAnnexBlockEntity;
 import com.ajustor.minecities.block.TownHallBlockEntity;
 import net.fabricmc.fabric.api.object.builder.v1.block.entity.FabricBlockEntityTypeBuilder;
@@ -18,6 +19,11 @@ public final class McBlockEntities {
 			BuiltInRegistries.BLOCK_ENTITY_TYPE,
 			MineCities.id("town_annex"),
 			FabricBlockEntityTypeBuilder.create(TownAnnexBlockEntity::new, McBlocks.TOWN_ANNEX).build());
+
+	public static final BlockEntityType<TaxBoxBlockEntity> TAX_BOX = Registry.register(
+			BuiltInRegistries.BLOCK_ENTITY_TYPE,
+			MineCities.id("tax_box"),
+			FabricBlockEntityTypeBuilder.create(TaxBoxBlockEntity::new, McBlocks.TAX_BOX).build());
 
 	private McBlockEntities() {
 	}

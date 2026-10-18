@@ -78,6 +78,11 @@ public class StationScenes implements Scene {
 			ServerPlayer mayor = mayor(server);
 			mayor.getInventory().clearContent();
 			TownService.found(level, HALL, mayor, new ItemStack(McItems.TOWN_HALL));
+			// De quoi payer les chantiers à partir du niveau 2 (MC-57).
+			if (level.getBlockEntity(HALL) instanceof com.ajustor.minecities.block.TownHallBlockEntity hall) {
+				com.ajustor.minecities.town.Stock.insert(hall,
+						new ItemStack(net.minecraft.world.item.Items.EMERALD, 64));
+			}
 			return mayor.getInventory().contains(new ItemStack(McItems.STATIONS.get(Job.BUILDER))) ? null
 					: "pas d'établi du bâtisseur offert";
 		}));

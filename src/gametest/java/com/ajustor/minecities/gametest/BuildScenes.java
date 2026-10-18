@@ -208,6 +208,8 @@ public class BuildScenes implements Scene {
 			hall.setItem(slot++, new ItemStack(Items.IRON_AXE));
 		}
 		hall.setItem(slot++, new ItemStack(Items.SCAFFOLDING, 32));
+		// De quoi payer le chantier (MC-57 : à partir du niveau 2).
+		hall.setItem(slot++, new ItemStack(Items.EMERALD, 32));
 		for (Map.Entry<Item, Integer> e : needs.entrySet()) {
 			int left = e.getValue();
 			while (left > 0) {
