@@ -40,8 +40,9 @@ class ArcherGoal extends WorkGoal {
 	@Override
 	protected void onStop() {
 		// Il ne reste pas perché sans rien faire : il redescend au pied de sa tour.
-		if (post != null && citizen.blockPosition().getY() > employment().station().getY() + 2
-				&& citizen.job().isPresent()) {
+		// Sans emploi (sa tour retirée), il n'a plus de poste : on ne le demande pas.
+		if (post != null && citizen.job().isPresent()
+				&& citizen.blockPosition().getY() > employment().station().getY() + 2) {
 			BlockPos station = employment().station();
 			citizen.snapTo(station.getX() + 0.5, station.getY(), station.getZ() + 1.5, citizen.getYRot(), 0);
 			citizen.fallDistance = 0;
