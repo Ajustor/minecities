@@ -102,12 +102,13 @@ public final class TownNetwork {
 		TownTier next = town.tier().next();
 		long now = level.getGameTime();
 		Chronicle chronicle = town.chronicle();
+		com.ajustor.minecities.town.Families.Growth growth = com.ajustor.minecities.town.Families.growth(town, now);
 		TownSnapshot.Life life = new TownSnapshot.Life(town.averageMood().map(m -> (int) Math.round(m * 10)).orElse(-1),
 				chronicle.partying(now), chronicle.canCelebrate(now), chronicle.untilNextFestival(now), Festivals.cost(),
 				chronicle.alarmed(now) || Raids.underAttack(town.id()),
 				TownService.granary(level, town).map(g -> Stock.count(g, s -> s.is(Items.EMERALD))).orElse(0),
 				chronicle.earnedToday(now), town.activeAnnexes().size(), town.tier().annexes(), town.appeal(),
-				chronicle.disaster(now).orElse(""));
+				chronicle.disaster(now).orElse(""), growth.key(), growth.days(), growth.level());
 		return new TownSnapshot(town.hall(), town.name(), town.tier().translationKey(), town.population(),
 				town.citizens(), town.villagers(), town.capacity(), town.homes().size(), town.workstations(),
 				(int) employed, meals, next == null ? "" : next.translationKey(),

@@ -219,6 +219,7 @@ public class CitizenEntity extends PathfinderMob {
 				net.minecraft.sounds.SoundEvents.UI_LOOM_TAKE_RESULT));
 		goalSelector.addGoal(4, new CraftGoal(this, Job.LIBRARIAN, Crafts.LIBRARIAN, 50, Action.TALK,
 				net.minecraft.sounds.SoundEvents.BOOK_PAGE_TURN, net.minecraft.core.particles.ParticleTypes.ENCHANT));
+		goalSelector.addGoal(4, new TavernerGoal(this));
 		goalSelector.addGoal(4, new LumberjackGoal(this));
 		goalSelector.addGoal(4, new BreederGoal(this));
 		goalSelector.addGoal(4, new FishermanGoal(this));
@@ -674,7 +675,13 @@ public class CitizenEntity extends PathfinderMob {
 				town.get().chronicle().recentDeaths(now), danger, town.get().chronicle().rejoicing(now),
 				town.get().workers(Job.LIBRARIAN) > 0, town.get().decreeMood(), town.get().monuments().size(),
 				illness().orElse(null));
-		mood = Happiness.of(factors, com.ajustor.minecities.town.Budget.mood(town.get(), getUUID(), r.isChild()));
+		java.util.List<Happiness.Factor> extra = new java.util.ArrayList<>(
+				com.ajustor.minecities.town.Budget.mood(town.get(), getUUID(), r.isChild()));
+		// La taverne a servi aujourd'hui : la ville est plus gaie (MC-58).
+		if (town.get().chronicle().tavernOpen(now)) {
+			extra.add(new Happiness.Factor("tavern", 1));
+		}
+		mood = Happiness.of(factors, extra);
 		entityData.set(MOOD, mood.score());
 		town.get().setMood(getUUID(), mood.score());
 		int trouble = 0;

@@ -24,9 +24,10 @@ public final class Chronicle {
 			Codec.LONG.optionalFieldOf("last_disaster", 0L).forGetter(c -> c.lastDisaster),
 			net.minecraft.core.BlockPos.CODEC.optionalFieldOf("fire_min").forGetter(c -> c.fireMin),
 			net.minecraft.core.BlockPos.CODEC.optionalFieldOf("fire_max").forGetter(c -> c.fireMax),
-			Budget.Ledger.CODEC.optionalFieldOf("ledger").forGetter(c -> java.util.Optional.of(c.ledger))
+			Budget.Ledger.CODEC.optionalFieldOf("ledger").forGetter(c -> java.util.Optional.of(c.ledger)),
+			Codec.LONG.optionalFieldOf("served_at", -1L).forGetter(c -> c.servedAt)
 	).apply(i, (deaths, festivalAt, alarmUntil, marketDay, earnedToday, earnedTotal, disaster, until, last, min,
-			max, ledger) -> {
+			max, ledger, servedAt) -> {
 		Chronicle chronicle = new Chronicle(deaths, festivalAt, alarmUntil, marketDay, earnedToday, earnedTotal);
 		chronicle.disaster = disaster;
 		chronicle.disasterUntil = until;
@@ -34,6 +35,7 @@ public final class Chronicle {
 		chronicle.fireMin = min;
 		chronicle.fireMax = max;
 		chronicle.ledger = ledger.orElseGet(Budget.Ledger::new);
+		chronicle.servedAt = servedAt;
 		return chronicle;
 	}));
 
@@ -53,6 +55,8 @@ public final class Chronicle {
 	private long marketDay;
 	private int earnedToday;
 	private long earnedTotal;
+	/** Quand la taverne a servi pour la dernière fois (MC-58) ; -1 : jamais. */
+	private long servedAt = -1;
 	/** Les comptes de la ville : l'impôt, les salaires, les chantiers (MC-57). */
 	private Budget.Ledger ledger = new Budget.Ledger();
 	/** La catastrophe en cours ({@code fire}, {@code blight}, {@code quake} ; vide : aucune) et sa fin. */
@@ -84,6 +88,16 @@ public final class Chronicle {
 	}
 
 	/** Les émeraudes que le marché a rapportées depuis la fondation. */
+	/** La taverne vient de servir. */
+	public void served(long now) {
+		servedAt = now;
+	}
+
+	/** La taverne a-t-elle servi depuis moins d'un jour ? */
+	public boolean tavernOpen(long now) {
+		return servedAt >= 0 && now - servedAt < 24000L;
+	}
+
 	public Budget.Ledger ledger() {
 		return ledger;
 	}

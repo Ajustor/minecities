@@ -63,6 +63,8 @@ public final class Families {
 		int min = minimum >= 0 ? minimum : com.ajustor.minecities.McConfig.get().newcomerMinimum;
 		if (town.population() < min && now - town.lastArrival() >= newcomerDelay()) {
 			TownService.immigrate(level, town);
+		} else {
+			attract(level, town, now);
 		}
 		List<CitizenEntity> here = new ArrayList<>();
 		for (UUID id : town.residents().keySet()) {
@@ -73,6 +75,52 @@ public final class Families {
 		befriend(level, town, here);
 		births(level, town, now);
 		growUp(level, town, now);
+	}
+
+	/** Au-delà de ce bonheur moyen, la taverne attire du monde (MC-58). */
+	public static final double TAVERN_MOOD = 5;
+
+	/**
+	 * Où en est la croissance de la ville, pour le Résumé : {@code key} dit ce qui se passe (des nouveaux
+	 * venus sous le minimum, la taverne, ou ce qui l'empêche), {@code days} dans combien de jours arrive
+	 * le prochain (ou le minimum d'habitants), {@code level} le niveau de la taverne.
+	 */
+	public record Growth(String key, int days, int level) {
+	}
+
+	public static Growth growth(Town town, long now) {
+		int min = minimum >= 0 ? minimum : com.ajustor.minecities.McConfig.get().newcomerMinimum;
+		if (town.population() < min) {
+			return new Growth("newcomers", min, 0);
+		}
+		java.util.Optional<Resident.Employment> taverner = town.residents().values().stream()
+				.flatMap(r -> r.job().stream()).filter(j -> j.job() == Job.TAVERNER).findFirst();
+		if (taverner.isEmpty()) {
+			return new Growth("no_tavern", 0, 0);
+		}
+		int level = town.buildingLevel(taverner.get().workshop());
+		if (town.freeBeds() <= 0) {
+			return new Growth("no_bed", 0, level);
+		}
+		if (town.averageMood().filter(m -> m < TAVERN_MOOD).isPresent()) {
+			return new Growth("unhappy", 0, level);
+		}
+		long spacing = Math.max(1, 6 - level - town.appeal() / 10) * 24000L;
+		long left = Math.max(0, town.lastArrival() + spacing - now);
+		return new Growth("tavern", (int) ((left + 23999) / 24000), level);
+	}
+
+	/**
+	 * La taverne attire un nouveau venu : avec un tavernier, un lit libre et une ville assez heureuse,
+	 * un tous les {@code 6 - niveau de la taverne - attrait / 10} jours (au moins un). Vrai s'il en est venu un.
+	 */
+	public static boolean attract(ServerLevel level, Town town, long now) {
+		Growth growth = growth(town, now);
+		if (!growth.key().equals("tavern") || growth.days() > 0) {
+			return false;
+		}
+		TownService.immigrate(level, town);
+		return true;
 	}
 
 	/** Les enfants arrivés à l'âge adulte grandissent (et le disent). */

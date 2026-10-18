@@ -104,7 +104,7 @@ public class StationScenes implements Scene {
 				}
 				x += 2;
 			}
-			if (McBlocks.STATIONS.size() != 18) {
+			if (McBlocks.STATIONS.size() != 19) {
 				wrong.add(McBlocks.STATIONS.size() + " postes");
 			}
 			return wrong.isEmpty() ? null : String.join(" ; ", wrong);
@@ -248,7 +248,7 @@ public class StationScenes implements Scene {
 
 		// En images : la rangée des postes, l'interface de l'établi, puis celle de la maison bâtie.
 		stage.client(mc -> hideGui(mc, true));
-		// Les dix-huit postes, chacun de près.
+		// Les dix-neuf postes, chacun de près.
 		int index = 0;
 		for (Job job : McBlocks.STATIONS.keySet()) {
 			double cx = -18 + 2 * index + 0.5;

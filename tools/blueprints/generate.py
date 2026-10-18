@@ -53,6 +53,7 @@ KEY = {
     "n": "minecraft:anvil[facing=east]",
     "e": "minecraft:brewing_stand",
     "u": "minecraft:cauldron",
+    "4": "minecities:taverner_station[facing=north]",
     "p": "minecraft:lectern[facing=north]",
     # Les matériaux des quatre niveaux (brief 11).
     "_": "minecraft:coarse_dirt",
@@ -625,6 +626,7 @@ FURNITURE = {
     "tannery": ["3", "2", "T", "@", "3", "2", "A", "@"],
     "library": ["#", "T", "#", "@", "#", "T", "#", "2"],
     "carpentry": ["P", "P", "2", "A", "T", "@", "P", "2"],
+    "tavern": ["y", "T", "2", "T", "y", "2", "T", "@"],
     "warehouse": ["2", "T", "2", "@", "2", "T", "2", "@"],
 }
 # Combien de meubles à chaque niveau.
@@ -763,6 +765,7 @@ def main():
     series(prints, "tannery", lambda level: workshop_level(level, "N"))
     # La logistique (v1.4) : la charpenterie et l'entrepôt.
     series(prints, "carpentry", lambda level: workshop_level(level, "!"))
+    series(prints, "tavern", lambda level: workshop_level(level, "4"))
     series(prints, "warehouse", warehouse_level)
     # La bibliothèque (dès la ville) : des bibliothèques ciselées, et des rayonnages le long des murs.
     series(prints, "library", lambda level: workshop_level(level, "x", more={(1, 1, 2): "#", (1, 1, 3): "#",

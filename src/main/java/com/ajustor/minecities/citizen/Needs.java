@@ -40,6 +40,7 @@ final class Needs {
 			case ARCHER -> s -> s.is(ItemTags.ARROWS) || s.is(Items.FLINT) || s.is(Items.FEATHER) || s.is(Items.STICK);
 			case BEEKEEPER -> s -> s.is(Items.GLASS_BOTTLE);
 			case MINER -> s -> s.is(Items.STICK) || s.is(Items.TORCH);
+			case TAVERNER -> TavernerGoal.DRINK;
 			default -> null;
 		};
 		return Optional.ofNullable(inputs);
