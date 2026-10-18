@@ -88,8 +88,18 @@ public class WorkScenes implements Scene {
 			TownService.declareHouse(level, WORKSHOP_PLAQUE, player);
 			long farmers = town.residents().values().stream().filter(r -> hasJob(r, Job.FARMER)).count();
 			long cooks = town.residents().values().stream().filter(r -> hasJob(r, Job.COOK)).count();
-			return farmers == 1 && cooks == 1 ? null
-					: "emplois mal attribués : " + town.residents() + " ; bâtiments : " + town.houses();
+			if (farmers != 1 || cooks != 1) {
+				return "emplois mal attribués : " + town.residents() + " ; bâtiments : " + town.houses();
+			}
+			// Dans le coffre de la cuisine, de quoi rien cuire seul (des bols, du sucre) : le cuisinier va
+			// quand même chercher la viande au grenier.
+			Optional<BlockPos> chest = town.house(WORKSHOP_PLAQUE).flatMap(h -> h.containers().stream().findFirst());
+			if (chest.isEmpty() || !(level.getBlockEntity(chest.get()) instanceof Container c)) {
+				return "pas de coffre dans la cuisine";
+			}
+			Stock.insert(c, new ItemStack(Items.BOWL, 4));
+			Stock.insert(c, new ItemStack(Items.SUGAR, 2));
+			return null;
 		}));
 		stage.look(6, Y + 9, -14, 9, Y, -1);
 		stage.waitTicks(40);
