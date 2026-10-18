@@ -197,7 +197,8 @@ public class CitizenEntity extends PathfinderMob {
 		goalSelector.addGoal(2, new ShelterGoal(this));
 		goalSelector.addGoal(2, new FirefightGoal(this));
 		goalSelector.addGoal(2, new SleepInBedGoal(this));
-		goalSelector.addGoal(3, new EatGoal(this));
+		// Le repas passe avant la fête : affamé, on ne danse pas jusqu'à défaillir.
+		goalSelector.addGoal(2, new EatGoal(this));
 		goalSelector.addGoal(3, new FestivalGoal(this));
 		goalSelector.addGoal(4, new FarmerGoal(this));
 		goalSelector.addGoal(4, new CookGoal(this, Job.COOK));
