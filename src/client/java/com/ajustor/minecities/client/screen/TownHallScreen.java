@@ -659,7 +659,7 @@ public class TownHallScreen extends Screen {
 			y += ROW;
 		}
 		if (!town.manager()) {
-			graphics.text(font, Component.translatable("screen.minecities.mayor_decides"), left + 80, top + HEIGHT - 20,
+			graphics.text(font, Component.translatable("screen.minecities.managers_only"), left + 80, top + HEIGHT - 20,
 					FADED, false);
 		}
 	}

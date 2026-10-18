@@ -134,7 +134,7 @@ public class PlanScreen extends Screen {
 			graphics.text(font, detail, left + 22, y + 9, row.locked().isEmpty() ? ACCENT : BAD, false);
 			y += ROW;
 		}
-		Component hint = !plan.manager() ? Component.translatable("screen.minecities.mayor_decides")
+		Component hint = !plan.manager() ? Component.translatable("screen.minecities.managers_only")
 				: plan.proposal() ? Component.translatable("screen.minecities.plan.hint.proposal")
 				: Component.translatable("screen.minecities.plan.hint.place");
 		List<net.minecraft.util.FormattedCharSequence> lines = font.split(hint, WIDTH - 20);
