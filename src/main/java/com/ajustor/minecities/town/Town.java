@@ -29,7 +29,8 @@ import java.util.UUID;
 public final class Town {
 	/** L'état civil de la ville (à part : un codec ne prend que 16 champs à la fois). */
 	private record Head(UUID id, String name, ResourceKey<Level> dimension, BlockPos hall, UUID mayor,
-			String mayorName, List<UUID> deputies, long founded, Membership membership, Election election) {
+			String mayorName, List<UUID> deputies, long founded, Membership membership, Election election,
+			Map<UUID, BlockPos> whereabouts) {
 		static final MapCodec<Head> CODEC = RecordCodecBuilder.mapCodec(i -> i.group(
 				UUIDUtil.CODEC.fieldOf("id").forGetter(Head::id),
 				Codec.STRING.fieldOf("name").forGetter(Head::name),
@@ -40,13 +41,15 @@ public final class Town {
 				UUIDUtil.CODEC.listOf().optionalFieldOf("deputies", List.of()).forGetter(Head::deputies),
 				Codec.LONG.optionalFieldOf("founded", 0L).forGetter(Head::founded),
 				Membership.CODEC.forGetter(Head::membership),
-				Election.CODEC.forGetter(Head::election)
+				Election.CODEC.forGetter(Head::election),
+				Codec.unboundedMap(UUIDUtil.STRING_CODEC, BlockPos.CODEC).optionalFieldOf("whereabouts", Map.of())
+						.forGetter(Head::whereabouts)
 		).apply(i, Head::new));
 	}
 
 	public static final Codec<Town> CODEC = RecordCodecBuilder.create(i -> i.group(
 			Head.CODEC.forGetter(t -> new Head(t.id, t.name, t.dimension, t.hall, t.mayor, t.mayorName,
-					List.copyOf(t.deputies), t.founded, t.membership, t.election)),
+					List.copyOf(t.deputies), t.founded, t.membership, t.election, Map.copyOf(t.whereabouts))),
 			House.CODEC.listOf().optionalFieldOf("houses", List.of()).forGetter(t -> List.copyOf(t.houses.values())),
 			Codec.unboundedMap(UUIDUtil.STRING_CODEC, Resident.CODEC).optionalFieldOf("residents", Map.of())
 					.forGetter(t -> t.residents),
@@ -81,6 +84,7 @@ public final class Town {
 		town.partners.addAll(partners);
 		town.membership = head.membership();
 		town.election = head.election();
+		town.whereabouts.putAll(head.whereabouts());
 		return town;
 	}));
 
@@ -124,6 +128,8 @@ public final class Town {
 	private Optional<Long> orphanedAt = Optional.empty();
 	/** Quand chaque citoyen a été vu pour la dernière fois (non sauvegardé). */
 	private final Map<UUID, Long> seen = new HashMap<>();
+	/** Où chaque citoyen a été vu pour la dernière fois : on ne le cherche que là où il peut être. */
+	private final Map<UUID, BlockPos> whereabouts = new HashMap<>();
 	/** Le palier imposé par un opérateur (serveurs, essais), au lieu de celui de la population. */
 	private Optional<TownTier> forcedTier = Optional.empty();
 	/** Les mairies annexes : elles étendent le territoire et servent de greniers secondaires. */
@@ -544,6 +550,7 @@ public final class Town {
 	public void farewell(UUID citizen) {
 		moods.remove(citizen);
 		seen.remove(citizen);
+		whereabouts.remove(citizen);
 		Resident gone = residents.remove(citizen);
 		if (gone != null) {
 			gone.spouse().ifPresent(s -> residents.computeIfPresent(s, (id, r) -> r.widowed()));
@@ -785,9 +792,15 @@ public final class Town {
 		orphanedAt = since;
 	}
 
-	/** Ce citoyen a été vu à l'instant. */
-	public void seen(UUID citizen, long now) {
+	/** Ce citoyen a été vu à l'instant, à cet endroit. */
+	public void seen(UUID citizen, long now, BlockPos at) {
 		seen.put(citizen, now);
+		whereabouts.put(citizen, at.immutable());
+	}
+
+	/** Là où ce citoyen a été vu pour la dernière fois, si on le sait. */
+	public Optional<BlockPos> whereabouts(UUID citizen) {
+		return Optional.ofNullable(whereabouts.get(citizen));
 	}
 
 	/** Quand ce citoyen a été vu pour la dernière fois (à défaut : maintenant, et l'on s'en souvient). */

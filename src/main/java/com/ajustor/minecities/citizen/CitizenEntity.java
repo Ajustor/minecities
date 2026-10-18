@@ -788,7 +788,37 @@ public class CitizenEntity extends PathfinderMob {
 		}
 		level.sendParticles(ParticleTypes.POOF, getX(), getY() + 1, getZ(), 12, 0.3, 0.6, 0.3, 0.02);
 		doors.closeAll();
+		handOver(level);
 		discard();
+	}
+
+	/**
+	 * Ce qu'il porte (ses poches, l'outil et l'armure de la ville) n'en part pas avec lui : il le rend au
+	 * grenier, ou le laisse là où il était si la ville n'est plus (ou que le grenier est plein).
+	 */
+	private void handOver(ServerLevel level) {
+		java.util.List<ItemStack> all = new java.util.ArrayList<>();
+		for (ItemStack stack : inventory) {
+			if (!stack.isEmpty()) {
+				all.add(stack.copy());
+			}
+		}
+		inventory.clear();
+		for (EquipmentSlot slot : EquipmentSlot.values()) {
+			ItemStack worn = getItemBySlot(slot);
+			if (!worn.isEmpty()) {
+				all.add(worn.copy());
+				setItemSlot(slot, ItemStack.EMPTY);
+			}
+		}
+		Optional<com.ajustor.minecities.block.TownHallBlockEntity> granary = town()
+				.flatMap(t -> TownService.granary(level, t));
+		for (ItemStack stack : all) {
+			ItemStack rest = granary.map(g -> com.ajustor.minecities.town.Stock.insert(g, stack)).orElse(stack);
+			if (!rest.isEmpty()) {
+				spawnAtLocation(level, rest);
+			}
+		}
 	}
 
 	@Override
@@ -903,6 +933,12 @@ public class CitizenEntity extends PathfinderMob {
 
 	@Override
 	public boolean removeWhenFarAway(double distSqr) {
+		return false;
+	}
+
+	/** Un citoyen ne prend pas les portails : sa ville ne le retrouverait plus dans l'autre dimension. */
+	@Override
+	public boolean canUsePortal(boolean allowPassengers) {
 		return false;
 	}
 

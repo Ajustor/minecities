@@ -26,6 +26,7 @@
   "message.minecities.found.too_close": "Too close to %s: move further away to found a town.",
   "message.minecities.disbanded": "The town of %s has been disbanded.",
   "message.minecities.hall.not_mayor": "Only the mayor of %s can tear down its town hall.",
+  "message.minecities.annex.not_mayor": "Only the mayor of %s and their deputies can tear down a town annex.",
   "message.minecities.hall.orphan": "This town hall belongs to no town.",
   "message.minecities.house.no_town": "This house is not on any town's territory.",
   "message.minecities.house.valid": "Building registered in %s: %s bed(s), %s workstation(s), %s chest(s), %s interior blocks.",

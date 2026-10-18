@@ -1,9 +1,11 @@
 package com.ajustor.minecities.gametest;
 
 import com.ajustor.minecities.McConfig;
+import com.ajustor.minecities.block.TownHallBlockEntity;
 import com.ajustor.minecities.citizen.CitizenEntity;
 import com.ajustor.minecities.registry.McItems;
 import com.ajustor.minecities.town.Families;
+import com.ajustor.minecities.town.Stock;
 import com.ajustor.minecities.town.Town;
 import com.ajustor.minecities.town.TownService;
 import com.ajustor.minecities.town.Towns;
@@ -11,6 +13,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
 
 import java.util.Optional;
@@ -89,6 +92,29 @@ public class RobustScenes implements Scene {
 		McConfig.get().missingCitizenMinutes = before;
 		check(stage.compute(server -> town(server).orElseThrow().citizens() == 1 ? null
 				: "l'autre citoyen a été rayé aussi"));
+
+		// Un citoyen qui quitte la ville rend au grenier ce qu'il porte.
+		check(stage.compute(server -> {
+			ServerLevel level = server.overworld();
+			CitizenEntity citizen = (CitizenEntity) level.getEntity(
+					town(server).orElseThrow().residents().keySet().iterator().next());
+			citizen.carry(new ItemStack(Items.DIAMOND, 3));
+			citizen.leaveTown(level, null);
+			return level.getBlockEntity(HALL) instanceof TownHallBlockEntity hall
+					&& Stock.count(hall, s -> s.is(Items.DIAMOND)) == 3 ? null
+					: "le citoyen parti a emporté ce qu'il portait";
+		}));
+
+		// Un entonnoir sous l'hôtel de ville n'en vide pas le grenier.
+		stage.run(server -> {
+			if (server.overworld().getBlockEntity(HALL) instanceof TownHallBlockEntity hall) {
+				hall.setItem(0, new ItemStack(Items.EMERALD, 5));
+			}
+			command(server, "setblock 0 %d 0 minecraft:hopper".formatted(Y - 1));
+		});
+		stage.waitTicks(60);
+		check(stage.compute(server -> server.overworld().getBlockEntity(HALL) instanceof TownHallBlockEntity hall
+				&& hall.getItem(0).getCount() == 5 ? null : "un entonnoir a puisé dans le grenier"));
 	}
 
 	private static Optional<Town> town(MinecraftServer server) {
