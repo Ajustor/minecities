@@ -105,7 +105,14 @@ class CourierGoal extends WorkGoal {
 		if (haul == null) {
 			// Quelque chose dans les poches (une course interrompue) : aux réserves.
 			if (citizen.inventory().stream().anyMatch(s -> !s.isEmpty())) {
-				deliver(s -> false, 0);
+				if (deliver(s -> false, 0) && citizen.inventory().stream().anyMatch(s -> !s.isEmpty())) {
+					// Rien n'a trouvé de place : les réserves sont pleines. Il le dit au maire et attend qu'on
+					// en fasse, au lieu de rester planté devant le grenier.
+					citizen.complain("stores_full", net.minecraft.network.chat.Component.translatable(
+							"message.minecities.courier.full", citizen.getName()), net.minecraft.network.chat.Component
+							.translatable("speech.minecities.stores_full"));
+					rest(IDLE_LONG / 2);
+				}
 				return;
 			}
 			if (--plan > 0) {
