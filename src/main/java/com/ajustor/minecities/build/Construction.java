@@ -145,6 +145,13 @@ public final class Construction {
 		return index < step || placed.get(index);
 	}
 
+	/** Reprend le chantier à ce bloc : ce qui suit sera revu (ce qui est déjà en place se passe vite). */
+	public void redo(int index) {
+		step = Math.min(step, index);
+		placed.clear();
+		claims.clear();
+	}
+
 	/** Ce bloc est fait ; l'avancement passe tous les blocs faits qui se suivent. */
 	public void markPlaced(int index) {
 		placed.set(index);

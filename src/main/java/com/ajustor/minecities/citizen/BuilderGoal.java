@@ -135,6 +135,13 @@ class BuilderGoal extends WorkGoal {
 				dismantle(construction);
 				return;
 			}
+			// Une moitié de lit ou de porte posée d'avance a pu sauter depuis, sous la mise à jour d'un
+			// voisin : on la refait avant de se dire fini (MC-50).
+			int broken = brokenHalf();
+			if (broken >= 0) {
+				construction.redo(broken);
+				return;
+			}
 			finish(construction);
 			return;
 		}
@@ -146,6 +153,19 @@ class BuilderGoal extends WorkGoal {
 		}
 		construction.claim(index, citizen.getUUID());
 		work(construction, index, plan.get(index));
+	}
+
+	/** Le premier lit ou la première porte du plan qui n'est plus en place ; -1 s'il n'y en a pas. */
+	private int brokenHalf() {
+		for (int i = 0; i < plan.size(); i++) {
+			BuildPlan.Placement p = plan.get(i);
+			if ((p.state().hasProperty(BlockStateProperties.BED_PART)
+					|| p.state().hasProperty(BlockStateProperties.DOUBLE_BLOCK_HALF))
+					&& !satisfied(level().getBlockState(p.pos()), p.state())) {
+				return i;
+			}
+		}
+		return -1;
 	}
 
 	/** Combien de blocs à venir il regarde pour choisir le sien. */

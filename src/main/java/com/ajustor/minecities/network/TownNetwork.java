@@ -41,6 +41,17 @@ public final class TownNetwork {
 	/** On agit sur l'hôtel de ville à portée de main, comme sur un coffre. */
 	private static final double REACH = 8.0;
 
+	/** Une demande au plus par joueur tous les tant de ticks : chacune coûte un instantané complet de la ville. */
+	private static final int COOLDOWN = 4;
+	private static final Map<UUID, Long> LAST_ACTION = new java.util.HashMap<>();
+
+	/** Trop tôt après la précédente demande de ce joueur ? (MC-49) */
+	private static boolean throttled(ServerPlayer player) {
+		long now = player.level().getGameTime();
+		Long last = LAST_ACTION.put(player.getUUID(), now);
+		return last != null && now - last >= 0 && now - last < COOLDOWN;
+	}
+
 	private TownNetwork() {
 	}
 
@@ -48,8 +59,11 @@ public final class TownNetwork {
 		PayloadTypeRegistry.clientboundPlay().register(OpenTownPayload.TYPE, OpenTownPayload.CODEC);
 		PayloadTypeRegistry.clientboundPlay().register(GhostPayload.TYPE, GhostPayload.CODEC);
 		PayloadTypeRegistry.serverboundPlay().register(TownActionPayload.TYPE, TownActionPayload.CODEC);
-		ServerPlayNetworking.registerGlobalReceiver(TownActionPayload.TYPE,
-				(payload, context) -> act(context.player(), payload));
+		ServerPlayNetworking.registerGlobalReceiver(TownActionPayload.TYPE, (payload, context) -> {
+			if (!throttled(context.player())) {
+				act(context.player(), payload);
+			}
+		});
 	}
 
 	/** Ouvre l'écran de l'hôtel de ville pour ce joueur. */

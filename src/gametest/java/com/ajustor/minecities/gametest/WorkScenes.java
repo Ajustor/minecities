@@ -138,7 +138,9 @@ public class WorkScenes implements Scene {
 			for (int x = 10; x <= 14; x++) {
 				BlockState state = level.getBlockState(new BlockPos(x, Y, STEM_Z));
 				boolean stem = state.getBlock() instanceof StemBlock || state.getBlock() instanceof AttachedStemBlock;
-				if (x % 2 == 0 ? !stem : !state.isAir()) {
+				// Entre deux tiges : rien de semé ; une tige peut y refaire un fruit depuis la cueillette.
+				boolean fruit = state.is(Blocks.PUMPKIN) || state.is(Blocks.MELON);
+				if (x % 2 == 0 ? !stem : !state.isAir() && !fruit) {
 					return "en x = " + x + ", z = " + STEM_Z + " : " + state;
 				}
 			}
