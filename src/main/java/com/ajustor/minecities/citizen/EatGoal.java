@@ -53,11 +53,31 @@ public class EatGoal extends Goal {
 		// Affamé, il mangerait même du gâté.
 		List<BlockPos> pantries = TownService.pantries(level, town.get(), resident.get(), citizen.hunger() <= 0);
 		if (pantries.isEmpty()) {
+			// Rien au garde-manger : il mange ce qu'il porte (le fermier sa récolte, le cuisinier ses plats).
+			if (eatFromPockets()) {
+				return false;
+			}
 			cooldown = NOTHING_COOLDOWN;
 			citizen.need("hungry", Component.translatable("speech.minecities.hungry"));
 			return false;
 		}
 		pantry = pantries.getFirst();
+		return true;
+	}
+
+	/** Mange un aliment de ses poches ; faux s'il n'y en a pas. */
+	private boolean eatFromPockets() {
+		List<ItemStack> inventory = citizen.inventory();
+		net.minecraft.world.SimpleContainer pockets = new net.minecraft.world.SimpleContainer(
+				inventory.toArray(ItemStack[]::new));
+		ItemStack food = TownService.takeFood(pockets, citizen.diet());
+		if (food.isEmpty()) {
+			return false;
+		}
+		for (int i = 0; i < inventory.size(); i++) {
+			inventory.set(i, pockets.getItem(i));
+		}
+		citizen.eat(food);
 		return true;
 	}
 
