@@ -130,6 +130,13 @@ class SmithGoal extends WorkGoal {
 	@Override
 	public void start() {
 		super.start();
+		// Interrompu avec de quoi finir sa pièce (ou des minerais à fondre) : il reprend à la forge.
+		if (forging != null ? forging.materials().entrySet().stream().allMatch(e -> citizen.inventory().stream()
+				.filter(s -> s.is(e.getKey())).mapToInt(ItemStack::getCount).sum() >= e.getValue())
+				: citizen.inventory().stream().anyMatch(s -> SMELTS.containsKey(s.getItem()))) {
+			phase = Phase.WORK;
+			return;
+		}
 		phase = citizen.inventory().stream().allMatch(ItemStack::isEmpty) ? Phase.DECIDE : Phase.DELIVER;
 	}
 
