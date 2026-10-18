@@ -93,9 +93,14 @@ abstract class WorkGoal extends Goal {
 	protected void onStop() {
 	}
 
+	/**
+	 * À chaque tick, sauf au repos : entre deux ticks complets, le jeu fait tourner les buts en cours sans
+	 * demander s'ils peuvent continuer. Un travailleur qui vient de se mettre au repos referait un tour
+	 * (le joaillier reprenait au grenier ce qu'il venait de rendre, sans fin).
+	 */
 	@Override
 	public boolean requiresUpdateEveryTick() {
-		return true;
+		return citizen.level().getGameTime() >= idleUntil;
 	}
 
 	/** L'allure du travailleur entre deux tâches (le bâtisseur presse le pas). */
