@@ -169,7 +169,7 @@ abstract class WorkGoal extends Goal {
 		} else if (distance < errandBest - 1) {
 			errandBest = distance;
 			errandSince = now;
-		} else if (now - errandSince > GIVE_UP) {
+		} else if (now - errandSince > GIVE_UP && givesUp() && !target.equals(town().hall())) {
 			// Inaccessible (derrière une clôture, sur un toit, sur un îlot) : il la laisse de côté un moment
 			// et en choisira une autre, au lieu de s'y user toute la journée.
 			unreachable.put(target.immutable(), now + SHUNNED);
@@ -183,6 +183,14 @@ abstract class WorkGoal extends Goal {
 			citizen.walkTo(target, speed());
 		}
 		return false;
+	}
+
+	/**
+	 * Renonce-t-il à une cible qu'il n'approche plus ? Oui, sauf ceux qui ont leur propre façon d'y aller
+	 * (le bâtisseur, sur ses échafaudages). Le grenier de l'hôtel de ville, lui, n'est jamais laissé de côté.
+	 */
+	protected boolean givesUp() {
+		return true;
 	}
 
 	/** Peut-il aller là ? (faux s'il vient d'y renoncer, faute de chemin) */

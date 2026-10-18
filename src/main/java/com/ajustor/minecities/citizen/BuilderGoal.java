@@ -682,6 +682,12 @@ class BuilderGoal extends WorkGoal {
 		}
 	}
 
+	/** Sur ses échafaudages, il avance par à-coups : il ne renonce pas à une cible faute de s'en approcher. */
+	@Override
+	protected boolean givesUp() {
+		return false;
+	}
+
 	/** Depuis quand il attend le livreur, et jusqu'à quand il va lui-même chercher ses matériaux. */
 	private long requestedAt;
 	private long selfServeUntil;
