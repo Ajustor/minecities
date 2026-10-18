@@ -98,11 +98,14 @@ class CraftGoal extends WorkGoal {
 		}
 	}
 
-	/** Combien d'ouvrages ce contenant permet, sans dépasser ce dont la ville a besoin ({@code stocked} en réserve). */
-	static int possible(Container c, Craft craft, int stocked) {
+	/**
+	 * Combien d'ouvrages permettent ces réserves (tous les contenants ensemble : l'entrepôt range chaque
+	 * sorte à part), sans dépasser ce dont la ville a besoin ({@code stocked} en réserve).
+	 */
+	static int possible(List<Container> pool, Craft craft, int stocked) {
 		int batches = BATCH;
 		for (Input input : craft.inputs()) {
-			batches = Math.min(batches, Stock.count(c, input.accepts()) / input.count());
+			batches = Math.min(batches, count(pool, input.accepts()) / input.count());
 		}
 		if (craft.enough() > 0) {
 			int wanted = (craft.enough() - stocked + craft.result().getCount() - 1) / craft.result().getCount();
@@ -111,20 +114,23 @@ class CraftGoal extends WorkGoal {
 		return batches;
 	}
 
-	/** Ce que la ville a déjà de cet ouvrage, dans ses réserves et les coffres de l'atelier. */
-	private int stocked(Craft craft) {
-		return count(pool(supplies()), s -> ItemStack.isSameItemSameComponents(s, craft.result()));
+	/** Ce que la ville a déjà de cet ouvrage, dans ces réserves. */
+	private static int stocked(List<Container> pool, Craft craft) {
+		return count(pool, s -> ItemStack.isSameItemSameComponents(s, craft.result()));
 	}
 
-	/** Le contenant (de l'atelier, de l'entrepôt, du grenier) où il y a de quoi faire un ouvrage. */
+	/**
+	 * Le premier contenant (de l'atelier, de l'entrepôt, du grenier) où se trouve un ingrédient d'un
+	 * ouvrage que les réserves permettent : il y va, et rassemble de là tout ce qu'il lui faut.
+	 */
 	private Optional<BlockPos> source() {
-		for (BlockPos pos : supplies()) {
-			Optional<Container> c = container(pos);
-			if (c.isPresent() && crafts.stream().anyMatch(craft -> possible(c.get(), craft, stocked(craft)) > 0)) {
-				return Optional.of(pos);
-			}
+		List<Container> pool = pool(supplies());
+		List<Craft> doable = crafts.stream().filter(craft -> possible(pool, craft, stocked(pool, craft)) > 0).toList();
+		if (doable.isEmpty()) {
+			return Optional.empty();
 		}
-		return Optional.empty();
+		return find(supplies(), s -> doable.stream()
+				.anyMatch(craft -> craft.inputs().stream().anyMatch(input -> input.accepts().test(s))));
 	}
 
 	private void decide() {
@@ -139,22 +145,17 @@ class CraftGoal extends WorkGoal {
 		if (!goTo(source)) {
 			return;
 		}
-		Optional<Container> stock = container(source);
 		source = null;
-		if (stock.isEmpty()) {
-			rest(IDLE_SHORT);
-			return;
-		}
-		Container c = stock.get();
+		List<Container> pool = pool(supplies());
 		for (Craft craft : crafts) {
-			int batches = possible(c, craft, stocked(craft));
+			int batches = possible(pool, craft, stocked(pool, craft));
 			if (batches <= 0) {
 				continue;
 			}
 			for (Input input : craft.inputs()) {
 				int left = input.count() * batches;
 				while (left > 0) {
-					ItemStack taken = Stock.take(c, input.accepts(), left);
+					ItemStack taken = take(pool, input.accepts(), left);
 					if (taken.isEmpty()) {
 						break;
 					}

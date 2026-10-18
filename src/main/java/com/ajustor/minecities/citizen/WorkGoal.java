@@ -48,10 +48,18 @@ abstract class WorkGoal extends Goal {
 		setFlags(EnumSet.of(Flag.MOVE, Flag.LOOK));
 	}
 
+	/**
+	 * Ceux qui nourrissent la ville travaillent tant qu'ils ne sont pas tout à fait affamés : s'ils
+	 * s'arrêtaient dès la faim, un grenier vide ne se remplirait jamais plus.
+	 */
+	private static final java.util.Set<Job> FEEDERS = java.util.EnumSet.of(Job.FARMER, Job.FISHERMAN, Job.COOK,
+			Job.BAKER, Job.BREEDER);
+
 	private boolean onDuty() {
 		Optional<Town> town = citizen.town();
+		boolean starving = FEEDERS.contains(job) ? citizen.hunger() <= 0 : citizen.hunger() < Hunger.HUNGRY;
 		if (citizen.job().filter(j -> j.job() == job).isEmpty() || town.isEmpty() || citizen.isSleeping()
-				|| citizen.hunger() < Hunger.HUNGRY || citizen.bedridden() || !(citizen.level() instanceof ServerLevel)) {
+				|| starving || citizen.bedridden() || !(citizen.level() instanceof ServerLevel)) {
 			return false;
 		}
 		if (job.defends()) {

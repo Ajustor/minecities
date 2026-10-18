@@ -256,7 +256,7 @@ configuration de Jade. Sans Jade, rien ne change.
 
 ### Recettes
 
-- **Hôtel de ville** : cloche au centre du haut, entre deux émeraudes ; pupitre au centre, entouré
+- **Hôtel de ville** : lingot d'or au centre du haut, entre deux émeraudes ; pupitre au centre, entouré
   de planches ; coffre en bas au centre, entouré de planches.
 - **Plaque de maison** (×2) : une dalle de bois, une pépite de fer, une teinture noire.
 - **Mairie annexe** : planche, carte, planche ; planche, tonneau, planche ; trois bûches.

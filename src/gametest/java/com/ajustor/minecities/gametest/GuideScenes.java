@@ -51,6 +51,10 @@ public class GuideScenes implements Scene {
 			check(run(server, player, "ville bug") == 1, "/ville bug a échoué");
 			check(server.getRecipeManager().byKey(ResourceKey.create(Registries.RECIPE, MineCities.id("guide")))
 					.isPresent(), "la recette du guide manque");
+			// Le livre de recettes montre celles du mod (l'hôtel de ville d'abord).
+			Guide.teachRecipes(player);
+			check(player.getRecipeBook().contains(ResourceKey.create(Registries.RECIPE, MineCities.id("town_hall"))),
+					"le livre de recettes ne montre pas l'hôtel de ville");
 			List<Component> pages = Guide.pages();
 			check(pages.size() == 34, "le guide a " + pages.size() + " pages");
 			List<String> missing = new ArrayList<>();

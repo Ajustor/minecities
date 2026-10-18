@@ -3,6 +3,7 @@ package com.ajustor.minecities.gametest;
 import com.ajustor.minecities.McConfig;
 import com.ajustor.minecities.block.TownHallBlockEntity;
 import com.ajustor.minecities.citizen.CitizenEntity;
+import com.ajustor.minecities.citizen.Hunger;
 import com.ajustor.minecities.registry.McItems;
 import com.ajustor.minecities.town.Families;
 import com.ajustor.minecities.town.Stock;
@@ -92,6 +93,17 @@ public class RobustScenes implements Scene {
 		McConfig.get().missingCitizenMinutes = before;
 		check(stage.compute(server -> town(server).orElseThrow().citizens() == 1 ? null
 				: "l'autre citoyen a été rayé aussi"));
+
+		// Le grenier vide, un citoyen qui a faim mange ce qu'il porte.
+		stage.run(server -> {
+			CitizenEntity citizen = (CitizenEntity) server.overworld().getEntity(
+					town(server).orElseThrow().residents().keySet().iterator().next());
+			citizen.setHunger(4);
+			citizen.carry(new ItemStack(Items.BREAD, 4));
+		});
+		waitOrExplain(stage, server -> ((CitizenEntity) server.overworld().getEntity(
+				town(server).orElseThrow().residents().keySet().iterator().next())).hunger() >= Hunger.HUNGRY, 1600,
+				"le citoyen affamé n'a pas mangé le pain qu'il portait");
 
 		// Un citoyen qui quitte la ville rend au grenier ce qu'il porte.
 		check(stage.compute(server -> {

@@ -7,6 +7,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.Container;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.AbstractFurnaceBlock;
@@ -86,28 +87,41 @@ class CookGoal extends WorkGoal {
 		if (!goTo(granary)) {
 			return;
 		}
-		container(granary).ifPresent(c -> {
-			for (int i = 0; i < 6 && !citizen.inventoryFull(); i++) {
-				ItemStack taken = Stock.take(c, kitchen()::isIngredient, BATCH);
-				if (taken.isEmpty()) {
-					break;
-				}
-				citizen.carry(taken);
+		// Il rassemble de là ce qu'il lui faut dans toutes les réserves : une sorte de chaque ingrédient
+		// d'abord (les bols dans un coffre, la viande au grenier), puis davantage.
+		List<Container> pool = pool(supplies());
+		for (int i = 0; i < 6 && !citizen.inventoryFull(); i++) {
+			ItemStack taken = take(pool, s -> kitchen().isIngredient(s) && !carries(s), BATCH);
+			if (taken.isEmpty()) {
+				taken = take(pool, kitchen()::isIngredient, BATCH);
 			}
-			if (!kitchen().canCook(citizen.inventory())) {
-				// De quoi rien faire (un bol sans soupe, deux blés) : il repose tout, et attend.
-				List<ItemStack> inventory = citizen.inventory();
-				for (int i = 0; i < inventory.size(); i++) {
-					inventory.set(i, Stock.insert(c, inventory.get(i)));
-				}
+			if (taken.isEmpty()) {
+				break;
 			}
-		});
+			citizen.carry(taken);
+		}
+		if (!kitchen().canCook(citizen.inventory())) {
+			// De quoi rien faire (un bol sans soupe, deux blés) : il repose tout, et attend.
+			List<ItemStack> inventory = citizen.inventory();
+			for (int i = 0; i < inventory.size(); i++) {
+				ItemStack rest = inventory.get(i);
+				for (Container c : pool) {
+					rest = Stock.insert(c, rest);
+				}
+				inventory.set(i, rest);
+			}
+		}
 		if (kitchen().canCook(citizen.inventory())) {
 			phase = Phase.COOK;
 		} else {
 			phase = citizen.inventory().stream().allMatch(ItemStack::isEmpty) ? Phase.FETCH : Phase.DELIVER;
 			rest(IDLE_LONG);
 		}
+	}
+
+	/** Il en porte déjà de cette sorte. */
+	private boolean carries(ItemStack stack) {
+		return citizen.inventory().stream().anyMatch(c -> ItemStack.isSameItemSameComponents(c, stack));
 	}
 
 	private void cook() {

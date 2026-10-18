@@ -16,6 +16,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.Container;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -82,6 +83,19 @@ public class CraftScenes implements Scene {
 					return "pas de " + job.serializedName() + " : " + town.residents() + " ; " + town.houses();
 				}
 			}
+			return null;
+		}));
+		// L'éclat d'améthyste de la broche est dans un coffre de l'atelier du joaillier, le cuivre au grenier :
+		// les ingrédients d'un même ouvrage dans deux contenants.
+		check(stage.compute(server -> {
+			Town town = town(server);
+			Optional<BlockPos> chest = town.residents().values().stream().flatMap(r -> r.job().stream())
+					.filter(j -> j.job() == Job.JEWELER).findFirst()
+					.flatMap(j -> town.house(j.workshop())).flatMap(h -> h.containers().stream().findFirst());
+			if (chest.isEmpty() || !(server.overworld().getBlockEntity(chest.get()) instanceof Container c)) {
+				return "pas de coffre dans l'atelier du joaillier";
+			}
+			Stock.insert(c, new ItemStack(Items.AMETHYST_SHARD));
 			return null;
 		}));
 		stage.look(6, Y + 16, 2, 6, Y, -16);
@@ -169,7 +183,7 @@ public class CraftScenes implements Scene {
 			Item[] items = {Items.COOKED_BEEF, Items.GOLD_INGOT, Items.DIAMOND, Items.LAPIS_LAZULI, Items.COPPER_INGOT,
 					Items.AMETHYST_SHARD, Items.CLAY_BALL, Items.SAND, Items.WOOL.white(), Items.OAK_PLANKS, Items.PAPER,
 					Items.LEATHER, Items.GLASS_BOTTLE, Items.SHEARS, Items.BAKED_POTATO};
-			int[] counts = {32, 5, 1, 2, 2, 1, 8, 4, 3, 3, 3, 1, 4, 1, 16};
+			int[] counts = {32, 5, 1, 2, 2, 0, 8, 4, 3, 3, 3, 1, 4, 1, 16};
 			for (int i = 0; i < items.length; i++) {
 				hall.setItem(i, new ItemStack(items[i], counts[i]));
 			}
