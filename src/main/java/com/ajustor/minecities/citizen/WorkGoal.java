@@ -38,6 +38,14 @@ abstract class WorkGoal extends Goal {
 	private long idleUntil;
 	private BlockPos errand;
 	private int repath;
+	/** Depuis quand il va vers sa cible sans s'en approcher, et le plus près qu'il en a été. */
+	private long errandSince;
+	private double errandBest;
+	/** Les cibles qu'il n'a pas pu atteindre, et jusqu'à quand il les laisse de côté. */
+	private final java.util.Map<BlockPos, Long> unreachable = new java.util.HashMap<>();
+	/** Sans s'approcher d'un bloc en tant de ticks, il renonce à la cible ; pour tant de ticks. */
+	private static final int GIVE_UP = 300;
+	private static final int SHUNNED = 2400;
 	private net.minecraft.world.entity.item.ItemEntity litter;
 	private int litterTicks;
 	private final java.util.Set<java.util.UUID> ignoredLitter = new java.util.HashSet<>();
@@ -151,12 +159,48 @@ abstract class WorkGoal extends Goal {
 			citizen.getNavigation().stop();
 			return true;
 		}
-		if (!target.equals(errand) || --repath <= 0 || citizen.getNavigation().isDone()) {
+		long now = citizen.level().getGameTime();
+		double distance = citizen.distanceToSqr(target.getX() + 0.5, target.getY() + 0.5, target.getZ() + 0.5);
+		if (!target.equals(errand)) {
 			errand = target;
+			repath = 0;
+			errandSince = now;
+			errandBest = distance;
+		} else if (distance < errandBest - 1) {
+			errandBest = distance;
+			errandSince = now;
+		} else if (now - errandSince > GIVE_UP && givesUp() && !target.equals(town().hall())) {
+			// Inaccessible (derrière une clôture, sur un toit, sur un îlot) : il la laisse de côté un moment
+			// et en choisira une autre, au lieu de s'y user toute la journée.
+			unreachable.put(target.immutable(), now + SHUNNED);
+			errand = null;
+			citizen.getNavigation().stop();
+			gaveUp(target);
+			return false;
+		}
+		if (--repath <= 0 || citizen.getNavigation().isDone()) {
 			repath = 40;
 			citizen.walkTo(target, speed());
 		}
 		return false;
+	}
+
+	/**
+	 * Renonce-t-il à une cible qu'il n'approche plus ? Oui, sauf ceux qui ont leur propre façon d'y aller
+	 * (le bâtisseur, sur ses échafaudages). Le grenier de l'hôtel de ville, lui, n'est jamais laissé de côté.
+	 */
+	protected boolean givesUp() {
+		return true;
+	}
+
+	/** Peut-il aller là ? (faux s'il vient d'y renoncer, faute de chemin) */
+	protected boolean reachable(BlockPos pos) {
+		Long until = unreachable.get(pos);
+		return until == null || until <= citizen.level().getGameTime();
+	}
+
+	/** Il vient de renoncer à cette cible : à chaque métier d'en choisir une autre. */
+	protected void gaveUp(BlockPos target) {
 	}
 
 	/** Les réserves de l'atelier (ses coffres), puis le grenier de l'hôtel de ville. */
@@ -206,7 +250,7 @@ abstract class WorkGoal extends Goal {
 
 	/** Le premier contenant de la liste qui a ce qu'on cherche. */
 	protected Optional<BlockPos> find(List<BlockPos> containers, Predicate<ItemStack> filter) {
-		return containers.stream().filter(p -> level().isLoaded(p) && level().getBlockEntity(p) instanceof Container c
+		return containers.stream().filter(p -> reachable(p) && level().isLoaded(p) && level().getBlockEntity(p) instanceof Container c
 				&& Stock.count(c, filter) > 0).findFirst();
 	}
 

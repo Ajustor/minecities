@@ -322,7 +322,7 @@ public final class Town {
 
 	/** Les annexes en service : autant que le palier en permet (les premières posées). */
 	public List<BlockPos> activeAnnexes() {
-		return annexes.subList(0, Math.min(annexes.size(), tier.annexes()));
+		return List.copyOf(annexes.subList(0, Math.min(annexes.size(), tier.annexes())));
 	}
 
 	/** Pourquoi on ne peut pas poser d'annexe ici ; vide si on peut. */

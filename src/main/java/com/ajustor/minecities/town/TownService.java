@@ -73,6 +73,8 @@ public final class TownService {
 	private static final int SURVEYS_PER_PASS = 4;
 	/** Les villes dont le maire démonte l'hôtel de ville : elles disparaissent tout de suite. */
 	private static final java.util.Set<UUID> DISMANTLED = new java.util.HashSet<>();
+	/** Le tag du joueur qui a déjà reçu son établi du bâtisseur. */
+	private static final String BENCH_GIVEN = "minecities.bench";
 	private static int ticks;
 
 	private TownService() {
@@ -110,9 +112,19 @@ public final class TownService {
 						town.get().name()).withStyle(ChatFormatting.RED));
 				return false;
 			}
-			// Le maire démonte son hôtel de ville : la ville disparaît sans attendre.
-			town.ifPresent(t -> DISMANTLED.add(t.id()));
 			return true;
+		});
+		// Le maire a démonté son hôtel de ville (la casse a bien eu lieu : un autre mod a pu l'annuler) : la
+		// ville disparaît sans attendre.
+		PlayerBlockBreakEvents.AFTER.register((level, player, pos, state, blockEntity) -> {
+			if (level instanceof ServerLevel serverLevel && state.is(McBlocks.TOWN_HALL)) {
+				Towns.get(serverLevel.getServer()).byHall(level.dimension(), pos)
+						.filter(t -> t.mayor().equals(player.getUUID())).ifPresent(t -> DISMANTLED.add(t.id()));
+			}
+		});
+		net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
+			DISMANTLED.clear();
+			LAST_SURVEY.clear();
 		});
 	}
 
@@ -182,6 +194,15 @@ public final class TownService {
 		}
 		Component customName = stack.get(DataComponents.CUSTOM_NAME);
 		String name = customName != null ? customName.getString() : uniqueName(towns, level);
+		// Deux villes ne portent pas le même nom : /ville join et /ville trade les désignent par lui.
+		if (towns.byName(name).isPresent()) {
+			String base = name;
+			int n = 2;
+			while (towns.byName(base + " " + n).isPresent()) {
+				n++;
+			}
+			name = base + " " + n;
+		}
 		Town town = Town.found(name, level.dimension(), pos, player.getUUID(), player.getGameProfile().name(),
 				level.getGameTime());
 		towns.add(town);
@@ -194,14 +215,17 @@ public final class TownService {
 		}
 		player.sendSystemMessage(Component.translatable("message.minecities.found.hint")
 				.withStyle(ChatFormatting.GRAY));
-		// L'établi du bâtisseur, offert : posé dans un bâtiment déclaré, la ville a son premier bâtisseur.
-		ItemStack bench = new ItemStack(com.ajustor.minecities.registry.McItems.STATIONS
-				.get(com.ajustor.minecities.town.Job.BUILDER));
-		if (!player.getInventory().add(bench)) {
-			EntityCompat.drop(player, bench);
+		// L'établi du bâtisseur, offert une fois par joueur (fonder, démonter et refonder n'en donne pas
+		// d'autres) : posé dans un bâtiment déclaré, la ville a son premier bâtisseur.
+		if (player.addTag(BENCH_GIVEN)) {
+			ItemStack bench = new ItemStack(com.ajustor.minecities.registry.McItems.STATIONS
+					.get(com.ajustor.minecities.town.Job.BUILDER));
+			if (!player.getInventory().add(bench)) {
+				EntityCompat.drop(player, bench);
+			}
+			player.sendSystemMessage(Component.translatable("message.minecities.found.builder")
+					.withStyle(ChatFormatting.GRAY));
 		}
-		player.sendSystemMessage(Component.translatable("message.minecities.found.builder")
-				.withStyle(ChatFormatting.GRAY));
 		level.playSound(null, pos, SoundEvents.BELL_BLOCK, SoundSource.BLOCKS, 1.0f, 1.0f);
 	}
 
@@ -339,8 +363,19 @@ public final class TownService {
 
 	/** Relève le bâtiment et met la ville à jour : enregistré s'il est valide, oublié sinon. */
 	static HouseScanner.Result survey(ServerLevel level, Town town, BlockPos plaque) {
-		HouseScanner.Result raw = HouseScanner.scan((x, y, z) -> classify(level, new BlockPos(x, y, z)),
-				new HouseScanner.Pos(plaque.getX(), plaque.getY(), plaque.getZ()));
+		boolean[] unloaded = {false};
+		HouseScanner.Result raw = HouseScanner.scan((x, y, z) -> {
+			BlockPos pos = new BlockPos(x, y, z);
+			if (!level.isLoaded(pos)) {
+				unloaded[0] = true;
+			}
+			return classify(level, pos);
+		}, new HouseScanner.Pos(plaque.getX(), plaque.getY(), plaque.getZ()));
+		// Une partie du bâtiment hors des chunks chargés : le relevé ne conclut rien, la maison reste comme
+		// elle était (ses habitants, ses emplois, sa plaque) jusqu'au prochain relevé complet.
+		if (!raw.valid() && unloaded[0] && town.house(plaque).isPresent()) {
+			return raw;
+		}
 		List<BlockPos> beds = raw.beds().stream().map(TownService::pos)
 				.filter(b -> !town.bedClaimedElsewhere(b, plaque)).toList();
 		List<House.Workstation> stations = raw.workstations().stream().map(TownService::pos)

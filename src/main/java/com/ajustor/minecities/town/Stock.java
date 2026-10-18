@@ -80,10 +80,10 @@ public final class Stock {
 				rest.shrink(moved);
 			}
 		}
+		// Une case vide reçoit au plus une pile pleine : pas de piles hors norme, que la sauvegarde refuserait.
 		for (int i = 0; i < slots.size() && !rest.isEmpty(); i++) {
 			if (slots.get(i).isEmpty()) {
-				slots.set(i, rest.copy());
-				rest = ItemStack.EMPTY;
+				slots.set(i, rest.split(Math.min(rest.getCount(), rest.getMaxStackSize())));
 			}
 		}
 		return rest;

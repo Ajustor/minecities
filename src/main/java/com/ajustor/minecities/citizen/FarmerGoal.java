@@ -83,6 +83,11 @@ class FarmerGoal extends WorkGoal {
 		}
 	}
 
+	@Override
+	protected void gaveUp(BlockPos pos) {
+		target = null;
+	}
+
 	/** Un plant mûr à récolter, ou une terre labourée nue à semer (s'il a de quoi). */
 	private boolean worthIt(BlockPos pos) {
 		if (ripe(pos)) {
@@ -135,7 +140,7 @@ class FarmerGoal extends WorkGoal {
 		double bestDistance = Double.MAX_VALUE;
 		for (BlockPos pos : BlockPos.betweenClosed(station.offset(-FIELD_RADIUS, -FIELD_HEIGHT, -FIELD_RADIUS),
 				station.offset(FIELD_RADIUS, FIELD_HEIGHT, FIELD_RADIUS))) {
-			if (!level().isLoaded(pos) || !worthIt(pos) || !town().contains(level().dimension(), pos)) {
+			if (!level().isLoaded(pos) || !reachable(pos) || !worthIt(pos) || !town().contains(level().dimension(), pos)) {
 				continue;
 			}
 			boolean ripe = ripe(pos);

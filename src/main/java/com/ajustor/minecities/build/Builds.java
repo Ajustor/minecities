@@ -45,6 +45,10 @@ public final class Builds {
 	 */
 	public static Optional<Component> check(ServerLevel level, Town town, Blueprint blueprint, BlockPos origin,
 			Rotation rotation) {
+		// Les schémas d'avant les quatre niveaux ne servent plus qu'aux chantiers déjà commencés.
+		if (blueprint.legacy()) {
+			return Optional.of(Component.translatable("message.minecities.build.legacy", blueprint.displayName()));
+		}
 		if (town.tier().ordinal() < blueprint.tier().ordinal()) {
 			return Optional.of(Component.translatable("message.minecities.build.locked",
 					blueprint.displayName(), Component.translatable(blueprint.tier().translationKey())));

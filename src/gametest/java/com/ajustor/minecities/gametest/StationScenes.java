@@ -77,6 +77,8 @@ public class StationScenes implements Scene {
 			ServerLevel level = server.overworld();
 			ServerPlayer mayor = mayor(server);
 			mayor.getInventory().clearContent();
+			// L'établi n'est offert qu'une fois par joueur : le joueur des scènes a déjà fondé d'autres villes.
+			mayor.removeTag("minecities.bench");
 			TownService.found(level, HALL, mayor, new ItemStack(McItems.TOWN_HALL));
 			// De quoi payer les chantiers à partir du niveau 2 (MC-57).
 			if (level.getBlockEntity(HALL) instanceof com.ajustor.minecities.block.TownHallBlockEntity hall) {

@@ -345,7 +345,9 @@ public class CitizenEntity extends PathfinderMob {
 			// Les poches pleines : il le pose à ses pieds, et le reprend dès qu'il a de la place.
 			net.minecraft.world.entity.item.ItemEntity item = spawnAtLocation(serverLevel, rest);
 			if (item != null) {
-				item.setUnlimitedLifetime();
+				// Dix minutes, et pas pour toujours : sa liste n'est pas sauvegardée, et ce qu'il n'a pas repris
+				// après un rechargement resterait au sol à jamais.
+				item.setExtendedLifetime();
 				dropped.add(item.getUUID());
 			}
 		}
