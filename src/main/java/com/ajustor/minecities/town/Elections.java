@@ -192,16 +192,34 @@ public final class Elections {
 	/** Le dépouillement : un élu, ou un nouveau tour entre les ex æquo. */
 	private static void count(ServerLevel level, Town town, long now) {
 		Election election = town.election();
-		List<UUID> candidates = election.candidates().stream().map(Map.Entry::getKey).toList();
+		// Ceux qui ont quitté la ville (ou en ont été chassés) pendant le vote n'y sont plus candidats, et
+		// leurs voix ne comptent plus.
+		List<UUID> candidates = election.candidates().stream().map(Map.Entry::getKey).filter(town::isMember).toList();
+		if (candidates.isEmpty()) {
+			finish(level, town, now, town.mayor(), town.mayorName(), 0);
+			return;
+		}
+		Map<UUID, UUID> votes = new java.util.HashMap<>();
+		election.votes().forEach((voter, choice) -> {
+			if (town.isMember(voter) && candidates.contains(choice)) {
+				votes.put(voter, choice);
+			}
+		});
 		List<Integer> moods = new ArrayList<>();
 		town.residents().forEach((id, resident) -> {
 			if (!resident.isChild()) {
 				town.mood(id).ifPresent(moods::add);
 			}
 		});
-		Ballot.Result result = Ballot.count(candidates, town.mayor(), election.votes(), moods,
-				new java.util.Random(level.getRandom().nextLong()));
+		java.util.Random random = new java.util.Random(level.getRandom().nextLong());
+		Ballot.Result result = Ballot.count(candidates, town.mayor(), votes, moods, random);
 		Optional<UUID> winner = result.winner();
+		// Personne n'a voté, et le maire sortant n'est plus en lice : un tour de plus ne changerait rien. Le
+		// sort départage, au lieu de relancer des tours sans fin.
+		if (winner.isEmpty() && !result.leaders().isEmpty()
+				&& result.leaders().stream().allMatch(l -> result.votes(l) == 0)) {
+			winner = Optional.of(result.leaders().get(random.nextInt(result.leaders().size())));
+		}
 		if (winner.isEmpty()) {
 			election.vote(now + McConfig.get().votingDays * DAY, result.leaders());
 			Towns.get(level.getServer()).changed();
@@ -209,9 +227,10 @@ public final class Elections {
 					names(election), election.round()));
 			return;
 		}
-		String name = election.candidates().stream().filter(e -> e.getKey().equals(winner.get()))
+		UUID elected = winner.get();
+		String name = election.candidates().stream().filter(e -> e.getKey().equals(elected))
 				.map(Map.Entry::getValue).findFirst().orElse("?");
-		finish(level, town, now, winner.get(), name, result.votes(winner.get()));
+		finish(level, town, now, elected, name, result.votes(elected));
 	}
 
 	/** L'élu prend l'écharpe ; l'ancien maire reste habitant. */
