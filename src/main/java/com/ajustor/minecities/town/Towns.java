@@ -80,8 +80,13 @@ public final class Towns extends SavedData {
 	/** Un hôtel de ville trop près d'une autre ville ? Renvoie la ville gênante. */
 	public Optional<Town> tooClose(ResourceKey<Level> dimension, BlockPos pos) {
 		return towns.values().stream()
-				.filter(t -> t.dimension().equals(dimension) && t.distance(pos) < Math.max(MIN_DISTANCE, t.radius() + TownTier.VILLAGE.radius()))
+				.filter(t -> t.dimension().equals(dimension) && t.distance(pos) < spacing(t))
 				.findFirst();
+	}
+
+	/** La distance à laisser entre l'hôtel de ville de cette ville et celui d'une nouvelle. */
+	public static int spacing(Town town) {
+		return Math.max(MIN_DISTANCE, town.radius() + TownTier.VILLAGE.radius());
 	}
 
 	public void add(Town town) {

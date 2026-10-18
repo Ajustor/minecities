@@ -212,6 +212,11 @@ public class StationScenes implements Scene {
 					|| !noWater.equals("no_water")) {
 				wrong.add("états : hors ville " + outside + ", libre " + loose + ", palier " + locked + ", sec " + noWater);
 			}
+			// Un poste libre, quand tout le monde a déjà un emploi : personne ne viendra (MC-56).
+			if (town.residents().values().stream().allMatch(r -> r.isChild() || r.job().isPresent())
+					!= StationNetwork.vacancy(town).equals("vacant_none")) {
+				wrong.add("poste libre : " + StationNetwork.vacancy(town));
+			}
 			level.setBlockAndUpdate(far, Blocks.AIR.defaultBlockState());
 			return wrong.isEmpty() ? null : String.join(" ; ", wrong);
 		}));

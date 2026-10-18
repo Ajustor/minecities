@@ -93,6 +93,12 @@ public final class StationNetwork {
 		return snapshot(level, pos, null);
 	}
 
+	/** Un poste libre : un citoyen sans emploi viendra le prendre, ou il faut d'abord un habitant de plus. */
+	public static String vacancy(Town town) {
+		return town.residents().values().stream().anyMatch(r -> !r.isChild() && r.job().isEmpty()) ? "vacant"
+				: "vacant_none";
+	}
+
 	/** Ce que l'interface montre de ce poste, à ce joueur (s'il gère la ville, il voit les commandes). */
 	public static Optional<StationSnapshot> snapshot(ServerLevel level, BlockPos pos, ServerPlayer viewer) {
 		BlockState state = level.getBlockState(pos);
@@ -126,7 +132,7 @@ public final class StationNetwork {
 			} else if (!declared) {
 				status = "undeclared";
 			} else {
-				status = workers.isEmpty() ? "vacant" : "ok";
+				status = workers.isEmpty() ? vacancy(t) : "ok";
 			}
 			if (job == Job.BUILDER) {
 				for (Construction c : t.constructions()) {

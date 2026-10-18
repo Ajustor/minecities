@@ -184,8 +184,14 @@ public final class TownService {
 		}
 		Optional<Town> neighbour = towns.tooClose(level.dimension(), pos);
 		if (neighbour.isPresent()) {
+			// De combien, et dans quelle direction s'éloigner de son hôtel de ville.
+			BlockPos hall = neighbour.get().hall();
+			int dx = pos.getX() - hall.getX();
+			int dz = pos.getZ() - hall.getZ();
+			String away = Math.abs(dx) >= Math.abs(dz) ? (dx >= 0 ? "east" : "west") : (dz >= 0 ? "south" : "north");
 			player.sendSystemMessage(Component.translatable("message.minecities.found.too_close",
-					neighbour.get().name()).withStyle(ChatFormatting.RED));
+					neighbour.get().name(), (int) neighbour.get().distance(pos), Towns.spacing(neighbour.get()),
+					Component.translatable("direction.minecities." + away)).withStyle(ChatFormatting.RED));
 			level.removeBlock(pos, false);
 			if (!player.isCreative()) {
 				EntityCompat.placeBack(player, stack.copyWithCount(1));
