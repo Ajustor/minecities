@@ -906,6 +906,12 @@ public class CitizenEntity extends PathfinderMob {
 		return false;
 	}
 
+	/** Un citoyen ne prend pas les portails : sa ville ne le retrouverait plus dans l'autre dimension. */
+	@Override
+	public boolean canUsePortal(boolean allowPassengers) {
+		return false;
+	}
+
 	// Santé (MC-12)
 
 	public Health health() {

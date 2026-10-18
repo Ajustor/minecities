@@ -20,6 +20,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.Container;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.ai.memory.MemoryModuleType;
 import net.minecraft.world.entity.npc.villager.Villager;
@@ -508,21 +509,25 @@ public final class TownService {
 	}
 
 	/**
-	 * Raye les citoyens disparus : jamais revus depuis une heure (réglage) alors que leur maison
-	 * (ou l'hôtel de ville, pour un sans-logis) est chargée. Un citoyen supprimé par une commande ou un
-	 * autre mod ne reste pas inscrit pour toujours.
+	 * Raye les citoyens disparus : jamais revus depuis une heure (réglage) alors que leur maison (ou
+	 * l'hôtel de ville, pour un sans-logis) et l'endroit où on les a vus pour la dernière fois sont
+	 * chargés. Un citoyen supprimé par une commande ou un autre mod ne reste pas inscrit pour toujours ;
+	 * celui qui attend, figé, dans un coin hors de portée des joueurs n'est pas rayé pour autant.
 	 */
 	private static void forgetMissing(ServerLevel level, Town town, long now) {
 		long limit = com.ajustor.minecities.McConfig.get().missingCitizenMinutes * 1200L;
 		for (Map.Entry<UUID, Resident> e : town.residents().entrySet()) {
 			UUID id = e.getKey();
-			if (level.getEntity(id) != null) {
-				town.seen(id, now);
+			Entity entity = level.getEntity(id);
+			if (entity != null) {
+				town.seen(id, now, entity.blockPosition());
 				continue;
 			}
 			BlockPos anchor = e.getValue().home().orElse(town.hall());
+			BlockPos last = town.whereabouts(id).orElse(anchor);
 			long seen = town.lastSeen(id, now);
-			if (limit > 0 && level.isPositionEntityTicking(anchor) && now - seen > limit) {
+			if (limit > 0 && level.isPositionEntityTicking(anchor) && level.isPositionEntityTicking(last)
+					&& now - seen > limit) {
 				farewell(level, town.id(), id, Component.translatable("message.minecities.citizen.missing",
 						e.getValue().name()));
 			}
