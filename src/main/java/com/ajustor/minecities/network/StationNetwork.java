@@ -42,6 +42,17 @@ public final class StationNetwork {
 	/** On agit sur le poste à portée de main. */
 	private static final double REACH = 8.0;
 
+	/** Une demande au plus par joueur tous les tant de ticks : chacune coûte un relevé (celui d'un puits de mine lit des milliers de blocs). */
+	private static final int COOLDOWN = 10;
+	private static final Map<UUID, Long> LAST_ACTION = new java.util.HashMap<>();
+
+	/** Trop tôt après la précédente demande de ce joueur ? (MC-49) */
+	private static boolean throttled(ServerPlayer player) {
+		long now = player.level().getGameTime();
+		Long last = LAST_ACTION.put(player.getUUID(), now);
+		return last != null && now - last >= 0 && now - last < COOLDOWN;
+	}
+
 	/** Le joueur fait luire le travailleur de ce poste. */
 	public record ActionPayload(BlockPos pos, String action, UUID target) implements CustomPacketPayload {
 		public static final Type<ActionPayload> TYPE = new Type<>(MineCities.id("station_action"));
@@ -63,8 +74,11 @@ public final class StationNetwork {
 	public static void register() {
 		PayloadTypeRegistry.clientboundPlay().register(StationSnapshot.TYPE, StationSnapshot.CODEC);
 		PayloadTypeRegistry.serverboundPlay().register(ActionPayload.TYPE, ActionPayload.CODEC);
-		ServerPlayNetworking.registerGlobalReceiver(ActionPayload.TYPE,
-				(payload, context) -> act(context.player(), payload));
+		ServerPlayNetworking.registerGlobalReceiver(ActionPayload.TYPE, (payload, context) -> {
+			if (!throttled(context.player())) {
+				act(context.player(), payload);
+			}
+		});
 	}
 
 	/** Le métier de ce poste du mod : celui qu'il sert ici, sinon celui de son nom (un poste loin de l'eau…). */

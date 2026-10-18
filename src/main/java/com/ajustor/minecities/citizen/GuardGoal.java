@@ -55,6 +55,12 @@ class GuardGoal extends WorkGoal {
 		goTo(patrol);
 	}
 
+	/** Tous les combien de ticks il regarde s'il y a de l'armure pour lui. */
+	private static final int ARMOR_CHECK = 100;
+	/** Le coffre où il va chercher une pièce d'armure, et le temps avant de regarder à nouveau. */
+	private Optional<BlockPos> armor = Optional.empty();
+	private int armorWait;
+
 	/** La pièce d'armure de cet objet, s'il en est une. */
 	private static Optional<EquipmentSlot> armorSlot(ItemStack stack) {
 		Equippable equippable = stack.get(DataComponents.EQUIPPABLE);
@@ -67,12 +73,23 @@ class GuardGoal extends WorkGoal {
 	 * plus rien à aller chercher.
 	 */
 	private boolean ensureArmor() {
-		Optional<BlockPos> source = find(supplies(), s -> armorSlot(s).filter(slot -> citizen.getItemBySlot(slot)
-				.isEmpty()).isPresent());
-		if (source.isEmpty()) {
-			return true;
+		// Fouiller tous les coffres de la ville à chaque tick coûte cher : il regarde de temps en temps,
+		// et garde le coffre trouvé tant qu'il peut y aller (MC-49).
+		if (armor.isEmpty() || !reachable(armor.get())) {
+			armor = Optional.empty();
+			if (--armorWait > 0) {
+				return true;
+			}
+			armorWait = ARMOR_CHECK;
+			armor = find(supplies(), s -> armorSlot(s).filter(slot -> citizen.getItemBySlot(slot).isEmpty()).isPresent());
+			if (armor.isEmpty()) {
+				return true;
+			}
 		}
+		Optional<BlockPos> source = armor;
 		if (goTo(source.get())) {
+			armor = Optional.empty();
+			armorWait = 0;
 			container(source.get()).ifPresent(c -> {
 				ItemStack piece = Stock.take(c, s -> armorSlot(s).filter(slot -> citizen.getItemBySlot(slot)
 						.isEmpty()).isPresent(), 1);

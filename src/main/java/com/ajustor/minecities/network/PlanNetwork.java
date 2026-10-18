@@ -208,6 +208,9 @@ public final class PlanNetwork {
 		return Optional.empty();
 	}
 
+	/** Le plan de chaque chantier montré, par identifiant de fantôme : il ne change pas (MC-49). */
+	private static final Map<UUID, List<BuildPlan.Placement>> PLANS = new HashMap<>();
+
 	/** Le fantôme d'un chantier se montre sous cet identifiant, distinct de celui d'un joueur. */
 	public static UUID ghostId(Construction construction) {
 		return UUID.nameUUIDFromBytes(("site:" + construction.id()).getBytes(java.nio.charset.StandardCharsets.UTF_8));
@@ -221,6 +224,10 @@ public final class PlanNetwork {
 		for (ServerPlayer player : server.getPlayerList().getPlayers()) {
 			show(player);
 		}
+		// Les plans des chantiers que plus personne ne regarde s'oublient.
+		java.util.Set<UUID> seen = new java.util.HashSet<>();
+		SHOWN.values().forEach(m -> seen.addAll(m.keySet()));
+		PLANS.keySet().retainAll(seen);
 	}
 
 	/** Met à jour les chantiers que voit ce joueur. */
@@ -255,7 +262,8 @@ public final class PlanNetwork {
 			if (blueprint.isEmpty()) {
 				continue;
 			}
-			List<BuildPlan.Placement> plan = BuildPlan.of(blueprint.get(), c.style(), c.origin(), c.rotation());
+			List<BuildPlan.Placement> plan = PLANS.computeIfAbsent(entry.getKey(),
+					k -> BuildPlan.of(blueprint.get(), c.style(), c.origin(), c.rotation()));
 			List<GhostPayload.Block> blocks = Proposals.ghost(plan, i -> !c.isPlaced(i));
 			if (blocks.isEmpty()) {
 				if (shown.remove(entry.getKey()) != null) {

@@ -38,6 +38,12 @@ import java.util.Set;
  * territoire, et laisse la roche-mère.
  */
 class MinerGoal extends WorkGoal {
+	/** Tous les combien de ticks il revérifie son chemin de remontée. */
+	private static final int WAY_CHECK = 40;
+	/** La première marche qui ne passe plus, à la dernière vérification. */
+	private Optional<BlockPos> way = Optional.empty();
+	private int wayCheck;
+
 	/** Il ne garde que tant de pierre : le reste reste au fond comme déblais. */
 	private static final int STONE_KEPT = 64;
 	/** L'andésite et le gravier qu'il garde (le reste reste au fond, comme les autres déblais). */
@@ -114,11 +120,17 @@ class MinerGoal extends WorkGoal {
 		}
 		// Avant de descendre, le chemin de remontée : il répare la première marche qui ne passe plus, et ne
 		// s'engage pas s'il ne peut pas.
-		Optional<BlockPos> broken = com.ajustor.minecities.town.Mines.broken(level(), mine);
+		// Revérifié toutes les deux secondes, pas à chaque tick : il lit tout le chemin (MC-49).
+		if (--wayCheck <= 0) {
+			wayCheck = WAY_CHECK;
+			way = com.ajustor.minecities.town.Mines.broken(level(), mine);
+		}
+		Optional<BlockPos> broken = way;
 		if (broken.isPresent()) {
 			if (!goTo(broken.get())) {
 				return;
 			}
+			wayCheck = 0;
 			if (!com.ajustor.minecities.town.Mines.repair(level(), broken.get())) {
 				citizen.complain("mine_blocked", Component.translatable("message.minecities.mine.blocked",
 						citizen.getName(), broken.get().toShortString()),
