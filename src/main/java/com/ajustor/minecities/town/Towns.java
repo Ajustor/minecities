@@ -34,6 +34,7 @@ public final class Towns extends SavedData {
 
 	private Towns(List<Town> towns) {
 		towns.forEach(t -> this.towns.put(t.id(), t));
+		link();
 	}
 
 	public static Towns get(MinecraftServer server) {
@@ -79,19 +80,36 @@ public final class Towns extends SavedData {
 
 	/** Un hôtel de ville trop près d'une autre ville ? Renvoie la ville gênante. */
 	public Optional<Town> tooClose(ResourceKey<Level> dimension, BlockPos pos) {
+		// Loin de l'hôtel de ville, mais aussi des annexes : une nouvelle ville n'y aurait presque rien.
 		return towns.values().stream()
-				.filter(t -> t.dimension().equals(dimension) && t.distance(pos) < Math.max(MIN_DISTANCE, t.radius() + TownTier.VILLAGE.radius()))
+				.filter(t -> t.dimension().equals(dimension) && (t.distance(pos) < spacing(t) || t.activeAnnexes()
+						.stream().anyMatch(a -> Math.hypot(pos.getX() - a.getX(), pos.getZ() - a.getZ())
+								< Town.ANNEX_RADIUS + TownTier.VILLAGE.radius())))
 				.findFirst();
+	}
+
+	/** La distance à laisser entre l'hôtel de ville de cette ville et celui d'une nouvelle. */
+	public static int spacing(Town town) {
+		return Math.max(MIN_DISTANCE, town.radius() + TownTier.VILLAGE.radius());
 	}
 
 	public void add(Town town) {
 		towns.put(town.id(), town);
+		link();
 		setDirty();
 	}
 
 	public void remove(Town town) {
 		towns.remove(town.id());
+		town.neighbours(List.of());
+		link();
 		setDirty();
+	}
+
+	/** Chaque ville connaît ses voisines, pour partager le territoire là où il se chevauche. */
+	private void link() {
+		List<Town> all = List.copyOf(towns.values());
+		all.forEach(t -> t.neighbours(all));
 	}
 
 	/** Toute modification d'une ville doit passer par là pour être sauvegardée. */

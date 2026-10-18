@@ -57,10 +57,15 @@ public final class Families {
 		minimum = value;
 	}
 
+	/** Jusqu'à combien d'habitants les nouveaux venus arrivent d'eux-mêmes. */
+	public static int minimum() {
+		return minimum >= 0 ? minimum : com.ajustor.minecities.McConfig.get().newcomerMinimum;
+	}
+
 	/** Toutes les 5 secondes, pour une ville chargée. */
 	static void tick(ServerLevel level, Town town) {
 		long now = level.getGameTime();
-		int min = minimum >= 0 ? minimum : com.ajustor.minecities.McConfig.get().newcomerMinimum;
+		int min = minimum();
 		if (town.population() < min && now - town.lastArrival() >= newcomerDelay()) {
 			TownService.immigrate(level, town);
 		} else {
@@ -89,7 +94,7 @@ public final class Families {
 	}
 
 	public static Growth growth(Town town, long now) {
-		int min = minimum >= 0 ? minimum : com.ajustor.minecities.McConfig.get().newcomerMinimum;
+		int min = minimum();
 		if (town.population() < min) {
 			return new Growth("newcomers", min, 0);
 		}

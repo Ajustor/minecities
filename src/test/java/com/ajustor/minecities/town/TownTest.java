@@ -51,6 +51,31 @@ class TownTest {
 	}
 
 	@Test
+	void neighboursShareTheirTerritory() {
+		// Un village fondé à 96 blocs, puis la première ville devient mégalopole : son disque déborde sur
+		// le village, mais le terrain du village reste au village (MC-44).
+		Town big = town();
+		Town small = Town.found("Bourg", Level.OVERWORLD, new BlockPos(96, 64, 0), UUID.randomUUID(), "Maire", 0);
+		Towns towns = new Towns();
+		towns.add(big);
+		towns.add(small);
+		big.forceTier(java.util.Optional.of(TownTier.MEGALOPOLIS));
+		big.updateTier();
+		assertTrue(big.contains(Level.OVERWORLD, new BlockPos(40, 0, 0)));
+		assertFalse(big.contains(Level.OVERWORLD, new BlockPos(60, 0, 0)));
+		assertTrue(small.contains(Level.OVERWORLD, new BlockPos(60, 0, 0)));
+		assertTrue(big.contains(Level.OVERWORLD, new BlockPos(-200, 0, 0)));
+		assertEquals(small, towns.at(Level.OVERWORLD, new BlockPos(100, 0, 0)).orElseThrow());
+		// Partie, la voisine ne retient plus rien.
+		towns.remove(small);
+		assertTrue(big.contains(Level.OVERWORLD, new BlockPos(60, 0, 0)));
+		// Ni près d'une annexe : une ville fondée là n'aurait presque pas de terrain.
+		big.addAnnex(new BlockPos(200, 64, 0));
+		assertTrue(towns.tooClose(Level.OVERWORLD, new BlockPos(290, 64, 0)).isPresent());
+		assertFalse(towns.tooClose(Level.OVERWORLD, new BlockPos(400, 64, 0)).isPresent());
+	}
+
+	@Test
 	void newcomersGetAFreeBed() {
 		Town town = town();
 		town.putHouse(new House(PLAQUE, List.of(BED_A, BED_B), List.of(), 30));

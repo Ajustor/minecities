@@ -212,6 +212,11 @@ public class StationScenes implements Scene {
 					|| !noWater.equals("no_water")) {
 				wrong.add("états : hors ville " + outside + ", libre " + loose + ", palier " + locked + ", sec " + noWater);
 			}
+			// Un poste libre, quand tout le monde a déjà un emploi : personne ne viendra (MC-56).
+			if (town.residents().values().stream().allMatch(r -> r.isChild() || r.job().isPresent())
+					!= StationNetwork.vacancy(town).equals("vacant_none")) {
+				wrong.add("poste libre : " + StationNetwork.vacancy(town));
+			}
 			level.setBlockAndUpdate(far, Blocks.AIR.defaultBlockState());
 			return wrong.isEmpty() ? null : String.join(" ; ", wrong);
 		}));
@@ -295,6 +300,14 @@ public class StationScenes implements Scene {
 			ServerLevel level = server.overworld();
 			Town town = town(server);
 			House handmade = town.house(PLAQUE).orElseThrow();
+			// Pas de chantier par-dessus une maison déclarée (MC-45) ; la rebâtir, si.
+			Optional<net.minecraft.network.chat.Component> onTop = Builds.check(level, town, Blueprints.get(server,
+					Identifier.fromNamespaceAndPath("minecities", "house_1")).orElseThrow(), handmade.min().orElseThrow(),
+					Rotation.NONE);
+			if (!onTop.map(c -> c.getContents() instanceof net.minecraft.network.chat.contents.TranslatableContents t
+					? t.getKey() : "").orElse("").equals("message.minecities.build.occupied")) {
+				return "par-dessus une maison : " + onTop;
+			}
 			Optional<net.minecraft.network.chat.Component> refusal = Builds.rebuild(level, town, PLAQUE);
 			Optional<Construction> site = town.constructions().stream().filter(c -> !c.done() && c.clearing().isPresent())
 					.findFirst();

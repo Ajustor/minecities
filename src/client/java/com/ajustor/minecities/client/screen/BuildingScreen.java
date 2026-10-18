@@ -121,7 +121,7 @@ public class BuildingScreen extends Screen {
 			}
 		}
 		if (!building.manager() && building.next().isPresent()) {
-			graphics.text(font, Component.translatable("screen.minecities.mayor_decides"), left + 12, top + HEIGHT - 20,
+			graphics.text(font, Component.translatable("screen.minecities.managers_only"), left + 12, top + HEIGHT - 20,
 					FADED, false);
 		}
 		super.extractRenderState(graphics, mouseX, mouseY, a);

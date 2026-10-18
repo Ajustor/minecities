@@ -184,8 +184,14 @@ public final class TownService {
 		}
 		Optional<Town> neighbour = towns.tooClose(level.dimension(), pos);
 		if (neighbour.isPresent()) {
+			// De combien, et dans quelle direction s'éloigner de son hôtel de ville.
+			BlockPos hall = neighbour.get().hall();
+			int dx = pos.getX() - hall.getX();
+			int dz = pos.getZ() - hall.getZ();
+			String away = Math.abs(dx) >= Math.abs(dz) ? (dx >= 0 ? "east" : "west") : (dz >= 0 ? "south" : "north");
 			player.sendSystemMessage(Component.translatable("message.minecities.found.too_close",
-					neighbour.get().name()).withStyle(ChatFormatting.RED));
+					neighbour.get().name(), (int) neighbour.get().distance(pos), Towns.spacing(neighbour.get()),
+					Component.translatable("direction.minecities." + away)).withStyle(ChatFormatting.RED));
 			level.removeBlock(pos, false);
 			if (!player.isCreative()) {
 				EntityCompat.placeBack(player, stack.copyWithCount(1));
@@ -213,7 +219,7 @@ public final class TownService {
 			player.sendSystemMessage(Component.translatable("message.minecities.found.village", town.villagers(),
 					Component.translatable(town.tier().translationKey())).withStyle(ChatFormatting.GREEN));
 		}
-		player.sendSystemMessage(Component.translatable("message.minecities.found.hint")
+		player.sendSystemMessage(Component.translatable("message.minecities.found.hint", Families.minimum())
 				.withStyle(ChatFormatting.GRAY));
 		// L'établi du bâtisseur, offert une fois par joueur (fonder, démonter et refonder n'en donne pas
 		// d'autres) : posé dans un bâtiment déclaré, la ville a son premier bâtisseur.
@@ -666,7 +672,10 @@ public final class TownService {
 		Towns.get(level.getServer()).changed();
 	}
 
-	/** Un nouveau citoyen arrive à l'hôtel de ville, attiré par un lit libre et un grenier garni. */
+	/**
+	 * Un nouveau citoyen arrive à l'hôtel de ville : d'eux-mêmes jusqu'au minimum d'habitants, puis attirés
+	 * par la taverne (voir {@link Families#growth}).
+	 */
 	public static Optional<CitizenEntity> immigrate(ServerLevel level, Town town) {
 		BlockPos spot = arrivalSpot(level, town);
 		CitizenEntity citizen = McEntities.CITIZEN.create(level, EntitySpawnReason.EVENT);

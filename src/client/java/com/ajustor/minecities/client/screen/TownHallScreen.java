@@ -26,6 +26,8 @@ public class TownHallScreen extends Screen {
 	private static final int ROWS = 7;
 	/** Les plans : deux lignes de moins, sous le choix du style et au-dessus du grenier. */
 	private static final int PLAN_ROWS = 5;
+	/** Les demandes de mariage : espacées, avec leurs deux boutons ; cinq tiennent au-dessus des pages. */
+	private static final int REQUEST_ROWS = 5;
 	private static final int ROW = 22;
 	/** Les joueurs de la ville : quatre lignes, au-dessus des droits de chaque rang. */
 	private static final int MEMBER_ROWS = 4;
@@ -169,7 +171,7 @@ public class TownHallScreen extends Screen {
 				if (town.manager()) {
 					int y = top + 76;
 					for (TownSnapshot.PlanRow plan : visible(town.plans(), PLAN_ROWS)) {
-						Button take = addRenderableWidget(Button.builder(Component.translatable("screen.minecities.plans.take"),
+						Button take = addRenderableWidget(Button.builder(Component.translatable("screen.minecities.plans.choose"),
 								b -> send("plan:" + STYLES[style] + ":" + plan.id(), TownActionPayload.NONE))
 								.bounds(left + WIDTH - 80, y, 70, 16).build());
 						take.active = plan.locked().isEmpty();
@@ -183,7 +185,7 @@ public class TownHallScreen extends Screen {
 			case REGISTRY -> {
 				if (town.manager()) {
 					int y = top + 56;
-					for (TownSnapshot.RequestRow request : town.requests().stream().limit(ROWS).toList()) {
+					for (TownSnapshot.RequestRow request : visible(town.requests(), REQUEST_ROWS)) {
 						addRenderableWidget(Button.builder(Component.translatable("screen.minecities.accept"),
 								b -> send("accept", request.id())).bounds(left + WIDTH - 150, y, 66, 18).build());
 						addRenderableWidget(Button.builder(Component.translatable("screen.minecities.refuse"),
@@ -191,6 +193,7 @@ public class TownHallScreen extends Screen {
 						y += ROW + 4;
 					}
 				}
+				pager(town.requests().size(), REQUEST_ROWS);
 			}
 		}
 	}
@@ -659,7 +662,7 @@ public class TownHallScreen extends Screen {
 			y += ROW;
 		}
 		if (!town.manager()) {
-			graphics.text(font, Component.translatable("screen.minecities.mayor_decides"), left + 80, top + HEIGHT - 20,
+			graphics.text(font, Component.translatable("screen.minecities.managers_only"), left + 80, top + HEIGHT - 20,
 					FADED, false);
 		}
 	}
@@ -670,7 +673,7 @@ public class TownHallScreen extends Screen {
 			return;
 		}
 		int y = top + 61;
-		for (TownSnapshot.RequestRow request : town.requests().stream().limit(ROWS).toList()) {
+		for (TownSnapshot.RequestRow request : visible(town.requests(), REQUEST_ROWS)) {
 			line(graphics, Component.translatable("screen.minecities.request", request.first(), request.second()), y,
 					INK);
 			y += ROW + 4;
