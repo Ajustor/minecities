@@ -200,8 +200,14 @@ class MerchantGoal extends WorkGoal {
 		if (++timer < HAGGLE) {
 			return;
 		}
-		// L'affaire est faite : ce qu'il portait contre ce qu'il rapporte.
-		citizen.inventory().clear();
+		// L'affaire est faite : ce qu'il a apporté pour elle contre ce qu'il rapporte. Le reste de ses poches
+		// (un achat pas encore rangé, le grenier plein) ne part pas avec.
+		if (buying != null) {
+			spend(s -> s.is(Items.EMERALD), buying.price());
+		} else if (selling != null) {
+			Item sold = selling;
+			spend(s -> s.is(sold), sellingCount);
+		}
 		if (buying != null) {
 			citizen.carry(buying.stack());
 			citizen.say("bought", Component.translatable("speech.minecities.bought",
@@ -238,7 +244,20 @@ class MerchantGoal extends WorkGoal {
 		}
 		buying = null;
 		selling = null;
-		phase = Phase.DECIDE;
+		// Le grenier plein : il garde le reste et y retournera, plutôt que de l'effacer à l'affaire suivante.
+		phase = citizen.inventory().stream().allMatch(ItemStack::isEmpty) ? Phase.DECIDE : Phase.CARRY_HOME;
 		rest(200);
+	}
+
+	/** Retire de ses poches tant de pièces de ce qui convient. */
+	private void spend(java.util.function.Predicate<ItemStack> filter, int count) {
+		int left = count;
+		for (ItemStack stack : citizen.inventory()) {
+			if (left > 0 && filter.test(stack)) {
+				int used = Math.min(left, stack.getCount());
+				stack.shrink(used);
+				left -= used;
+			}
+		}
 	}
 }
