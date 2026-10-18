@@ -2,13 +2,13 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "pattern": [
-    "EBE",
+    "EGE",
     "PLP",
     "PCP"
   ],
   "key": {
     "E": "minecraft:emerald",
-    "B": "minecraft:bell",
+    "G": "minecraft:gold_ingot",
     "P": "#minecraft:planks",
     "L": "minecraft:lectern",
     "C": "minecraft:chest"
