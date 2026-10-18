@@ -29,7 +29,13 @@ public final class Builds {
 	 */
 	public static Optional<Component> order(ServerLevel level, Town town, Blueprint blueprint, BuildStyle style,
 			BlockPos origin, Rotation rotation) {
-		Optional<Component> refusal = check(level, town, blueprint, origin, rotation);
+		return order(level, town, blueprint, style, origin, rotation, Optional.empty());
+	}
+
+	/** Commande un chantier qui remplace le bâtiment de cette emprise (il peut la recouvrir). */
+	private static Optional<Component> order(ServerLevel level, Town town, Blueprint blueprint, BuildStyle style,
+			BlockPos origin, Rotation rotation, Optional<BlockPos[]> replaced) {
+		Optional<Component> refusal = check(level, town, blueprint, origin, rotation, replaced);
 		if (refusal.isPresent()) {
 			return refusal;
 		}
@@ -41,10 +47,16 @@ public final class Builds {
 
 	/**
 	 * Ce qui empêcherait de commander ce chantier ici : schéma pas encore ouvert à ce palier, emprise
-	 * hors du territoire, ou sur un chantier pas encore fini.
+	 * hors du territoire, sur un chantier pas encore fini ou sur un bâtiment de la ville.
 	 */
 	public static Optional<Component> check(ServerLevel level, Town town, Blueprint blueprint, BlockPos origin,
 			Rotation rotation) {
+		return check(level, town, blueprint, origin, rotation, Optional.empty());
+	}
+
+	/** De même, pour un chantier qui remplace le bâtiment de l'emprise {@code replaced}. */
+	public static Optional<Component> check(ServerLevel level, Town town, Blueprint blueprint, BlockPos origin,
+			Rotation rotation, Optional<BlockPos[]> replaced) {
 		// Les schémas d'avant les quatre niveaux ne servent plus qu'aux chantiers déjà commencés.
 		if (blueprint.legacy()) {
 			return Optional.of(Component.translatable("message.minecities.build.legacy", blueprint.displayName()));
@@ -62,6 +74,9 @@ public final class Builds {
 		}
 		if (town.constructions().stream().anyMatch(c -> !c.done() && c.overlaps(bounds[0], bounds[1]))) {
 			return Optional.of(Component.translatable("message.minecities.build.overlap"));
+		}
+		if (occupied(town, bounds, replaced)) {
+			return Optional.of(Component.translatable("message.minecities.build.occupied"));
 		}
 		// Les chantiers à partir du niveau 2 se paient en émeraudes (MC-57).
 		Optional<Component> unaffordable = com.ajustor.minecities.town.Budget.unaffordable(level, town, blueprint.level());
@@ -97,12 +112,19 @@ public final class Builds {
 		// Du haut vers le bas : le toit tombe avant les murs.
 		BlockPos lo = clearing.get()[0];
 		BlockPos hi = clearing.get()[1];
+		// Les maisons voisines (murs compris) restent : un mur mitoyen n'est pas à nous seuls (MC-45).
+		List<BlockPos[]> neighbours = Towns.get(server).all().stream()
+				.filter(t -> t.constructions().contains(construction)).findFirst()
+				.map(t -> t.houses().stream().filter(h -> h.min().isPresent() && h.max().isPresent()
+						&& !(h.min().get().equals(lo) && h.max().get().equals(hi)))
+						.map(h -> new BlockPos[]{h.min().get(), h.max().get()}).toList())
+				.orElse(List.of());
 		for (int y = hi.getY(); y >= lo.getY(); y--) {
 			for (int x = lo.getX(); x <= hi.getX(); x++) {
 				for (int z = lo.getZ(); z <= hi.getZ(); z++) {
 					BlockPos pos = new BlockPos(x, y, z);
 					// Le sol reste : le nouveau bâtiment s'y pose.
-					if (!planned.contains(pos) && y > lo.getY()) {
+					if (!planned.contains(pos) && y > lo.getY() && neighbours.stream().noneMatch(n -> inside(pos, pos, n))) {
 						full.add(new BuildPlan.Placement(pos, net.minecraft.world.level.block.Blocks.AIR.defaultBlockState()));
 					}
 				}
@@ -149,6 +171,55 @@ public final class Builds {
 				: Blueprints.get(server, net.minecraft.resources.Identifier.fromNamespaceAndPath("minecities", family + "_2"));
 	}
 
+	/**
+	 * L'emprise écraserait-elle une maison déclarée, un bâtiment fini, l'hôtel de ville ou une annexe
+	 * (MC-45) ? Seul l'intérieur des bâtiments compte : un mur mitoyen peut servir aux deux. Le bâtiment
+	 * qu'on remplace ne compte pas.
+	 */
+	private static boolean occupied(Town town, BlockPos[] bounds, Optional<BlockPos[]> replaced) {
+		for (com.ajustor.minecities.town.House house : town.houses()) {
+			if (house.min().isEmpty() || house.max().isEmpty()) {
+				if (inside(house.plaque(), house.plaque(), bounds) && replaced.filter(r -> inside(house.plaque(),
+						house.plaque(), r)).isEmpty()) {
+					return true;
+				}
+				continue;
+			}
+			BlockPos min = house.min().get();
+			BlockPos max = house.max().get();
+			if (replaced.filter(r -> inside(min, max, grown(r))).isEmpty()
+					&& overlaps(bounds, min.offset(1, 1, 1), max.offset(-1, -1, -1))) {
+				return true;
+			}
+		}
+		for (Construction built : town.constructions()) {
+			if (built.done() && replaced.filter(r -> inside(built.min(), built.max(), grown(r))).isEmpty()
+					&& overlaps(bounds, built.min().offset(1, 1, 1), built.max().offset(-1, -1, -1))) {
+				return true;
+			}
+		}
+		java.util.List<BlockPos> halls = new java.util.ArrayList<>(town.annexes());
+		halls.add(town.hall());
+		return halls.stream().anyMatch(h -> h.getX() >= bounds[0].getX() && h.getX() <= bounds[1].getX()
+				&& h.getZ() >= bounds[0].getZ() && h.getZ() <= bounds[1].getZ());
+	}
+
+	private static boolean overlaps(BlockPos[] bounds, BlockPos min, BlockPos max) {
+		return bounds[0].getX() <= max.getX() && bounds[1].getX() >= min.getX() && bounds[0].getZ() <= max.getZ()
+				&& bounds[1].getZ() >= min.getZ() && bounds[0].getY() <= max.getY() && bounds[1].getY() >= min.getY();
+	}
+
+	/** De {@code min} à {@code max}, tout est-il dans cette emprise ? */
+	private static boolean inside(BlockPos min, BlockPos max, BlockPos[] box) {
+		return min.getX() >= box[0].getX() && min.getY() >= box[0].getY() && min.getZ() >= box[0].getZ()
+				&& max.getX() <= box[1].getX() && max.getY() <= box[1].getY() && max.getZ() <= box[1].getZ();
+	}
+
+	/** L'emprise élargie d'un bloc (et de deux vers le bas : le sol, le dessous de la plaque). */
+	private static BlockPos[] grown(BlockPos[] box) {
+		return new BlockPos[]{box[0].offset(-1, -2, -1), box[1].offset(1, 1, 1)};
+	}
+
 	/** Où poser le schéma de remplacement : centré sur l'ancien bâtiment, posé sur son sol, porte au nord. */
 	public static BlockPos replacementOrigin(Blueprint blueprint, com.ajustor.minecities.town.House house) {
 		BlockPos min = house.min().orElse(house.plaque());
@@ -169,7 +240,8 @@ public final class Builds {
 			return Optional.of(Component.translatable("screen.minecities.building.no_family"));
 		}
 		BlockPos origin = replacementOrigin(next.get(), house.get());
-		Optional<Component> refusal = check(level, town, next.get(), origin, Rotation.NONE);
+		Optional<Component> refusal = check(level, town, next.get(), origin, Rotation.NONE,
+				Optional.of(new BlockPos[]{house.get().min().get(), house.get().max().get()}));
 		if (refusal.isPresent()) {
 			return refusal;
 		}
@@ -191,7 +263,8 @@ public final class Builds {
 		if (next.isEmpty()) {
 			return Optional.of(Component.translatable("message.minecities.build.no_upgrade"));
 		}
-		return order(level, town, next.get(), built.get().style(), built.get().origin(), built.get().rotation());
+		return order(level, town, next.get(), built.get().style(), built.get().origin(), built.get().rotation(),
+				Optional.of(new BlockPos[]{built.get().min(), built.get().max()}));
 	}
 
 	/** Dit au joueur ce que coûte le plan, et ce que le grenier en a déjà. */

@@ -105,6 +105,7 @@
   "message.minecities.builder.done": "%s a fini de bâtir : %s.",
   "message.minecities.build.outside": "Le chantier sortirait du territoire de %s.",
   "message.minecities.build.overlap": "Un autre chantier, pas encore fini, occupe déjà cet endroit.",
+  "message.minecities.build.occupied": "Le chantier empiéterait sur un bâtiment de la ville, l'hôtel de ville ou une annexe : déplacez-le.",
   "message.minecities.build.not_built": "Il n'y a pas ici de bâtiment construit par la ville.",
   "message.minecities.build.no_upgrade": "Ce bâtiment ne peut pas être agrandi.",
   "message.minecities.build.materials": "Matériaux (requis, dont au grenier) :",

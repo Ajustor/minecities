@@ -228,9 +228,10 @@ class BuilderGoal extends WorkGoal {
 			BlockStateProperties.HALF, BlockStateProperties.DOUBLE_BLOCK_HALF, BlockStateProperties.BED_PART,
 			BlockStateProperties.SLAB_TYPE, BlockStateProperties.ATTACH_FACE, BlockStateProperties.DOOR_HINGE);
 
-	/** Ce qu'on ne casse pas : la roche-mère, l'hôtel de ville, les plaques des autres maisons. */
+	/** Ce qu'on ne casse pas : la roche-mère, l'hôtel de ville, ses annexes et sa boîte à impôts, les plaques des autres maisons. */
 	private boolean unbreakable(BlockState current, BuildPlan.Placement p) {
 		return current.getDestroySpeed(level(), p.pos()) < 0 || current.is(McBlocks.TOWN_HALL)
+				|| current.is(McBlocks.TOWN_ANNEX) || current.is(McBlocks.TAX_BOX)
 				|| current.is(McBlocks.HOUSE_PLAQUE) && !p.state().is(McBlocks.HOUSE_PLAQUE);
 	}
 

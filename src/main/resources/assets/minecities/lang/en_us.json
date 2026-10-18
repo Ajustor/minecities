@@ -105,6 +105,7 @@
   "message.minecities.builder.done": "%s finished building: %s.",
   "message.minecities.build.outside": "The construction would go beyond the territory of %s.",
   "message.minecities.build.overlap": "Another unfinished construction already occupies this spot.",
+  "message.minecities.build.occupied": "The site would overlap a town building, the town hall or an annex: move it.",
   "message.minecities.build.not_built": "There is no building built by the town here.",
   "message.minecities.build.no_upgrade": "This building cannot be enlarged.",
   "message.minecities.build.materials": "Materials (required, of which in the granary):",

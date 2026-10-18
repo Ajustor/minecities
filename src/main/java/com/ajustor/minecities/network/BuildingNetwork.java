@@ -128,7 +128,8 @@ public final class BuildingNetwork {
 				next = Optional.of(replacement.get().displayName());
 				BlockPos origin = Builds.replacementOrigin(replacement.get(), house.get());
 				refusal = site.isPresent() ? Optional.of(Component.translatable("screen.minecities.building.in_progress"))
-						: Builds.check(level, town, replacement.get(), origin, net.minecraft.world.level.block.Rotation.NONE);
+						: Builds.check(level, town, replacement.get(), origin, net.minecraft.world.level.block.Rotation.NONE,
+								house.get().min().flatMap(min -> house.get().max().map(max -> new BlockPos[]{min, max})));
 				materials(level, town, BuildPlan.of(replacement.get(), com.ajustor.minecities.build.BuildStyle.PLAINS,
 						origin, net.minecraft.world.level.block.Rotation.NONE), materials);
 			}
@@ -140,7 +141,8 @@ public final class BuildingNetwork {
 			} else {
 				next = Optional.of(upgrade.get().displayName());
 				refusal = site.isPresent() ? Optional.of(Component.translatable("screen.minecities.building.in_progress"))
-						: Builds.check(level, town, upgrade.get(), built.get().origin(), built.get().rotation());
+						: Builds.check(level, town, upgrade.get(), built.get().origin(), built.get().rotation(),
+								Optional.of(new BlockPos[]{built.get().min(), built.get().max()}));
 				materials(level, town, BuildPlan.of(upgrade.get(), built.get().style(), built.get().origin(),
 						built.get().rotation()), materials);
 			}

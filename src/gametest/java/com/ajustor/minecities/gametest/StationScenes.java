@@ -300,6 +300,14 @@ public class StationScenes implements Scene {
 			ServerLevel level = server.overworld();
 			Town town = town(server);
 			House handmade = town.house(PLAQUE).orElseThrow();
+			// Pas de chantier par-dessus une maison déclarée (MC-45) ; la rebâtir, si.
+			Optional<net.minecraft.network.chat.Component> onTop = Builds.check(level, town, Blueprints.get(server,
+					Identifier.fromNamespaceAndPath("minecities", "house_1")).orElseThrow(), handmade.min().orElseThrow(),
+					Rotation.NONE);
+			if (!onTop.map(c -> c.getContents() instanceof net.minecraft.network.chat.contents.TranslatableContents t
+					? t.getKey() : "").orElse("").equals("message.minecities.build.occupied")) {
+				return "par-dessus une maison : " + onTop;
+			}
 			Optional<net.minecraft.network.chat.Component> refusal = Builds.rebuild(level, town, PLAQUE);
 			Optional<Construction> site = town.constructions().stream().filter(c -> !c.done() && c.clearing().isPresent())
 					.findFirst();
