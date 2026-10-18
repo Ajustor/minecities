@@ -26,6 +26,7 @@
   "message.minecities.found.too_close": "Trop près de %s : éloignez-vous pour fonder une ville.",
   "message.minecities.disbanded": "La ville de %s a été dissoute.",
   "message.minecities.hall.not_mayor": "Seul le maire de %s peut démolir son hôtel de ville.",
+  "message.minecities.annex.not_mayor": "Seuls le maire de %s et ses adjoints peuvent démolir une mairie annexe.",
   "message.minecities.hall.orphan": "Cet hôtel de ville n'appartient à aucune ville.",
   "message.minecities.house.no_town": "Cette maison n'est sur le territoire d'aucune ville.",
   "message.minecities.house.valid": "Bâtiment enregistré à %s : %s lit(s), %s poste(s) de travail, %s coffre(s), %s blocs d'intérieur.",

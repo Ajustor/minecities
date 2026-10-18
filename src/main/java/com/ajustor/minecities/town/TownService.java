@@ -88,6 +88,9 @@ public final class TownService {
 			if (!(level instanceof ServerLevel serverLevel)) {
 				return true;
 			}
+			if (state.is(McBlocks.TOWN_ANNEX)) {
+				return mayBreakAnnex(serverLevel, player, pos);
+			}
 			if (!state.is(McBlocks.TOWN_HALL)) {
 				return mayBreak(serverLevel, player, pos);
 			}
@@ -118,6 +121,18 @@ public final class TownService {
 						.withStyle(ChatFormatting.RED));
 				return false;
 			}
+		}
+		return true;
+	}
+
+	/** Une mairie annexe (et son grenier) ne se démonte que par le maire ou ses adjoints. */
+	private static boolean mayBreakAnnex(ServerLevel level, Player player, BlockPos pos) {
+		Optional<Town> town = Towns.get(level.getServer()).all().stream()
+				.filter(t -> t.dimension().equals(level.dimension()) && t.annexes().contains(pos)).findFirst();
+		if (town.isPresent() && !town.get().canManage(player.getUUID())) {
+			player.sendSystemMessage(Component.translatable("message.minecities.annex.not_mayor",
+					town.get().name()).withStyle(ChatFormatting.RED));
+			return false;
 		}
 		return true;
 	}
