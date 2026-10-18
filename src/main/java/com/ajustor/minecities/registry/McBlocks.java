@@ -3,6 +3,7 @@ package com.ajustor.minecities.registry;
 import com.ajustor.minecities.MineCities;
 import com.ajustor.minecities.block.HousePlaqueBlock;
 import com.ajustor.minecities.block.MineWinchBlock;
+import com.ajustor.minecities.block.TaxBoxBlock;
 import com.ajustor.minecities.block.WorkstationBlock;
 import com.ajustor.minecities.block.TownAnnexBlock;
 import com.ajustor.minecities.block.TownHallBlock;
@@ -44,6 +45,15 @@ public final class McBlocks {
 
 	/** La mairie annexe : elle étend le territoire d'une grande ville, avec un grenier de quartier. */
 	public static final Block TOWN_ANNEX = register("town_annex", TownAnnexBlock::new,
+			BlockBehaviour.Properties.of()
+					.mapColor(MapColor.WOOD)
+					.strength(3.0f, 1200.0f)
+					.noOcclusion()
+					.sound(SoundType.WOOD)
+					.pushReaction(PushReaction.BLOCK));
+
+	/** La boîte à impôts (MC-57) : l'impôt du matin y est versé ; le maire le porte au grenier. */
+	public static final Block TAX_BOX = register("tax_box", TaxBoxBlock::new,
 			BlockBehaviour.Properties.of()
 					.mapColor(MapColor.WOOD)
 					.strength(3.0f, 1200.0f)

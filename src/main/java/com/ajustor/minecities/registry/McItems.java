@@ -25,6 +25,8 @@ public final class McItems {
 			new Item.Properties().useBlockDescriptionPrefix());
 	public static final Item TOWN_ANNEX = register("town_annex", p -> new BlockItem(McBlocks.TOWN_ANNEX, p),
 			new Item.Properties().stacksTo(16).useBlockDescriptionPrefix());
+	public static final Item TAX_BOX = register("tax_box", p -> new BlockItem(McBlocks.TAX_BOX, p),
+			new Item.Properties().stacksTo(1).useBlockDescriptionPrefix());
 	public static final Item MINE_WINCH = register("mine_winch", p -> new BlockItem(McBlocks.MINE_WINCH, p),
 			new Item.Properties().useBlockDescriptionPrefix());
 	public static final Item JEWELER_BENCH = register("jeweler_bench", p -> new BlockItem(McBlocks.JEWELER_BENCH, p),
@@ -93,6 +95,7 @@ public final class McItems {
 					output.accept(TOWN_HALL);
 					output.accept(HOUSE_PLAQUE);
 					output.accept(TOWN_ANNEX);
+					output.accept(TAX_BOX);
 					output.accept(MINE_WINCH);
 					output.accept(JEWELER_BENCH);
 					output.accept(GLASS_KILN);

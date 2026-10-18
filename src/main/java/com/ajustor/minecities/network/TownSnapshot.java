@@ -25,8 +25,14 @@ public record TownSnapshot(BlockPos hall, String name, String tier, int populati
 	 * La mairie : le maire, ses adjoints, les décrets (clé de chaque décret, et s'il est en vigueur), les
 	 * villes partenaires (nom, et si l'accord est signé des deux côtés).
 	 */
+	/**
+	 * L'onglet Mairie. Le budget (MC-57) : s'il est en service, le taux de l'impôt et ce qu'il demande à
+	 * chaque adulte, l'impôt perçu, les salaires et les chantiers du jour, et les émeraudes de la boîte à
+	 * impôts (-1 sans boîte).
+	 */
 	public record Council(String mayor, List<String> deputies, List<String> decrees, List<Boolean> decreed,
-			List<String> partners, List<Boolean> open) {
+			List<String> partners, List<Boolean> open, boolean budget, String tax, int perAdult, int taxes, int wages,
+			int works, int taxBox) {
 	}
 
 	/**
@@ -142,6 +148,13 @@ public record TownSnapshot(BlockPos hall, String name, String tier, int populati
 		writeFlags(buf, s.council.decreed());
 		writeStrings(buf, s.council.partners());
 		writeFlags(buf, s.council.open());
+		buf.writeBoolean(s.council.budget());
+		buf.writeUtf(s.council.tax());
+		buf.writeVarInt(s.council.perAdult());
+		buf.writeVarInt(s.council.taxes());
+		buf.writeVarInt(s.council.wages());
+		buf.writeVarInt(s.council.works());
+		buf.writeInt(s.council.taxBox());
 		buf.writeVarInt(s.rows.size());
 		for (CitizenRow row : s.rows) {
 			UUIDUtil.STREAM_CODEC.encode(buf, row.id);
@@ -282,7 +295,8 @@ public record TownSnapshot(BlockPos hall, String name, String tier, int populati
 				buf.readBoolean(), buf.readVarInt(), buf.readVarInt(), buf.readVarInt(), buf.readVarInt(), buf.readVarInt(),
 				buf.readUtf());
 		Council council = new Council(buf.readUtf(), readStrings(buf), readStrings(buf), readFlags(buf),
-				readStrings(buf), readFlags(buf));
+				readStrings(buf), readFlags(buf), buf.readBoolean(), buf.readUtf(), buf.readVarInt(), buf.readVarInt(),
+				buf.readVarInt(), buf.readVarInt(), buf.readInt());
 		int count = buf.readVarInt();
 		List<CitizenRow> rows = new ArrayList<>(count);
 		for (int i = 0; i < count; i++) {

@@ -255,6 +255,44 @@ def annex_board():
     return img
 
 
+def tax_box(face):
+    """La boîte à impôts : du chêne noir cerclé de fer ; une fente sur le dessus, une émeraude devant."""
+    rng = random.Random(11 if face == "top" else 12)
+    img = Image.new("RGBA", (16, 16))
+    wood = hexc("#4a3420")
+    iron = hexc("#8a8a8a")
+    brass = hexc("#c9a640")
+    for y in range(16):
+        for x in range(16):
+            img.putpixel((x, y), jitter(rng, shade(wood, 1.0 if (y // 4) % 2 else 0.9), 0.05))
+    # Les ferrures : un cadre sur le pourtour.
+    for i in range(16):
+        for x, y in ((i, 0), (i, 15), (0, i), (15, i)):
+            img.putpixel((x, y), jitter(rng, iron, 0.04))
+    if face == "top":
+        # La fente, cerclée de laiton.
+        for x in range(4, 12):
+            img.putpixel((x, 6), brass)
+            img.putpixel((x, 9), brass)
+            for y in (7, 8):
+                img.putpixel((x, y), hexc("#120c06"))
+        for y in range(6, 10):
+            img.putpixel((3, y), brass)
+            img.putpixel((12, y), brass)
+    else:
+        # Une émeraude sur une plaque de laiton, et la serrure.
+        for y in range(3, 10):
+            for x in range(5, 11):
+                img.putpixel((x, y), jitter(rng, brass, 0.04))
+        emerald = hexc("#17c75a")
+        for x, y in ((7, 4), (8, 4), (6, 5), (7, 5), (8, 5), (9, 5), (6, 6), (7, 6), (8, 6), (9, 6), (7, 7), (8, 7)):
+            img.putpixel((x, y), shade(emerald, 1.15 if y < 6 else 0.85))
+        for y in (11, 12):
+            img.putpixel((7, y), hexc("#2a2a2a"))
+            img.putpixel((8, y), hexc("#2a2a2a"))
+    return img
+
+
 def hide():
     """La peau tendue du séchoir : du cuir brun aux taches plus sombres, une couture sur le pourtour."""
     rng = random.Random(8)
@@ -489,6 +527,8 @@ def main():
     save(spawn_egg(), TEXTURES / "item/citizen_spawn_egg.png")
     save(hats(), TEXTURES / "entity/citizen/hats.png")
     save(annex_board(), TEXTURES / "block/annex_board.png")
+    save(tax_box("top"), TEXTURES / "block/tax_box_top.png")
+    save(tax_box("front"), TEXTURES / "block/tax_box_front.png")
     save(hide(), TEXTURES / "block/hide.png")
     for name, (rows, palette) in JEWELS.items():
         save(sprite(rows, palette), TEXTURES / f"item/{name}.png")

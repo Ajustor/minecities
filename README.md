@@ -217,6 +217,11 @@ version du mod, les autres mods et le temps de jeu.
 12. **Les décrets** (onglet Mairie, ou `/ville decree <décret>`) : le **rationnement** (on mange moins,
    le moral baisse), les **heures supplémentaires** (on travaille de l'aube à la nuit, le moral baisse),
    le **jour férié** (personne ne travaille, le moral monte).
+   **L'impôt**, juste en dessous : un taux (aucun, bas, normal, élevé) que chaque adulte verse chaque
+   matin dans la **boîte à impôts** ; plus il est haut, plus la ville grogne. Les gardes et les archers
+   sont payés chaque matin sur le grenier (une émeraude chacun) : au maire d'y porter l'argent de la
+   boîte, sinon ils traînent. Les chantiers coûtent aussi des émeraudes à partir du niveau 2 (4, 12,
+   32). Le bilan du jour s'affiche dans l'onglet Mairie (réglage `budget` dans `config/minecities.json`).
 13. **Le commerce entre villes** : `/ville trade <ville>` signe un accord ; quand les deux maires ont
    signé, une caravane part chaque minute du marché de la ville qui a trop d'une marchandise vers
    celle qui en manque, contre des émeraudes au cours des villageois (il faut un marchand au départ, et
@@ -260,6 +265,8 @@ configuration de Jade. Sans Jade, rien ne change.
   de planches ; coffre en bas au centre, entouré de planches.
 - **Plaque de maison** (×2) : une dalle de bois, une pépite de fer, une teinture noire.
 - **Mairie annexe** : planche, carte, planche ; planche, tonneau, planche ; trois bûches.
+- **Boîte à impôts** : fer, émeraude, fer ; planche de chêne noir, coffre, planche ; trois planches de
+  chêne noir.
 - **Treuil de mine** : bûche, ficelle, bûche ; bûche, rien, bûche ; planche, chaîne, planche.
 - **Établi de joaillier** : vitre, éclat d'améthyste, lingot de fer ; trois planches ; bûche, rien, bûche.
 - **Four de verrier** : brique, rien, brique ; brique, fourneau, brique ; brique, sable, brique.
@@ -336,7 +343,7 @@ Gradle (`:26.2`, `:26.3`) et son jar, des mêmes sources : voir [ARCHITECTURE.md
 ./gradlew build                 # les deux versions : compile, tests unitaires, toutes les scènes sans fenêtre, un jar par version dans build/libs
 ./gradlew :26.2:runClient       # lance le jeu avec le mod (Minecraft 26.2 ; :26.3:runClient pour 26.3)
 ./gradlew :26.2:runGameTest     # les scènes de jeu, vérifiées sur le seul serveur, sans fenêtre (rapide)
-./gradlew :26.2:runGameTest -PminecitiesGametest=work   # une scène (data, city, work, countryside, village, build, family, raid, life, market, robust, industry, crafts,
+./gradlew :26.2:runGameTest -PminecitiesGametest=work   # une scène (data, budget, city, work, countryside, village, build, family, raid, life, market, robust, industry, crafts,
 council, logistics, guide, structures, plans, jade, residents, elections, monuments, health, map, disasters, stations, mine)
 ./gradlew :26.2:runClientGameTest   # les mêmes scènes dans le vrai jeu, photographiées (versions/26.2/build/run/clientGameTest/screenshots), plus styles
 ./gradlew :26.2:runClientGameTest -PminecitiesFilm   # avec les films image par image (lents)

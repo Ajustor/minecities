@@ -151,6 +151,11 @@ public class TownHallScreen extends Screen {
 								.bounds(left + WIDTH - 90, y, 80, 16).build());
 						y += DECREE_ROW;
 					}
+					// Le taux de l'impôt, sous les décrets (MC-57).
+					if (council.budget()) {
+						addRenderableWidget(Button.builder(Component.translatable("screen.minecities.council.tax.change"),
+								b -> send("tax.next", TownActionPayload.NONE)).bounds(left + WIDTH - 90, y, 80, 16).build());
+					}
 				}
 			}
 			case PLANS -> {
@@ -370,6 +375,12 @@ public class TownHallScreen extends Screen {
 		line(graphics, Component.translatable("screen.minecities.treasury", life.treasury(), life.earnedToday()), y,
 				ACCENT);
 		y += 14;
+		if (town.council().budget()) {
+			int box = town.council().taxBox();
+			line(graphics, box >= 0 ? Component.translatable("screen.minecities.tax_box", box)
+					: Component.translatable("screen.minecities.tax_box.none"), y, box >= 0 ? INK : FADED);
+			y += 14;
+		}
 		if (life.maxAnnexes() > 0) {
 			line(graphics, Component.translatable("screen.minecities.annexes", life.annexes(), life.maxAnnexes()), y,
 					INK);
@@ -502,18 +513,27 @@ public class TownHallScreen extends Screen {
 					left + 34, y + 10, FADED, false);
 			y += DECREE_ROW;
 		}
-		y += 4;
-		line(graphics, Component.translatable("screen.minecities.council.trade"), y, ACCENT);
-		y += 14;
-		if (council.partners().isEmpty()) {
-			graphics.text(font, Component.translatable("screen.minecities.council.no_trade"), left + 22, y, FADED, false);
+		// Le budget : le taux de l'impôt, et ce que la journée a rapporté et coûté.
+		if (council.budget()) {
+			graphics.text(font, Component.literal("● ").append(Component.translatable("screen.minecities.council.tax",
+					Component.translatable("tax.minecities." + council.tax()), council.perAdult())), left + 22, y, ACCENT,
+					false);
+			graphics.text(font, Component.translatable("screen.minecities.council.budget", council.taxes(),
+					council.wages(), council.works()), left + 34, y + 10, FADED, false);
 		}
-		// Sous la liste, en bas à gauche : le bouton du grenier.
-		for (int i = 0; i < council.partners().size() && y < top + HEIGHT - 30; i++) {
+		// Le commerce, en haut à droite (à côté du maire et de ses adjoints).
+		int x = left + WIDTH / 2 + 10;
+		int ty = top + 58;
+		graphics.text(font, Component.translatable("screen.minecities.council.trade"), x, ty, ACCENT, false);
+		ty += 14;
+		if (council.partners().isEmpty()) {
+			graphics.text(font, Component.translatable("screen.minecities.council.no_trade"), x + 8, ty, FADED, false);
+		}
+		for (int i = 0; i < council.partners().size() && ty < top + 100; i++) {
 			graphics.text(font, Component.translatable(council.open().get(i) ? "screen.minecities.council.partner"
-					: "screen.minecities.council.pending", council.partners().get(i)), left + 22, y,
+					: "screen.minecities.council.pending", council.partners().get(i)), x + 8, ty,
 					council.open().get(i) ? GOOD : FADED, false);
-			y += 12;
+			ty += 12;
 		}
 	}
 

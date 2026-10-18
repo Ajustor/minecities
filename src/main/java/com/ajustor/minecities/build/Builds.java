@@ -33,6 +33,7 @@ public final class Builds {
 		if (refusal.isPresent()) {
 			return refusal;
 		}
+		com.ajustor.minecities.town.Budget.pay(level, town, blueprint.level());
 		town.order(Construction.order(blueprint, style, origin, rotation));
 		Towns.get(level.getServer()).changed();
 		return Optional.empty();
@@ -57,6 +58,11 @@ public final class Builds {
 		}
 		if (town.constructions().stream().anyMatch(c -> !c.done() && c.overlaps(bounds[0], bounds[1]))) {
 			return Optional.of(Component.translatable("message.minecities.build.overlap"));
+		}
+		// Les chantiers à partir du niveau 2 se paient en émeraudes (MC-57).
+		Optional<Component> unaffordable = com.ajustor.minecities.town.Budget.unaffordable(level, town, blueprint.level());
+		if (unaffordable.isPresent()) {
+			return unaffordable;
 		}
 		// Un seul de chaque monument par ville, bâti ou en chantier.
 		if (com.ajustor.minecities.town.Monument.of(blueprint.id()).isPresent()
@@ -162,6 +168,7 @@ public final class Builds {
 		if (refusal.isPresent()) {
 			return refusal;
 		}
+		com.ajustor.minecities.town.Budget.pay(level, town, next.get().level());
 		town.order(Construction.rebuild(next.get(), BuildStyle.PLAINS, origin, Rotation.NONE, house.get().min().get(),
 				house.get().max().get()));
 		Towns.get(level.getServer()).changed();

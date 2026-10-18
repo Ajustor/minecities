@@ -143,6 +143,18 @@ public final class Happiness {
 		return new Mood(Math.clamp(score, MIN, MAX), List.copyOf(factors));
 	}
 
+	/** La note, avec en plus ces facteurs (l'impôt, un salaire impayé). */
+	public static Mood of(Factors f, List<Factor> extra) {
+		Mood mood = of(f);
+		if (extra.isEmpty()) {
+			return mood;
+		}
+		List<Factor> factors = new java.util.ArrayList<>(mood.factors());
+		factors.addAll(extra);
+		int score = BASE + factors.stream().mapToInt(Factor::delta).sum();
+		return new Mood(Math.clamp(score, MIN, MAX), List.copyOf(factors));
+	}
+
 	/**
 	 * Ce que son humeur fait à son rythme de travail : les pauses durent d'autant (moins quand il est
 	 * heureux, plus quand il ne l'est pas).

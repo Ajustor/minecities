@@ -92,6 +92,15 @@ public final class TownService {
 			if (state.is(McBlocks.TOWN_ANNEX)) {
 				return mayBreakAnnex(serverLevel, player, pos);
 			}
+			if (state.is(McBlocks.TAX_BOX)) {
+				Optional<Town> owner = Budget.owner(serverLevel, pos);
+				if (owner.isPresent() && !owner.get().canManage(player.getUUID())) {
+					player.sendSystemMessage(Component.translatable("message.minecities.tax_box.not_mayor",
+							owner.get().name()).withStyle(ChatFormatting.RED));
+					return false;
+				}
+				return true;
+			}
 			if (!state.is(McBlocks.TOWN_HALL)) {
 				return mayBreak(serverLevel, player, pos);
 			}
@@ -479,6 +488,7 @@ public final class TownService {
 				continue;
 			}
 			Elections.tick(level, town, now);
+			Budget.tick(level, town);
 			// Les bâtiments sont relevés à leur tour, quelques-uns à chaque passage.
 			Map<BlockPos, Long> surveyed = LAST_SURVEY.computeIfAbsent(town.id(), id -> new HashMap<>());
 			int budget = SURVEYS_PER_PASS;
