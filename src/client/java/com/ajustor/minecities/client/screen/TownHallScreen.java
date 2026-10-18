@@ -32,7 +32,7 @@ public class TownHallScreen extends Screen {
 	/** Les joueurs de la ville : quatre lignes, au-dessus des droits de chaque rang. */
 	private static final int MEMBER_ROWS = 4;
 	/** Un décret : son nom, puis son effet dessous. */
-	private static final int DECREE_ROW = 22;
+	private static final int DECREE_ROW = 20;
 	/** L'interligne du Résumé : serré, pour que tout tienne au-dessus des boutons du bas. */
 	private static final int SUMMARY_LINE = 12;
 	private static final int MEMBER_ROW = 16;
@@ -145,7 +145,7 @@ public class TownHallScreen extends Screen {
 			case COUNCIL -> {
 				if (town.manager()) {
 					TownSnapshot.Council council = town.council();
-					int y = top + 104;
+					int y = top + 82;
 					for (int i = 0; i < council.decrees().size(); i++) {
 						String decree = council.decrees().get(i);
 						boolean on = council.decreed().get(i);
@@ -507,12 +507,11 @@ public class TownHallScreen extends Screen {
 		TownSnapshot.Council council = town.council();
 		int y = top + 58;
 		line(graphics, Component.translatable("screen.minecities.council.mayor", council.mayor()), y, INK);
-		y += 14;
+		y += 12;
 		line(graphics, council.deputies().isEmpty() ? Component.translatable("screen.minecities.council.no_deputy")
 				: Component.translatable("screen.minecities.council.deputies", String.join(", ", council.deputies())),
 				y, FADED);
-		y += 20;
-		line(graphics, Component.translatable("screen.minecities.council.decrees"), y, ACCENT);
+		// Les décrets (le ● dit ceux en vigueur), puis l'impôt : tout tient au-dessus des boutons du bas.
 		y += 14;
 		for (int i = 0; i < council.decrees().size(); i++) {
 			boolean on = council.decreed().get(i);
@@ -539,7 +538,7 @@ public class TownHallScreen extends Screen {
 		if (council.partners().isEmpty()) {
 			graphics.text(font, Component.translatable("screen.minecities.council.no_trade"), x + 8, ty, FADED, false);
 		}
-		for (int i = 0; i < council.partners().size() && ty < top + 100; i++) {
+		for (int i = 0; i < council.partners().size() && ty < top + 80; i++) {
 			graphics.text(font, Component.translatable(council.open().get(i) ? "screen.minecities.council.partner"
 					: "screen.minecities.council.pending", council.partners().get(i)), x + 8, ty,
 					council.open().get(i) ? GOOD : FADED, false);

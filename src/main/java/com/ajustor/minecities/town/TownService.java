@@ -779,7 +779,15 @@ public final class TownService {
 	}
 
 	/** Prend ou lève un décret, et l'annonce à la ville. */
-	public static void decree(ServerLevel level, Town town, Decree decree) {
+	/**
+	 * Prend ou lève ce décret ; renvoie le refus, s'il y en a un. Un village ne décrète pas encore : il
+	 * faut le palier Ville (lever un décret reste toujours possible).
+	 */
+	public static Optional<Component> decree(ServerLevel level, Town town, Decree decree) {
+		if (!town.decreed(decree) && town.tier().ordinal() < Decree.TIER.ordinal()) {
+			return Optional.of(Component.translatable("message.minecities.decree.tier",
+					Component.translatable(Decree.TIER.translationKey())));
+		}
 		boolean on = town.toggle(decree);
 		Component message = Component.translatable(on ? "message.minecities.decree.on" : "message.minecities.decree.off",
 				town.name(), Component.translatable(decree.translationKey()));
@@ -790,6 +798,7 @@ public final class TownService {
 		}
 		level.playSound(null, town.hall(), SoundEvents.BELL_BLOCK, SoundSource.BLOCKS, 1.0f, 0.8f);
 		Towns.get(level.getServer()).changed();
+		return Optional.empty();
 	}
 
 	/** Peut-il ouvrir le grenier de la ville (l'hôtel de ville ou une annexe) ? Sinon, il le lui dit. */

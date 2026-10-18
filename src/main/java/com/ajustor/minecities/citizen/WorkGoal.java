@@ -81,7 +81,7 @@ abstract class WorkGoal extends Goal {
 			long time = Math.floorMod(citizen.level().getOverworldClockTime(), 24000L);
 			return time < 13500 || time >= 23000;
 		}
-		return !SleepInBedGoal.isNight(citizen.level());
+		return !SleepInBedGoal.bedtime(citizen);
 	}
 
 	@Override

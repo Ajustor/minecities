@@ -133,6 +133,22 @@ public class CouncilScenes implements Scene {
 		waitOrExplain(stage, server -> citizens(server).stream().filter(c -> c.townId().filter(town(server).id()::equals)
 				.isPresent()).allMatch(c -> c.moodDetail().factors().contains(new Happiness.Factor("decrees_good", 1))),
 				400, "le jour férié ne réjouit personne");
+		// Un village ne décrète pas encore ; sous couvre-feu, on rentre dès la fin d'après-midi (MC-66).
+		check(stage.compute(server -> {
+			Town other = Towns.get(server).byHall(server.overworld().dimension(), OTHER_HALL).orElseThrow();
+			if (other.tier() != TownTier.VILLAGE || TownService.decree(server.overworld(), other, Decree.CURFEW).isEmpty()
+					|| other.decreed(Decree.CURFEW)) {
+				return "un village a décrété le couvre-feu";
+			}
+			TownService.decree(server.overworld(), town(server), Decree.CURFEW);
+			long time = server.overworld().getOverworldClockTime();
+			CityScenes.command(server, "time set 11500");
+			boolean home = citizens(server).stream().filter(c -> !c.isDefender())
+					.allMatch(com.ajustor.minecities.citizen.SleepInBedGoal::bedtime);
+			CityScenes.command(server, "time set " + Math.floorMod(time, 24000L));
+			TownService.decree(server.overworld(), town(server), Decree.CURFEW);
+			return home && !town(server).decreed(Decree.CURFEW) ? null : "le couvre-feu ne renvoie personne";
+		}));
 
 		// Un accord de commerce : la voisine n'a pas de pain, la ville en a trop.
 		stage.run(server -> {
