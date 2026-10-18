@@ -5,6 +5,7 @@ import com.ajustor.minecities.block.TownHallBlockEntity;
 import com.ajustor.minecities.citizen.CitizenEntity;
 import com.ajustor.minecities.registry.McItems;
 import com.ajustor.minecities.town.Families;
+import com.ajustor.minecities.town.Stock;
 import com.ajustor.minecities.town.Town;
 import com.ajustor.minecities.town.TownService;
 import com.ajustor.minecities.town.Towns;
@@ -91,6 +92,18 @@ public class RobustScenes implements Scene {
 		McConfig.get().missingCitizenMinutes = before;
 		check(stage.compute(server -> town(server).orElseThrow().citizens() == 1 ? null
 				: "l'autre citoyen a été rayé aussi"));
+
+		// Un citoyen qui quitte la ville rend au grenier ce qu'il porte.
+		check(stage.compute(server -> {
+			ServerLevel level = server.overworld();
+			CitizenEntity citizen = (CitizenEntity) level.getEntity(
+					town(server).orElseThrow().residents().keySet().iterator().next());
+			citizen.carry(new ItemStack(Items.DIAMOND, 3));
+			citizen.leaveTown(level, null);
+			return level.getBlockEntity(HALL) instanceof TownHallBlockEntity hall
+					&& Stock.count(hall, s -> s.is(Items.DIAMOND)) == 3 ? null
+					: "le citoyen parti a emporté ce qu'il portait";
+		}));
 
 		// Un entonnoir sous l'hôtel de ville n'en vide pas le grenier.
 		stage.run(server -> {
