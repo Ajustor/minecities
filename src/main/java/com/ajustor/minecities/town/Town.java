@@ -108,6 +108,8 @@ public final class Town {
 	private final Map<UUID, Resident> residents;
 	private TownTier tier;
 	private long lastArrival;
+	/** Les autres villes de la même dimension ; pas sauvegardé, {@link Towns} le tient à jour. */
+	private List<Town> neighbours = List.of();
 	/** Les villageois vanilla qui vivent sur le territoire : ils comptent dans la population. */
 	private int villagers;
 	/** Les lits où dorment ces villageois : on n'y loge pas de citoyen (non sauvegardé). */
@@ -290,16 +292,35 @@ public final class Town {
 
 	/**
 	 * Dans le territoire de la ville : un disque autour de l'hôtel de ville, et un autre autour de
-	 * chacune de ses mairies annexes en service, sur toute la hauteur.
+	 * chacune de ses mairies annexes en service, sur toute la hauteur. Là où il chevauche celui d'une
+	 * voisine (elle a grandi depuis), le point revient à la ville dont l'hôtel de ville ou l'annexe est
+	 * le plus près : les territoires se partagent, ils ne se recouvrent pas (MC-44).
 	 */
 	public boolean contains(ResourceKey<Level> dimension, BlockPos pos) {
+		if (!claims(dimension, pos)) {
+			return false;
+		}
+		long mine = reach(pos);
+		for (Town other : neighbours) {
+			if (other.claims(dimension, pos)) {
+				long theirs = other.reach(pos);
+				if (theirs < mine || theirs == mine && other.id.compareTo(id) < 0) {
+					return false;
+				}
+			}
+		}
+		return true;
+	}
+
+	/** Les disques de la ville, sans tenir compte des voisines. */
+	private boolean claims(ResourceKey<Level> dimension, BlockPos pos) {
 		if (!this.dimension.equals(dimension)) {
 			return false;
 		}
 		if (within(hall, pos, radius())) {
 			return true;
 		}
-		for (BlockPos annex : activeAnnexes()) {
+		for (BlockPos annex : annexes.subList(0, Math.min(annexes.size(), tier.annexes()))) {
 			if (within(annex, pos, ANNEX_RADIUS)) {
 				return true;
 			}
@@ -307,10 +328,28 @@ public final class Town {
 		return false;
 	}
 
-	private static boolean within(BlockPos center, BlockPos pos, int radius) {
+	/** Le carré de la distance horizontale entre ce point et l'hôtel de ville ou l'annexe la plus proche. */
+	long reach(BlockPos pos) {
+		long best = squared(hall, pos);
+		for (BlockPos annex : annexes.subList(0, Math.min(annexes.size(), tier.annexes()))) {
+			best = Math.min(best, squared(annex, pos));
+		}
+		return best;
+	}
+
+	/** Les autres villes de la même dimension, pour partager le territoire (tenu à jour par {@link Towns}). */
+	void neighbours(List<Town> towns) {
+		neighbours = towns.stream().filter(t -> t != this && t.dimension.equals(dimension)).toList();
+	}
+
+	private static long squared(BlockPos center, BlockPos pos) {
 		long dx = pos.getX() - center.getX();
 		long dz = pos.getZ() - center.getZ();
-		return dx * dx + dz * dz <= (long) radius * radius;
+		return dx * dx + dz * dz;
+	}
+
+	private static boolean within(BlockPos center, BlockPos pos, int radius) {
+		return squared(center, pos) <= (long) radius * radius;
 	}
 
 	// Annexes
