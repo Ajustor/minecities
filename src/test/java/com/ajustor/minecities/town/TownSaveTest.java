@@ -25,6 +25,23 @@ class TownSaveTest {
 	}
 
 	@Test
+	void anUnreadableTownIsKeptAsItWas() {
+		// Une ville abîmée ne fait pas disparaître l'autre, et revient intacte à la sauvegarde (MC-48).
+		Town good = Town.found("Valombre", Level.OVERWORLD, new BlockPos(0, 64, 0), UUID.randomUUID(), "Maire", 0);
+		Town bad = Town.found("Bourg", Level.OVERWORLD, new BlockPos(200, 64, 0), UUID.randomUUID(), "Maire", 0);
+		Towns towns = new Towns();
+		towns.add(good);
+		towns.add(bad);
+		com.google.gson.JsonArray saved = Towns.CODEC.encodeStart(JsonOps.INSTANCE, towns).getOrThrow().getAsJsonArray();
+		saved.get(1).getAsJsonObject().addProperty("hall", "n'importe quoi");
+		Towns read = Towns.CODEC.parse(JsonOps.INSTANCE, saved).getOrThrow();
+		assertEquals(List.of(good.id()), read.all().stream().map(Town::id).toList());
+		assertTrue(read.unreadable(bad.id()));
+		JsonElement again = Towns.CODEC.encodeStart(JsonOps.INSTANCE, read).getOrThrow();
+		assertEquals(saved.get(1), again.getAsJsonArray().get(1));
+	}
+
+	@Test
 	void aTownSurvivesSavingAndLoading() {
 		Town town = Town.found("Valombre", Level.OVERWORLD, new BlockPos(0, 64, 0), UUID.randomUUID(), "Maire", 0);
 		BlockPos plaque = new BlockPos(10, 64, 10);

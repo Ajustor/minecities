@@ -819,6 +819,11 @@ public class CitizenEntity extends PathfinderMob {
 					Component.translatable("message.minecities.citizen.arrived", name, town.name()));
 		}
 		Optional<Town> town = towns.byId(townId);
+		if (town.isEmpty() && towns.unreadable(townId)) {
+			// Sa ville est dans la sauvegarde, mais illisible : il attend qu'on la répare, sans partir.
+			resident = Optional.empty();
+			return true;
+		}
 		Optional<Resident> record = town.flatMap(t -> t.resident(getUUID()));
 		if (record.isEmpty()) {
 			leaveTown(level, null);
