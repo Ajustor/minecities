@@ -47,7 +47,8 @@ final class Crafts {
 					new ItemStack(Items.BED.white()), 8),
 			new Craft(List.of(new Input(s -> s.is(ItemTags.WOOL), 6), of(Items.LEATHER, 2)),
 					new ItemStack(McItems.COAT), 8),
-			new Craft(List.of(of(Items.STRING, 4)), new ItemStack(Items.WOOL.white()), 32));
+			new Craft(List.of(of(Items.STRING, 4)), new ItemStack(Items.WOOL.white()), 32),
+			new Craft(List.of(of(Items.STRING, 1), of(Items.HONEYCOMB, 1)), new ItemStack(Items.CANDLE), 8));
 
 	/** Les essences de bois que le charpentier sait travailler. */
 	static final List<String> WOODS = List.of("oak", "spruce", "birch", "jungle", "acacia", "dark_oak", "mangrove",
@@ -113,6 +114,53 @@ final class Crafts {
 			return java.util.Optional.ofNullable(craft);
 		}
 		return java.util.Optional.empty();
+	}
+
+	/** Ce qu'on fait de ce qui manque à un chantier : jusqu'à tant d'avance, pas davantage. */
+	private static final int ON_ORDER = 4;
+
+	private static Input planks(int count) {
+		return new Input(s -> s.is(ItemTags.PLANKS), count);
+	}
+
+	/**
+	 * Un meuble que réclame un bâtisseur (brief 11 : les niveaux 3 et 4), d'après la recette vanilla ; le
+	 * charpentier le fait sur commande. Vide si ce n'en est pas un.
+	 */
+	static java.util.Optional<Craft> furniture(net.minecraft.world.item.Item wanted) {
+		Craft craft = null;
+		if (wanted == Items.CHEST) {
+			craft = new Craft(List.of(planks(8)), new ItemStack(Items.CHEST), ON_ORDER);
+		} else if (wanted == Items.BARREL) {
+			craft = new Craft(List.of(planks(7)), new ItemStack(Items.BARREL), ON_ORDER);
+		} else if (wanted == Items.CRAFTING_TABLE) {
+			craft = new Craft(List.of(planks(4)), new ItemStack(Items.CRAFTING_TABLE), ON_ORDER);
+		} else if (wanted == Items.BOOKSHELF) {
+			craft = new Craft(List.of(planks(6), of(Items.BOOK, 3)), new ItemStack(Items.BOOKSHELF), ON_ORDER);
+		} else if (wanted == Items.COMPOSTER) {
+			craft = new Craft(List.of(planks(4)), new ItemStack(Items.COMPOSTER), ON_ORDER);
+		} else if (wanted == Items.CAMPFIRE) {
+			craft = new Craft(List.of(of(Items.STICK, 3), new Input(s -> s.is(ItemTags.LOGS), 3), of(Items.COAL, 1)),
+					new ItemStack(Items.CAMPFIRE), ON_ORDER);
+		}
+		return java.util.Optional.ofNullable(craft);
+	}
+
+	/** La pierre ouvragée que réclame un bâtisseur ; le maçon la fait sur commande. Vide si ce n'en est pas. */
+	static java.util.Optional<Craft> stonework(net.minecraft.world.item.Item wanted) {
+		Craft craft = null;
+		if (wanted == Items.SMOOTH_STONE_SLAB) {
+			craft = new Craft(List.of(of(Items.COBBLESTONE, 2)), new ItemStack(Items.SMOOTH_STONE_SLAB, 2), ON_ORDER * 2);
+		} else if (wanted == Items.DECORATED_POT) {
+			craft = new Craft(List.of(of(Items.BRICK, 4)), new ItemStack(Items.DECORATED_POT), ON_ORDER);
+		} else if (wanted == Items.FLOWER_POT) {
+			craft = new Craft(List.of(of(Items.BRICK, 3)), new ItemStack(Items.FLOWER_POT), ON_ORDER);
+		} else if (wanted == Items.QUARTZ_PILLAR) {
+			craft = new Craft(List.of(of(Items.QUARTZ_BLOCK, 2)), new ItemStack(Items.QUARTZ_PILLAR, 2), ON_ORDER);
+		} else if (wanted == Items.BRICKS) {
+			craft = new Craft(List.of(of(Items.CLAY_BALL, 4)), new ItemStack(Items.BRICKS), ON_ORDER * 4);
+		}
+		return java.util.Optional.ofNullable(craft);
 	}
 
 	/** Le tanneur : du cuir (des peaux de lapin), et des tuniques de cuir pour les gardes qui n'ont rien. */

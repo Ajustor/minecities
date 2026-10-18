@@ -183,6 +183,13 @@ class MerchantGoal extends WorkGoal {
 		if (granary.stream().noneMatch(TownService::hasFood)) {
 			return Market.offer(Items.BREAD);
 		}
+		// Ce qui manque aux chantiers, et qui s'achète.
+		for (Item material : CitizenEntity.missingMaterials(level(), town())) {
+			Optional<Market.Offer> offer = Market.offer(material);
+			if (offer.isPresent() && count(granary, s -> s.is(material)) == 0) {
+				return offer;
+			}
+		}
 		return Optional.empty();
 	}
 

@@ -211,8 +211,8 @@ public class CitizenEntity extends PathfinderMob {
 				net.minecraft.sounds.SoundEvents.ARMOR_EQUIP_LEATHER.value()));
 		goalSelector.addGoal(4, new CraftGoal(this, Job.JEWELER, Crafts.JEWELER, 60, Action.BUILD,
 				net.minecraft.sounds.SoundEvents.AMETHYST_BLOCK_CHIME));
-		goalSelector.addGoal(4, new CraftGoal(this, Job.MASON, Crafts.MASON, 25, Action.BUILD,
-				net.minecraft.sounds.SoundEvents.UI_STONECUTTER_TAKE_RESULT));
+		goalSelector.addGoal(4, new CraftGoal(this, Job.MASON, this::masonry, 25, Action.BUILD,
+				net.minecraft.sounds.SoundEvents.UI_STONECUTTER_TAKE_RESULT, net.minecraft.core.particles.ParticleTypes.CRIT));
 		goalSelector.addGoal(4, new CraftGoal(this, Job.GLASSBLOWER, Crafts.GLASSBLOWER, 30, Action.COOK,
 				net.minecraft.sounds.SoundEvents.FURNACE_FIRE_CRACKLE, net.minecraft.core.particles.ParticleTypes.FLAME));
 		goalSelector.addGoal(4, new CraftGoal(this, Job.WEAVER, Crafts.WEAVER, 40, Action.COOK,
@@ -618,8 +618,20 @@ public class CitizenEntity extends PathfinderMob {
 					other.wanted().flatMap(Crafts::woodwork).ifPresent(crafts::add);
 				}
 			}));
+			// Le mobilier qui manque aux chantiers (coffres, tonneaux, bibliothèques…).
+			town().ifPresent(t -> missingMaterials(serverLevel, t).forEach(m -> Crafts.furniture(m).ifPresent(crafts::add)));
 		}
 		crafts.addAll(Crafts.CARPENTER);
+		return crafts;
+	}
+
+	/** Ce que fait le maçon : d'abord la pierre ouvragée qui manque aux chantiers, puis ses ouvrages courants. */
+	private java.util.List<CraftGoal.Craft> masonry() {
+		java.util.List<CraftGoal.Craft> crafts = new java.util.ArrayList<>();
+		if (level() instanceof ServerLevel serverLevel) {
+			town().ifPresent(t -> missingMaterials(serverLevel, t).forEach(m -> Crafts.stonework(m).ifPresent(crafts::add)));
+		}
+		crafts.addAll(Crafts.MASON);
 		return crafts;
 	}
 
@@ -653,6 +665,33 @@ public class CitizenEntity extends PathfinderMob {
 	}
 
 	/** A-t-il un besoin en souffrance dont la clé commence ainsi ? */
+	/** Les matériaux qui lui manquent pour son chantier (ses plaintes « material:<objet> » récentes). */
+	public java.util.List<net.minecraft.world.item.Item> missingMaterials() {
+		long now = level().getGameTime();
+		java.util.List<net.minecraft.world.item.Item> items = new java.util.ArrayList<>();
+		for (java.util.Map.Entry<String, Need> e : needs.entrySet()) {
+			if (e.getKey().startsWith("material:") && now - e.getValue().since() <= NEED_MEMORY) {
+				net.minecraft.resources.Identifier id = net.minecraft.resources.Identifier.tryParse(
+						e.getKey().substring("material:".length()));
+				if (id != null) {
+					net.minecraft.core.registries.BuiltInRegistries.ITEM.getOptional(id).ifPresent(items::add);
+				}
+			}
+		}
+		return items;
+	}
+
+	/** Les matériaux que réclament les bâtisseurs de la ville. */
+	public static java.util.List<net.minecraft.world.item.Item> missingMaterials(ServerLevel level, Town town) {
+		java.util.List<net.minecraft.world.item.Item> items = new java.util.ArrayList<>();
+		for (UUID id : town.residents().keySet()) {
+			if (level.getEntity(id) instanceof CitizenEntity other) {
+				other.missingMaterials().stream().filter(i -> !items.contains(i)).forEach(items::add);
+			}
+		}
+		return items;
+	}
+
 	public boolean hasNeed(String prefix) {
 		long now = level().getGameTime();
 		return needs.entrySet().stream().anyMatch(e -> e.getKey().startsWith(prefix)
