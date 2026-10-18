@@ -140,6 +140,11 @@ version du mod, les autres mods et le temps de jeu.
      canne à sucre) ; avec une bibliothèque, toute la ville est plus heureuse et les enfants grandissent
      en deux jours au lieu de trois.
    - **Séchoir à peaux → tanneur** : du cuir (peaux de lapin), et des tuniques de cuir pour les gardes.
+   - **Comptoir de taverne → tavernier** : il sert à boire (miel, baies, pommes, pris aux
+     réserves) ; le jour où la taverne a servi, toute la ville est plus gaie. Surtout, la taverne fait
+     **grandir la ville** au-delà de cinq habitants : avec un lit libre et une ville assez heureuse, un
+     nouveau venu tous les 6 jours moins le niveau de la taverne (et moins l'attrait des monuments), au
+     moins un. Le Résumé dit quand arrive le prochain, ou ce qui l'en empêche.
    - **Table de forge → inventeur** : quand la ville est attaquée, il assemble devant l'hôtel de ville
      un **golem de fer** (4 blocs de fer et une citrouille sculptée, pris au grenier) ou, à défaut, un
      **golem de neige** (2 blocs de neige et une citrouille).
@@ -343,7 +348,7 @@ Gradle (`:26.2`, `:26.3`) et son jar, des mêmes sources : voir [ARCHITECTURE.md
 ./gradlew build                 # les deux versions : compile, tests unitaires, toutes les scènes sans fenêtre, un jar par version dans build/libs
 ./gradlew :26.2:runClient       # lance le jeu avec le mod (Minecraft 26.2 ; :26.3:runClient pour 26.3)
 ./gradlew :26.2:runGameTest     # les scènes de jeu, vérifiées sur le seul serveur, sans fenêtre (rapide)
-./gradlew :26.2:runGameTest -PminecitiesGametest=work   # une scène (data, budget, city, work, countryside, village, build, family, raid, life, market, robust, industry, crafts,
+./gradlew :26.2:runGameTest -PminecitiesGametest=work   # une scène (data, budget, tavern, city, work, countryside, village, build, family, raid, life, market, robust, industry, crafts,
 council, logistics, guide, structures, plans, jade, residents, elections, monuments, health, map, disasters, stations, mine)
 ./gradlew :26.2:runClientGameTest   # les mêmes scènes dans le vrai jeu, photographiées (versions/26.2/build/run/clientGameTest/screenshots), plus styles
 ./gradlew :26.2:runClientGameTest -PminecitiesFilm   # avec les films image par image (lents)

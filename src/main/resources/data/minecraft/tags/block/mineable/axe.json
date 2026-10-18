@@ -25,6 +25,7 @@
     "minecities:mason_station",
     "minecities:weaver_station",
     "minecities:beekeeper_station",
-    "minecities:librarian_station"
+    "minecities:librarian_station",
+    "minecities:taverner_station"
   ]
 }

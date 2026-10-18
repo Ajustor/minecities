@@ -73,7 +73,12 @@ public enum Job {
 	/** Tanne les peaux de lapin en cuir, et coud des tuniques de cuir ; au séchoir à peaux. */
 	TANNER("tanner", (level, pos, state) -> is(state, "tanning_rack"), null),
 	/** Débite les bûches en planches et bâtons, fait bols, portes, barrières, escaliers… ; à l'établi du charpentier. */
-	CARPENTER("carpenter", (level, pos, state) -> is(state, "carpenter_bench"), null);
+	CARPENTER("carpenter", (level, pos, state) -> is(state, "carpenter_bench"), null),
+	/**
+	 * Le tavernier, au comptoir de taverne (MC-58) : il sert à boire. Pas de bloc vanilla : un chaudron
+	 * (déjà dans des ateliers et des maisons) aurait fait des taverniers partout.
+	 */
+	TAVERNER("taverner", (level, pos, state) -> is(state, "taverner_station"), null);
 
 	/** Ce bloc est-il ce poste de travail du mod ? (par son nom : les registres du mod ne sont pas chargés partout.) */
 	private static boolean is(BlockState state, String name) {

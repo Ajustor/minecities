@@ -56,6 +56,8 @@ STATIONS = {
                   "minecraft:honeycomb"),
     "librarian": ("dark_oak", "red_wool", [((2, 13, 3), (12, 19, 7), "bookshelf"), ((9, 13, 9), (14, 15, 13), "white_wool")],
                   "minecraft:book"),
+    "taverner": ("spruce", "brown_wool", [((2, 13, 3), (9, 19, 10), "barrel_side"), ((10, 13, 9), (14, 17, 13), "cauldron_side")],
+                 "minecraft:barrel"),
 }
 
 FACINGS = {"north": 0, "east": 90, "south": 180, "west": 270}

@@ -31,6 +31,8 @@ public class TownHallScreen extends Screen {
 	private static final int MEMBER_ROWS = 4;
 	/** Un décret : son nom, puis son effet dessous. */
 	private static final int DECREE_ROW = 22;
+	/** L'interligne du Résumé : serré, pour que tout tienne au-dessus des boutons du bas. */
+	private static final int SUMMARY_LINE = 12;
 	private static final int MEMBER_ROW = 16;
 	/** Les droits, dans l'ordre de {@code Membership.Permission}. */
 	private static final String[] PERMISSIONS = {"declare", "granary", "break"};
@@ -363,63 +365,68 @@ public class TownHallScreen extends Screen {
 		int y = top + 58;
 		line(graphics, Component.translatable("screen.minecities.population", town.population(), town.citizens(),
 				town.villagers()), y, INK);
-		y += 14;
+		y += SUMMARY_LINE;
 		line(graphics, Component.translatable("screen.minecities.homes", town.homes(), town.capacity()), y, INK);
-		y += 14;
+		y += SUMMARY_LINE;
+		// La croissance : d'où viendra le prochain habitant, ou ce qui l'empêche (MC-58).
+		String growth = town.life().growth();
+		line(graphics, Component.translatable("screen.minecities.growth." + growth, town.life().growthDays(),
+				town.life().tavernLevel()), y, growth.equals("tavern") || growth.equals("newcomers") ? INK : BAD);
+		y += SUMMARY_LINE;
 		line(graphics, Component.translatable("screen.minecities.jobs", town.employed(), town.workstations()), y, INK);
-		y += 14;
+		y += SUMMARY_LINE;
 		line(graphics, Component.translatable("screen.minecities.meals", town.meals()), y,
 				town.meals() > 0 ? INK : BAD);
-		y += 14;
+		y += SUMMARY_LINE;
 		TownSnapshot.Life life = town.life();
 		line(graphics, Component.translatable("screen.minecities.treasury", life.treasury(), life.earnedToday()), y,
 				ACCENT);
-		y += 14;
+		y += SUMMARY_LINE;
 		if (town.council().budget()) {
 			int box = town.council().taxBox();
 			line(graphics, box >= 0 ? Component.translatable("screen.minecities.tax_box", box)
 					: Component.translatable("screen.minecities.tax_box.none"), y, box >= 0 ? INK : FADED);
-			y += 14;
+			y += SUMMARY_LINE;
 		}
 		if (life.maxAnnexes() > 0) {
 			line(graphics, Component.translatable("screen.minecities.annexes", life.annexes(), life.maxAnnexes()), y,
 					INK);
-			y += 14;
+			y += SUMMARY_LINE;
 		}
 		if (life.appeal() > 0) {
 			line(graphics, Component.translatable("screen.minecities.appeal", life.appeal()), y, ACCENT);
-			y += 14;
+			y += SUMMARY_LINE;
 		}
 		if (life.mood() >= 0) {
 			double mood = life.mood() / 10.0;
 			line(graphics, Component.translatable("screen.minecities.mood", String.format("%.1f", mood)), y,
 					moodColor(mood));
-			y += 14;
+			y += SUMMARY_LINE;
 		}
 		if (life.alarmed()) {
 			line(graphics, Component.translatable("screen.minecities.alarmed"), y, BAD);
-			y += 14;
+			y += SUMMARY_LINE;
 		}
 		if (!life.disaster().isEmpty()) {
 			line(graphics, Component.translatable("screen.minecities.disaster." + life.disaster()), y, BAD);
-			y += 14;
+			y += SUMMARY_LINE;
 		}
 		if (life.partying()) {
 			line(graphics, Component.translatable("screen.minecities.partying"), y, FESTIVE);
-			y += 14;
+			y += SUMMARY_LINE;
 		} else if (!life.canCelebrate()) {
 			long minutes = Math.max(1, life.untilFestival() / 1200);
 			line(graphics, Component.translatable("screen.minecities.next_festival", minutes), y, FADED);
-			y += 14;
+			y += SUMMARY_LINE;
 		}
 		y += 6;
 		if (!town.nextTier().isEmpty()) {
 			line(graphics, Component.translatable("screen.minecities.next", Component.translatable(town.nextTier())),
 					y, ACCENT);
-			y += 14;
+			y += SUMMARY_LINE;
 			line(graphics, Component.translatable("screen.minecities.next.needs", town.population(),
 					town.nextPopulation(), town.homes(), town.nextHouses()), y, FADED);
-			y += 14;
+			y += SUMMARY_LINE;
 		}
 		if (!town.requests().isEmpty()) {
 			y += 6;

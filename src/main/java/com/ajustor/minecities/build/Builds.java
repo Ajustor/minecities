@@ -129,6 +129,7 @@ public final class Builds {
 			java.util.Map.entry(com.ajustor.minecities.town.Job.WEAVER, "weavery"),
 			java.util.Map.entry(com.ajustor.minecities.town.Job.BEEKEEPER, "apiary"),
 			java.util.Map.entry(com.ajustor.minecities.town.Job.LIBRARIAN, "library"),
+			java.util.Map.entry(com.ajustor.minecities.town.Job.TAVERNER, "tavern"),
 			java.util.Map.entry(com.ajustor.minecities.town.Job.TANNER, "tannery"),
 			java.util.Map.entry(com.ajustor.minecities.town.Job.CARPENTER, "carpentry"));
 
