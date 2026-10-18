@@ -40,6 +40,8 @@ import java.util.Set;
 class MinerGoal extends WorkGoal {
 	/** Il ne garde que tant de pierre : le reste reste au fond comme déblais. */
 	private static final int STONE_KEPT = 64;
+	/** L'andésite et le gravier qu'il garde (le reste reste au fond, comme les autres déblais). */
+	private static final int OTHER_KEPT = 16;
 	/** Un filon est suivi sur tant de blocs au plus. */
 	private static final int VEIN = 16;
 	/** Bloqué sur le chemin de la face si longtemps, il y va par l'échelle (il s'y téléporte). */
@@ -270,9 +272,12 @@ class MinerGoal extends WorkGoal {
 		int stone = citizen.inventory().stream().filter(s -> s.is(Items.COBBLESTONE)
 				|| s.is(Items.COBBLED_DEEPSLATE)).mapToInt(ItemStack::getCount).sum();
 		for (ItemStack drop : drops) {
-			boolean rubble = drop.is(Items.COBBLESTONE) || drop.is(Items.COBBLED_DEEPSLATE) || drop.is(Items.DIRT)
-					|| drop.is(Items.GRAVEL) || drop.is(Items.TUFF) || drop.is(Items.DIORITE) || drop.is(Items.ANDESITE)
-					|| drop.is(Items.GRANITE);
+			// L'andésite (polie par le maçon) et le gravier (le silex des flèches) : il en garde un peu.
+			boolean kept = (drop.is(Items.ANDESITE) || drop.is(Items.GRAVEL)) && citizen.inventory().stream()
+					.filter(s -> s.is(drop.getItem())).mapToInt(ItemStack::getCount).sum() < OTHER_KEPT;
+			boolean rubble = !kept && (drop.is(Items.COBBLESTONE) || drop.is(Items.COBBLED_DEEPSLATE)
+					|| drop.is(Items.DIRT) || drop.is(Items.GRAVEL) || drop.is(Items.TUFF) || drop.is(Items.DIORITE)
+					|| drop.is(Items.ANDESITE) || drop.is(Items.GRANITE));
 			if (rubble && (stone >= STONE_KEPT || !drop.is(Items.COBBLESTONE))) {
 				// Des déblais : ils restent au fond.
 				continue;
