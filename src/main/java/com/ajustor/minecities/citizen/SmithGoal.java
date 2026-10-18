@@ -38,7 +38,35 @@ class SmithGoal extends WorkGoal {
 			Items.GOLD_INGOT, Items.RAW_COPPER, Items.COPPER_INGOT);
 
 	/** Un objet à forger et ce qu'il coûte. */
-	record Forging(Item result, Map<Item, Integer> materials) {
+	record Forging(Item result, int count, Map<Item, Integer> materials) {
+		Forging(Item result, Map<Item, Integer> materials) {
+			this(result, 1, materials);
+		}
+	}
+
+	/** Les pièces de forge que réclament les chantiers des niveaux 3 et 4 (brief 11), et de quoi les faire. */
+	static final Map<Item, Forging> MATERIALS = materials();
+
+	/** Un objet vanilla par son nom (le cuivre ciré n'a pas de champ à lui dans {@code Items}). */
+	private static Item vanilla(String name) {
+		return net.minecraft.core.registries.BuiltInRegistries.ITEM.getValue(
+				net.minecraft.resources.Identifier.withDefaultNamespace(name));
+	}
+
+	private static Map<Item, Forging> materials() {
+		Map<Item, Forging> map = new LinkedHashMap<>();
+		for (Forging f : new Forging[]{
+				new Forging(Items.LANTERN, 1, of(Items.IRON_INGOT, 1, Items.COAL, 1, Items.STICK, 1)),
+				new Forging(Items.IRON_BARS, 8, of(Items.IRON_INGOT, 3)),
+				new Forging(Items.CAULDRON, 1, of(Items.IRON_INGOT, 7)),
+				new Forging(Items.ANVIL, 1, of(Items.IRON_INGOT, 31)),
+				new Forging(Items.RAIL, 16, of(Items.IRON_INGOT, 6, Items.STICK, 1)),
+				new Forging(Items.GOLD_BLOCK, 1, of(Items.GOLD_INGOT, 9)),
+				new Forging(vanilla("waxed_cut_copper"), 4, of(Items.COPPER_INGOT, 9, Items.HONEYCOMB, 1)),
+				new Forging(vanilla("waxed_cut_copper_stairs"), 4, of(Items.COPPER_INGOT, 9, Items.HONEYCOMB, 1))}) {
+			map.put(f.result(), f);
+		}
+		return map;
 	}
 
 	private enum Phase { DECIDE, WORK, DELIVER }
@@ -80,7 +108,8 @@ class SmithGoal extends WorkGoal {
 			case "iron_block" -> List.of(new Forging(Items.IRON_BLOCK, of(Items.IRON_INGOT, 9)));
 			case "leggings" -> List.of(new Forging(Items.IRON_LEGGINGS, of(Items.IRON_INGOT, 7)));
 			case "boots" -> List.of(new Forging(Items.IRON_BOOTS, of(Items.IRON_INGOT, 4)));
-			default -> List.of();
+			default -> tool.startsWith("material:") ? MATERIALS.values().stream()
+					.filter(f -> tool.equals("material:" + f.result())).toList() : List.of();
 		};
 	}
 
@@ -101,6 +130,13 @@ class SmithGoal extends WorkGoal {
 	@Override
 	public void start() {
 		super.start();
+		// Interrompu avec de quoi finir sa pièce (ou des minerais à fondre) : il reprend à la forge.
+		if (forging != null ? forging.materials().entrySet().stream().allMatch(e -> citizen.inventory().stream()
+				.filter(s -> s.is(e.getKey())).mapToInt(ItemStack::getCount).sum() >= e.getValue())
+				: citizen.inventory().stream().anyMatch(s -> SMELTS.containsKey(s.getItem()))) {
+			phase = Phase.WORK;
+			return;
+		}
 		phase = citizen.inventory().stream().allMatch(ItemStack::isEmpty) ? Phase.DECIDE : Phase.DELIVER;
 	}
 
@@ -135,7 +171,8 @@ class SmithGoal extends WorkGoal {
 	private void decide() {
 		// Il va là où sont ses matières (son atelier, l'entrepôt, le grenier), et y rassemble le reste.
 		Optional<BlockPos> source = find(supplies(), s -> SMELTS.containsKey(s.getItem()) || s.is(Items.IRON_INGOT)
-				|| s.is(Items.COBBLESTONE) || s.is(Items.STICK) || s.is(Items.STRING));
+				|| s.is(Items.COBBLESTONE) || s.is(Items.STICK) || s.is(Items.STRING) || s.is(Items.GOLD_INGOT)
+				|| s.is(Items.COPPER_INGOT));
 		if (source.isEmpty()) {
 			rest(IDLE_LONG / 2);
 			return;
@@ -204,6 +241,12 @@ class SmithGoal extends WorkGoal {
 			tool.filter(t -> forgings(t).stream().noneMatch(f -> count(granary, s -> s.is(f.result())) > 0))
 					.ifPresent(wanted::add);
 		}
+		// Ce que réclament les chantiers, s'il sait le forger.
+		for (Item material : CitizenEntity.missingMaterials(level(), town())) {
+			if (MATERIALS.containsKey(material) && count(granary, s -> s.is(material)) == 0) {
+				wanted.add("material:" + material);
+			}
+		}
 		// Les golems de l'inventeur : quatre blocs de fer d'avance.
 		if (town().workers(Job.INVENTOR) > 0 && count(granary, s -> s.is(Items.IRON_BLOCK)) < 4) {
 			wanted.add("iron_block");
@@ -240,7 +283,7 @@ class SmithGoal extends WorkGoal {
 					}
 				}
 			});
-			citizen.carry(new ItemStack(forging.result()));
+			citizen.carry(new ItemStack(forging.result(), forging.count()));
 			level().playSound(null, station, SoundEvents.ANVIL_USE, SoundSource.BLOCKS, 0.6f, 1.0f);
 			citizen.say("forged", Component.translatable("speech.minecities.forged",
 					Component.translatable(forging.result().getDescriptionId())));

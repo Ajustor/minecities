@@ -79,12 +79,38 @@ public final class Market {
 				new Offer(Items.FISHING_ROD, 1, 2),
 				new Offer(Items.BOW, 1, 2),
 				new Offer(Items.ARROW, 16, 1),
-				new Offer(Items.BREAD, 6, 1)}) {
+				new Offer(Items.BREAD, 6, 1),
+				new Offer(Items.SHEARS, 1, 1),
+				// Ce qui manque aux chantiers des niveaux 3 et 4, quand la ville ne le fait pas elle-même.
+				new Offer(Items.LANTERN, 2, 1),
+				new Offer(Items.IRON_BARS, 8, 1),
+				new Offer(Items.CHEST, 2, 1),
+				new Offer(Items.BOOKSHELF, 1, 2),
+				new Offer(Items.CANDLE, 4, 1),
+				new Offer(Items.CAKE, 1, 2),
+				new Offer(Items.DECORATED_POT, 1, 1),
+				new Offer(Items.FLOWER_POT, 2, 1),
+				new Offer(Items.CAULDRON, 1, 3),
+				new Offer(Items.ANVIL, 1, 8),
+				new Offer(Items.CAMPFIRE, 1, 1),
+				new Offer(Items.QUARTZ_PILLAR, 2, 3),
+				new Offer(Items.GOLD_BLOCK, 1, 10),
+				new Offer(vanilla("waxed_cut_copper"), 4, 3),
+				new Offer(vanilla("waxed_cut_copper_stairs"), 4, 3),
+				new Offer(Items.SMOOTH_STONE_SLAB, 8, 1),
+				new Offer(Items.POLISHED_ANDESITE, 8, 1),
+				new Offer(Items.STAINED_GLASS_PANE.white(), 8, 1)}) {
 			BUY.put(offer.item(), offer);
 		}
 	}
 
 	private Market() {
+	}
+
+	/** Un objet vanilla par son nom (le cuivre ciré n'a pas de champ à lui dans {@code Items}). */
+	private static Item vanilla(String name) {
+		return net.minecraft.core.registries.BuiltInRegistries.ITEM.getValue(
+				net.minecraft.resources.Identifier.withDefaultNamespace(name));
 	}
 
 	/** Ce que rapporte une pièce d'orfèvrerie (les bijoux du joaillier), en émeraudes. */
@@ -134,6 +160,8 @@ public final class Market {
 			case FISHERMAN -> offer(Items.FISHING_ROD);
 			case GUARD -> offer(Items.STONE_SWORD);
 			case ARCHER -> offer(Items.BOW);
+			case MINER -> offer(Items.STONE_PICKAXE);
+			case BEEKEEPER -> offer(Items.SHEARS);
 			default -> Optional.empty();
 		};
 	}

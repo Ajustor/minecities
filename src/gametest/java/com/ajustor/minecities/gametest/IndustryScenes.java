@@ -120,6 +120,20 @@ public class IndustryScenes implements Scene {
 				entrance.getY() - 7, entrance.getZ() + 0.5);
 		stage.waitTicks(20);
 		stage.shot("industry_2_mine");
+
+		// Un chantier réclame une lanterne (niveau 3) : le forgeron la forge, avec le fer, le charbon et un
+		// bâton du grenier.
+		stage.run(server -> {
+			if (server.overworld().getBlockEntity(HALL) instanceof TownHallBlockEntity hall) {
+				com.ajustor.minecities.town.Stock.insert(hall, new ItemStack(Items.IRON_INGOT, 2));
+				com.ajustor.minecities.town.Stock.insert(hall, new ItemStack(Items.COAL, 2));
+				com.ajustor.minecities.town.Stock.insert(hall, new ItemStack(Items.STICK, 2));
+			}
+			citizens(server).getFirst().need("material:" + Items.LANTERN,
+					net.minecraft.network.chat.Component.literal("il me faut une lanterne"));
+		});
+		waitOrExplain(stage, server -> granary(server, Items.LANTERN) > 0, 2400,
+				"le forgeron n'a pas forgé la lanterne du chantier", server -> "grenier " + contents(server) + ".");
 	}
 
 	private static Town town(MinecraftServer server) {

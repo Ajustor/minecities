@@ -77,6 +77,12 @@ class CraftGoal extends WorkGoal {
 	@Override
 	public void start() {
 		super.start();
+		// Interrompu (un repas, la nuit) avec de quoi finir son ouvrage : il le reprend, au lieu de tout
+		// rapporter et de revenir le chercher.
+		if (current != null && has(current)) {
+			phase = Phase.WORK;
+			return;
+		}
 		phase = citizen.inventory().stream().allMatch(ItemStack::isEmpty) ? Phase.DECIDE : Phase.DELIVER;
 	}
 

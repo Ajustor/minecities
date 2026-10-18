@@ -45,13 +45,20 @@ class FirefightGoal extends Goal {
 		return citizen.town().filter(t -> t.chronicle().disaster(now).filter(Disasters.FIRE::equals).isPresent());
 	}
 
+	/**
+	 * Il ne cherche le feu qu'un appel sur dix. Un compteur à lui, et pas {@code tickCount % 20} : le jeu
+	 * n'appelle {@code canUse} qu'un tick sur deux, selon la parité de l'identifiant, et la moitié des
+	 * citoyens ne voyaient jamais le feu.
+	 */
+	private int checks;
+
 	@Override
 	public boolean canUse() {
 		if (cooldown > 0) {
 			cooldown--;
 			return false;
 		}
-		if (citizen.tickCount % 20 != 0 || burning().isEmpty()) {
+		if (++checks % 10 != 0 || burning().isEmpty()) {
 			return false;
 		}
 		target = nearestFire();
