@@ -6,6 +6,7 @@ import com.ajustor.minecities.build.Blueprints;
 import com.ajustor.minecities.build.BuildPlan;
 import com.ajustor.minecities.build.Builds;
 import com.ajustor.minecities.build.Construction;
+import com.ajustor.minecities.registry.McBlocks;
 import com.ajustor.minecities.town.House;
 import com.ajustor.minecities.town.HouseScanner;
 import com.ajustor.minecities.town.Stock;
@@ -28,10 +29,12 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * L'interface d'un bâtiment : elle s'ouvre d'un clic sur sa plaque (après le relevé) ou du bouton
@@ -40,6 +43,9 @@ import java.util.Optional;
 public final class BuildingNetwork {
 	/** On agit sur le bâtiment de près : sa plaque, ou l'hôtel de ville. */
 	private static final double REACH = 8.0;
+	/** Une demande au plus par joueur tous les tant de ticks : chacune coûte un relevé complet. */
+	private static final int COOLDOWN = 10;
+	private static final Map<UUID, Long> LAST_ACTION = new HashMap<>();
 	/** Les matériaux montrés, les plus nombreux d'abord. */
 	private static final int MATERIALS = 8;
 
@@ -80,6 +86,11 @@ public final class BuildingNetwork {
 			return Optional.empty();
 		}
 		Town town = found.get();
+		// Seulement une plaque, ou une maison de la ville : pas n'importe quelle pièce close envoyée par
+		// le client, qui deviendrait une maison sans que personne l'ait déclarée.
+		if (town.house(plaque).isEmpty() && !level.getBlockState(plaque).is(McBlocks.HOUSE_PLAQUE)) {
+			return Optional.empty();
+		}
 		// Un relevé frais : l'état du bâtiment tel qu'il est maintenant (et la ville à jour).
 		HouseScanner.Result result = TownService.resurvey(level, town, plaque);
 		Optional<House> house = town.house(plaque);
@@ -155,6 +166,11 @@ public final class BuildingNetwork {
 		boolean near = player.distanceToSqr(Vec3.atCenterOf(payload.plaque())) <= REACH * REACH
 				|| town.filter(t -> player.distanceToSqr(Vec3.atCenterOf(t.hall())) <= REACH * REACH).isPresent();
 		if (town.isEmpty() || !near) {
+			return;
+		}
+		long now = level.getGameTime();
+		Long last = LAST_ACTION.put(player.getUUID(), now);
+		if (last != null && now - last >= 0 && now - last < COOLDOWN) {
 			return;
 		}
 		if (payload.action().equals("upgrade") && town.get().canManage(player.getUUID())) {
