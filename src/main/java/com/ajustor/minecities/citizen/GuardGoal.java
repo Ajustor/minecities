@@ -7,6 +7,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.item.equipment.Equippable;
 
 import java.util.List;
@@ -46,6 +47,14 @@ class GuardGoal extends WorkGoal {
 			goTo(town().hall());
 			return;
 		}
+		// Le butin des monstres tués autour de lui (MC-61) : il le ramasse, puis le porte aux réserves.
+		if (collectLitter(citizen.blockPosition(), LOOT_RADIUS, MOB_LOOT)) {
+			return;
+		}
+		if (delivering || produce(s -> false, 0) > 0) {
+			delivering = !deliver(s -> false, 0);
+			return;
+		}
 		if (patrol == null || --patrolTicks <= 0) {
 			patrolTicks = PATROL;
 			List<House> houses = town().houses();
@@ -54,6 +63,15 @@ class GuardGoal extends WorkGoal {
 		}
 		goTo(patrol);
 	}
+
+	/** Ce que lâchent les monstres et qui sert en ville : la ficelle du tisserand, les flèches de l'archer… */
+	private static final java.util.function.Predicate<ItemStack> MOB_LOOT = s -> s.is(Items.STRING) || s.is(Items.BONE)
+			|| s.is(Items.GUNPOWDER) || s.is(Items.ARROW) || s.is(Items.SPIDER_EYE) || s.is(Items.SLIME_BALL)
+			|| s.is(Items.ENDER_PEARL);
+	/** Jusqu'où, autour de lui, il va ramasser ce butin. */
+	private static final int LOOT_RADIUS = 8;
+	/** Il porte son butin aux réserves. */
+	private boolean delivering;
 
 	/** Tous les combien de ticks il regarde s'il y a de l'armure pour lui. */
 	private static final int ARMOR_CHECK = 100;

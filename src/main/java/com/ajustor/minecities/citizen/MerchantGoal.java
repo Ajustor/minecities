@@ -190,8 +190,27 @@ class MerchantGoal extends WorkGoal {
 				return offer;
 			}
 		}
+		// Les matières premières d'un métier de la ville, quand il n'y en a plus nulle part (MC-61).
+		List<Container> stores = pool(supplies());
+		for (java.util.Map.Entry<Job, List<Item>> e : RAW.entrySet()) {
+			if (town().workers(e.getKey()) == 0) {
+				continue;
+			}
+			for (Item raw : e.getValue()) {
+				if (count(granary, s -> s.is(raw)) == 0 && count(stores, s -> s.is(raw)) == 0) {
+					return Market.offer(raw);
+				}
+			}
+		}
 		return Optional.empty();
 	}
+
+	/** Ce que chaque métier transforme et que personne ne produit en ville : il l'achète quand il manque. */
+	private static final java.util.Map<Job, List<Item>> RAW = java.util.Map.of(
+			Job.WEAVER, List.of(Items.STRING),
+			Job.GLASSBLOWER, List.of(Items.SAND, Items.DYE.white()),
+			Job.MASON, List.of(Items.CLAY_BALL),
+			Job.DOCTOR, List.of(Items.MILK_BUCKET, Items.GLISTERING_MELON_SLICE));
 
 	private void haggle() {
 		BlockPos stall = employment().station();

@@ -81,6 +81,14 @@ public final class Market {
 				new Offer(Items.ARROW, 16, 1),
 				new Offer(Items.BREAD, 6, 1),
 				new Offer(Items.SHEARS, 1, 1),
+				new Offer(Items.BUCKET, 1, 1),
+				// Les matières premières des artisans et du médecin, quand la ville n'en produit pas (MC-61).
+				new Offer(Items.STRING, 8, 1),
+				new Offer(Items.SAND, 16, 1),
+				new Offer(Items.CLAY_BALL, 16, 1),
+				new Offer(Items.DYE.white(), 4, 1),
+				new Offer(Items.MILK_BUCKET, 1, 1),
+				new Offer(Items.GLISTERING_MELON_SLICE, 1, 2),
 				// Ce qui manque aux chantiers des niveaux 3 et 4, quand la ville ne le fait pas elle-même.
 				new Offer(Items.LANTERN, 2, 1),
 				new Offer(Items.IRON_BARS, 8, 1),

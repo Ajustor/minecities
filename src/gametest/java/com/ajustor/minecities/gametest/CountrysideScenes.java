@@ -97,6 +97,19 @@ public class CountrysideScenes implements Scene {
 				server -> logs(server) + " bûches restantes, à " + remainingLogs(server) + ".");
 		waitOrExplain(stage, server -> granary(server, s -> s.is(ItemTags.LOGS)) > 0, 2400,
 				"le bois n'est pas arrivé au grenier");
+		// Des moutons au pré, des cisailles au grenier : l'éleveur les tond (MC-61).
+		stage.run(server -> {
+			for (int i = 0; i < 2; i++) {
+				command(server, "summon minecraft:sheep %d %d -16".formatted(-13 + i * 3, Y));
+			}
+			if (server.overworld().getBlockEntity(HALL) instanceof TownHallBlockEntity hall) {
+				Stock.insert(hall, new ItemStack(Items.SHEARS));
+			}
+		});
+		waitOrExplain(stage, server -> !server.overworld().getEntitiesOfClass(
+				net.minecraft.world.entity.animal.sheep.Sheep.class, new net.minecraft.world.phys.AABB(HALL).inflate(40),
+				net.minecraft.world.entity.animal.sheep.Sheep::isSheared).isEmpty(), 2400,
+				"l'éleveur n'a pas tondu les moutons");
 		stage.look(0, Y + 22, -2, 0, Y, -1);
 		stage.waitTicks(20);
 		stage.shot("countryside_1_after");

@@ -191,6 +191,18 @@ public class HealthScenes implements Scene {
 		}));
 		stage.waitTicks(200);
 		check(stage.compute(server -> citizen(server, feverish).isSleeping() ? "guéri, il reste au lit" : null));
+		// Sans malade, il prépare d'avance la pastèque scintillante : une tranche et huit pépites (MC-61).
+		stage.run(server -> {
+			if (server.overworld().getBlockEntity(HALL) instanceof TownHallBlockEntity hall) {
+				hall.setItem(11, new ItemStack(Items.MELON_SLICE, 1));
+				hall.setItem(12, new ItemStack(Items.GOLD_NUGGET, 8));
+			}
+		});
+		waitOrExplain(stage, server -> server.overworld().getBlockEntity(HALL) instanceof TownHallBlockEntity hall
+				&& com.ajustor.minecities.town.Stock.count(hall, s -> s.is(Items.GOLD_NUGGET)) == 0
+				&& com.ajustor.minecities.town.Stock.count(hall, s -> s.is(Items.GLISTERING_MELON_SLICE)) >= 2, 2400,
+				"le médecin n'a pas préparé de pastèque scintillante",
+				server -> "médecin à " + doctor(server).blockPosition().toShortString());
 		stage.client(mc -> hideGui(mc, false));
 	}
 

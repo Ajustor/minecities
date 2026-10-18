@@ -40,7 +40,15 @@ class BreederGoal extends WorkGoal {
 			|| s.is(Items.BEEF) || s.is(Items.PORKCHOP) || s.is(Items.CHICKEN) || s.is(Items.MUTTON)
 			|| s.is(Items.RABBIT);
 
-	private enum Task { NONE, FETCH, FEED, CULL }
+	private enum Task { NONE, FETCH, FEED, CULL, GET, SHEAR, MILK }
+
+	/** Ses cisailles et ses seaux vides : il les garde, il ne les rapporte pas avec la récolte. */
+	private static final Predicate<ItemStack> GEAR = s -> s.is(Items.SHEARS) || s.is(Items.BUCKET);
+	/** Combien de seaux de lait il garde d'avance dans les réserves (le remède de la dysenterie). */
+	private static final int MILK_KEPT = 2;
+
+	/** L'outil qu'il va chercher aux réserves. */
+	private net.minecraft.world.item.Item wanted;
 
 	private Task task = Task.NONE;
 	private EntityType<?> species;
@@ -72,9 +80,9 @@ class BreederGoal extends WorkGoal {
 			return;
 		}
 		pickUp(ANIMAL_LOOT);
-		int produce = produce(s -> false, 0);
+		int produce = produce(GEAR, 64);
 		if (delivering || produce >= LOAD || citizen.inventoryFull() || evening() && produce > 0 && task == Task.NONE) {
-			delivering = !deliver(s -> false, 0);
+			delivering = !deliver(GEAR, 64);
 			return;
 		}
 		switch (task) {
@@ -82,6 +90,8 @@ class BreederGoal extends WorkGoal {
 			case FETCH -> fetch();
 			case FEED -> feed();
 			case CULL -> cull();
+			case GET -> get();
+			case SHEAR, MILK -> harvest();
 		}
 	}
 
@@ -116,11 +126,90 @@ class BreederGoal extends WorkGoal {
 				return;
 			}
 		}
+		// La laine et le lait (MC-61) : il tond un mouton prêt, et trait une vache quand le lait manque aux
+		// réserves ; il va d'abord chercher cisailles ou seau s'il n'en a pas.
+		Optional<Animal> sheep = herd().stream().filter(a -> a instanceof net.minecraft.world.entity.animal.sheep.Sheep s
+				&& s.readyForShearing()).findFirst();
+		if (sheep.isPresent() && equip(Items.SHEARS)) {
+			target = sheep.get();
+			task = Task.SHEAR;
+			return;
+		}
+		Optional<Animal> cow = herd().stream().filter(a -> a instanceof net.minecraft.world.entity.animal.cow.AbstractCow
+				&& !a.isBaby()).findFirst();
+		if (cow.isPresent() && count(pool(supplies()), s -> s.is(Items.MILK_BUCKET)) < MILK_KEPT
+				&& citizen.inventory().stream().noneMatch(s -> s.is(Items.MILK_BUCKET)) && equip(Items.BUCKET)) {
+			target = cow.get();
+			task = Task.MILK;
+			return;
+		}
 		if (produce > 0) {
 			delivering = true;
 		} else {
 			rest(IDLE_SHORT);
 		}
+	}
+
+	/**
+	 * A-t-il cet outil en poche ? Sinon, s'il y en a aux réserves, il part le chercher (et renvoie faux).
+	 */
+	private boolean equip(net.minecraft.world.item.Item item) {
+		if (citizen.inventory().stream().anyMatch(s -> s.is(item))) {
+			return true;
+		}
+		if (find(supplies(), s -> s.is(item)).isPresent()) {
+			wanted = item;
+			task = Task.GET;
+		}
+		return false;
+	}
+
+	private void get() {
+		Optional<BlockPos> source = find(supplies(), s -> s.is(wanted));
+		if (source.isEmpty()) {
+			task = Task.NONE;
+			return;
+		}
+		if (goTo(source.get())) {
+			container(source.get()).ifPresent(c -> citizen.carry(Stock.take(c, s -> s.is(wanted), 1)));
+			task = Task.NONE;
+		}
+	}
+
+	/** Tond le mouton, ou trait la vache, une fois à côté. */
+	private void harvest() {
+		if (target == null || !target.isAlive()) {
+			task = Task.NONE;
+			target = null;
+			return;
+		}
+		citizen.getLookControl().setLookAt(target);
+		if (citizen.distanceToSqr(target) > 2.5 * 2.5) {
+			follow(target);
+			return;
+		}
+		citizen.getNavigation().stop();
+		EntityCompat.swing(citizen, InteractionHand.MAIN_HAND);
+		if (task == Task.SHEAR && target instanceof net.minecraft.world.entity.animal.sheep.Sheep sheep
+				&& sheep.readyForShearing()) {
+			citizen.inventory().stream().filter(s -> s.is(Items.SHEARS)).findFirst().ifPresent(shears -> {
+				sheep.shear(level(), net.minecraft.sounds.SoundSource.NEUTRAL, shears);
+				// Les cisailles s'usent comme celles du joueur.
+				shears.setDamageValue(shears.getDamageValue() + 1);
+				if (shears.getDamageValue() >= shears.getMaxDamage()) {
+					shears.shrink(1);
+				}
+			});
+		} else if (task == Task.MILK) {
+			citizen.inventory().stream().filter(s -> s.is(Items.BUCKET)).findFirst().ifPresent(bucket -> {
+				bucket.shrink(1);
+				citizen.carry(new ItemStack(Items.MILK_BUCKET));
+				level().playSound(null, target.blockPosition(), net.minecraft.sounds.SoundEvents.COW_MILK,
+						net.minecraft.sounds.SoundSource.NEUTRAL, 1.0f, 1.0f);
+			});
+		}
+		target = null;
+		task = Task.NONE;
 	}
 
 	private Optional<Animal> sample() {
