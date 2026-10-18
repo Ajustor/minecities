@@ -123,6 +123,14 @@ public class CraftScenes implements Scene {
 		stage.look(0, Y + 2.3, 28, 0, Y + 1.5, 34.5);
 		stage.waitTicks(10);
 		stage.shot("crafts_1_hats");
+
+		// La ville disparaît en pleine journée, ses artisans au travail : ils s'en vont, sans planter le
+		// serveur (un artisan sans ville recevait encore un tick de travail).
+		stage.run(server -> {
+			citizens(server).forEach(c -> c.setNoAi(false));
+			Towns.get(server).remove(town(server));
+		});
+		waitOrExplain(stage, server -> citizens(server).isEmpty(), 400, "les artisans ne sont pas partis");
 	}
 
 	private static BlockPos origin(int i) {
