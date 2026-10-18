@@ -339,8 +339,19 @@ public final class TownService {
 
 	/** Relève le bâtiment et met la ville à jour : enregistré s'il est valide, oublié sinon. */
 	static HouseScanner.Result survey(ServerLevel level, Town town, BlockPos plaque) {
-		HouseScanner.Result raw = HouseScanner.scan((x, y, z) -> classify(level, new BlockPos(x, y, z)),
-				new HouseScanner.Pos(plaque.getX(), plaque.getY(), plaque.getZ()));
+		boolean[] unloaded = {false};
+		HouseScanner.Result raw = HouseScanner.scan((x, y, z) -> {
+			BlockPos pos = new BlockPos(x, y, z);
+			if (!level.isLoaded(pos)) {
+				unloaded[0] = true;
+			}
+			return classify(level, pos);
+		}, new HouseScanner.Pos(plaque.getX(), plaque.getY(), plaque.getZ()));
+		// Une partie du bâtiment hors des chunks chargés : le relevé ne conclut rien, la maison reste comme
+		// elle était (ses habitants, ses emplois, sa plaque) jusqu'au prochain relevé complet.
+		if (!raw.valid() && unloaded[0] && town.house(plaque).isPresent()) {
+			return raw;
+		}
 		List<BlockPos> beds = raw.beds().stream().map(TownService::pos)
 				.filter(b -> !town.bedClaimedElsewhere(b, plaque)).toList();
 		List<House.Workstation> stations = raw.workstations().stream().map(TownService::pos)
