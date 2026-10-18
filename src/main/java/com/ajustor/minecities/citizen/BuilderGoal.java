@@ -4,6 +4,7 @@ import com.ajustor.minecities.build.Blueprint;
 import com.ajustor.minecities.build.Blueprints;
 import com.ajustor.minecities.build.BuildPlan;
 import com.ajustor.minecities.build.Construction;
+import com.ajustor.minecities.compat.EntityCompat;
 import com.ajustor.minecities.registry.McBlocks;
 import com.ajustor.minecities.town.Job;
 import com.ajustor.minecities.town.Stock;
@@ -265,7 +266,7 @@ class BuilderGoal extends WorkGoal {
 		citizen.getNavigation().stop();
 		citizen.getLookControl().setLookAt(p.pos().getX() + 0.5, p.pos().getY() + 0.5, p.pos().getZ() + 0.5);
 		cooldown = PACE;
-		citizen.swing(InteractionHand.MAIN_HAND);
+		EntityCompat.swing(citizen, InteractionHand.MAIN_HAND);
 		citizen.act(Action.BUILD, 10);
 		if (clearing) {
 			// Dégager : ce qui était là va au grenier (par ses poches).
@@ -490,7 +491,7 @@ class BuilderGoal extends WorkGoal {
 					.setValue(ScaffoldingBlock.DISTANCE, ScaffoldingBlock.getDistance(level(), cell)), Block.UPDATE_ALL);
 			level().playSound(null, cell, SoundEvents.SCAFFOLDING_PLACE, SoundSource.BLOCKS, 1.0f, 1.0f);
 			construction.scaffolding().add(cell);
-			citizen.swing(InteractionHand.MAIN_HAND);
+			EntityCompat.swing(citizen, InteractionHand.MAIN_HAND);
 			cooldown = PACE;
 			Towns.get(level().getServer()).changed();
 			return false;
@@ -618,7 +619,7 @@ class BuilderGoal extends WorkGoal {
 			level().removeBlock(top, false);
 			level().playSound(null, top, SoundEvents.SCAFFOLDING_BREAK, SoundSource.BLOCKS, 1.0f, 1.0f);
 			citizen.carry(new ItemStack(Items.SCAFFOLDING));
-			citizen.swing(InteractionHand.MAIN_HAND);
+			EntityCompat.swing(citizen, InteractionHand.MAIN_HAND);
 		}
 		scaffolding.remove(top);
 		cooldown = PACE;
@@ -799,7 +800,7 @@ class BuilderGoal extends WorkGoal {
 		}
 		citizen.getLookControl().setLookAt(lender);
 		lender.getLookControl().setLookAt(citizen);
-		citizen.swing(InteractionHand.MAIN_HAND);
+		EntityCompat.swing(citizen, InteractionHand.MAIN_HAND);
 		cooldown = PACE;
 	}
 
@@ -824,7 +825,7 @@ class BuilderGoal extends WorkGoal {
 				consume(log.get());
 			}
 			citizen.carry(new ItemStack(planks, sawn * 4));
-			citizen.swing(InteractionHand.MAIN_HAND);
+			EntityCompat.swing(citizen, InteractionHand.MAIN_HAND);
 			level().playSound(null, citizen.blockPosition(), SoundEvents.WOOD_HIT, SoundSource.NEUTRAL, 0.8F, 1.0F);
 			cooldown = 20;
 			return true;

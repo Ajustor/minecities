@@ -1,5 +1,6 @@
 package com.ajustor.minecities.citizen;
 
+import com.ajustor.minecities.compat.EntityCompat;
 import com.ajustor.minecities.town.Job;
 import com.ajustor.minecities.town.Stock;
 import net.minecraft.core.BlockPos;
@@ -202,7 +203,7 @@ class CraftGoal extends WorkGoal {
 				}
 			}
 		}
-		citizen.swing(InteractionHand.MAIN_HAND);
+		EntityCompat.swing(citizen, InteractionHand.MAIN_HAND);
 		citizen.carry(current.result().copy());
 		level().playSound(null, station, sound, SoundSource.BLOCKS, 0.7f, 1.0f);
 	}

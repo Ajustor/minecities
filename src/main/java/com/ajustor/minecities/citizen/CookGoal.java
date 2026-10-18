@@ -1,5 +1,6 @@
 package com.ajustor.minecities.citizen;
 
+import com.ajustor.minecities.compat.EntityCompat;
 import com.ajustor.minecities.town.Job;
 import com.ajustor.minecities.town.Stock;
 import net.minecraft.core.BlockPos;
@@ -130,7 +131,7 @@ class CookGoal extends WorkGoal {
 			phase = Phase.DELIVER;
 			return;
 		}
-		citizen.swing(InteractionHand.MAIN_HAND);
+		EntityCompat.swing(citizen, InteractionHand.MAIN_HAND);
 		level().playSound(null, station, job == Job.BAKER ? SoundEvents.FURNACE_FIRE_CRACKLE : SoundEvents.SMOKER_SMOKE,
 				SoundSource.BLOCKS, 1.0f, 1.0f);
 		citizen.carry(dish);

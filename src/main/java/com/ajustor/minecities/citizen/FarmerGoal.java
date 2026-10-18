@@ -1,5 +1,6 @@
 package com.ajustor.minecities.citizen;
 
+import com.ajustor.minecities.compat.EntityCompat;
 import com.ajustor.minecities.town.Job;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -151,7 +152,7 @@ class FarmerGoal extends WorkGoal {
 	private void work(BlockPos pos) {
 		ServerLevel level = level();
 		BlockState state = level.getBlockState(pos);
-		citizen.swing(InteractionHand.MAIN_HAND);
+		EntityCompat.swing(citizen, InteractionHand.MAIN_HAND);
 		citizen.act(Action.HOE, 15);
 		if (state.is(Blocks.SUGAR_CANE) && ripe(pos)) {
 			// Toute la tige au-dessus du pied, du haut vers le bas : rien ne tombe par terre.

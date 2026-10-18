@@ -1,5 +1,6 @@
 package com.ajustor.minecities.citizen;
 
+import com.ajustor.minecities.compat.EntityCompat;
 import com.ajustor.minecities.town.Job;
 import com.ajustor.minecities.town.Stock;
 import net.minecraft.core.BlockPos;
@@ -166,7 +167,7 @@ class InventorGoal extends WorkGoal {
 		golem.snapTo(at.getX() + 0.5, at.getY(), at.getZ() + 0.5, citizen.getYRot(), 0);
 		golem.setPersistenceRequired();
 		level().addFreshEntity(golem);
-		citizen.swing(InteractionHand.MAIN_HAND);
+		EntityCompat.swing(citizen, InteractionHand.MAIN_HAND);
 		citizen.act(Action.CHEER, 40);
 		citizen.say("golem", Component.translatable("speech.minecities.golem"));
 		level().playSound(null, at, recipe == IRON_GOLEM ? SoundEvents.IRON_GOLEM_REPAIR : SoundEvents.SNOW_GOLEM_AMBIENT,

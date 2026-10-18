@@ -19,7 +19,9 @@ import net.minecraft.world.phys.shapes.VoxelShape;
  * interface.
  */
 public class WorkstationBlock extends HorizontalDirectionalBlock {
+	//? if <26.3 {
 	public static final MapCodec<WorkstationBlock> CODEC = simpleCodec(WorkstationBlock::new);
+	//?}
 	private static final VoxelShape SHAPE = Block.box(0, 0, 0, 16, 15, 16);
 
 	public WorkstationBlock(Properties properties) {
@@ -27,10 +29,12 @@ public class WorkstationBlock extends HorizontalDirectionalBlock {
 		registerDefaultState(stateDefinition.any().setValue(FACING, Direction.NORTH));
 	}
 
+	//? if <26.3 {
 	@Override
 	protected MapCodec<? extends HorizontalDirectionalBlock> codec() {
 		return CODEC;
 	}
+	//?}
 
 	@Override
 	protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {

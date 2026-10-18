@@ -1,5 +1,7 @@
 package com.ajustor.minecities.citizen;
 
+import com.ajustor.minecities.compat.BlockCompat;
+import com.ajustor.minecities.compat.EntityCompat;
 import com.ajustor.minecities.town.Job;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -92,7 +94,7 @@ class FishermanGoal extends WorkGoal {
 		for (BlockPos pos : BlockPos.betweenClosed(station.offset(-SHORE_RADIUS, -3, -SHORE_RADIUS),
 				station.offset(SHORE_RADIUS, 2, SHORE_RADIUS))) {
 			if (!level().isLoaded(pos) || !level().getBlockState(pos).isAir()
-					|| !level().getBlockState(pos.below()).blocksMotion()
+					|| !BlockCompat.blocksMotion(level().getBlockState(pos.below()))
 					|| !town().contains(level().dimension(), pos)) {
 				continue;
 			}
@@ -114,7 +116,7 @@ class FishermanGoal extends WorkGoal {
 	/** Une prise, tirée de la table de pêche vanilla. */
 	private void cast() {
 		ItemStack rod = citizen.getMainHandItem();
-		citizen.swing(InteractionHand.MAIN_HAND);
+		EntityCompat.swing(citizen, InteractionHand.MAIN_HAND);
 		LootParams params = new LootParams.Builder(level())
 				.withParameter(LootContextParams.ORIGIN, Vec3.atCenterOf(water))
 				.withParameter(LootContextParams.TOOL,

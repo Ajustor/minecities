@@ -2,7 +2,7 @@
 
 *[English version](README.en.md)*
 
-Des villes vivantes pour Minecraft 26.2 (Fabric), inspirées de MineColonies mais dans l'esprit
+Des villes vivantes pour Minecraft 26.2 et 26.3 (Fabric), inspirées de MineColonies mais dans l'esprit
 vanilla : pas de plans imposés ni de huttes préfabriquées. Vous bâtissez comme vous voulez, le mod
 reconnaît vos maisons, et des citoyens viennent y vivre. Le village devient ville, puis grande
 ville, puis mégalopole.
@@ -329,19 +329,21 @@ entre les ex æquo. Seul joueur de sa ville, ou sans adversaire, le maire est r�
 
 ## Développer
 
-Java 25 est requis (Loom 1.18.3, Minecraft 26.2).
+Java 25 est requis (Loom 1.18.3, Minecraft 26.2 et 26.3). Chaque version de Minecraft a son projet
+Gradle (`:26.2`, `:26.3`) et son jar, des mêmes sources : voir [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ```sh
-./gradlew build                 # compile, tests unitaires, toutes les scènes sans fenêtre, jar dans build/libs
-./gradlew runClient             # lance le jeu avec le mod
-./gradlew runGameTest           # les scènes de jeu, vérifiées sur le seul serveur, sans fenêtre (rapide)
-./gradlew runGameTest -PminecitiesGametest=work   # une scène (city, work, countryside, village, build, family, raid, life, market, robust, industry, crafts,
+./gradlew build                 # les deux versions : compile, tests unitaires, toutes les scènes sans fenêtre, un jar par version dans build/libs
+./gradlew :26.2:runClient       # lance le jeu avec le mod (Minecraft 26.2 ; :26.3:runClient pour 26.3)
+./gradlew :26.2:runGameTest     # les scènes de jeu, vérifiées sur le seul serveur, sans fenêtre (rapide)
+./gradlew :26.2:runGameTest -PminecitiesGametest=work   # une scène (data, city, work, countryside, village, build, family, raid, life, market, robust, industry, crafts,
 council, logistics, guide, structures, plans, jade, residents, elections, monuments, health, map, disasters, stations, mine)
-./gradlew runClientGameTest     # les mêmes scènes dans le vrai jeu, photographiées (build/run/clientGameTest/screenshots), plus styles
-./gradlew runClientGameTest -PminecitiesFilm   # avec les films image par image (lents)
+./gradlew :26.2:runClientGameTest   # les mêmes scènes dans le vrai jeu, photographiées (versions/26.2/build/run/clientGameTest/screenshots), plus styles
+./gradlew :26.2:runClientGameTest -PminecitiesFilm   # avec les films image par image (lents)
 python tools/textures/generate.py   # régénère les textures (peaux des citoyens, plaque, œuf)
 python tools/models/town_hall.py    # régénère le modèle de l'hôtel de ville
 python tools/blueprints/generate.py # régénère les schémas du bâtisseur
+python tools/data/migrate.py        # après avoir touché à src/main/resources/data : les données des versions plus récentes (src/overlays/)
 ```
 
 Les textures sont produites par `tools/textures/generate.py` : modifier le script et le relancer,

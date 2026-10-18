@@ -35,7 +35,9 @@ import java.util.Map;
  * chaque lit accueillant un citoyen. Un clic dessus relève la maison à nouveau et en dit l'état.
  */
 public class HousePlaqueBlock extends HorizontalDirectionalBlock {
+	//? if <26.3 {
 	public static final MapCodec<HousePlaqueBlock> CODEC = simpleCodec(HousePlaqueBlock::new);
+	//?}
 
 	/** L'état du dernier relevé, qui se voit sur la plaque : porte verte, ou rouge. */
 	public enum Status implements StringRepresentable {
@@ -69,10 +71,12 @@ public class HousePlaqueBlock extends HorizontalDirectionalBlock {
 		registerDefaultState(stateDefinition.any().setValue(FACING, Direction.NORTH).setValue(STATUS, Status.NONE));
 	}
 
+	//? if <26.3 {
 	@Override
 	protected MapCodec<? extends HorizontalDirectionalBlock> codec() {
 		return CODEC;
 	}
+	//?}
 
 	@Override
 	protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {

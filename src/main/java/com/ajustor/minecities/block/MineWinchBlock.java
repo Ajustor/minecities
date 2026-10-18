@@ -18,7 +18,9 @@ import net.minecraft.world.phys.shapes.VoxelShape;
  * l'est du bâtiment.
  */
 public class MineWinchBlock extends HorizontalDirectionalBlock {
+	//? if <26.3 {
 	public static final MapCodec<MineWinchBlock> CODEC = simpleCodec(MineWinchBlock::new);
+	//?}
 	private static final VoxelShape SHAPE = Block.box(0, 0, 0, 16, 14, 16);
 
 	public MineWinchBlock(Properties properties) {
@@ -26,10 +28,12 @@ public class MineWinchBlock extends HorizontalDirectionalBlock {
 		registerDefaultState(stateDefinition.any().setValue(FACING, Direction.NORTH));
 	}
 
+	//? if <26.3 {
 	@Override
 	protected MapCodec<? extends HorizontalDirectionalBlock> codec() {
 		return CODEC;
 	}
+	//?}
 
 	@Override
 	protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {

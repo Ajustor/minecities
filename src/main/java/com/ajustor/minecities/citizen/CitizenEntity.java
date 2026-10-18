@@ -1,5 +1,6 @@
 package com.ajustor.minecities.citizen;
 
+import com.ajustor.minecities.compat.EntityCompat;
 import com.ajustor.minecities.town.Job;
 import com.ajustor.minecities.town.Names;
 import com.ajustor.minecities.town.Raids;
@@ -543,7 +544,7 @@ public class CitizenEntity extends PathfinderMob {
 		act(Action.EAT, 20);
 		satisfied("hungry");
 		starvingTicks = 0;
-		swing(InteractionHand.MAIN_HAND);
+		EntityCompat.swing(this, InteractionHand.MAIN_HAND);
 		playSound(SoundEvents.GENERIC_EAT.value(), 0.6f, 0.9f + getRandom().nextFloat() * 0.2f);
 		if (level() instanceof ServerLevel serverLevel) {
 			serverLevel.sendParticles(new ItemParticleOption(ParticleTypes.ITEM, food.getItem()), getX(), getEyeY() - 0.2,
