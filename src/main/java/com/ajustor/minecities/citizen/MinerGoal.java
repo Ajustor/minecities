@@ -247,6 +247,10 @@ class MinerGoal extends WorkGoal {
 
 	/** Abat un bloc avec sa pioche et en garde ce qu'il donne (la pierre, jusqu'à un certain point). */
 	private void mineBlock(BlockPos pos) {
+		// Sa pioche vient de casser : il ne retire plus rien (le bloc disparaîtrait sans rien laisser).
+		if (citizen.getMainHandItem().isEmpty()) {
+			return;
+		}
 		BlockState state = level().getBlockState(pos);
 		if (state.isAir() || state.canBeReplaced() && level().getFluidState(pos).isEmpty()) {
 			if (!state.isAir()) {
@@ -276,7 +280,8 @@ class MinerGoal extends WorkGoal {
 			if (drop.is(Items.COBBLESTONE)) {
 				stone += drop.getCount();
 			}
-			Stock.insert(citizen.inventory(), drop);
+			// Ce qui ne tient pas dans ses poches tombe à ses pieds, et il le ramasse en passant.
+			citizen.carry(drop);
 		}
 	}
 
