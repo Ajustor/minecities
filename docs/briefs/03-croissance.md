@@ -30,12 +30,15 @@ genre `monument` ouverts à la mégalopole, sans plaque, un de chaque par ville 
 (chantier fini), ils donnent du bonheur (+1, au plus +2) et de l'attrait (`Town.appeal()`, 1, 1 et
 2), qu'une taverne pourra utiliser pour attirer des nouveaux venus.
 
+Ce que le code débloque aujourd'hui (`Job.minTier()`, le palier des schémas, `TownTier`), aligné le
+18/10/2026 (MC-69) :
+
 | Palier | Débloque |
 |---|---|
-| Village | maisons, fermier, boulanger |
-| Ville | bûcheron, pêcheur, garde, marché ; décrets ; élections (si plusieurs joueurs) |
-| Grande ville | mineur, constructeur, bibliothèque ; **quartiers** ; routes reconnues |
-| Mégalopole | monuments (faits, MC-11 : statue, fontaine, beffroi), gare/transports (wagons), ambassades entre villes, titre de « gouverneur » |
+| Village (rayon 48) | les maisons ; tous les métiers sauf ceux de la ville (fermier, cuisinier, boulanger, bûcheron, éleveur, pêcheur, bâtisseur, livreur, garde, archer, inventeur, médecin, mineur, maçon, verrier, tisserand, apiculteur, tanneur, charpentier, tavernier) ; les bâtiments de niveau 1 et 2 ; décrets ; élections (si plusieurs joueurs) |
+| Ville (rayon 80) | marchand, forgeron, joaillier, bibliothécaire ; les bâtiments de niveau 3 |
+| Grande ville (rayon 128) | les bâtiments de niveau 4 ; deux mairies annexes ; à venir : **routes reconnues**, **gare et wagonnets**, **marché hebdomadaire** (tickets MC-86 à MC-88) |
+| Mégalopole (rayon 224) | quatre mairies annexes ; les monuments (MC-11 : statue, fontaine, beffroi) ; à venir : **titre de gouverneur**, **ambassades** (tickets MC-89, MC-90) |
 
 ## Pistes
 
