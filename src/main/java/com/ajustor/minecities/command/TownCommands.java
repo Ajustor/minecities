@@ -306,7 +306,12 @@ public final class TownCommands {
 		Decree decree = Decree.fromSerializedName(StringArgumentType.getString(context, "decree"))
 				.orElseThrow(NO_DECREE::create);
 		ServerLevel level = context.getSource().getServer().getLevel(town.dimension());
-		TownService.decree(level != null ? level : context.getSource().getLevel(), town, decree);
+		Optional<Component> refusal = TownService.decree(level != null ? level : context.getSource().getLevel(),
+				town, decree);
+		if (refusal.isPresent()) {
+			context.getSource().sendFailure(refusal.get());
+			return 0;
+		}
 		return Command.SINGLE_SUCCESS;
 	}
 

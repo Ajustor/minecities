@@ -38,6 +38,16 @@ public class SleepInBedGoal extends Goal {
 		return time >= 12500 && time < 23500;
 	}
 
+	/** L'heure de rentrer pour ce citoyen : la nuit, ou dès la fin d'après-midi sous couvre-feu (MC-66). */
+	public static boolean bedtime(CitizenEntity citizen) {
+		if (isNight(citizen.level())) {
+			return true;
+		}
+		long time = Math.floorMod(citizen.level().getOverworldClockTime(), 24000L);
+		return time >= com.ajustor.minecities.town.Decree.CURFEW_TIME && time < 23500 && citizen.town()
+				.filter(t -> t.decreed(com.ajustor.minecities.town.Decree.CURFEW)).isPresent();
+	}
+
 	private boolean bedAvailable(BlockPos pos) {
 		if (!bedsWork(citizen.level(), pos)) {
 			return false;
@@ -49,7 +59,7 @@ public class SleepInBedGoal extends Goal {
 
 	@Override
 	public boolean canUse() {
-		if (!isNight(citizen.level()) && !citizen.bedridden() || citizen.isDefender()) {
+		if (!bedtime(citizen) && !citizen.bedridden() || citizen.isDefender()) {
 			return false;
 		}
 		Optional<BlockPos> target = citizen.bed();
@@ -62,7 +72,7 @@ public class SleepInBedGoal extends Goal {
 
 	@Override
 	public boolean canContinueToUse() {
-		return (isNight(citizen.level()) || citizen.bedridden()) && bed != null && citizen.bed().filter(bed::equals).isPresent()
+		return (bedtime(citizen) || citizen.bedridden()) && bed != null && citizen.bed().filter(bed::equals).isPresent()
 				&& bedAvailable(bed);
 	}
 

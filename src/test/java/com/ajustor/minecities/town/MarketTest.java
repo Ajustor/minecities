@@ -27,6 +27,19 @@ class MarketTest {
 	}
 
 	@Test
+	void processedGoodsSellBetterThanTheirIngredients() {
+		// Une émeraude de pain demande moins de blé que de vendre le blé (trois blés le pain) ; de même
+		// pour la viande cuite et les livres (MC-62).
+		assertTrue(Market.rate(Items.BREAD).orElseThrow() * 3 < Market.rate(Items.WHEAT).orElseThrow());
+		assertTrue(Market.rate(Items.COOKED_BEEF).orElseThrow() < Market.rate(Items.BEEF).orElseThrow());
+		assertTrue(Market.rate(Items.BOOK).orElseThrow() * 3 < Market.rate(Items.PAPER).orElseThrow());
+		for (net.minecraft.world.item.Item made : List.of(Items.BRICKS, Items.GLASS, Items.HONEY_BOTTLE,
+				Items.PUMPKIN_PIE)) {
+			assertTrue(Market.rate(made).isPresent(), made.toString());
+		}
+	}
+
+	@Test
 	void onlyTheSurplusIsSoldAtVillagerRates() {
 		int rate = Market.rate(Items.WHEAT).orElseThrow();
 		assertEquals(20, rate);
@@ -95,9 +108,11 @@ class MarketTest {
 		assertEquals(6, Trade.load(Trade.PLENTY + 6, 3));
 		assertEquals(0, Trade.load(Trade.PLENTY, 0));
 		assertEquals(0, Trade.load(500, Trade.SHORT));
-		// Le prix : au cours des villageois, la nourriture huit par émeraude, au moins une émeraude.
+		// Le prix : au cours du marché (le pain six par émeraude), la nourriture sans cours huit par
+		// émeraude, au moins une émeraude.
 		assertEquals(1, Trade.price(Items.WHEAT, 20));
-		assertEquals(4, Trade.price(Items.BREAD, 32));
+		assertEquals(5, Trade.price(Items.BREAD, 32));
+		assertEquals(4, Trade.price(Items.MELON_SLICE, 32));
 		assertEquals(1, Trade.price(Items.BREAD, 3));
 	}
 

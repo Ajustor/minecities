@@ -61,6 +61,28 @@ class DoctorGoal extends WorkGoal {
 		};
 	}
 
+	/** Combien de pastèques scintillantes il garde d'avance contre la fièvre. */
+	private static final int GLISTERING_KEPT = 2;
+
+	/**
+	 * À son poste : une tranche de pastèque et huit pépites d'or des réserves font une pastèque
+	 * scintillante, le remède de la fièvre, tant qu'il n'en a pas assez d'avance (MC-61).
+	 */
+	private void brew() {
+		List<net.minecraft.world.Container> pool = pool(supplies());
+		if (count(pool, s -> s.is(Items.GLISTERING_MELON_SLICE)) >= GLISTERING_KEPT
+				|| count(pool, s -> s.is(Items.MELON_SLICE)) < 1 || count(pool, s -> s.is(Items.GOLD_NUGGET)) < 8) {
+			return;
+		}
+		take(pool, s -> s.is(Items.MELON_SLICE), 1);
+		take(pool, s -> s.is(Items.GOLD_NUGGET), 8);
+		ItemStack rest = container(town().hall()).map(c -> Stock.insert(c, new ItemStack(Items.GLISTERING_MELON_SLICE)))
+				.orElse(new ItemStack(Items.GLISTERING_MELON_SLICE));
+		if (!rest.isEmpty()) {
+			citizen.carry(rest);
+		}
+	}
+
 	/** A-t-il besoin du médecin ? */
 	static boolean ailing(CitizenEntity c) {
 		return c.isAlive() && (c.getHealth() < c.getMaxHealth() - 1 || c.hunger() <= 0
@@ -96,11 +118,15 @@ class DoctorGoal extends WorkGoal {
 			search = 40;
 			patient = findPatient().orElse(null);
 			if (patient == null) {
-				// Personne à soigner : il prépare ses remèdes.
+				// Personne à soigner : il rejoint son poste (en regardant de temps en temps s'il y a un malade),
+				// puis y prépare ses remèdes.
 				if (goTo(employment().station())) {
 					citizen.act(Action.COOK, 30);
+					brew();
+					rest(100);
+				} else {
+					search = 10;
 				}
-				rest(100);
 				return;
 			}
 			citizen.say("on_my_way", Component.translatable("speech.minecities.doctor_coming", patient.getName()));

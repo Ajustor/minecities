@@ -69,6 +69,34 @@ public final class Market {
 		SELL.put(Items.MANGROVE_LOG, 16);
 		SELL.put(Items.COAL, 15);
 		SELL.put(Items.IRON_INGOT, 4);
+		// Ce que la ville transforme se vend mieux que ce qu'il a coûté (MC-62).
+		SELL.put(Items.BREAD, 6);
+		SELL.put(Items.COOKIE, 24);
+		SELL.put(Items.PUMPKIN_PIE, 4);
+		SELL.put(Items.BAKED_POTATO, 16);
+		SELL.put(Items.COOKED_BEEF, 8);
+		SELL.put(Items.COOKED_PORKCHOP, 8);
+		SELL.put(Items.COOKED_CHICKEN, 8);
+		SELL.put(Items.COOKED_MUTTON, 8);
+		SELL.put(Items.COOKED_RABBIT, 6);
+		SELL.put(Items.COOKED_COD, 8);
+		SELL.put(Items.COOKED_SALMON, 8);
+		SELL.put(Items.MUSHROOM_STEW, 2);
+		SELL.put(Items.BEETROOT_SOUP, 2);
+		SELL.put(Items.RABBIT_STEW, 1);
+		SELL.put(Items.HONEY_BOTTLE, 3);
+		SELL.put(Items.HONEYCOMB, 6);
+		SELL.put(Items.CANDLE, 4);
+		SELL.put(Items.PAPER, 16);
+		SELL.put(Items.BOOK, 2);
+		SELL.put(Items.BRICKS, 3);
+		SELL.put(Items.STONE_BRICKS, 20);
+		SELL.put(Items.POLISHED_ANDESITE, 20);
+		SELL.put(Items.GLASS, 8);
+		SELL.put(Items.GLASS_PANE, 20);
+		SELL.put(Items.GLASS_BOTTLE, 8);
+		SELL.put(Items.STAINED_GLASS_PANE.white(), 12);
+		SELL.put(Items.LEATHER_CHESTPLATE, 1);
 
 		for (Offer offer : new Offer[]{
 				new Offer(Items.STONE_HOE, 1, 1),
@@ -81,6 +109,14 @@ public final class Market {
 				new Offer(Items.ARROW, 16, 1),
 				new Offer(Items.BREAD, 6, 1),
 				new Offer(Items.SHEARS, 1, 1),
+				new Offer(Items.BUCKET, 1, 1),
+				// Les matières premières des artisans et du médecin, quand la ville n'en produit pas (MC-61).
+				new Offer(Items.STRING, 8, 1),
+				new Offer(Items.SAND, 16, 1),
+				new Offer(Items.CLAY_BALL, 16, 1),
+				new Offer(Items.DYE.white(), 4, 1),
+				new Offer(Items.MILK_BUCKET, 1, 1),
+				new Offer(Items.GLISTERING_MELON_SLICE, 1, 2),
 				// Ce qui manque aux chantiers des niveaux 3 et 4, quand la ville ne le fait pas elle-même.
 				new Offer(Items.LANTERN, 2, 1),
 				new Offer(Items.IRON_BARS, 8, 1),

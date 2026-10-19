@@ -12,7 +12,16 @@ public enum Decree {
 	/** Heures supplémentaires : les travailleurs commencent à l'aube et finissent à la nuit ; ils fatiguent. */
 	OVERTIME("overtime", -1),
 	/** Jour férié : personne ne travaille (sauf les défenseurs) ; tout le monde se réjouit. */
-	HOLIDAY("holiday", 1);
+	HOLIDAY("holiday", 1),
+	/** Couvre-feu : tout le monde rentre dès la fin d'après-midi (sauf les défenseurs) ; moins de pertes la nuit. */
+	CURFEW("curfew", -1),
+	/** Frontières ouvertes : la taverne attire plus vite, mais seulement une ville plus heureuse. */
+	OPEN_BORDERS("open_borders", 0);
+
+	/** Les décrets ne se prennent qu'à partir de ce palier (brief 03). */
+	public static final TownTier TIER = TownTier.TOWN;
+	/** L'heure du couvre-feu : la fin d'après-midi, avant la tombée de la nuit (12 500). */
+	public static final long CURFEW_TIME = 11000;
 
 	private final String serializedName;
 	private final int mood;

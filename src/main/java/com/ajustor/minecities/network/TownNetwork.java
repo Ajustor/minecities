@@ -404,12 +404,13 @@ public final class TownNetwork {
 				}
 				com.ajustor.minecities.town.Budget.nextRate(level, town);
 			}
-			case "decree.rationing", "decree.overtime", "decree.holiday" -> {
+			case "decree.rationing", "decree.overtime", "decree.holiday", "decree.curfew", "decree.open_borders" -> {
 				if (!town.canManage(player.getUUID())) {
 					return;
 				}
 				com.ajustor.minecities.town.Decree.fromSerializedName(payload.action().substring("decree.".length()))
-						.ifPresent(decree -> TownService.decree(level, town, decree));
+						.flatMap(decree -> TownService.decree(level, town, decree))
+						.ifPresent(refusal -> player.sendSystemMessage(refusal.copy().withStyle(ChatFormatting.RED)));
 			}
 			case "festival" -> {
 				if (!town.canManage(player.getUUID())) {

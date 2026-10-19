@@ -90,4 +90,14 @@ class HappinessTest {
 		assertTrue(Happiness.workPace(2) > 1.0f);
 		assertTrue(Happiness.workPace(0) > Happiness.workPace(3));
 	}
+
+	@Test
+	void theHomeCounts() {
+		// Une belle maison réjouit ; s'y entasser, ou y dormir sans lampe, pèse (MC-64).
+		assertEquals(List.of(), Happiness.home(1, 2, 2, 12));
+		assertEquals(List.of(new Happiness.Factor("fine_home", 1)), Happiness.home(3, 2, 2, 12));
+		assertEquals(List.of(new Happiness.Factor("fine_home", 2)), Happiness.home(4, 1, 2, 12));
+		assertEquals(List.of(new Happiness.Factor("crowded", -1), new Happiness.Factor("dark_home", -1)),
+				Happiness.home(2, 3, 2, 0));
+	}
 }

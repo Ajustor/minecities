@@ -84,6 +84,8 @@ public final class Families {
 
 	/** Au-delà de ce bonheur moyen, la taverne attire du monde (MC-58). */
 	public static final double TAVERN_MOOD = 5;
+	/** Ce qu'il faut de bonheur en plus, frontières ouvertes. */
+	public static final double OPEN_MOOD = 2;
 
 	/**
 	 * Où en est la croissance de la ville, pour le Résumé : {@code key} dit ce qui se passe (des nouveaux
@@ -107,10 +109,13 @@ public final class Families {
 		if (town.freeBeds() <= 0) {
 			return new Growth("no_bed", 0, level);
 		}
-		if (town.averageMood().filter(m -> m < TAVERN_MOOD).isPresent()) {
+		// Frontières ouvertes (MC-66) : deux jours de moins entre deux arrivants, mais une ville plus heureuse.
+		boolean open = town.decreed(Decree.OPEN_BORDERS);
+		double wanted = open ? TAVERN_MOOD + OPEN_MOOD : TAVERN_MOOD;
+		if (town.averageMood().filter(m -> m < wanted).isPresent()) {
 			return new Growth("unhappy", 0, level);
 		}
-		long spacing = Math.max(1, 6 - level - town.appeal() / 10) * 24000L;
+		long spacing = Math.max(1, 6 - level - town.appeal() / 10 - (open ? 2 : 0)) * 24000L;
 		long left = Math.max(0, town.lastArrival() + spacing - now);
 		return new Growth("tavern", (int) ((left + 23999) / 24000), level);
 	}

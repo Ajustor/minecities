@@ -144,6 +144,27 @@ public final class Happiness {
 	}
 
 	/** La note, avec en plus ces facteurs (l'impôt, un salaire impayé). */
+	/** En dessous de cette lumière (des lampes, pas du jour), une maison est sombre. */
+	public static final int DARK = 6;
+
+	/**
+	 * Ce que le logis fait au moral (MC-64) : une maison de niveau 3 ou 4 réjouit ; plus d'occupants que
+	 * de lits, ou un lit sans lampe alentour, pèse.
+	 */
+	public static List<Factor> home(int level, long occupants, int beds, int light) {
+		List<Factor> factors = new java.util.ArrayList<>();
+		if (level >= 3) {
+			factors.add(new Factor("fine_home", level >= 4 ? 2 : 1));
+		}
+		if (occupants > beds) {
+			factors.add(new Factor("crowded", -1));
+		}
+		if (light < DARK) {
+			factors.add(new Factor("dark_home", -1));
+		}
+		return factors;
+	}
+
 	public static Mood of(Factors f, List<Factor> extra) {
 		Mood mood = of(f);
 		if (extra.isEmpty()) {
