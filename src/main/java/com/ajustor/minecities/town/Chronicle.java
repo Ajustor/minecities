@@ -26,9 +26,11 @@ public final class Chronicle {
 			net.minecraft.core.BlockPos.CODEC.optionalFieldOf("fire_max").forGetter(c -> c.fireMax),
 			Budget.Ledger.CODEC.optionalFieldOf("ledger").forGetter(c -> java.util.Optional.of(c.ledger)),
 			Codec.LONG.optionalFieldOf("served_at", -1L).forGetter(c -> c.servedAt),
-			Codec.LONG.optionalFieldOf("last_raid", -1L).forGetter(c -> c.lastRaid)
+			Codec.LONG.optionalFieldOf("last_raid", -1L).forGetter(c -> c.lastRaid),
+			net.minecraft.core.BlockPos.CODEC.listOf().optionalFieldOf("mastered", List.of())
+					.forGetter(c -> List.copyOf(c.mastered))
 	).apply(i, (deaths, festivalAt, alarmUntil, marketDay, earnedToday, earnedTotal, disaster, until, last, min,
-			max, ledger, servedAt, lastRaid) -> {
+			max, ledger, servedAt, lastRaid, mastered) -> {
 		Chronicle chronicle = new Chronicle(deaths, festivalAt, alarmUntil, marketDay, earnedToday, earnedTotal);
 		chronicle.disaster = disaster;
 		chronicle.disasterUntil = until;
@@ -38,6 +40,7 @@ public final class Chronicle {
 		chronicle.ledger = ledger.orElseGet(Budget.Ledger::new);
 		chronicle.servedAt = servedAt;
 		chronicle.lastRaid = lastRaid;
+		chronicle.mastered.addAll(mastered);
 		return chronicle;
 	}));
 
@@ -59,6 +62,8 @@ public final class Chronicle {
 	private long earnedTotal;
 	/** Quand le dernier raid a pris fin ; -1 : jamais. */
 	private long lastRaid = -1;
+	/** Les ateliers (par plaque) dont le bibliothécaire a fait des maîtres (MC-63). */
+	private final java.util.Set<net.minecraft.core.BlockPos> mastered = new java.util.HashSet<>();
 	/** Quand la taverne a servi pour la dernière fois (MC-58) ; -1 : jamais. */
 	private long servedAt = -1;
 	/** Les comptes de la ville : l'impôt, les salaires, les chantiers (MC-57). */
@@ -94,6 +99,14 @@ public final class Chronicle {
 	/** Les émeraudes que le marché a rapportées depuis la fondation. */
 	public long lastRaid() {
 		return lastRaid;
+	}
+
+	public boolean mastered(net.minecraft.core.BlockPos workshop) {
+		return mastered.contains(workshop);
+	}
+
+	public void master(net.minecraft.core.BlockPos workshop) {
+		mastered.add(workshop.immutable());
 	}
 
 	public void raided(long now) {

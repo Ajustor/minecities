@@ -100,6 +100,10 @@ public class StationScreen extends Screen {
 				: Component.translatable("screen.minecities.station.status." + station.status(),
 						Component.translatable(station.detail()));
 		graphics.text(font, status, left + 12, y, fine ? GOOD : BAD, false);
+		if (!station.mastery().isEmpty()) {
+			graphics.text(font, Component.translatable("screen.minecities.station.mastery." + station.mastery()),
+					left + 12, y + 12, station.mastery().equals("active") ? GOOD : FADED, false);
+		}
 		y = workersTop();
 		for (StationSnapshot.Worker worker : station.workers().stream().limit(MAX_WORKERS).toList()) {
 			graphics.text(font, Component.literal(worker.name()), left + 12, y, INK, false);

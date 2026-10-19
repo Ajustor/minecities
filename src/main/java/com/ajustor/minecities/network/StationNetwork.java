@@ -177,8 +177,12 @@ public final class StationNetwork {
 			}
 		}
 		boolean manager = viewer != null && town.filter(t -> t.canManage(viewer.getUUID())).isPresent();
+		// La maîtrise de l'atelier où sert ce poste (MC-63) ; rien hors d'un atelier déclaré.
+		String mastery = town.flatMap(t -> t.houses().stream().filter(h -> h.workstations().stream()
+						.anyMatch(w -> w.pos().equals(pos))).findFirst()
+				.map(h -> com.ajustor.minecities.town.Mastery.state(level, t, h.plaque()))).orElse("");
 		return Optional.of(new StationSnapshot(pos, state.getBlock().getDescriptionId(), job.serializedName(),
-				town.map(Town::name).orElse(""), status, detail, workers, sites, manager, mineState, ores));
+				town.map(Town::name).orElse(""), status, detail, workers, sites, manager, mineState, ores, mastery));
 	}
 
 	/** Un travailleur : ce qu'il fait, d'après ce qu'on voit de lui. */

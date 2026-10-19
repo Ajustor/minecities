@@ -100,8 +100,15 @@ public class CouncilScenes implements Scene {
 					return "pas de " + job.serializedName() + " : " + town.residents() + " ; " + town.houses();
 				}
 			}
-			return town.buildingLevel(RaidScenes.plaque(level, SMITHY).orElseThrow()) == 4 ? null
-					: "la forge n'est pas de niveau 4";
+			BlockPos forge = RaidScenes.plaque(level, SMITHY).orElseThrow();
+			if (town.buildingLevel(forge) != 4) {
+				return "la forge n'est pas de niveau 4";
+			}
+			// La maîtrise attend un livre du bibliothécaire (MC-63) ; la ville n'en a pas : on la lui donne.
+			String before = com.ajustor.minecities.town.Mastery.state(level, town, forge);
+			town.chronicle().master(forge);
+			return before.equals("library") && com.ajustor.minecities.town.Mastery.active(town, forge) ? null
+					: "maîtrise : " + before;
 		}));
 
 		// Le maître forgeron habille le garde de fer, de pied en cap ; le tanneur tanne.
