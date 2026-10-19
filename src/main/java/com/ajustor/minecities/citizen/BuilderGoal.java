@@ -51,6 +51,11 @@ class BuilderGoal extends WorkGoal {
 	private static final int CLIMB = 4;
 	/** Un bloc toutes les 4 ticks : cinq par seconde. */
 	private static final int PACE = 4;
+
+	/** Le temps entre deux blocs : moitié moins pour un maître (MC-63). */
+	private int pace() {
+		return master() ? PACE / 2 : PACE;
+	}
 	/** Il emporte au plus tant de chaque matériau par voyage. */
 	private static final int HAUL = 64;
 	/** Au grenier, il emporte les matériaux des 128 prochains blocs, tant qu'il a de la place. */
@@ -286,7 +291,7 @@ class BuilderGoal extends WorkGoal {
 		}
 		citizen.getNavigation().stop();
 		citizen.getLookControl().setLookAt(p.pos().getX() + 0.5, p.pos().getY() + 0.5, p.pos().getZ() + 0.5);
-		cooldown = PACE;
+		cooldown = pace();
 		EntityCompat.swing(citizen, InteractionHand.MAIN_HAND);
 		citizen.act(Action.BUILD, 10);
 		if (clearing) {
@@ -513,7 +518,7 @@ class BuilderGoal extends WorkGoal {
 			level().playSound(null, cell, SoundEvents.SCAFFOLDING_PLACE, SoundSource.BLOCKS, 1.0f, 1.0f);
 			construction.scaffolding().add(cell);
 			EntityCompat.swing(citizen, InteractionHand.MAIN_HAND);
-			cooldown = PACE;
+			cooldown = pace();
 			Towns.get(level().getServer()).changed();
 			return false;
 		}
@@ -643,7 +648,7 @@ class BuilderGoal extends WorkGoal {
 			EntityCompat.swing(citizen, InteractionHand.MAIN_HAND);
 		}
 		scaffolding.remove(top);
-		cooldown = PACE;
+		cooldown = pace();
 		Towns.get(level().getServer()).changed();
 	}
 
@@ -845,7 +850,7 @@ class BuilderGoal extends WorkGoal {
 		citizen.getLookControl().setLookAt(lender);
 		lender.getLookControl().setLookAt(citizen);
 		EntityCompat.swing(citizen, InteractionHand.MAIN_HAND);
-		cooldown = PACE;
+		cooldown = pace();
 	}
 
 	/**

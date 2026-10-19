@@ -50,6 +50,20 @@ final class Crafts {
 			new Craft(List.of(of(Items.STRING, 4)), new ItemStack(Items.WOOL.white()), 32),
 			new Craft(List.of(of(Items.STRING, 1), of(Items.HONEYCOMB, 1)), new ItemStack(Items.CANDLE), 8));
 
+	/** Le maître tisserand (MC-63) : des tapis blancs, puis teints dans les couleurs qu'on lui fournit. */
+	static final List<Craft> MASTER_WEAVER = masterWeaver();
+
+	private static List<Craft> masterWeaver() {
+		List<Craft> crafts = new java.util.ArrayList<>(WEAVER);
+		crafts.add(new Craft(List.of(of(Items.WOOL.white(), 2)), new ItemStack(Items.CARPET.white(), 3), 16));
+		for (String color : List.of("red", "blue", "green", "yellow", "black", "brown", "orange", "purple", "cyan",
+				"light_blue", "lime", "magenta", "pink", "gray", "light_gray")) {
+			crafts.add(new Craft(List.of(of(Items.CARPET.white(), 8), of(item(color + "_dye"), 1)),
+					new ItemStack(item(color + "_carpet"), 8), 8));
+		}
+		return List.copyOf(crafts);
+	}
+
 	/** Les essences de bois que le charpentier sait travailler. */
 	static final List<String> WOODS = List.of("oak", "spruce", "birch", "jungle", "acacia", "dark_oak", "mangrove",
 			"cherry", "pale_oak");

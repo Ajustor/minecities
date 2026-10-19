@@ -439,7 +439,7 @@ abstract class WorkGoal extends Goal {
 
 	/** Un atelier de niveau 4 (une demeure) : ses travailleurs y ont l'outillage du maître (brief 11). */
 	protected boolean master() {
-		return citizen.job().map(j -> town().buildingLevel(j.workshop())).orElse(1) >= 4;
+		return citizen.job().filter(j -> com.ajustor.minecities.town.Mastery.active(town(), j.workshop())).isPresent();
 	}
 
 	/**

@@ -216,8 +216,8 @@ public class CitizenEntity extends PathfinderMob {
 				net.minecraft.sounds.SoundEvents.UI_STONECUTTER_TAKE_RESULT, net.minecraft.core.particles.ParticleTypes.CRIT));
 		goalSelector.addGoal(4, new CraftGoal(this, Job.GLASSBLOWER, Crafts.GLASSBLOWER, 30, Action.COOK,
 				net.minecraft.sounds.SoundEvents.FURNACE_FIRE_CRACKLE, net.minecraft.core.particles.ParticleTypes.FLAME));
-		goalSelector.addGoal(4, new CraftGoal(this, Job.WEAVER, Crafts.WEAVER, 40, Action.COOK,
-				net.minecraft.sounds.SoundEvents.UI_LOOM_TAKE_RESULT));
+		goalSelector.addGoal(4, new CraftGoal(this, Job.WEAVER, this::weaving, 40, Action.COOK,
+				net.minecraft.sounds.SoundEvents.UI_LOOM_TAKE_RESULT, net.minecraft.core.particles.ParticleTypes.CRIT));
 		goalSelector.addGoal(4, new CraftGoal(this, Job.LIBRARIAN, Crafts.LIBRARIAN, 50, Action.TALK,
 				net.minecraft.sounds.SoundEvents.BOOK_PAGE_TURN, net.minecraft.core.particles.ParticleTypes.ENCHANT));
 		goalSelector.addGoal(4, new TavernerGoal(this));
@@ -668,6 +668,17 @@ public class CitizenEntity extends PathfinderMob {
 	}
 
 	/** A-t-il un besoin en souffrance dont la clé commence ainsi ? */
+	/** Ce que tisse le tisserand : maître (MC-63), il fait aussi des tapis, et les teint. */
+	private java.util.List<CraftGoal.Craft> weaving() {
+		return masterCraftsman() ? Crafts.MASTER_WEAVER : Crafts.WEAVER;
+	}
+
+	/** Est-il un maître : son atelier est de niveau 4, et le bibliothécaire y a prêté un livre (MC-63) ? */
+	public boolean masterCraftsman() {
+		return resident.flatMap(Resident::job).flatMap(j -> town().filter(t -> com.ajustor.minecities.town.Mastery
+				.active(t, j.workshop()))).isPresent();
+	}
+
 	/** Les matériaux qui lui manquent pour son chantier (ses plaintes « material:<objet> » récentes). */
 	public java.util.List<net.minecraft.world.item.Item> missingMaterials() {
 		long now = level().getGameTime();

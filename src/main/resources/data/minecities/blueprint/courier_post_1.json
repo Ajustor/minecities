@@ -1,0 +1,93 @@
+{
+ "kind": "workshop",
+ "layers": [
+  [
+   "....^....",
+   ".PPPPPPP.",
+   ".P_____P.",
+   ".P_____P.",
+   ".P_____P.",
+   ".P_____P.",
+   "OP_____P.",
+   ".PPPPPPP.",
+   "........."
+  ],
+  [
+   ".... ....",
+   ".PPPDPPP.",
+   ".Pt   CP.",
+   ".PC    P.",
+   ".P2    P.",
+   ".P     P.",
+   "OP    ¤P.",
+   ".PPPPPPP.",
+   "........."
+  ],
+  [
+   ".........",
+   ".PPPdPPP.",
+   ".P L  +P.",
+   "(P     P)",
+   ".E     E.",
+   "(P     P)",
+   "OP     P.",
+   ".PPEPPPP.",
+   "..=.=...."
+  ],
+  [
+   ".........",
+   ".PPPPPPP.",
+   ".P     P.",
+   ".P     P.",
+   ".P     P.",
+   ".P     P.",
+   "OP     P.",
+   ".PPPPPPP.",
+   "........."
+  ],
+  [
+   ".........",
+   "SSSSSSSSS",
+   "SSSSSSSSS",
+   "SSSSSSSSS",
+   "SSSSSSSSS",
+   "SSSSSSSSS",
+   "OSSSSSSSS",
+   "SSSSSSSSS",
+   "SSSSSSSSS"
+  ],
+  [
+   ".........",
+   ".........",
+   ".........",
+   ".........",
+   ".........",
+   ".........",
+   "*........",
+   ".........",
+   "........."
+  ]
+ ],
+ "key": {
+  " ": "minecraft:air",
+  "(": "{trapdoor}[facing=west,half=top,open=true]",
+  ")": "{trapdoor}[facing=east,half=top,open=true]",
+  "*": "minecraft:campfire[lit=true,signal_fire=false,facing=north]",
+  "+": "minecraft:potted_poppy",
+  "2": "minecraft:decorated_pot",
+  "=": "{trapdoor}[facing=south,half=top,open=true]",
+  "C": "minecraft:chest[facing=south]",
+  "D": "{door}[facing=north,half=lower,hinge=left]",
+  "E": "{fence}",
+  "L": "minecities:house_plaque[facing=south]",
+  "O": "{foundation}",
+  "P": "{frame}[axis=y]",
+  "S": "{roof_slab}[type=bottom]",
+  "^": "{steps}[facing=south,half=bottom,shape=straight]",
+  "_": "minecraft:coarse_dirt",
+  "d": "{door}[facing=north,half=upper,hinge=left]",
+  "t": "minecraft:torch",
+  "¤": "minecities:courier_station[facing=north]"
+ },
+ "upgrade": "minecities:courier_post_2"
+}

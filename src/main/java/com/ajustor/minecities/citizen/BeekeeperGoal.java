@@ -138,10 +138,11 @@ class BeekeeperGoal extends WorkGoal {
 		Optional<ItemStack> bottle = citizen.inventory().stream().filter(s -> s.is(Items.GLASS_BOTTLE)).findFirst();
 		if (bottle.isPresent()) {
 			bottle.get().shrink(1);
-			citizen.carry(new ItemStack(Items.HONEY_BOTTLE));
+			// Le maître apiculteur (MC-63) : double récolte.
+			citizen.carry(new ItemStack(Items.HONEY_BOTTLE, master() ? 2 : 1));
 			level().playSound(null, pos, SoundEvents.BOTTLE_FILL, SoundSource.BLOCKS, 1.0f, 1.0f);
 		} else {
-			citizen.carry(new ItemStack(Items.HONEYCOMB, 3));
+			citizen.carry(new ItemStack(Items.HONEYCOMB, master() ? 6 : 3));
 			citizen.getMainHandItem().hurtAndBreak(1, citizen, EquipmentSlot.MAINHAND);
 			level().playSound(null, pos, SoundEvents.BEEHIVE_SHEAR, SoundSource.BLOCKS, 1.0f, 1.0f);
 		}

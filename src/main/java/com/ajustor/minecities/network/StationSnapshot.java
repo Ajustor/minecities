@@ -27,7 +27,7 @@ import java.util.UUID;
  * @param ores   pour le mineur : ce que le puits peut encore donner, et ce qu'il a déjà donné
  */
 public record StationSnapshot(BlockPos pos, String block, String job, String town, String status, String detail,
-		List<Worker> workers, List<Site> sites, boolean manager, String mine, List<Ore> ores)
+		List<Worker> workers, List<Site> sites, boolean manager, String mine, List<Ore> ores, String mastery)
 		implements CustomPacketPayload {
 	public static final Type<StationSnapshot> TYPE = new Type<>(MineCities.id("open_station"));
 
@@ -79,6 +79,7 @@ public record StationSnapshot(BlockPos pos, String block, String job, String tow
 			buf.writeVarInt(ore.remaining());
 			buf.writeVarInt(ore.mined());
 		}
+		buf.writeUtf(s.mastery);
 	}
 
 	private static StationSnapshot read(RegistryFriendlyByteBuf buf) {
@@ -105,7 +106,8 @@ public record StationSnapshot(BlockPos pos, String block, String job, String tow
 		for (int i = 0; i < oreCount; i++) {
 			ores.add(new Ore(net.minecraft.world.item.ItemStack.STREAM_CODEC.decode(buf), buf.readVarInt(), buf.readVarInt()));
 		}
-		return new StationSnapshot(pos, block, job, town, status, detail, workers, sites, manager, mine, ores);
+		return new StationSnapshot(pos, block, job, town, status, detail, workers, sites, manager, mine, ores,
+				buf.readUtf());
 	}
 
 	@Override

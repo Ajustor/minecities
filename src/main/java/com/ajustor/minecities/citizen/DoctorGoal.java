@@ -202,6 +202,16 @@ class DoctorGoal extends WorkGoal {
 		}
 		level().sendParticles(ParticleTypes.HAPPY_VILLAGER, patient.getX(), patient.getY() + 1.2, patient.getZ(), 5,
 				0.3, 0.4, 0.3, 0);
+		if (master()) {
+			// Le maître médecin (MC-63) : les blessés autour du malade reçoivent aussi ses soins.
+			CitizenEntity treated = patient;
+			for (CitizenEntity other : level().getEntitiesOfClass(CitizenEntity.class, patient.getBoundingBox()
+					.inflate(4), c -> c != treated && c != citizen && c.isAlive() && c.getHealth() < c.getMaxHealth())) {
+				other.heal(CARE_AMOUNT);
+				level().sendParticles(ParticleTypes.HAPPY_VILLAGER, other.getX(), other.getY() + 1.2, other.getZ(), 3,
+						0.3, 0.4, 0.3, 0);
+			}
+		}
 		level().playSound(null, patient.blockPosition(), SoundEvents.BREWING_STAND_BREW, SoundSource.NEUTRAL, 0.4f,
 				1.6f);
 	}

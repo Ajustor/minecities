@@ -10,6 +10,7 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.Container;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.AbstractFurnaceBlock;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
@@ -47,8 +48,12 @@ class CookGoal extends WorkGoal {
 		if (job == Job.BAKER) {
 			return Cooking.BAKER;
 		}
-		return citizen.town().filter(t -> t.workers(Job.BAKER) > 0).isPresent() ? Cooking.COOK_WITH_BAKER
-				: Cooking.COOK;
+		boolean baker = citizen.town().filter(t -> t.workers(Job.BAKER) > 0).isPresent();
+		// Le maître cuisinier (MC-63) sait aussi le gâteau.
+		if (master()) {
+			return baker ? Cooking.MASTER_COOK_WITH_BAKER : Cooking.MASTER_COOK;
+		}
+		return baker ? Cooking.COOK_WITH_BAKER : Cooking.COOK;
 	}
 
 	@Override
@@ -140,6 +145,14 @@ class CookGoal extends WorkGoal {
 		}
 		timer = 0;
 		ItemStack dish = kitchen().cookOne(citizen.inventory());
+		if (dish.is(Items.CAKE)) {
+			// Le gâteau du maître cuisinier (MC-63) : les seaux de lait vides lui restent.
+			citizen.carry(new ItemStack(Items.BUCKET, 3));
+		}
+		if (master() && job == Job.BAKER) {
+			// Le maître boulanger : double fournée.
+			dish.setCount(Math.min(dish.getMaxStackSize(), dish.getCount() * 2));
+		}
 		if (dish.isEmpty()) {
 			light(false);
 			phase = Phase.DELIVER;

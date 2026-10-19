@@ -105,7 +105,9 @@ public final class Families {
 		if (taverner.isEmpty()) {
 			return new Growth("no_tavern", 0, 0);
 		}
-		int level = town.buildingLevel(taverner.get().workshop());
+		// Un maître tavernier (MC-63) : la taverne compte un niveau de plus.
+		int level = town.buildingLevel(taverner.get().workshop())
+				+ (Mastery.active(town, taverner.get().workshop()) ? 1 : 0);
 		if (town.freeBeds() <= 0) {
 			return new Growth("no_bed", 0, level);
 		}

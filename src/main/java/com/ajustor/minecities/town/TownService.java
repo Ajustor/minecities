@@ -530,6 +530,7 @@ public final class TownService {
 			}
 			Elections.tick(level, town, now);
 			Budget.tick(level, town);
+			Mastery.tick(level, town);
 			// Les bâtiments sont relevés à leur tour, quelques-uns à chaque passage.
 			Map<BlockPos, Long> surveyed = LAST_SURVEY.computeIfAbsent(town.id(), id -> new HashMap<>());
 			int budget = SURVEYS_PER_PASS;

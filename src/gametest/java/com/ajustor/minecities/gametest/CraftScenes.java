@@ -98,6 +98,27 @@ public class CraftScenes implements Scene {
 			Stock.insert(c, new ItemStack(Items.AMETHYST_SHARD));
 			return null;
 		}));
+		// Le bibliothécaire prête un livre du grenier à l'atelier de niveau 4 (MC-63) : celui du joaillier,
+		// tenu pour une demeure bâtie par la ville. Le livre est consommé.
+		BlockPos jewelry = stage.compute(server -> {
+			Town town = town(server);
+			com.ajustor.minecities.build.Construction built = com.ajustor.minecities.build.Construction.order(
+					com.ajustor.minecities.build.Blueprints.get(server, net.minecraft.resources.Identifier
+							.fromNamespaceAndPath("minecities", "jeweler_workshop_4")).orElseThrow(),
+					com.ajustor.minecities.build.BuildStyle.PLAINS, origin(0), net.minecraft.world.level.block.Rotation.NONE);
+			built.finish();
+			town.order(built);
+			if (server.overworld().getBlockEntity(HALL) instanceof Container hall) {
+				Stock.insert(hall, new ItemStack(Items.BOOK));
+			}
+			return town.residents().values().stream().flatMap(r -> r.job().stream()).filter(j -> j.job() == Job.JEWELER)
+					.findFirst().orElseThrow().workshop();
+		});
+		waitOrExplain(stage, server -> com.ajustor.minecities.town.Mastery.active(town(server), jewelry)
+				&& server.overworld().getBlockEntity(HALL) instanceof Container hall
+				&& Stock.count(hall, st -> st.is(Items.BOOK)) == 0, 400, "le bibliothécaire n'a pas prêté de livre",
+				server -> "niveau " + town(server).buildingLevel(jewelry) + ", état "
+						+ com.ajustor.minecities.town.Mastery.state(server.overworld(), town(server), jewelry) + " ;");
 		stage.look(6, Y + 16, 2, 6, Y, -16);
 		stage.client(mc -> hideGui(mc, true));
 		stage.waitTicks(20);

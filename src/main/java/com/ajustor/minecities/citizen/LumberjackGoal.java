@@ -184,6 +184,16 @@ class LumberjackGoal extends WorkGoal {
 			axe.hurtAndBreak(1, citizen, EquipmentSlot.MAINHAND);
 		}
 		replant(base, species);
+		if (master()) {
+			// Le maître bûcheron (MC-63) : une seconde pousse, à côté.
+			for (net.minecraft.core.Direction side : net.minecraft.core.Direction.Plane.HORIZONTAL) {
+				BlockPos next = base.relative(side, 2);
+				if (level().getBlockState(next).isAir()) {
+					replant(next, species);
+					break;
+				}
+			}
+		}
 	}
 
 	/** Une pousse au pied de l'arbre abattu : de la même essence si possible. */
