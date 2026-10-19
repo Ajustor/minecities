@@ -285,6 +285,9 @@ public class TownHallScreen extends Screen {
 	/** L'onglet Élection : ouvrir l'élection, signer la pétition, se porter candidat, voter. */
 	private void electionWidgets() {
 		TownSnapshot.Ballot ballot = town.ballot();
+		if (!town.council().elections()) {
+			return;
+		}
 		String rank = town.members().rank();
 		boolean member = !rank.equals("visitor");
 		switch (ballot.phase()) {
@@ -708,6 +711,10 @@ public class TownHallScreen extends Screen {
 		int y = top + 58;
 		line(graphics, Component.translatable("screen.minecities.council.mayor", town.council().mayor()), y, INK);
 		y += 14;
+		if (!town.council().elections()) {
+			line(graphics, Component.translatable("screen.minecities.election.disabled"), y, FADED);
+			return;
+		}
 		if (ballot.termIn() >= 0) {
 			line(graphics, Component.translatable("screen.minecities.election.term", minutes(ballot.termIn())), y, FADED);
 			y += 14;

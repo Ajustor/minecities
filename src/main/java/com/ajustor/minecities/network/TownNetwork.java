@@ -286,7 +286,7 @@ public final class TownNetwork {
 		return new TownSnapshot.Council(town.mayorName(), deputies, decrees, decreed, partners, open,
 				com.ajustor.minecities.McConfig.get().budget, ledger.rate().serializedName(), ledger.rate().emeralds(),
 				ledger.taxes(), ledger.wages(), ledger.works(), com.ajustor.minecities.town.Budget.inTaxBox(level, town),
-				towns, offered, viewer != null && town.mayor().equals(viewer.getUUID()));
+				towns, offered, viewer != null && town.mayor().equals(viewer.getUUID()), !town.election().disabled());
 	}
 
 	public static void act(ServerPlayer player, TownActionPayload payload) {
@@ -351,6 +351,8 @@ public final class TownNetwork {
 		} else if ((action.equals("deputy.add") || action.equals("deputy.remove")) && mayor) {
 			decided = com.ajustor.minecities.town.Mayoralty.deputy(level.getServer(), town, payload.request(), targetName,
 					action.equals("deputy.add"));
+		} else if (action.equals("elections.toggle") && mayor) {
+			com.ajustor.minecities.town.Elections.toggle(level, town);
 		} else if (action.equals("transfer") && mayor) {
 			decided = com.ajustor.minecities.town.Mayoralty.transfer(level.getServer(), town, payload.request(), targetName);
 		} else if (action.startsWith("trade:") && town.canManage(player.getUUID())) {

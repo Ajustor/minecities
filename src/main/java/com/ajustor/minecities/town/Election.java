@@ -33,7 +33,8 @@ public final class Election {
 			Codec.unboundedMap(UUIDUtil.STRING_CODEC, UUIDUtil.CODEC).optionalFieldOf("votes", Map.of())
 					.forGetter(e -> e.votes),
 			Codec.STRING.optionalFieldOf("last_winner", "").forGetter(e -> e.lastWinner),
-			Codec.INT.optionalFieldOf("last_votes", 0).forGetter(e -> e.lastVotes)
+			Codec.INT.optionalFieldOf("last_votes", 0).forGetter(e -> e.lastVotes),
+			Codec.BOOL.optionalFieldOf("disabled", false).forGetter(e -> e.disabled)
 	).apply(i, Election::new));
 
 	/** Où en est l'élection. */
@@ -68,6 +69,31 @@ public final class Election {
 	private final Map<UUID, UUID> votes;
 	private String lastWinner;
 	private int lastVotes;
+	/** Le maire a coupé les élections de sa ville (MC-91) : aucune ne s'ouvre, il reste en place. */
+	private boolean disabled;
+
+	public boolean disabled() {
+		return disabled;
+	}
+
+	/** Coupe ou rétablit les élections ; couper annule le scrutin en cours. Renvoie vrai si elles sont coupées. */
+	public boolean toggleDisabled() {
+		disabled = !disabled;
+		if (disabled) {
+			phase = Phase.NONE;
+			petition.clear();
+			candidates.clear();
+			votes.clear();
+			round = 1;
+		}
+		return disabled;
+	}
+
+	private Election(long termEnds, long lastElection, List<UUID> petition, String phase, long phaseEnds, int round,
+			Map<UUID, String> candidates, Map<UUID, UUID> votes, String lastWinner, int lastVotes, boolean disabled) {
+		this(termEnds, lastElection, petition, phase, phaseEnds, round, candidates, votes, lastWinner, lastVotes);
+		this.disabled = disabled;
+	}
 
 	private Election(long termEnds, long lastElection, List<UUID> petition, String phase, long phaseEnds, int round,
 			Map<UUID, String> candidates, Map<UUID, UUID> votes, String lastWinner, int lastVotes) {

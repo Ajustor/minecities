@@ -27,7 +27,7 @@ public final class Elections {
 	/** Pourquoi on ne peut pas faire ce qu'on demande. */
 	public enum Refusal {
 		NOT_MAYOR, NOT_MEMBER, MAYOR, RUNNING, NOT_RUNNING, TOO_SOON, SIGNED, CANDIDATE, NOT_CANDIDACY, NOT_VOTING,
-		VOTED, NOT_CANDIDATE;
+		VOTED, NOT_CANDIDATE, DISABLED;
 
 		public String translationKey() {
 			return "message.minecities.election.refused." + name().toLowerCase(java.util.Locale.ROOT);
@@ -71,6 +71,9 @@ public final class Elections {
 	public static Optional<Refusal> sign(ServerLevel level, Town town, ServerPlayer player) {
 		UUID id = player.getUUID();
 		Election election = town.election();
+		if (election.disabled()) {
+			return Optional.of(Refusal.DISABLED);
+		}
 		if (!town.isMember(id)) {
 			return Optional.of(Refusal.NOT_MEMBER);
 		}
@@ -135,6 +138,10 @@ public final class Elections {
 	/** Les échéances : fin du mandat, fin des candidatures, fin du vote. */
 	public static void tick(ServerLevel level, Town town, long now) {
 		Election election = town.election();
+		// Élections coupées (MC-91) : le maire reste, aucun mandat ne court.
+		if (election.disabled()) {
+			return;
+		}
 		int termDays = McConfig.get().termDays;
 		if (election.termEnds() == 0 && termDays > 0) {
 			// Une ville d'avant les élections, ou une ville nouvelle : son mandat commence maintenant.
@@ -172,6 +179,9 @@ public final class Elections {
 	/** Ouvre l'élection, si rien ne l'empêche ; seul joueur de sa ville, le maire est réélu d'office. */
 	private static Optional<Refusal> open(ServerLevel level, Town town, long now, boolean early) {
 		Election election = town.election();
+		if (election.disabled()) {
+			return Optional.of(Refusal.DISABLED);
+		}
 		if (election.phase() != Election.Phase.NONE) {
 			return Optional.of(Refusal.RUNNING);
 		}
@@ -254,6 +264,20 @@ public final class Elections {
 	}
 
 	/** Prévient les joueurs de la ville connectés. */
+	/** Le maire coupe ou rétablit les élections de sa ville (MC-91) ; un scrutin en cours est annulé. */
+	public static void toggle(ServerLevel level, Town town) {
+		boolean running = town.election().phase() != Election.Phase.NONE;
+		boolean disabled = town.election().toggleDisabled();
+		if (!disabled) {
+			// Rétablies : le mandat repart d'aujourd'hui.
+			town.election().setTermEnds(level.getGameTime() + McConfig.get().termDays * DAY);
+		}
+		Towns.get(level.getServer()).changed();
+		announce(level.getServer(), town, Component.translatable(disabled
+				? running ? "message.minecities.election.disabled.cancelled" : "message.minecities.election.disabled"
+				: "message.minecities.election.enabled", town.mayorName()));
+	}
+
 	public static void announce(MinecraftServer server, Town town, Component message) {
 		for (ServerPlayer player : server.getPlayerList().getPlayers()) {
 			if (town.isMember(player.getUUID())) {
