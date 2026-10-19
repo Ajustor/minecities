@@ -188,7 +188,8 @@ class CraftGoal extends WorkGoal {
 			return;
 		}
 		citizen.act(gesture, 10);
-		if (++timer < workTime) {
+		// Un maître (MC-63) travaille deux fois plus vite.
+		if (++timer < (master() ? workTime / 2 : workTime)) {
 			if (timer % 10 == 0) {
 				level().sendParticles(particle, station.getX() + 0.5, station.getY() + 1.1, station.getZ() + 0.5, 3,
 						0.2, 0.1, 0.2, 0.02);

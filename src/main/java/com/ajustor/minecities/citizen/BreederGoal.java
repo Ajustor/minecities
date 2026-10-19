@@ -270,6 +270,18 @@ class BreederGoal extends WorkGoal {
 		// Deux bêtes en amour ne se cherchent qu'à huit blocs : si l'autre est plus loin dans le pré, elles
 		// marchent l'une vers l'autre, sinon le blé est perdu quand l'amour passe.
 		Animal fed = target;
+		if (master()) {
+			// Le maître éleveur (MC-63) : quand le couple est formé, un second petit naît avec le premier.
+			herd().stream().filter(a -> a != fed && a.getType() == fed.getType() && a.isInLove()
+					&& a.distanceToSqr(fed) <= 8 * 8).findFirst().ifPresent(partner -> {
+				net.minecraft.world.entity.AgeableMob baby = fed.getBreedOffspring(level(), partner);
+				if (baby != null) {
+					baby.setBaby(true);
+					baby.snapTo(fed.getX(), fed.getY(), fed.getZ(), 0, 0);
+					level().addFreshEntity(baby);
+				}
+			});
+		}
 		herd().stream().filter(a -> a != fed && a.getType() == fed.getType() && a.isInLove())
 				.min(Comparator.comparingDouble(fed::distanceToSqr))
 				.filter(partner -> partner.distanceToSqr(fed) > 3 * 3)

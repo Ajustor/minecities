@@ -25,6 +25,11 @@ import java.util.UUID;
 class CourierGoal extends WorkGoal {
 	/** Il porte au plus une pile par livraison. */
 	private static final int LOAD = 64;
+
+	/** Ce qu'il porte d'un voyage : le double pour un maître (MC-63). */
+	private int load() {
+		return master() ? LOAD * 2 : LOAD;
+	}
 	/** Un atelier qui a moins que ça de ses matières, il le regarnit. */
 	private static final int STOCKED = 16;
 
@@ -89,7 +94,7 @@ class CourierGoal extends WorkGoal {
 		}
 		if (goTo(source.get())) {
 			container(source.get()).ifPresent(c -> {
-				ItemStack taken = Stock.take(c, s -> s.is(item), Math.min(LOAD, customer.get().wantedCount()));
+				ItemStack taken = Stock.take(c, s -> s.is(item), Math.min(load(), customer.get().wantedCount()));
 				if (!taken.isEmpty()) {
 					cargo = item;
 					stow();
@@ -175,7 +180,7 @@ class CourierGoal extends WorkGoal {
 					}
 					Item item = stack.getItem();
 					BlockPos to = com.ajustor.minecities.town.Storage.depot(level(), town, stack);
-					return Optional.of(new Haul(chest, s -> s.is(item), LOAD, to));
+					return Optional.of(new Haul(chest, s -> s.is(item), load(), to));
 				}
 			}
 		}
@@ -192,7 +197,7 @@ class CourierGoal extends WorkGoal {
 				}
 				Optional<BlockPos> source = com.ajustor.minecities.town.Storage.find(level(), town, inputs.get());
 				if (source.isPresent() && !source.get().equals(chest)) {
-					return Optional.of(new Haul(source.get(), inputs.get(), LOAD / 2, chest));
+					return Optional.of(new Haul(source.get(), inputs.get(), load() / 2, chest));
 				}
 			}
 		}

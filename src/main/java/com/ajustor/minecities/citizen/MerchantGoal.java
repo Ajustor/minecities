@@ -234,6 +234,10 @@ class MerchantGoal extends WorkGoal {
 		} else if (selling != null) {
 			int emeralds = Market.value(selling).map(v -> v * sellingCount)
 					.orElseGet(() -> Market.emeralds(sellingCount, Market.rate(selling).orElse(sellingCount + 1)));
+			if (master()) {
+				// Le maître marchand (MC-63) : un quart de mieux.
+				emeralds += emeralds / 4;
+			}
 			citizen.carry(new ItemStack(Items.EMERALD, emeralds));
 			town().chronicle().earn(level().getGameTime(), emeralds);
 			citizen.say("sold", Component.translatable("speech.minecities.sold", sellingCount,

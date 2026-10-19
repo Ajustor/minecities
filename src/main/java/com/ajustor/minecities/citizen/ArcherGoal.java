@@ -153,7 +153,10 @@ class ArcherGoal extends WorkGoal {
 		level().addFreshEntity(arrow);
 		level().playSound(null, citizen.blockPosition(), SoundEvents.ARROW_SHOOT, SoundSource.NEUTRAL, 1.0f, 1.0f);
 		EntityCompat.swing(citizen, InteractionHand.MAIN_HAND);
-		arrows.shrink(1);
+		// Le maître archer (MC-63) : une flèche sur quatre lui revient.
+		if (!master() || citizen.getRandom().nextInt(4) != 0) {
+			arrows.shrink(1);
+		}
 		bow.hurtAndBreak(1, citizen, EquipmentSlot.MAINHAND);
 	}
 

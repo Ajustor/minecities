@@ -29,11 +29,17 @@ final class Cooking {
 			Items.KELP, Items.DRIED_KELP);
 
 	/** Un plat : ses ingrédients, ce qu'il donne, et s'il sort du four du boulanger. */
-	record Recipe(Map<Item, Integer> ingredients, Item dish, int count, boolean bakery) {
+	record Recipe(Map<Item, Integer> ingredients, Item dish, int count, boolean bakery, boolean master) {
+		Recipe(Map<Item, Integer> ingredients, Item dish, int count, boolean bakery) {
+			this(ingredients, dish, count, bakery, false);
+		}
 	}
 
 	/** Les plats, du plus recherché au plus simple. */
 	static final List<Recipe> RECIPES = List.of(
+			// Le gâteau, du seul maître cuisinier (MC-63).
+			new Recipe(ordered(Items.MILK_BUCKET, 3, Items.SUGAR, 2, Items.EGG, 1, Items.WHEAT, 3), Items.CAKE, 1,
+					false, true),
 			new Recipe(ordered(Items.RABBIT, 1, Items.CARROT, 1, Items.POTATO, 1, Items.BROWN_MUSHROOM, 1, Items.BOWL, 1),
 					Items.RABBIT_STEW, 1, false),
 			new Recipe(ordered(Items.PUMPKIN, 1, Items.SUGAR, 1, Items.EGG, 1), Items.PUMPKIN_PIE, 1, true),
@@ -47,6 +53,9 @@ final class Cooking {
 
 	/** Le cuisinier seul : il fait tout. */
 	static final Cooking COOK = new Cooking(true, true, true);
+	/** Le maître cuisinier : de même, et le gâteau. */
+	static final Cooking MASTER_COOK = new Cooking(true, true, true, true);
+	static final Cooking MASTER_COOK_WITH_BAKER = new Cooking(true, true, false, true);
 	/** Le cuisinier quand la ville a un boulanger : viandes, poissons, soupes et ragoûts. */
 	static final Cooking COOK_WITH_BAKER = new Cooking(true, true, false);
 	/** Le boulanger : pain, biscuits, tartes. */
@@ -55,11 +64,17 @@ final class Cooking {
 	private final boolean smoking;
 	private final boolean kitchen;
 	private final boolean bakery;
+	private final boolean master;
 
 	private Cooking(boolean smoking, boolean kitchen, boolean bakery) {
+		this(smoking, kitchen, bakery, false);
+	}
+
+	private Cooking(boolean smoking, boolean kitchen, boolean bakery, boolean master) {
 		this.smoking = smoking;
 		this.kitchen = kitchen;
 		this.bakery = bakery;
+		this.master = master;
 	}
 
 	private static Map<Item, Integer> ordered(Object... pairs) {
@@ -71,7 +86,7 @@ final class Cooking {
 	}
 
 	private boolean makes(Recipe recipe) {
-		return recipe.bakery() ? bakery : kitchen;
+		return (!recipe.master() || master) && (recipe.bakery() ? bakery : kitchen);
 	}
 
 	/** Ce qu'on emporte du grenier : ce qui se cuit, et les ingrédients de ses plats. */
