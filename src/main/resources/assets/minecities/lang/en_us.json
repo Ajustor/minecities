@@ -172,6 +172,7 @@
   "screen.minecities.growth.unhappy": "Growth: the town isn't happy enough to draw people",
   "screen.minecities.jobs": "Jobs: %s filled out of %s workstations",
   "screen.minecities.meals": "Granary: %s food items",
+  "screen.minecities.meals.days": "Granary: %s food portions, about %s day(s)",
   "screen.minecities.next": "Next tier: %s",
   "screen.minecities.next.needs": "Population %s / %s, houses %s / %s",
   "screen.minecities.pending": "%s marriage request(s) await your decision (Registry tab).",

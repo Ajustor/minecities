@@ -172,6 +172,7 @@
   "screen.minecities.growth.unhappy": "Croissance : la ville n'est pas assez heureuse pour attirer du monde",
   "screen.minecities.jobs": "Emplois : %s occupés sur %s postes",
   "screen.minecities.meals": "Grenier : %s portions de nourriture",
+  "screen.minecities.meals.days": "Grenier : %s portions de nourriture, environ %s jour(s)",
   "screen.minecities.next": "Prochain palier : %s",
   "screen.minecities.next.needs": "Population %s / %s, maisons %s / %s",
   "screen.minecities.pending": "%s demande(s) de mariage attendent votre décision (onglet Registre).",
