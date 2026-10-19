@@ -166,6 +166,75 @@ def citizen_skin(index):
     return img
 
 
+def bandit_skin():
+    """Le bandit (MC-80) : capuche sombre, foulard rouge sur le nez, gilet de cuir, bottes."""
+    rng = random.Random(80)
+    skin = hexc("#b98a66")
+    hood = hexc("#3d3631")
+    scarf = hexc("#8e2a24")
+    shirt = hexc("#2f2a26")
+    vest = hexc("#6a4b2f")
+    pants = hexc("#3a3530")
+    boots = hexc("#24190f")
+    img = Image.new("RGBA", (64, 64), (0, 0, 0, 0))
+
+    # La tête : la peau, des yeux sombres et durs, le foulard du nez au menton.
+    paint_box(img, rng, HEAD, skin, 0.03)
+    fx, fy, _, _ = HEAD["front"]
+    for ex in (1, 5):
+        img.putpixel((fx + ex, fy + 3), hexc("#f0ece4"))
+        img.putpixel((fx + ex + 1, fy + 3), hexc("#2a1d14"))
+    for ex in (1, 2, 5, 6):
+        img.putpixel((fx + ex, fy + 2), shade(hood, 0.9))
+    for name in ("front", "right", "left", "back"):
+        x, y, w, h = HEAD[name]
+        fill(img, rng, x, y + 4, w, 4, scarf, 0.08)
+    # Le nœud du foulard, à la nuque.
+    x, y, w, h = HEAD["back"]
+    fill(img, rng, x + 3, y + 4, 2, 3, shade(scarf, 0.8))
+    # La capuche : la surcouche, sauf le visage.
+    for name in ("top", "back", "right", "left"):
+        face(img, rng, HAT[name], hood, 0.1)
+    x, y, w, h = HAT["front"]
+    fill(img, rng, x, y, w, 2, hood, 0.1)
+    fill(img, rng, x, y + 2, 1, 6, hood, 0.1)
+    fill(img, rng, x + 7, y + 2, 1, 6, hood, 0.1)
+
+    # Le corps : chemise sombre, gilet de cuir ouvert, ceinture à boucle.
+    paint_box(img, rng, BODY, shirt)
+    for name in ("front", "back", "right", "left"):
+        x, y, w, h = BODY[name]
+        fill(img, rng, x, y, w, 10, vest, 0.06)
+        fill(img, rng, x, y + 9, w, 1, boots, 0.04)
+    x, y, w, h = BODY["front"]
+    fill(img, rng, x + 3, y, 2, 9, shirt)
+    img.putpixel((x + 3, y + 9), hexc("#c9a74a"))
+    img.putpixel((x + 4, y + 9), hexc("#c9a74a"))
+    # La cape de la capuche tombe sur les épaules (surcouche du corps, en haut).
+    for name in ("back", "right", "left"):
+        x, y, w, h = JACKET[name]
+        fill(img, rng, x, y, w, 3, hood, 0.1)
+
+    # Les bras : manches sombres, brassards de cuir, mains.
+    for arm in (RIGHT_ARM, LEFT_ARM):
+        paint_box(img, rng, arm, shirt)
+        for name in ("front", "back", "right", "left"):
+            x, y, w, h = arm[name]
+            fill(img, rng, x, y + 6, w, 4, vest, 0.06)
+            fill(img, rng, x, y + 10, w, 2, skin, 0.03)
+        face(img, rng, arm["bottom"], skin, 0.03)
+        face(img, rng, arm["top"], hood, 0.1)
+
+    # Les jambes : pantalon, hautes bottes.
+    for leg in (RIGHT_LEG, LEFT_LEG):
+        paint_box(img, rng, leg, pants)
+        for name in ("front", "back", "right", "left"):
+            x, y, w, h = leg[name]
+            fill(img, rng, x, y + 6, w, 6, boots, 0.05)
+        face(img, rng, leg["bottom"], boots, 0.04)
+    return img
+
+
 # Blocs 16x16
 
 OAK = hexc("#a2824e")
@@ -568,6 +637,7 @@ def save(img, path):
 def main():
     for i in range(len(OUTFITS)):
         save(citizen_skin(i), TEXTURES / f"entity/citizen/citizen_{i}.png")
+    save(bandit_skin(), TEXTURES / "entity/bandit.png")
     save(house_plaque(), TEXTURES / "block/house_plaque.png")
     save(house_plaque("valid"), TEXTURES / "block/house_plaque_valid.png")
     save(house_plaque("invalid"), TEXTURES / "block/house_plaque_invalid.png")

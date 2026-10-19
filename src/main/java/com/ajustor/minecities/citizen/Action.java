@@ -29,5 +29,7 @@ public enum Action {
 	/** Soigne un patient, les mains posées sur lui. */
 	HEAL,
 	/** Danse à la fête. */
-	DANCE
+	DANCE,
+	/** À terre, mis hors de combat (un membre de caravane, MC-80). */
+	DOWN
 }

@@ -10,6 +10,11 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.phys.Vec3;
 
 /**
  * Le chariot d'une caravane (MC-80) : la part visible de sa cargaison, tirée par un cheval. Il n'existe
@@ -42,6 +47,15 @@ public class CaravanCart extends Entity {
 
 	public void setCamping(boolean camping) {
 		entityData.set(CAMPING, camping);
+	}
+
+	/** Un joueur fouille le chariot : possible seulement quand plus personne ne le défend. */
+	@Override
+	public InteractionResult interact(Player player, InteractionHand hand, Vec3 location) {
+		if (player instanceof ServerPlayer serverPlayer) {
+			Caravans.loot(serverPlayer, this);
+		}
+		return InteractionResult.SUCCESS;
 	}
 
 	@Override

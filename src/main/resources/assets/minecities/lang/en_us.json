@@ -944,5 +944,16 @@
   "screen.minecities.stall": "Stall from %s",
   "message.minecities.stall.opened": "%s, from %s, opens a stall at the edge of %s: %s.",
   "message.minecities.stall.closed": "%s packs up the stall and heads home: %s emeralds to the granary, with the unsold goods.",
-  "message.minecities.stall.empty": "%s has nothing left to sell."
+  "message.minecities.stall.empty": "%s has nothing left to sell.",
+  "entity.minecities.bandit": "Bandit",
+  "entity.minecities.escort": "%s Guard",
+  "container.minecities.caravan": "Caravan Wagon",
+  "message.minecities.caravan.ambush": "Ambush! Bandits attack the caravan from %s on its way to %s.",
+  "message.minecities.caravan.repelled": "The caravan from %s to %s fought off the bandits.",
+  "message.minecities.caravan.plundered": "Bandits plundered the caravan from %s to %s: %s lost.",
+  "message.minecities.caravan.lost": "The caravan from %s to %s is lost: its whole crew was killed.",
+  "message.minecities.caravan.guarded": "The wagon is defended: nothing to take while a defender still stands.",
+  "message.minecities.caravan.thief": "%s plundered one of the town's caravans and was found out: outlaw for three days.",
+  "message.minecities.caravan.outlaw": "You were seen: you are an outlaw in both towns for three days. Their guards will attack you.",
+  "message.minecities.stall.outlaw": "%s does not trade with caravan robbers."
 }

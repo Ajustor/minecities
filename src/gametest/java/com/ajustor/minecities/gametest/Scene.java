@@ -12,7 +12,7 @@ public interface Scene {
 	/** Toutes les scènes, dans l'ordre où elles se jouent. */
 	List<Scene> ALL = List.of(new DataScenes(), new CityScenes(), new WorkScenes(), new CountrysideScenes(), new VillageScenes(),
 			new BuildScenes(), new FamilyScenes(), new RaidScenes(), new LifeScenes(), new MarketScenes(),
-			new RobustScenes(), new IndustryScenes(), new CraftScenes(), new CouncilScenes(), new StyleScenes(),
+			new RobustScenes(), new IndustryScenes(), new CraftScenes(), new CouncilScenes(), new CaravanScenes(), new StyleScenes(),
 			new LogisticsScenes(), new GuideScenes(), new StructureScenes(), new PlanScenes(),
 			new JadeScenes(), new ResidentScenes(), new ElectionScenes(),
 			new MonumentScenes(), new HealthScenes(), new MapScenes(), new DisasterScenes(),

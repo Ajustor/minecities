@@ -51,10 +51,24 @@ public final class McEntities {
 					.updateInterval(20)
 					.build(CARAVAN_STALL_KEY));
 
+	private static final ResourceKey<EntityType<?>> BANDIT_KEY =
+			ResourceKey.create(Registries.ENTITY_TYPE, MineCities.id("bandit"));
+
+	/** Un bandit de grand chemin (MC-80), qui tend des embuscades aux caravanes. */
+	public static final EntityType<com.ajustor.minecities.caravan.Bandit> BANDIT = Registry.register(
+			BuiltInRegistries.ENTITY_TYPE, BANDIT_KEY,
+			EntityType.Builder.<com.ajustor.minecities.caravan.Bandit>of(com.ajustor.minecities.caravan.Bandit::new,
+							MobCategory.MONSTER)
+					.sized(0.6F, 1.95F)
+					.eyeHeight(1.62F)
+					.clientTrackingRange(8)
+					.build(BANDIT_KEY));
+
 	private McEntities() {
 	}
 
 	public static void register() {
 		FabricDefaultAttributeRegistry.register(CITIZEN, CitizenEntity.createAttributes());
+		FabricDefaultAttributeRegistry.register(BANDIT, com.ajustor.minecities.caravan.Bandit.createAttributes());
 	}
 }

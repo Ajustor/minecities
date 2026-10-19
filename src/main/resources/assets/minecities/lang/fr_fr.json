@@ -944,5 +944,16 @@
   "screen.minecities.stall": "Échoppe de %s",
   "message.minecities.stall.opened": "%s, de %s, ouvre son échoppe à l'entrée de %s : %s.",
   "message.minecities.stall.closed": "%s remballe son échoppe et rentre : %s émeraudes au grenier, avec les invendus.",
-  "message.minecities.stall.empty": "%s n'a plus rien à vendre."
+  "message.minecities.stall.empty": "%s n'a plus rien à vendre.",
+  "entity.minecities.bandit": "Bandit",
+  "entity.minecities.escort": "Garde de %s",
+  "container.minecities.caravan": "Chariot de caravane",
+  "message.minecities.caravan.ambush": "Embuscade ! Des bandits attaquent la caravane de %s en route vers %s.",
+  "message.minecities.caravan.repelled": "La caravane de %s vers %s a repoussé les bandits.",
+  "message.minecities.caravan.plundered": "Des bandits ont pillé la caravane de %s vers %s : %s perdus.",
+  "message.minecities.caravan.lost": "La caravane de %s vers %s est perdue : tout son équipage a été tué.",
+  "message.minecities.caravan.guarded": "Le chariot est défendu : rien à prendre tant qu'un défenseur tient debout.",
+  "message.minecities.caravan.thief": "%s a pillé une caravane de la ville, et on l'a su : hors-la-loi pour trois jours.",
+  "message.minecities.caravan.outlaw": "On vous a vu : vous êtes hors-la-loi dans les deux villes pour trois jours. Leurs gardes vous attaqueront.",
+  "message.minecities.stall.outlaw": "%s ne commerce pas avec les pilleurs de caravanes."
 }
