@@ -81,6 +81,8 @@ public final class TownCommands {
 		CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
 			dispatcher.register(root("minecities"));
 			dispatcher.register(root("ville"));
+			// En anglais, la même commande (MC-78).
+			dispatcher.register(root("town"));
 		});
 	}
 
