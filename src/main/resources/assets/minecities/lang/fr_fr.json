@@ -938,5 +938,11 @@
   "message.minecities.route.removed": "Point de passage retiré (il en reste %s).",
   "message.minecities.caravan.departed": "Une caravane quitte %s pour %s : %s.",
   "message.minecities.caravan.coming": "Une caravane de %s est en route vers %s : %s.",
-  "message.minecities.caravan.arrived": "La caravane de %s est arrivée à %s : %s au grenier."
+  "message.minecities.caravan.arrived": "La caravane de %s est arrivée à %s : %s au grenier.",
+  "entity.minecities.caravan_cart": "Chariot de caravane",
+  "entity.minecities.caravan_stall": "Échoppe de caravane",
+  "screen.minecities.stall": "Échoppe de %s",
+  "message.minecities.stall.opened": "%s, de %s, ouvre son échoppe à l'entrée de %s : %s.",
+  "message.minecities.stall.closed": "%s remballe son échoppe et rentre : %s émeraudes au grenier, avec les invendus.",
+  "message.minecities.stall.empty": "%s n'a plus rien à vendre."
 }

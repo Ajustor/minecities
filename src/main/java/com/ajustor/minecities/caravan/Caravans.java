@@ -43,7 +43,8 @@ import java.util.UUID;
  * Les caravanes du monde et les routes qui relient les villes (MC-80). Une caravane avance le jour,
  * campe la nuit ; elle ne prend corps (chariot, cheval, marchand) que lorsqu'un joueur est près d'elle,
  * et se contente sinon d'avancer sur le papier. À l'arrivée, sa cargaison entre au grenier de la ville
- * qui l'a achetée.
+ * qui l'a achetée, et le marchand monte une échoppe en bordure de la ville ({@link Stall}) pour vendre
+ * aux joueurs, une journée durant, des marchandises de sa ville.
  */
 public final class Caravans extends SavedData {
 	/** Son pas, en blocs par tick : celui d'un attelage au trot tranquille. */
@@ -54,19 +55,27 @@ public final class Caravans extends SavedData {
 	public static final String TAG = "minecities.caravan";
 	/** Une caravane par route, dans chaque sens, et par jour au plus. */
 	public static final long DAILY = 24000L;
+	/** Une échoppe reste ouverte un jour (moins si tout est vendu). */
+	public static final long STALL_TIME = 24000L;
+	/** L'échoppe s'installe à tant de blocs en deçà de la limite de la ville, et à côté de la route. */
+	private static final double EDGE = 4;
+	private static final double ROADSIDE = 3.5;
 
 	private static final Codec<Caravans> CODEC = RecordCodecBuilder.create(i -> i.group(
 			Caravan.CODEC.listOf().optionalFieldOf("active", List.of()).forGetter(c -> List.copyOf(c.active.values())),
 			Codec.unboundedMap(Codec.STRING, BlockPos.CODEC.listOf()).optionalFieldOf("waypoints", Map.of())
 					.forGetter(c -> c.waypoints),
 			Codec.unboundedMap(Codec.STRING, Codec.LONG).optionalFieldOf("departures", Map.of())
-					.forGetter(c -> c.departures)
+					.forGetter(c -> c.departures),
+			Stall.CODEC.listOf().optionalFieldOf("stalls", List.of()).forGetter(c -> List.copyOf(c.stalls.values()))
 	).apply(i, Caravans::new));
 	private static final SavedDataType<Caravans> TYPE = new SavedDataType<>(MineCities.id("caravans"), Caravans::new,
 			CODEC, DataFixTypes.SAVED_DATA_COMMAND_STORAGE);
 
 	/** Les membres visibles de chaque caravane : pas sauvegardés, recréés près des joueurs. */
 	private static final Map<UUID, Crew> CREWS = new HashMap<>();
+	/** De même, l'échoppe, le chariot dételé, le cheval et le marchand de chaque échoppe. */
+	private static final Map<UUID, StallCrew> STALL_CREWS = new HashMap<>();
 
 	/** Le chariot, le cheval et le marchand d'une caravane qui a pris corps. */
 	private record Crew(UUID cart, UUID horse, UUID merchant) {
@@ -75,7 +84,14 @@ public final class Caravans extends SavedData {
 		}
 	}
 
+	private record StallCrew(UUID stall, UUID cart, UUID horse, UUID merchant) {
+		boolean has(UUID id) {
+			return id.equals(stall) || id.equals(cart) || id.equals(horse) || id.equals(merchant);
+		}
+	}
+
 	private final Map<UUID, Caravan> active = new LinkedHashMap<>();
+	private final Map<UUID, Stall> stalls = new LinkedHashMap<>();
 	/** Les points de passage de chaque route (clé : les deux villes, la plus petite d'abord), dans ce sens. */
 	private final Map<String, List<BlockPos>> waypoints = new HashMap<>();
 	/** Le dernier départ dans chaque sens (clé : vendeur>acheteur). */
@@ -84,8 +100,10 @@ public final class Caravans extends SavedData {
 	public Caravans() {
 	}
 
-	private Caravans(List<Caravan> active, Map<String, List<BlockPos>> waypoints, Map<String, Long> departures) {
+	private Caravans(List<Caravan> active, Map<String, List<BlockPos>> waypoints, Map<String, Long> departures,
+			List<Stall> stalls) {
 		active.forEach(c -> this.active.put(c.id(), c));
+		stalls.forEach(st -> this.stalls.put(st.id(), st));
 		this.waypoints.putAll(waypoints);
 		this.departures.putAll(departures);
 	}
@@ -97,10 +115,14 @@ public final class Caravans extends SavedData {
 	public static void register() {
 		ServerTickEvents.END_SERVER_TICK.register(Caravans::tick);
 		ServerTickEvents.END_SERVER_TICK.register(RouteStaffItem::show);
-		ServerLifecycleEvents.SERVER_STOPPED.register(server -> CREWS.clear());
+		ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
+			CREWS.clear();
+			STALL_CREWS.clear();
+		});
 		// Un cheval ou un marchand de caravane relu d'une sauvegarde n'appartient plus à rien : il s'en va.
 		ServerEntityEvents.ENTITY_LOAD.register((entity, level) -> {
-			if (entity.entityTags().contains(TAG) && CREWS.values().stream().noneMatch(c -> c.has(entity.getUUID()))) {
+			if (entity.entityTags().contains(TAG) && CREWS.values().stream().noneMatch(c -> c.has(entity.getUUID()))
+					&& STALL_CREWS.values().stream().noneMatch(c -> c.has(entity.getUUID()))) {
 				entity.discard();
 			}
 		});
@@ -164,17 +186,24 @@ public final class Caravans extends SavedData {
 		return !onTheRoad && now - departures.getOrDefault(key, now - DAILY) >= DAILY;
 	}
 
-	/** Une caravane part, avec cette cargaison déjà payée. */
-	public Caravan depart(ServerLevel level, Town seller, Town buyer, List<ItemStack> cargo, String merchant) {
+	/**
+	 * Une caravane part, avec cette cargaison déjà payée, et ces marchandises que le marchand vendra à
+	 * son échoppe.
+	 */
+	public Caravan depart(ServerLevel level, Town seller, Town buyer, List<ItemStack> cargo, List<ItemStack> wares,
+			String merchant) {
 		long now = level.getGameTime();
-		Caravan caravan = Caravan.depart(seller.id(), buyer.id(), cargo, now, merchant, path(level, seller, buyer));
+		Caravan caravan = Caravan.depart(seller.id(), buyer.id(), cargo, wares, now, merchant,
+				path(level, seller, buyer));
+		List<ItemStack> load = new ArrayList<>(cargo);
+		load.addAll(wares);
 		active.put(caravan.id(), caravan);
 		departures.put(seller.id() + ">" + buyer.id(), now);
 		setDirty();
 		TownService.notify(level.getServer(), seller, Component.translatable("message.minecities.caravan.departed",
-				seller.name(), buyer.name(), describe(cargo)));
+				seller.name(), buyer.name(), describe(load)));
 		TownService.notify(level.getServer(), buyer, Component.translatable("message.minecities.caravan.coming",
-				seller.name(), buyer.name(), describe(cargo)));
+				seller.name(), buyer.name(), describe(load)));
 		return caravan;
 	}
 
@@ -194,11 +223,14 @@ public final class Caravans extends SavedData {
 
 	private static void tick(MinecraftServer server) {
 		Caravans caravans = get(server);
-		if (caravans.active.isEmpty() && CREWS.isEmpty()) {
+		if (caravans.active.isEmpty() && CREWS.isEmpty() && caravans.stalls.isEmpty() && STALL_CREWS.isEmpty()) {
 			return;
 		}
 		Towns towns = Towns.get(server);
 		boolean check = server.getTickCount() % 20 == 0;
+		if (check) {
+			caravans.tickStalls(server, towns);
+		}
 		for (Caravan caravan : List.copyOf(caravans.active.values())) {
 			Optional<Town> from = towns.byId(caravan.from());
 			Optional<Town> to = towns.byId(caravan.to());
@@ -245,14 +277,206 @@ public final class Caravans extends SavedData {
 				level.addFreshEntity(new ItemEntity(level, hall.getX() + 0.5, hall.getY() + 1, hall.getZ() + 2.5, rest));
 			}
 		}
-		Component message = Component.translatable("message.minecities.caravan.arrived", seller.name(), buyer.name(),
-				describe(caravan.cargo()));
-		TownService.notify(level.getServer(), seller, message);
-		TownService.notify(level.getServer(), buyer, message);
+		if (!caravan.cargo().isEmpty()) {
+			Component message = Component.translatable("message.minecities.caravan.arrived", seller.name(),
+					buyer.name(), describe(caravan.cargo()));
+			TownService.notify(level.getServer(), seller, message);
+			TownService.notify(level.getServer(), buyer, message);
+		}
+		if (!caravan.wares().isEmpty()) {
+			Stall stall = edge(level, caravan, buyer);
+			stalls.put(stall.id(), stall);
+			Component message = Component.translatable("message.minecities.stall.opened", caravan.merchant(),
+					seller.name(), buyer.name(), describe(caravan.wares()));
+			TownService.notify(level.getServer(), seller, message);
+			TownService.notify(level.getServer(), buyer, message);
+		}
 		level.playSound(null, buyer.hall(), net.minecraft.sounds.SoundEvents.WANDERING_TRADER_YES,
 				net.minecraft.sounds.SoundSource.NEUTRAL, 1.0f, 1.0f);
 		remove(level.getServer(), caravan);
 		return true;
+	}
+
+	// Les échoppes
+
+	/**
+	 * L'échoppe s'installe en bordure de la ville : en remontant la route depuis l'hôtel de ville, au
+	 * dernier point encore dans la ville (à quelques blocs de la limite), sur le bas-côté, le comptoir
+	 * tourné vers la route.
+	 */
+	private static Stall edge(ServerLevel level, Caravan caravan, Town buyer) {
+		List<BlockPos> path = caravan.path();
+		double length = Itinerary.length(path);
+		double s = Math.max(0, length - 12);
+		for (double back = length; back >= 0; back -= 2) {
+			if (!buyer.contains(level.dimension(), BlockPos.containing(Itinerary.at(path, back)))) {
+				s = Math.min(length, back + EDGE);
+				break;
+			}
+		}
+		Vec3 at = beside(path, s, ROADSIDE);
+		BlockPos ground = Itinerary.ground(level, (int) Math.floor(at.x), (int) Math.floor(at.z), (int) Math.floor(at.y));
+		return Stall.open(caravan, ground, Itinerary.yaw(path, s) - 90, level.getGameTime());
+	}
+
+	public List<Stall> stalls() {
+		return List.copyOf(stalls.values());
+	}
+
+	public Optional<Stall> stall(UUID id) {
+		return Optional.ofNullable(stalls.get(id));
+	}
+
+	/** Un joueur a acheté un lot de cette marchandise à l'échoppe. */
+	public void sold(UUID id, net.minecraft.world.item.Item item) {
+		Stall stall = stalls.get(id);
+		if (stall != null && stall.sell(item)) {
+			setDirty();
+		}
+	}
+
+	/** Un joueur s'adresse à l'échoppe : le troc s'ouvre (l'écran des villageois). */
+	public static void trade(ServerPlayer player, UUID id) {
+		MinecraftServer server = player.level().getServer();
+		Caravans caravans = get(server);
+		Stall stall = caravans.stalls.get(id);
+		if (stall == null) {
+			return;
+		}
+		if (!stall.hasWares()) {
+			player.sendSystemMessage(Component.translatable("message.minecities.stall.empty", stall.merchant()));
+			return;
+		}
+		String seller = Towns.get(server).byId(stall.from()).map(Town::name).orElse("?");
+		StallMerchant merchant = new StallMerchant(server, stall);
+		merchant.setTradingPlayer(player);
+		merchant.openTradingScreen(player, Component.translatable("screen.minecities.stall", seller), 0);
+	}
+
+	/** Chaque seconde : les échoppes prennent corps près des joueurs, et ferment au bout d'un jour. */
+	private void tickStalls(MinecraftServer server, Towns towns) {
+		for (Stall stall : List.copyOf(stalls.values())) {
+			Optional<Town> seller = towns.byId(stall.from());
+			Optional<Town> buyer = towns.byId(stall.to());
+			ServerLevel level = buyer.map(t -> server.getLevel(t.dimension())).orElse(null);
+			if (seller.isEmpty() || buyer.isEmpty() || level == null) {
+				// Une des villes a disparu : le marchand remballe sans rien rendre.
+				stalls.remove(stall.id());
+				disbandStall(server, stall.id());
+				setDirty();
+				continue;
+			}
+			if (level.getGameTime() - stall.opened() >= STALL_TIME || !stall.hasWares()) {
+				if (close(server, stall, seller.get())) {
+					continue;
+				}
+			}
+			embodyStall(level, stall);
+		}
+	}
+
+	/**
+	 * L'échoppe ferme : les émeraudes gagnées et ce qui reste repartent au grenier du vendeur (qui doit
+	 * être chargé, sinon on attend) ; vrai si c'est fait.
+	 */
+	private boolean close(MinecraftServer server, Stall stall, Town seller) {
+		ServerLevel home = server.getLevel(seller.dimension());
+		Optional<TownHallBlockEntity> granary = home == null ? Optional.empty() : TownService.granary(home, seller);
+		if (granary.isEmpty()) {
+			return false;
+		}
+		List<ItemStack> back = new ArrayList<>(stall.wares());
+		if (stall.earned() > 0) {
+			back.add(new ItemStack(net.minecraft.world.item.Items.EMERALD, stall.earned()));
+			seller.chronicle().earn(home.getGameTime(), stall.earned());
+		}
+		for (ItemStack goods : back) {
+			ItemStack rest = Stock.insert(granary.get(), goods.copy());
+			if (!rest.isEmpty()) {
+				BlockPos hall = seller.hall();
+				home.addFreshEntity(new ItemEntity(home, hall.getX() + 0.5, hall.getY() + 1, hall.getZ() + 2.5, rest));
+			}
+		}
+		TownService.notify(server, seller, Component.translatable("message.minecities.stall.closed", stall.merchant(),
+				stall.earned()));
+		stalls.remove(stall.id());
+		disbandStall(server, stall.id());
+		setDirty();
+		Towns.get(server).changed();
+		return true;
+	}
+
+	private static void embodyStall(ServerLevel level, Stall stall) {
+		Vec3 at = Vec3.atBottomCenterOf(stall.pos());
+		boolean seen = level.isLoaded(stall.pos()) && level.players().stream()
+				.anyMatch(p -> p.distanceToSqr(at.x, p.getY(), at.z) < VISIBLE * VISIBLE);
+		StallCrew crew = STALL_CREWS.get(stall.id());
+		if (seen && crew == null) {
+			CaravanStall booth = McEntities.CARAVAN_STALL.create(level, EntitySpawnReason.EVENT);
+			CaravanCart cart = McEntities.CARAVAN_CART.create(level, EntitySpawnReason.EVENT);
+			Horse horse = EntityTypes.HORSE.create(level, EntitySpawnReason.EVENT);
+			CitizenEntity merchant = McEntities.CITIZEN.create(level, EntitySpawnReason.EVENT);
+			if (booth == null || cart == null || horse == null || merchant == null) {
+				return;
+			}
+			float yaw = stall.yaw();
+			booth.snapTo(at.x, at.y, at.z, yaw, 0);
+			// Le chariot dételé à côté de l'échoppe, le long de la route ; le cheval devant lui.
+			Vec3 parked = local(at, yaw, -3.6, -1.2);
+			cart.snapTo(parked.x, at.y, parked.z, yaw + 90, 0);
+			Vec3 ahead = local(parked, yaw + 90, 0, 3.2);
+			horse.snapTo(ahead.x, at.y, ahead.z, yaw + 90, 0);
+			horse.setNoAi(true);
+			com.ajustor.minecities.compat.EntityCompat.invulnerable(horse);
+			horse.setPersistenceRequired();
+			horse.addTag(TAG);
+			// Le marchand derrière son comptoir.
+			Vec3 behind = local(at, yaw, 0, -0.75);
+			merchant.snapTo(behind.x, at.y, behind.z, yaw, 0);
+			merchant.setYHeadRot(yaw);
+			merchant.setYBodyRot(yaw);
+			merchant.travel(stall.merchant());
+			merchant.addTag(TAG);
+			STALL_CREWS.put(stall.id(), new StallCrew(booth.getUUID(), cart.getUUID(), horse.getUUID(),
+					merchant.getUUID()));
+			level.addFreshEntity(booth);
+			level.addFreshEntity(cart);
+			level.addFreshEntity(horse);
+			level.addFreshEntity(merchant);
+			crew = STALL_CREWS.get(stall.id());
+		} else if (!seen && crew != null) {
+			disbandStall(level.getServer(), stall.id());
+			return;
+		}
+		if (crew != null && level.getEntity(crew.stall()) instanceof CaravanStall booth) {
+			booth.show(stall.id(), stall.wares());
+		}
+	}
+
+	/** Un point donné en blocs dans le repère d'une entité de ce lacet (x vers sa gauche, z vers l'avant). */
+	static Vec3 local(Vec3 origin, double yaw, double x, double z) {
+		double r = Math.toRadians(yaw);
+		return origin.add(x * Math.cos(r) - z * Math.sin(r), 0, x * Math.sin(r) + z * Math.cos(r));
+	}
+
+	private static void disbandStall(MinecraftServer server, UUID stall) {
+		StallCrew crew = STALL_CREWS.remove(stall);
+		if (crew == null) {
+			return;
+		}
+		for (ServerLevel level : server.getAllLevels()) {
+			for (UUID id : new UUID[]{crew.stall(), crew.cart(), crew.horse(), crew.merchant()}) {
+				Entity entity = level.getEntity(id);
+				if (entity != null) {
+					entity.discard();
+				}
+			}
+		}
+	}
+
+	/** Le joueur voit-il cette échoppe ? (pour les scènes) */
+	public static boolean stallEmbodied(UUID stall) {
+		return STALL_CREWS.containsKey(stall);
 	}
 
 	/** Près d'un joueur, elle prend corps ; loin de tous, ses membres s'effacent. */
