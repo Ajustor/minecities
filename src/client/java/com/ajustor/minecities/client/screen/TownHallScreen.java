@@ -6,6 +6,7 @@ import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.core.BlockPos;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
@@ -116,10 +117,11 @@ public class TownHallScreen extends Screen {
 			x += 50;
 		}
 		addRenderableWidget(Button.builder(Component.translatable("screen.minecities.granary"),
-				b -> send("granary", TownActionPayload.NONE)).bounds(left + 10, top + HEIGHT - 26, 62, 18).build());
+				b -> send("granary", TownActionPayload.NONE)).tooltip(Tooltip.create(Component.translatable("screen.minecities.granary.tooltip")))
+				.bounds(left + 10, top + HEIGHT - 26, 62, 18).build());
 		addRenderableWidget(Button.builder(Component.translatable("screen.minecities.map"),
-				b -> minecraft.gui.setScreen(new TownMapScreen(town, this))).bounds(left + 76, top + HEIGHT - 26, 50, 18)
-				.build());
+				b -> minecraft.gui.setScreen(new TownMapScreen(town, this))).tooltip(Tooltip.create(Component.translatable("screen.minecities.map.tooltip")))
+				.bounds(left + 76, top + HEIGHT - 26, 50, 18).build());
 		switch (tab) {
 			case SUMMARY -> {
 				if (town.manager()) {
@@ -136,11 +138,13 @@ public class TownHallScreen extends Screen {
 				int y = top + 54;
 				for (TownSnapshot.CitizenRow row : rows) {
 					addRenderableWidget(Button.builder(Component.translatable("screen.minecities.locate"),
-							b -> send("locate", row.id())).bounds(left + WIDTH - 44, y, 34, 16).build());
+							b -> send("locate", row.id())).tooltip(Tooltip.create(Component.translatable("screen.minecities.locate.tooltip")))
+							.bounds(left + WIDTH - 44, y, 34, 16).build());
 					if (town.manager() && !row.job().isEmpty()) {
 						// Le renvoyer à son poste.
 						addRenderableWidget(Button.builder(Component.translatable("screen.minecities.posting"),
-								b -> send("posting", row.id())).bounds(left + WIDTH - 86, y, 40, 16).build());
+								b -> send("posting", row.id())).tooltip(Tooltip.create(Component.translatable("screen.minecities.posting.tooltip")))
+								.bounds(left + WIDTH - 86, y, 40, 16).build());
 					}
 					y += ROW;
 				}
@@ -154,7 +158,8 @@ public class TownHallScreen extends Screen {
 						BlockPos plaque = row.plaque();
 						addRenderableWidget(Button.builder(Component.translatable("screen.minecities.building.details"),
 								b -> send("building:" + plaque.getX() + "," + plaque.getY() + "," + plaque.getZ(),
-										TownActionPayload.NONE)).bounds(left + WIDTH - 66, y, 56, 16).build());
+										TownActionPayload.NONE)).tooltip(Tooltip.create(Component.translatable("screen.minecities.building.details.tooltip")))
+								.bounds(left + WIDTH - 66, y, 56, 16).build());
 					}
 					y += ROW;
 				}
@@ -170,13 +175,15 @@ public class TownHallScreen extends Screen {
 						addRenderableWidget(Button.builder(Component.translatable(on ? "screen.minecities.decree.lift"
 										: "screen.minecities.decree.take"),
 								b -> send("decree." + decree, TownActionPayload.NONE))
+								.tooltip(Tooltip.create(Component.translatable("decree.minecities." + decree + ".effect")))
 								.bounds(left + WIDTH - 90, y, 80, 16).build());
 						y += DECREE_ROW;
 					}
 					// Le taux de l'impôt, sous les décrets (MC-57).
 					if (council.budget()) {
 						addRenderableWidget(Button.builder(Component.translatable("screen.minecities.council.tax.change"),
-								b -> send("tax.next", TownActionPayload.NONE)).bounds(left + WIDTH - 90, y, 80, 16).build());
+								b -> send("tax.next", TownActionPayload.NONE)).tooltip(Tooltip.create(Component.translatable("screen.minecities.council.tax.tooltip")))
+								.bounds(left + WIDTH - 90, y, 80, 16).build());
 					}
 				}
 			}
@@ -261,6 +268,8 @@ public class TownHallScreen extends Screen {
 					addRenderableWidget(Button.builder(Component.translatable(allowed.get(p)
 									? "screen.minecities.residents.allowed" : "screen.minecities.residents.denied"),
 							b -> send(action, TownActionPayload.NONE))
+							.tooltip(Tooltip.create(Component.translatable("screen.minecities.residents.permission.tooltip."
+									+ PERMISSIONS[p])))
 							.bounds(left + 130 + p * 90, top + HEIGHT - 66 + r * 18, 84, 16).build());
 				}
 			}

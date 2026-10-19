@@ -5,6 +5,7 @@ import com.ajustor.minecities.network.StationSnapshot;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.FormattedCharSequence;
@@ -74,11 +75,11 @@ public class StationScreen extends Screen {
 		for (StationSnapshot.Worker worker : station.workers().stream().limit(MAX_WORKERS).toList()) {
 			addRenderableWidget(Button.builder(Component.translatable("screen.minecities.locate"),
 					b -> ClientPlayNetworking.send(new StationNetwork.ActionPayload(station.pos(), "locate", worker.id())))
-					.bounds(left + WIDTH - 44, y - 2, 34, 16).build());
+					.tooltip(Tooltip.create(Component.translatable("screen.minecities.locate.tooltip"))).bounds(left + WIDTH - 44, y - 2, 34, 16).build());
 			if (station.manager()) {
 				addRenderableWidget(Button.builder(Component.translatable("screen.minecities.posting"),
 						b -> ClientPlayNetworking.send(new StationNetwork.ActionPayload(station.pos(), "posting", worker.id())))
-						.bounds(left + WIDTH - 86, y - 2, 40, 16).build());
+						.tooltip(Tooltip.create(Component.translatable("screen.minecities.posting.tooltip"))).bounds(left + WIDTH - 86, y - 2, 40, 16).build());
 			}
 			y += ROW;
 		}
