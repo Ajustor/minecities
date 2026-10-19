@@ -147,7 +147,7 @@ public final class TownNetwork {
 				town.citizens(), town.villagers(), town.capacity(), town.homes().size(), town.workstations(),
 				(int) employed, meals, next == null ? "" : next.translationKey(),
 				next == null ? 0 : next.minCitizens(), next == null ? 0 : next.minHouses(),
-				town.canManage(player.getUUID()), life, council(level, town), rows, buildings, requests,
+				town.canManage(player.getUUID()), life, council(level, town, player), rows, buildings, requests,
 				plans(level, town), members(town, player), ballot(level, town, player), map(town));
 	}
 
@@ -253,7 +253,7 @@ public final class TownNetwork {
 				.toList();
 	}
 
-	private static TownSnapshot.Council council(ServerLevel level, Town town) {
+	private static TownSnapshot.Council council(ServerLevel level, Town town, ServerPlayer viewer) {
 		List<String> deputies = new ArrayList<>();
 		for (UUID deputy : town.deputies()) {
 			ServerPlayer online = level.getServer().getPlayerList().getPlayer(deputy);
@@ -267,16 +267,24 @@ public final class TownNetwork {
 		}
 		List<String> partners = new ArrayList<>();
 		List<Boolean> open = new ArrayList<>();
+		// Les autres villes, et l'accord que la nôtre leur a proposé (MC-75).
+		List<String> towns = new ArrayList<>();
+		List<Boolean> offered = new ArrayList<>();
 		for (Town other : Towns.get(level.getServer()).all()) {
 			if (town.partners().contains(other.id()) || other.partners().contains(town.id())) {
 				partners.add(other.name());
 				open.add(com.ajustor.minecities.town.Trade.trading(town, other));
 			}
+			if (!other.id().equals(town.id())) {
+				towns.add(other.name());
+				offered.add(town.partners().contains(other.id()));
+			}
 		}
 		com.ajustor.minecities.town.Budget.Ledger ledger = town.chronicle().ledger();
 		return new TownSnapshot.Council(town.mayorName(), deputies, decrees, decreed, partners, open,
 				com.ajustor.minecities.McConfig.get().budget, ledger.rate().serializedName(), ledger.rate().emeralds(),
-				ledger.taxes(), ledger.wages(), ledger.works(), com.ajustor.minecities.town.Budget.inTaxBox(level, town));
+				ledger.taxes(), ledger.wages(), ledger.works(), com.ajustor.minecities.town.Budget.inTaxBox(level, town),
+				towns, offered, viewer != null && town.mayor().equals(viewer.getUUID()));
 	}
 
 	public static void act(ServerPlayer player, TownActionPayload payload) {
@@ -324,6 +332,34 @@ public final class TownNetwork {
 							Towns.get(level.getServer()).changed();
 						}));
 			}
+			open(level, town, player);
+			return;
+		}
+		// Les décisions du maire depuis l'écran « Gérer la mairie » (MC-75) : le nom, les adjoints, la
+		// transmission (au maire seul), le commerce (au maire et aux adjoints).
+		Optional<Component> decided = Optional.empty();
+		boolean decision = true;
+		String action = payload.action();
+		boolean mayor = town.mayor().equals(player.getUUID());
+		ServerPlayer online = level.getServer().getPlayerList().getPlayer(payload.request());
+		String targetName = online != null ? online.getGameProfile().name()
+				: town.membership().residents().getOrDefault(payload.request(), "?");
+		if (action.startsWith("rename:") && mayor) {
+			decided = com.ajustor.minecities.town.Mayoralty.rename(level.getServer(), town, action.substring(7));
+		} else if ((action.equals("deputy.add") || action.equals("deputy.remove")) && mayor) {
+			decided = com.ajustor.minecities.town.Mayoralty.deputy(level.getServer(), town, payload.request(), targetName,
+					action.equals("deputy.add"));
+		} else if (action.equals("transfer") && mayor) {
+			decided = com.ajustor.minecities.town.Mayoralty.transfer(level.getServer(), town, payload.request(), targetName);
+		} else if (action.startsWith("trade:") && town.canManage(player.getUUID())) {
+			Optional<Town> other = Towns.get(level.getServer()).byName(action.substring(6));
+			decided = other.isEmpty() ? Optional.of(Component.translatable("command.minecities.no_town"))
+					: com.ajustor.minecities.town.Mayoralty.trade(level.getServer(), town, other.get());
+		} else {
+			decision = false;
+		}
+		if (decision) {
+			decided.ifPresent(r -> player.sendSystemMessage(r.copy().withStyle(ChatFormatting.RED)));
 			open(level, town, player);
 			return;
 		}

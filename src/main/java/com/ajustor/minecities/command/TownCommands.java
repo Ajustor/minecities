@@ -321,20 +321,15 @@ public final class TownCommands {
 		Towns towns = Towns.get(context.getSource().getServer());
 		Town other = towns.byName(StringArgumentType.getString(context, "town"))
 				.filter(t -> !t.id().equals(town.id())).orElseThrow(NO_TOWN::create);
-		if (town.partners().contains(other.id())) {
-			town.removePartner(other.id());
-			TownService.notify(context.getSource().getServer(), town, Component.translatable(
-					"message.minecities.trade.ended", town.name(), other.name()));
-			TownService.notify(context.getSource().getServer(), other, Component.translatable(
-					"message.minecities.trade.ended", town.name(), other.name()));
-		} else {
-			town.addPartner(other.id());
-			String key = Trade.trading(town, other) ? "message.minecities.trade.open" : "message.minecities.trade.offered";
-			TownService.notify(context.getSource().getServer(), town, Component.translatable(key, town.name(), other.name()));
-			TownService.notify(context.getSource().getServer(), other, Component.translatable(key, town.name(),
-					other.name()));
+		return refused(context, com.ajustor.minecities.town.Mayoralty.trade(context.getSource().getServer(), town, other));
+	}
+
+	/** La décision a-t-elle été refusée ? On le dit, et la commande échoue. */
+	private static int refused(CommandContext<CommandSourceStack> context, Optional<Component> refusal) {
+		if (refusal.isPresent()) {
+			context.getSource().sendFailure(refusal.get());
+			return 0;
 		}
-		towns.changed();
 		return Command.SINGLE_SUCCESS;
 	}
 
@@ -447,62 +442,22 @@ public final class TownCommands {
 
 	private static int rename(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
 		Town town = mayorTown(context);
-		String name = StringArgumentType.getString(context, "name").trim();
-		Towns towns = Towns.get(context.getSource().getServer());
-		if (name.isEmpty() || towns.byName(name).filter(t -> t != town).isPresent()) {
-			context.getSource().sendFailure(Component.translatable("command.minecities.rename.taken", name));
-			return 0;
-		}
-		String before = town.name();
-		town.rename(name);
-		towns.changed();
-		context.getSource().getServer().getPlayerList().broadcastSystemMessage(Component.translatable(
-				"command.minecities.rename.done", before, name).withStyle(ChatFormatting.GOLD), false);
-		return Command.SINGLE_SUCCESS;
+		return refused(context, com.ajustor.minecities.town.Mayoralty.rename(context.getSource().getServer(), town,
+				StringArgumentType.getString(context, "name")));
 	}
 
 	private static int transfer(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
 		Town town = mayorTown(context);
 		ServerPlayer successor = EntityArgument.getPlayer(context, "player");
-		Towns towns = Towns.get(context.getSource().getServer());
-		if (town.election().phase() != com.ajustor.minecities.town.Election.Phase.NONE) {
-			context.getSource().sendFailure(Component.translatable("command.minecities.mayor.election"));
-			return 0;
-		}
-		if (!town.isMember(successor.getUUID())) {
-			context.getSource().sendFailure(Component.translatable("command.minecities.not_member",
-					successor.getDisplayName(), town.name()));
-			return 0;
-		}
-		// L'ancien maire reste habitant de sa ville.
-		town.membership().addResident(town.mayor(), town.mayorName());
-		town.setMayor(successor.getUUID(), successor.getGameProfile().name());
-		towns.changed();
-		context.getSource().getServer().getPlayerList().broadcastSystemMessage(Component.translatable(
-				"command.minecities.mayor.done", successor.getDisplayName(), town.name())
-				.withStyle(ChatFormatting.GOLD), false);
-		return Command.SINGLE_SUCCESS;
+		return refused(context, com.ajustor.minecities.town.Mayoralty.transfer(context.getSource().getServer(), town,
+				successor.getUUID(), successor.getGameProfile().name()));
 	}
 
 	private static int deputy(CommandContext<CommandSourceStack> context, boolean add) throws CommandSyntaxException {
 		Town town = mayorTown(context);
 		ServerPlayer target = EntityArgument.getPlayer(context, "player");
-		if (add && !town.isMember(target.getUUID())) {
-			context.getSource().sendFailure(Component.translatable("command.minecities.not_member",
-					target.getDisplayName(), town.name()));
-			return 0;
-		}
-		boolean changed = add ? town.addDeputy(target.getUUID()) : town.removeDeputy(target.getUUID());
-		if (!changed) {
-			context.getSource().sendFailure(Component.translatable("command.minecities.deputy.unchanged"));
-			return 0;
-		}
-		Towns.get(context.getSource().getServer()).changed();
-		String key = add ? "command.minecities.deputy.added" : "command.minecities.deputy.removed";
-		context.getSource().sendSuccess(() -> Component.translatable(key, target.getDisplayName(), town.name()), true);
-		target.sendSystemMessage(Component.translatable(key, target.getDisplayName(), town.name())
-				.withStyle(ChatFormatting.GOLD));
-		return Command.SINGLE_SUCCESS;
+		return refused(context, com.ajustor.minecities.town.Mayoralty.deputy(context.getSource().getServer(), town,
+				target.getUUID(), target.getGameProfile().name(), add));
 	}
 
 	// Habitants joueurs

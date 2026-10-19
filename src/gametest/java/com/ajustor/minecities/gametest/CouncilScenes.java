@@ -185,10 +185,35 @@ public class CouncilScenes implements Scene {
 		stage.client(mc -> ((TownHallScreen) mc.gui.screen()).select(TownHallScreen.Tab.COUNCIL));
 		stage.waitTicks(3);
 		stage.shot("council_1_tab");
+		// Gérer la mairie sans commande (MC-75) : l'écran, puis les décisions qu'il envoie.
+		stage.client(mc -> mc.gui.setScreen(new com.ajustor.minecities.client.screen.ManageScreen(snapshot,
+				mc.gui.screen())));
+		stage.waitTicks(3);
+		stage.shot("council_2_manage");
 		stage.client(mc -> {
 			mc.gui.setScreen(null);
 			hideGui(mc, true);
 		});
+		check(snapshot.council().towns().size() == 1 && snapshot.council().offered().getFirst()
+				&& snapshot.council().mayorView() ? null : "l'écran de gestion : " + snapshot.council());
+		check(stage.compute(server -> {
+			Town town = town(server);
+			Town other = Towns.get(server).byHall(server.overworld().dimension(), OTHER_HALL).orElseThrow();
+			String name = town.name();
+			if (com.ajustor.minecities.town.Mayoralty.rename(server, town, other.name()).isEmpty()) {
+				return "renommée du nom d'une autre ville";
+			}
+			if (com.ajustor.minecities.town.Mayoralty.rename(server, town, "Nouvelle " + name).isPresent()
+					|| !town.name().equals("Nouvelle " + name)) {
+				return "pas renommée : " + town.name();
+			}
+			com.ajustor.minecities.town.Mayoralty.rename(server, town, name);
+			// Rompre l'accord, puis le reproposer : la voisine a signé, il se rouvre.
+			com.ajustor.minecities.town.Mayoralty.trade(server, town, other);
+			boolean broken = !com.ajustor.minecities.town.Trade.trading(town, other);
+			com.ajustor.minecities.town.Mayoralty.trade(server, town, other);
+			return broken && com.ajustor.minecities.town.Trade.trading(town, other) ? null : "l'accord ne se rompt pas";
+		}));
 	}
 
 	private static Town town(MinecraftServer server) {

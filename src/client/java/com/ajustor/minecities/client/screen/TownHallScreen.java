@@ -167,6 +167,11 @@ public class TownHallScreen extends Screen {
 			}
 			case COUNCIL -> {
 				if (town.manager()) {
+					// Renommer, adjoints, transmission, commerce : sans commande (MC-75).
+					addRenderableWidget(Button.builder(Component.translatable("screen.minecities.council.manage"),
+							b -> minecraft.gui.setScreen(new ManageScreen(town, this)))
+							.tooltip(Tooltip.create(Component.translatable("screen.minecities.council.manage.tooltip")))
+							.bounds(left + WIDTH / 2 - 62, top + 55, 64, 16).build());
 					TownSnapshot.Council council = town.council();
 					int y = top + 82;
 					for (int i = 0; i < council.decrees().size(); i++) {
