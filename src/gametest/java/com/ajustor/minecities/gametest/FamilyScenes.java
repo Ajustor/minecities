@@ -118,6 +118,12 @@ public class FamilyScenes implements Scene {
 			return a.spouse().filter(couple[1]::equals).isPresent() && a.home().isPresent()
 					&& a.home().equals(b.home()) ? null : "les mariés ne vivent pas ensemble : " + a + " / " + b;
 		}));
+		// La cérémonie (MC-81) : les deux mariés viennent devant l'hôtel de ville, puis la cérémonie s'achève.
+		waitOrExplain(stage, server -> java.util.Arrays.stream(couple).allMatch(id -> server.overworld().getEntity(id)
+				instanceof CitizenEntity c && c.distanceToSqr(town(server).hall().getX() + 0.5, c.getY(),
+				town(server).hall().getZ() + 3.5) < 4 * 4), 1200, "les mariés ne viennent pas à l'hôtel de ville");
+		waitOrExplain(stage, server -> java.util.Arrays.stream(couple).allMatch(id -> server.overworld().getEntity(id)
+				instanceof CitizenEntity c && c.wedding().isEmpty()), 600, "la cérémonie ne finit pas");
 
 		// Le joueur ajoute un lit dans leur maison, pour l'enfant à venir.
 		stage.run(server -> {
