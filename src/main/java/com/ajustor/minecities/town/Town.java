@@ -765,9 +765,9 @@ public final class Town {
 		return List.copyOf(constructions);
 	}
 
-	/** Le chantier en cours : le premier commandé qui n'est pas fini. */
+	/** Le chantier en cours : le premier commandé qui n'est ni fini ni suspendu. */
 	public Optional<Construction> activeConstruction() {
-		return constructions.stream().filter(c -> !c.done()).findFirst();
+		return constructions.stream().filter(c -> !c.done() && !c.paused()).findFirst();
 	}
 
 	public void order(Construction construction) {

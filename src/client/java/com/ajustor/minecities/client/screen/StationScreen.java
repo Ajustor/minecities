@@ -83,6 +83,17 @@ public class StationScreen extends Screen {
 			}
 			y += ROW;
 		}
+		// Suspendre ou reprendre un chantier (MC-84), au bout de sa ligne.
+		if (station.manager() && station.mine().isEmpty()) {
+			int sy = y + 12;
+			for (StationSnapshot.Site site : station.sites().stream().limit(MAX_SITES).toList()) {
+				addRenderableWidget(Button.builder(Component.literal(site.paused() ? "▶" : "Ⅱ"),
+						b -> ClientPlayNetworking.send(new StationNetwork.ActionPayload(station.pos(), "pause", site.id())))
+						.tooltip(Tooltip.create(Component.translatable(site.paused() ? "screen.minecities.station.resume"
+								: "screen.minecities.station.pause"))).bounds(left + WIDTH - 22, sy - 2, 12, 12).build());
+				sy += 12;
+			}
+		}
 		if (station.manager() && station.mine().equals("exhausted")) {
 			addRenderableWidget(Button.builder(Component.translatable("screen.minecities.mine.close"),
 					b -> ClientPlayNetworking.send(new StationNetwork.ActionPayload(station.pos(), "close_mine",
@@ -168,9 +179,11 @@ public class StationScreen extends Screen {
 			y += 12;
 			for (StationSnapshot.Site site : station.sites().stream().limit(MAX_SITES).toList()) {
 				int bar = 80;
-				int x = left + WIDTH - 20 - bar;
-				graphics.text(font, Component.literal(clip(site.name().getString(), x - 64 - 6 - (left + 20))), left + 20, y,
-						INK, false);
+				int x = left + WIDTH - 28 - bar;
+				Component name = site.paused() ? Component.translatable("screen.minecities.station.paused",
+						clip(site.name().getString(), x - 64 - 6 - (left + 20) - 40))
+						: Component.literal(clip(site.name().getString(), x - 64 - 6 - (left + 20)));
+				graphics.text(font, name, left + 20, y, site.paused() ? FADED : INK, false);
 				int done = site.total() == 0 ? 0 : bar * site.placed() / site.total();
 				graphics.fill(x, y + 1, x + bar, y + 7, 0xFFB8AA88);
 				graphics.fill(x, y + 1, x + done, y + 7, GOOD);

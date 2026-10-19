@@ -197,6 +197,15 @@ public class StationScenes implements Scene {
 			if (!StationSnapshot.CODEC.decode(buffer).equals(s)) {
 				wrong.add("relu autrement");
 			}
+			// Suspendu (MC-84), le chantier n'est plus celui des bâtisseurs ; repris, il l'est de nouveau.
+			Construction site = town.constructions().stream().filter(c -> !c.done()).findFirst().orElseThrow();
+			site.togglePause();
+			boolean paused = town.activeConstruction().filter(site::equals).isEmpty()
+					&& StationNetwork.snapshot(level, bench).orElseThrow().sites().getFirst().paused();
+			site.togglePause();
+			if (!paused || town.activeConstruction().filter(site::equals).isEmpty()) {
+				wrong.add("la pause du chantier");
+			}
 			// Hors de la ville, puis non déclaré, puis fermé à ce palier, puis loin de l'eau.
 			BlockPos far = new BlockPos(500, Y, 500);
 			level.setBlockAndUpdate(far, McBlocks.STATIONS.get(Job.COOK).defaultBlockState());

@@ -201,7 +201,7 @@ public final class StationNetwork {
 		int total = com.ajustor.minecities.build.Builds.plan(level.getServer(), c).size();
 		Component name = blueprint.<Component>map(com.ajustor.minecities.build.Blueprint::displayName)
 				.orElse(Component.literal(c.blueprint().getPath()));
-		return new StationSnapshot.Site(name, c.origin(), Math.min(c.step(), total), total);
+		return new StationSnapshot.Site(name, c.origin(), Math.min(c.step(), total), total, c.id(), c.paused());
 	}
 
 	private static void act(ServerPlayer player, ActionPayload payload) {
@@ -211,6 +211,19 @@ public final class StationNetwork {
 		}
 		if (payload.action().equals("refresh")) {
 			// L'écran ouvert redemande l'état du poste (MC-72).
+			open(level, payload.pos(), player);
+			return;
+		}
+		if (payload.action().equals("pause")) {
+			// Le maire (ou un adjoint) suspend ce chantier, ou le reprend (MC-84).
+			Optional<Town> town = Towns.get(level.getServer()).at(level.dimension(), payload.pos());
+			town.filter(t -> t.canManage(player.getUUID())).flatMap(t -> t.constructions().stream()
+					.filter(c -> c.id().equals(payload.target()) && !c.done()).findFirst()).ifPresent(c -> {
+				boolean paused = c.togglePause();
+				Towns.get(level.getServer()).changed();
+				player.sendSystemMessage(Component.translatable(paused ? "message.minecities.build.paused"
+						: "message.minecities.build.resumed", site(level, c).name()).withStyle(net.minecraft.ChatFormatting.GOLD));
+			});
 			open(level, payload.pos(), player);
 			return;
 		}

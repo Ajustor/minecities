@@ -40,7 +40,7 @@ public record StationSnapshot(BlockPos pos, String block, String job, String tow
 	}
 
 	/** Un chantier : le bâtiment, où, combien de blocs posés sur combien, et s'il est fini. */
-	public record Site(Component name, BlockPos origin, int placed, int total) {
+	public record Site(Component name, BlockPos origin, int placed, int total, UUID id, boolean paused) {
 	}
 
 	private static final StreamCodec<RegistryFriendlyByteBuf, Optional<Component>> OPTIONAL =
@@ -70,6 +70,8 @@ public record StationSnapshot(BlockPos pos, String block, String job, String tow
 			buf.writeBlockPos(site.origin());
 			buf.writeVarInt(site.placed());
 			buf.writeVarInt(site.total());
+			UUIDUtil.STREAM_CODEC.encode(buf, site.id());
+			buf.writeBoolean(site.paused());
 		}
 		buf.writeBoolean(s.manager);
 		buf.writeUtf(s.mine);
@@ -97,7 +99,8 @@ public record StationSnapshot(BlockPos pos, String block, String job, String tow
 		int siteCount = buf.readVarInt();
 		List<Site> sites = new ArrayList<>(siteCount);
 		for (int i = 0; i < siteCount; i++) {
-			sites.add(new Site(COMPONENT.decode(buf), buf.readBlockPos(), buf.readVarInt(), buf.readVarInt()));
+			sites.add(new Site(COMPONENT.decode(buf), buf.readBlockPos(), buf.readVarInt(), buf.readVarInt(),
+					UUIDUtil.STREAM_CODEC.decode(buf), buf.readBoolean()));
 		}
 		boolean manager = buf.readBoolean();
 		String mine = buf.readUtf();
