@@ -64,7 +64,20 @@ public class TownHallScreen extends Screen {
 		this.town = town;
 	}
 
-	/** Le serveur a envoyé un nouvel état (après une décision du maire). */
+
+	/** Tous les combien de ticks l'écran ouvert redemande l'état au serveur (MC-72). */
+	private static final int REFRESH = 40;
+	private int age;
+
+	@Override
+	public void tick() {
+		super.tick();
+		if (++age % REFRESH == 0) {
+			send("refresh", TownActionPayload.NONE);
+		}
+	}
+
+	/** Le serveur a envoyé un nouvel état (après une décision du maire, ou toutes les deux secondes). */
 	public void refresh(TownSnapshot snapshot) {
 		town = snapshot;
 		rebuildWidgets();

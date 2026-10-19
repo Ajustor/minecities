@@ -30,7 +30,7 @@ public class StationScreen extends Screen {
 	private static final int MAX_WORKERS = 3;
 	private static final int MAX_SITES = 3;
 
-	private final StationSnapshot station;
+	private StationSnapshot station;
 	private int left;
 	private int top;
 
@@ -42,6 +42,29 @@ public class StationScreen extends Screen {
 	public StationSnapshot station() {
 		return station;
 	}
+
+	public boolean shows(StationSnapshot snapshot) {
+		return snapshot.pos().equals(station.pos());
+	}
+
+	/** Le serveur a renvoyé l'état du poste. */
+	public void refresh(StationSnapshot snapshot) {
+		station = snapshot;
+		rebuildWidgets();
+	}
+
+	/** Tous les combien de ticks l'écran ouvert redemande l'état au serveur (MC-72). */
+	private static final int REFRESH = 40;
+	private int age;
+
+	@Override
+	public void tick() {
+		super.tick();
+		if (++age % REFRESH == 0) {
+			ClientPlayNetworking.send(new StationNetwork.ActionPayload(station.pos(), "refresh", new java.util.UUID(0, 0)));
+		}
+	}
+
 
 	@Override
 	protected void init() {

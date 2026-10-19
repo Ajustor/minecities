@@ -358,6 +358,9 @@ public final class TownNetwork {
 			return;
 		}
 		switch (payload.action()) {
+			case "refresh" -> {
+				// L'écran ouvert redemande l'état de la ville (MC-72) : il le reçoit plus bas.
+			}
 			case "granary" -> {
 				if (TownService.mayOpenGranary(player, town)
 						&& level.getBlockEntity(payload.hall()) instanceof TownHallBlockEntity hall) {

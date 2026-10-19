@@ -209,6 +209,11 @@ public final class StationNetwork {
 		if (player.distanceToSqr(Vec3.atCenterOf(payload.pos())) > REACH * REACH) {
 			return;
 		}
+		if (payload.action().equals("refresh")) {
+			// L'écran ouvert redemande l'état du poste (MC-72).
+			open(level, payload.pos(), player);
+			return;
+		}
 		if (payload.action().equals("close_mine")) {
 			// Le maire (ou un adjoint) rebouche le puits épuisé de ce treuil.
 			Optional<Town> town = Towns.get(level.getServer()).at(level.dimension(), payload.pos());

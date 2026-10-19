@@ -70,6 +70,19 @@ public class TownMapScreen extends Screen {
 	}
 
 	/** Le serveur a envoyé un nouvel état : la carte suit le palier, les annexes, les bâtiments. */
+	/** Tous les combien de ticks l'écran ouvert redemande l'état au serveur (MC-72). */
+	private static final int REFRESH = 40;
+	private int age;
+
+	@Override
+	public void tick() {
+		super.tick();
+		if (++age % REFRESH == 0) {
+			ClientPlayNetworking.send(new com.ajustor.minecities.network.TownActionPayload(town.hall(), "refresh",
+					com.ajustor.minecities.network.TownActionPayload.NONE));
+		}
+	}
+
 	public void refresh(TownSnapshot snapshot) {
 		town = snapshot;
 	}
