@@ -204,6 +204,7 @@
   "tool.minecities.guard": "une épée",
   "tool.minecities.archer": "un arc",
   "message.minecities.raid.start": "Des pillards marchent sur %s ! %s vague(s) arrivent.",
+  "message.minecities.trader": "%s : un marchand ambulant s'est installé devant l'hôtel de ville, pour la journée.",
   "message.minecities.raid.wave": "Vague %s sur %s : %s pillards.",
   "message.minecities.raid.pillage": "Les pillards pillent le grenier de %s !",
   "message.minecities.raid.victory": "%s a repoussé les pillards (vagues : %s) ! %s émeraudes au grenier.",

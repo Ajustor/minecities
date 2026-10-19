@@ -28,9 +28,10 @@ public final class Chronicle {
 			Codec.LONG.optionalFieldOf("served_at", -1L).forGetter(c -> c.servedAt),
 			Codec.LONG.optionalFieldOf("last_raid", -1L).forGetter(c -> c.lastRaid),
 			net.minecraft.core.BlockPos.CODEC.listOf().optionalFieldOf("mastered", List.of())
-					.forGetter(c -> List.copyOf(c.mastered))
+					.forGetter(c -> List.copyOf(c.mastered)),
+			Codec.LONG.optionalFieldOf("trader_at", -1L).forGetter(c -> c.traderAt)
 	).apply(i, (deaths, festivalAt, alarmUntil, marketDay, earnedToday, earnedTotal, disaster, until, last, min,
-			max, ledger, servedAt, lastRaid, mastered) -> {
+			max, ledger, servedAt, lastRaid, mastered, traderAt) -> {
 		Chronicle chronicle = new Chronicle(deaths, festivalAt, alarmUntil, marketDay, earnedToday, earnedTotal);
 		chronicle.disaster = disaster;
 		chronicle.disasterUntil = until;
@@ -41,6 +42,7 @@ public final class Chronicle {
 		chronicle.servedAt = servedAt;
 		chronicle.lastRaid = lastRaid;
 		chronicle.mastered.addAll(mastered);
+		chronicle.traderAt = traderAt;
 		return chronicle;
 	}));
 
@@ -107,6 +109,17 @@ public final class Chronicle {
 
 	public void master(net.minecraft.core.BlockPos workshop) {
 		mastered.add(workshop.immutable());
+	}
+
+	/** Quand le marchand ambulant est passé pour la dernière fois (MC-82) ; -1 : jamais. */
+	private long traderAt = -1;
+
+	public long traderAt() {
+		return traderAt;
+	}
+
+	public void traderCame(long now) {
+		traderAt = now;
 	}
 
 	public void raided(long now) {

@@ -204,6 +204,7 @@
   "tool.minecities.guard": "a sword",
   "tool.minecities.archer": "a bow",
   "message.minecities.raid.start": "Raiders are marching on %s! %s wave(s) are coming.",
+  "message.minecities.trader": "%s: a wandering trader has set up in front of the town hall, for the day.",
   "message.minecities.raid.wave": "Wave %s of %s: %s raiders.",
   "message.minecities.raid.pillage": "The raiders are looting the granary of %s!",
   "message.minecities.raid.victory": "%s drove off the raiders (waves: %s)! %s emeralds in the granary.",
