@@ -189,6 +189,7 @@
   "speech.minecities.married": "Long live the newlyweds!",
   "speech.minecities.grown": "I'm all grown up now!",
   "message.minecities.marriage.request": "%s and %s ask to get married (town hall screen, Registry tab).",
+  "message.minecities.divorce": "%s and %s no longer get along: they separate.",
   "message.minecities.marriage.done": "%s and %s got married in %s!",
   "message.minecities.birth": "%s was born, child of %s and %s.",
   "command.minecities.marriages": "Marriage requests in %s:",

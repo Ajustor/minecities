@@ -664,6 +664,12 @@ public final class Town {
 		return marriageRequests.stream().filter(r -> r.id().equals(id)).findFirst();
 	}
 
+	/** Deux époux se séparent (MC-67) : chacun redevient célibataire. */
+	public void divorce(UUID a, UUID b) {
+		residents.computeIfPresent(a, (id, r) -> r.widowed());
+		residents.computeIfPresent(b, (id, r) -> r.widowed());
+	}
+
 	/** Le maire refuse : la demande tombe, et leur affinité baisse un peu. */
 	public void refuse(MarriageRequest request) {
 		marriageRequests.remove(request);

@@ -189,6 +189,7 @@
   "speech.minecities.married": "Vive les mariés !",
   "speech.minecities.grown": "Je suis grand, maintenant !",
   "message.minecities.marriage.request": "%s et %s demandent à se marier (écran de l'hôtel de ville, onglet Registre).",
+  "message.minecities.divorce": "%s et %s ne s'entendent plus : ils se séparent.",
   "message.minecities.marriage.done": "%s et %s se sont mariés à %s !",
   "message.minecities.birth": "%s est né(e), enfant de %s et %s.",
   "command.minecities.marriages": "Demandes de mariage à %s :",
