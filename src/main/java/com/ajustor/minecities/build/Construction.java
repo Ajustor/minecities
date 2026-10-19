@@ -33,12 +33,15 @@ public final class Construction {
 			Codec.BOOL.optionalFieldOf("done", false).forGetter(c -> c.done),
 			BlockPos.CODEC.listOf().optionalFieldOf("scaffolding", List.of()).forGetter(c -> List.copyOf(c.scaffolding)),
 			BlockPos.CODEC.optionalFieldOf("clear_min").forGetter(c -> c.clearMin),
-			BlockPos.CODEC.optionalFieldOf("clear_max").forGetter(c -> c.clearMax)
-	).apply(i, (id, blueprint, style, origin, rotation, min, max, step, done, scaffolding, clearMin, clearMax) -> {
+			BlockPos.CODEC.optionalFieldOf("clear_max").forGetter(c -> c.clearMax),
+			Codec.BOOL.optionalFieldOf("paused", false).forGetter(c -> c.paused)
+	).apply(i, (id, blueprint, style, origin, rotation, min, max, step, done, scaffolding, clearMin, clearMax,
+			paused) -> {
 		Construction c = new Construction(id, blueprint, BuildStyle.fromSerializedName(style).orElse(BuildStyle.PLAINS),
 				origin, rotation, min, max, step, done, scaffolding);
 		c.clearMin = clearMin;
 		c.clearMax = clearMax;
+		c.paused = paused;
 		return c;
 	}));
 
@@ -54,6 +57,19 @@ public final class Construction {
 	/** Un bâtiment fait à la main que ce chantier remplace : le bâtisseur le dégage d'abord. */
 	private Optional<BlockPos> clearMin = Optional.empty();
 	private Optional<BlockPos> clearMax = Optional.empty();
+	/** Le maire l'a suspendu (MC-84) : les bâtisseurs passent au suivant, ou attendent. */
+	private boolean paused;
+
+	public boolean paused() {
+		return paused;
+	}
+
+	/** Suspend le chantier, ou le reprend ; renvoie vrai s'il est désormais suspendu. */
+	public boolean togglePause() {
+		paused = !paused;
+		claims.clear();
+		return paused;
+	}
 	/** Les échafaudages que le bâtisseur a montés, à démonter avant de finir. */
 	private final List<BlockPos> scaffolding;
 	/** Les blocs du plan déjà faits au-delà de {@code step} (non sauvegardé : on les revoit au besoin). */

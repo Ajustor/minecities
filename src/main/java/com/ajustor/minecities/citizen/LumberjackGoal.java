@@ -4,6 +4,7 @@ import com.ajustor.minecities.compat.EntityCompat;
 import com.ajustor.minecities.compat.SoundCompat;
 import com.ajustor.minecities.town.Job;
 import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -166,6 +167,13 @@ class LumberjackGoal extends WorkGoal {
 		ServerLevel level = level();
 		List<BlockPos> logs = trunk(base);
 		if (logs.isEmpty()) {
+			return;
+		}
+		if (!com.ajustor.minecities.town.Protection.mayBreak(level, town(), base)) {
+			// Un arbre protégé (MC-85) : il le laisse debout.
+			citizen.complain("protected", Component.translatable("message.minecities.protected", citizen.getName(),
+					base.toShortString()), Component.translatable("speech.minecities.protected"));
+			rest(IDLE_LONG);
 			return;
 		}
 		Block species = level.getBlockState(base).getBlock();

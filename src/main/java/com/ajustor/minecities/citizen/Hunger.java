@@ -11,6 +11,8 @@ public final class Hunger {
 	public static float decayPerTick() {
 		return MAX / Math.max(1, com.ajustor.minecities.McConfig.get().hungerDayTicks);
 	}
+	/** Ce que mange un adulte par jour, en portions : une barre pleine, à environ cinq de nourriture la portion. */
+	public static final int PORTIONS_PER_DAY = 4;
 	/** En dessous, il cherche à manger. */
 	public static final float HUNGRY = 12;
 	/** Il mange jusqu'à ce seuil. */

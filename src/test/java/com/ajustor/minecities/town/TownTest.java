@@ -208,6 +208,12 @@ class TownTest {
 		assertEquals(other, town.resident(bob).orElseThrow().home().orElseThrow());
 		assertTrue(town.marriageRequests().isEmpty());
 		assertEquals(1, town.couples().size());
+		// Séparés (MC-67), chacun redevient célibataire ; la maison reste la leur.
+		town.divorce(alice, bob);
+		assertTrue(town.resident(alice).orElseThrow().spouse().isEmpty());
+		assertTrue(town.resident(bob).orElseThrow().spouse().isEmpty());
+		assertEquals(0, town.couples().size());
+		town.marry(town.askToMarry(alice, bob, 20).orElseThrow());
 	}
 
 	@Test

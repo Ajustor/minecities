@@ -48,6 +48,8 @@ public class GuideScenes implements Scene {
 			check(guides(player.getInventory()) == 1, "il y a " + guides(player.getInventory()) + " guides");
 			check(run(server, player, "ville guide") == 1, "/ville guide a échoué");
 			check(guides(player.getInventory()) == 2, "/ville guide n'a pas donné de guide");
+			// En anglais : /town (MC-78).
+			check(run(server, player, "town guide") == 1 && guides(player.getInventory()) == 3, "/town guide a échoué");
 			check(run(server, player, "ville bug") == 1, "/ville bug a échoué");
 			check(server.getRecipeManager().byKey(ResourceKey.create(Registries.RECIPE, MineCities.id("guide")))
 					.isPresent(), "la recette du guide manque");

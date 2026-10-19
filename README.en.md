@@ -10,8 +10,8 @@ whole mod is translated into French and English.
 ## Playing
 
 On their first visit, every player receives the **town guide**, a book that explains everything
-below, with a clickable table of contents (`/ville guide` gives another; recipe: a book and a plank).
-A bug, an idea, some feedback? `/ville bug` opens the
+below, with a clickable table of contents (`/town guide` gives another; recipe: a book and a plank).
+A bug, an idea, some feedback? `/town bug` opens the
 [report form](https://ajustor.github.io/minecities/report.html), pre-filled with the mod version,
 your other mods and your playtime.
 
@@ -101,10 +101,10 @@ your other mods and your playtime.
    - **Smithing table → inventor**: when the town is attacked, builds an **iron golem** (4 iron
      blocks, a carved pumpkin) or a **snow golem** (2 snow blocks, a pumpkin) in front of the hall.
 6. **Have buildings built**: take a **blueprint** at the town hall (**Plans** tab, with its style:
-   plains, taiga, desert, savanna) and use it on the ground, or type `/ville build <blueprint> [style]`:
+   plains, taiga, desert, savanna) and use it on the ground, or type `/town build <blueprint> [style]`:
    the building's **ghost** appears in front of the mayor, translucent, for nearby players too. Sneak
-   with the blueprint (or `/ville build rotate`) to turn it, `/ville build confirm` (or the chat button)
-   to order it, `/ville build cancel` to drop it at no cost; the blueprint can be reused. `/ville upgrade`, or the **Upgrade** button of the building's interface (click its plaque, or
+   with the blueprint (or `/town build rotate`) to turn it, `/town build confirm` (or the chat button)
+   to order it, `/town build cancel` to drop it at no cost; the blueprint can be reused. `/town upgrade`, or the **Upgrade** button of the building's interface (click its plaque, or
    "Details" in the Buildings tab, which also shows the cost and what the granary has), raises it to the next of its **four
    levels**: hut (raw logs, flat roof), house (planks, stone, glass, gabled roof), hall (stone bricks,
    bricks, iron, lanterns; Town tier), mansion (polished stone, quartz, stained glass, copper, gold;
@@ -116,7 +116,7 @@ your other mods and your playtime.
    fishes as with Luck of the Sea III, the smith forges full iron armour for guards. For defence: the **barracks**, the **guard tower** and the
    **inventor's workshop**; for health, the **infirmary**; from Town on, the **market**. Datapacks can add blueprints (`data/<ns>/blueprint/`). So can you: save a building with a vanilla
    **structure block** (Save mode, door facing north, a house plaque inside so it registers itself); a few
-   seconds later `/ville build <name>` orders it, e.g. `/ville build minecraft:my_house`.
+   seconds later `/town build <name>` orders it, e.g. `/town build minecraft:my_house`.
 6 bis. **Warehouse**: a warehouse ledger makes a declared building the town's warehouse. Food and
    emeralds go to the granary, everything else to the warehouse. Without couriers everyone walks there;
    with couriers, workers leave their output in their workshop and couriers do the trips. The smith
@@ -140,15 +140,15 @@ your other mods and your playtime.
    harvest for a day. An **earthquake** hits every town at once: ten seconds of tremors that knock
    blocks down and hurt. Fire and tremors can kill. Each disaster is announced and shown in the
    summary; at most one per town every ten days (`disaster_spacing_days`).
-10. **Festivals**: the mayor holds one (`/ville festival` or the screen button) for 4 emeralds, at
+10. **Festivals**: the mayor holds one (`/town festival` or the screen button) for 4 emeralds, at
    most every three days: citizens dance under fireworks and stay happier for a day.
-11. **Decrees** (Council tab or `/ville decree`): rationing, overtime, holiday, each with its effect on
+11. **Decrees** (Council tab or `/town decree`): rationing, overtime, holiday, each with its effect on
    food, work and mood. **Taxes**, right below: a rate (none, low, normal, high) every adult pays each
    morning into the **tax box**; the higher, the grumpier the town. Guards and archers are paid every
    morning from the granary (one emerald each): the mayor carries the money there from the box, or they
    drag their feet. Construction also costs emeralds from level 2 (4, 12, 32). The day's budget shows in
    the Council tab (`budget` setting in `config/minecities.json`).
-12. **Trade between towns**: `/ville trade <town>`; once both mayors have signed, caravans carry the
+12. **Trade between towns**: `/town trade <town>`; once both mayors have signed, caravans carry the
    surplus of one granary to the other for emeralds.
 
 ## Configuration
@@ -164,7 +164,7 @@ seen again are struck off) and `give_guide` (every player gets the town guide on
 
 ## Residents and ranks
 
-Other players are **visitors**. To become a **resident**, ask to settle (`/ville join`, the button in
+Other players are **visitors**. To become a **resident**, ask to settle (`/town join`, the button in
 the Residents tab, or by sleeping in a bed of one of the town's houses); the mayor or a deputy accepts.
 You can be a resident of one town at a time. In the town hall's Residents tab, the mayor sets what
 residents and visitors may do: declare a house, open the granary (and annexes), break blocks of
@@ -175,7 +175,7 @@ houses and opens the granary).
 **Elections.** The mayor's term lasts 7 game days; when it ends, an election opens. The mayor may
 also call one at any time, and residents through a petition signed by half of them; at most one
 election every 3 days. One day of candidacies (the outgoing mayor runs automatically), then one day
-of voting in the Election tab or with `/ville vote`. Each of the town's players votes once; citizens
+of voting in the Election tab or with `/town vote`. Each of the town's players votes once; citizens
 too, with a chance equal to their happiness: happy ones for the outgoing mayor, others against, and
 their vote weighs as much. On a tie, the tied candidates face a new vote. Alone in their town, or
 unopposed, the mayor is re-elected automatically.
@@ -186,7 +186,7 @@ With [Jade](https://modrinth.com/mod/jade) (optional), a citizen's tooltip shows
 whether they are housed, and a house plaque's tooltip shows its last survey. Each line can be turned
 off in Jade's settings. Without Jade, nothing changes.
 
-## Commands (`/minecities` or `/ville`)
+## Commands (`/minecities` or `/town`)
 
 `info`, `list`, `citizens`, `rename <name>`, `mayor <player>`, `deputy add|remove <player>`,
 `join [town]`, `leave`, `resident [accept|refuse|remove <player>]`,

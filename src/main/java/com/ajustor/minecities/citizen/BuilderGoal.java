@@ -294,6 +294,13 @@ class BuilderGoal extends WorkGoal {
 		cooldown = pace();
 		EntityCompat.swing(citizen, InteractionHand.MAIN_HAND);
 		citizen.act(Action.BUILD, 10);
+		if (clearing && !com.ajustor.minecities.town.Protection.mayBreak(level, town(), p.pos())) {
+			// Un terrain protégé (un mod de protection, MC-85) : il le laisse tel quel.
+			citizen.complain("protected", Component.translatable("message.minecities.protected", citizen.getName(),
+					p.pos().toShortString()), Component.translatable("speech.minecities.protected"));
+			construction.markPlaced(index);
+			return;
+		}
 		if (clearing) {
 			// Dégager : ce qui était là va au grenier (par ses poches).
 			ItemStack held = tool.isPresent() ? citizen.getMainHandItem() : ItemStack.EMPTY;

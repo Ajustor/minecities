@@ -78,6 +78,7 @@ public final class Families {
 			}
 		}
 		befriend(level, town, here);
+		divorces(level, town);
 		births(level, town, now);
 		growUp(level, town, now);
 	}
@@ -155,7 +156,12 @@ public final class Families {
 					continue;
 				}
 				int before = town.affinity(a.getUUID(), b.getUUID());
-				int after = town.addAffinity(a.getUUID(), b.getUUID(), AFFINITY_GAIN);
+				// La faim et le malheur aigrissent (brief 10, MC-67) : l'affinité baisse au lieu de monter.
+				boolean sour = sour(a) || sour(b);
+				int after = town.addAffinity(a.getUUID(), b.getUUID(), sour ? -1 : AFFINITY_GAIN);
+				if (sour) {
+					continue;
+				}
 				if (before < Town.FRIENDS && after >= Town.FRIENDS) {
 					level.sendParticles(ParticleTypes.HEART, (a.getX() + b.getX()) / 2, a.getY() + 2.2,
 							(a.getZ() + b.getZ()) / 2, 3, 0.4, 0.2, 0.4, 0);
@@ -166,6 +172,30 @@ public final class Families {
 					TownService.notify(level.getServer(), town, Component.translatable(
 							"message.minecities.marriage.request", a.getName(), b.getName()));
 				});
+			}
+		}
+	}
+
+	/** Affamé ou malheureux : il n'est pas d'humeur à se faire des amis. */
+	private static boolean sour(CitizenEntity c) {
+		return c.hunger() < com.ajustor.minecities.citizen.Hunger.HUNGRY
+				|| c.mood() >= 0 && c.mood() <= com.ajustor.minecities.citizen.Happiness.UNHAPPY;
+	}
+
+	/** Sous cette affinité, deux époux se séparent (MC-67). */
+	public static final int DIVORCE = 20;
+
+	/** Les époux qui ne s'entendent plus se séparent ; ils restent dans la ville. */
+	private static void divorces(ServerLevel level, Town town) {
+		for (java.util.Map.Entry<UUID, Resident> e : java.util.List.copyOf(town.residents().entrySet())) {
+			Optional<UUID> spouse = e.getValue().spouse();
+			if (spouse.isPresent() && e.getKey().compareTo(spouse.get()) < 0
+					&& town.affinity(e.getKey(), spouse.get()) < DIVORCE) {
+				String a = e.getValue().name();
+				String b = town.resident(spouse.get()).map(Resident::name).orElse("?");
+				town.divorce(e.getKey(), spouse.get());
+				TownService.notify(level.getServer(), town, Component.translatable("message.minecities.divorce", a, b));
+				Towns.get(level.getServer()).changed();
 			}
 		}
 	}

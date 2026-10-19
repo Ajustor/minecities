@@ -453,8 +453,13 @@ public class TownHallScreen extends Screen {
 		y += SUMMARY_LINE;
 		line(graphics, Component.translatable("screen.minecities.jobs", town.employed(), town.workstations()), y, INK);
 		y += SUMMARY_LINE;
-		line(graphics, Component.translatable("screen.minecities.meals", town.meals()), y,
-				town.meals() > 0 ? INK : BAD);
+		// Combien de jours tient le grenier (MC-79) : un enfant mange deux fois moins.
+		double eaters = town.rows().stream().mapToDouble(r -> r.child() ? 0.5 : 1).sum();
+		int days = eaters > 0 ? (int) (town.meals() / (eaters * com.ajustor.minecities.citizen.Hunger.PORTIONS_PER_DAY))
+				: -1;
+		line(graphics, days < 0 ? Component.translatable("screen.minecities.meals", town.meals())
+						: Component.translatable("screen.minecities.meals.days", town.meals(), days), y,
+				town.meals() > 0 && days != 0 ? INK : BAD);
 		y += SUMMARY_LINE;
 		TownSnapshot.Life life = town.life();
 		line(graphics, Component.translatable("screen.minecities.treasury", life.treasury(), life.earnedToday()), y,
