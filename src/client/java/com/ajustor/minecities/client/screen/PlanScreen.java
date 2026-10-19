@@ -132,6 +132,10 @@ public class PlanScreen extends Screen {
 					? Component.translatable("blueprint.minecities.kind." + row.kind())
 					: Component.translatable("screen.minecities.plans.locked", Component.translatable(row.locked()));
 			graphics.text(font, detail, left + 22, y + 9, row.locked().isEmpty() ? ACCENT : BAD, false);
+			// Au survol : ce que le bâtiment coûte dans le style choisi (MC-76).
+			if (mouseX >= left + 8 && mouseX < left + WIDTH - 8 && mouseY >= y - 4 && mouseY < y + ROW - 4) {
+				graphics.setComponentTooltipForNextFrame(font, PlanCosts.tooltip(row.id(), plan.style()), mouseX, mouseY);
+			}
 			y += ROW;
 		}
 		Component hint = !plan.manager() ? Component.translatable("screen.minecities.managers_only")

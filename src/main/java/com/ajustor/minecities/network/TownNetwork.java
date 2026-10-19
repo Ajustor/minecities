@@ -71,6 +71,25 @@ public final class TownNetwork {
 		ServerPlayNetworking.send(player, new OpenTownPayload(snapshot(level, town, player)));
 	}
 
+	/** Ce qui fait son humeur, « clé:poids », pour l'infobulle de l'onglet Citoyens (MC-71). */
+	private static List<String> factors(CitizenEntity citizen) {
+		return citizen.moodDetail().factors().stream().map(f -> f.key() + ":" + f.delta()).toList();
+	}
+
+	/** Ce qui pèse le plus sur la ville : les trois raisons négatives les plus partagées (MC-71). */
+	private static List<String> worries(ServerLevel level, Town town) {
+		Map<String, Integer> counts = new java.util.HashMap<>();
+		for (UUID id : town.residents().keySet()) {
+			if (level.getEntity(id) instanceof CitizenEntity c) {
+				c.moodDetail().factors().stream().filter(f -> f.delta() < 0)
+						.forEach(f -> counts.merge(f.key(), 1, Integer::sum));
+			}
+		}
+		return counts.entrySet().stream()
+				.sorted(Map.Entry.<String, Integer>comparingByValue().reversed().thenComparing(Map.Entry.comparingByKey()))
+				.limit(3).map(e -> e.getKey() + ":" + e.getValue()).toList();
+	}
+
 	public static TownSnapshot snapshot(ServerLevel level, Town town, ServerPlayer player) {
 		List<TownSnapshot.CitizenRow> rows = new ArrayList<>();
 		Map<UUID, Resident> residents = town.residents();
@@ -82,7 +101,8 @@ public final class TownNetwork {
 			String spouse = r.spouse().map(residents::get).map(Resident::name).orElse("");
 			rows.add(new TownSnapshot.CitizenRow(e.getKey(), r.name(),
 					r.job().map(j -> j.job().translationKey()).orElse(""), hunger, r.hasHome(), spouse, r.isChild(),
-					town.mood(e.getKey()).orElse(-1), citizen == null ? Optional.empty() : citizen.lastNeed()));
+					town.mood(e.getKey()).orElse(-1), citizen == null ? Optional.empty() : citizen.lastNeed(),
+					citizen == null ? List.of() : factors(citizen)));
 		}
 		List<TownSnapshot.BuildingRow> buildings = new ArrayList<>();
 		for (House house : town.houses()) {
@@ -122,7 +142,7 @@ public final class TownNetwork {
 				chronicle.alarmed(now) || Raids.underAttack(town.id()),
 				TownService.granary(level, town).map(g -> Stock.count(g, s -> s.is(Items.EMERALD))).orElse(0),
 				chronicle.earnedToday(now), town.activeAnnexes().size(), town.tier().annexes(), town.appeal(),
-				chronicle.disaster(now).orElse(""), growth.key(), growth.days(), growth.level());
+				chronicle.disaster(now).orElse(""), growth.key(), growth.days(), growth.level(), worries(level, town));
 		return new TownSnapshot(town.hall(), town.name(), town.tier().translationKey(), town.population(),
 				town.citizens(), town.villagers(), town.capacity(), town.homes().size(), town.workstations(),
 				(int) employed, meals, next == null ? "" : next.translationKey(),
@@ -338,6 +358,9 @@ public final class TownNetwork {
 			return;
 		}
 		switch (payload.action()) {
+			case "refresh" -> {
+				// L'écran ouvert redemande l'état de la ville (MC-72) : il le reçoit plus bas.
+			}
 			case "granary" -> {
 				if (TownService.mayOpenGranary(player, town)
 						&& level.getBlockEntity(payload.hall()) instanceof TownHallBlockEntity hall) {

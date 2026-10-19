@@ -18,9 +18,16 @@ public class MineCitiesClient implements ClientModInitializer {
 		com.ajustor.minecities.client.render.GhostRenderer.register();
 		Guide.opener = player -> Minecraft.getInstance().gui.setScreen(
 				new BookViewScreen(new BookViewScreen.BookAccess(Guide.pages())));
-		ClientPlayNetworking.registerGlobalReceiver(com.ajustor.minecities.network.StationSnapshot.TYPE,
-				(payload, context) -> context.client().gui.setScreen(
-						new com.ajustor.minecities.client.screen.StationScreen(payload)));
+		ClientPlayNetworking.registerGlobalReceiver(com.ajustor.minecities.network.StationSnapshot.TYPE, (payload, context) -> {
+			// L'écran du même poste se rafraîchit ; sinon on l'ouvre.
+			if (context.client().gui.screen() instanceof com.ajustor.minecities.client.screen.StationScreen open
+					&& open.shows(payload)) {
+				open.refresh(payload);
+			} else {
+				context.client().gui.setScreen(new com.ajustor.minecities.client.screen.StationScreen(payload));
+			}
+		});
+		com.ajustor.minecities.client.screen.PlanCosts.register();
 		ClientPlayNetworking.registerGlobalReceiver(com.ajustor.minecities.network.PlanNetwork.PlanSnapshot.TYPE,
 				(payload, context) -> context.client().gui.setScreen(
 						new com.ajustor.minecities.client.screen.PlanScreen(payload)));
