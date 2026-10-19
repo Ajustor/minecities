@@ -47,8 +47,11 @@ public final class Guide {
 
 	private static final List<Chapter> CHAPTERS = List.of(new Chapter("found", 3), new Chapter("house", 2),
 			new Chapter("citizens", 4), new Chapter("jobs", 6), new Chapter("build", 4), new Chapter("storage", 2),
-			new Chapter("growth", 2), new Chapter("defense", 2), new Chapter("council", 4),
+			new Chapter("growth", 2), new Chapter("health", 2), new Chapter("city", 3), new Chapter("budget", 2),
+			new Chapter("defense", 2), new Chapter("council", 4), new Chapter("recipes", 2),
 			new Chapter("commands", 2), new Chapter("help", 1));
+	/** Combien de chapitres tiennent sur une page du sommaire (sous le titre et l'indice). */
+	private static final int CONTENTS_LINES = 9;
 
 	/** Ouvre le livre, sur le client : branché par le client, rien sur un serveur dédié. */
 	public static Consumer<Player> opener = player -> {
@@ -98,16 +101,24 @@ public final class Guide {
 		List<Component> pages = new ArrayList<>();
 		pages.add(Component.empty().append(title("guide.minecities.title")).append("\n\n")
 				.append(Component.translatable("guide.minecities.cover")));
-		MutableComponent contents = Component.empty().append(title("guide.minecities.contents")).append("\n");
-		// Les pages se comptent à partir de 1 : la couverture, le sommaire, puis le premier chapitre.
-		int page = 3;
-		for (Chapter chapter : CHAPTERS) {
+		// Le sommaire, sur autant de pages qu'il faut, l'indice sous son titre (MC-74). Les pages se comptent
+		// à partir de 1 : la couverture, le sommaire, puis le premier chapitre.
+		int contentsPages = (CHAPTERS.size() + CONTENTS_LINES - 1) / CONTENTS_LINES;
+		int page = 2 + contentsPages;
+		MutableComponent contents = null;
+		for (int i = 0; i < CHAPTERS.size(); i++) {
+			if (i % CONTENTS_LINES == 0) {
+				contents = Component.empty().append(title("guide.minecities.contents")).append("\n")
+						.append(Component.translatable("guide.minecities.contents.hint").withStyle(ChatFormatting.GRAY))
+						.append("\n");
+				pages.add(contents);
+			}
+			Chapter chapter = CHAPTERS.get(i);
 			int target = page;
 			contents.append(Component.literal("\n").append(Component.translatable("guide.minecities." + chapter.key()))
 					.withStyle(s -> s.withColor(ChatFormatting.DARK_BLUE).withClickEvent(new ClickEvent.ChangePage(target))));
 			page += chapter.pages();
 		}
-		pages.add(contents);
 		for (Chapter chapter : CHAPTERS) {
 			for (int i = 1; i <= chapter.pages(); i++) {
 				MutableComponent text = i == 1
