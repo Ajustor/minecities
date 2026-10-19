@@ -237,13 +237,13 @@ def blueprint(name, kind, layers, upgrade=None, door_x=3, tier=None):
 
 
 def monument(name, layers):
-    """Un monument (MC-11) : pas de perron ni de plaque, ouvert à la mégalopole."""
+    """Un monument (MC-11) : pas de perron ni de plaque, ouvert dès la ville (il en faut un pour la grande ville)."""
     used = {ch for layer in layers for row in layer for ch in row}
     data = {
         "kind": "monument",
         "layers": layers,
         "key": {ch: KEY[ch] for ch in sorted(used) if ch != "."},
-        "tier": "megalopolis",
+        "tier": "town",
     }
     return name, data
 

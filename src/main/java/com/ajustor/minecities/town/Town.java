@@ -468,6 +468,11 @@ public final class Town {
 	 * les nouveaux emplois.
 	 */
 	public Map<UUID, Resident.Employment> assignJobs() {
+		return assignJobs(-1L);
+	}
+
+	/** De même, en notant quand chacun est embauché (son expérience part de là). */
+	public Map<UUID, Resident.Employment> assignJobs(long now) {
 		Set<BlockPos> taken = new HashSet<>();
 		residents.values().forEach(r -> r.job().ifPresent(j -> taken.add(j.station())));
 		Map<UUID, Resident.Employment> hired = new LinkedHashMap<>();
@@ -483,13 +488,19 @@ public final class Town {
 				if (jobless.isEmpty()) {
 					return hired;
 				}
-				Resident.Employment employment = new Resident.Employment(station.job(), house.plaque(), station.pos());
+				Resident.Employment employment = new Resident.Employment(station.job(), house.plaque(), station.pos(), now);
 				residents.put(jobless.get(), residents.get(jobless.get()).employed(employment));
 				taken.add(station.pos());
 				hired.put(jobless.get(), employment);
 			}
 		}
 		return hired;
+	}
+
+	/** Les emplois dont on ne sait pas depuis quand ils durent (une ancienne sauvegarde) partent d'aujourd'hui. */
+	public void stampHires(long now) {
+		residents.replaceAll((id, r) -> r.job().filter(j -> j.hiredAt() < 0).map(j -> r.employed(j.hired(now)))
+				.orElse(r));
 	}
 
 	/** Combien de citoyens exercent ce métier. */
@@ -613,6 +624,26 @@ public final class Town {
 
 	public Optional<Integer> mood(UUID citizen) {
 		return Optional.ofNullable(moods.get(citizen));
+	}
+
+	/** Combien de métiers différents la ville exerce. */
+	public int distinctJobs() {
+		return (int) residents.values().stream().flatMap(r -> r.job().stream()).map(Resident.Employment::job)
+				.distinct().count();
+	}
+
+	/** La ville a-t-elle ce bâtiment public (MC-68) : une taverne, un monument, une bibliothèque ? */
+	public boolean hasPublicBuilding(String building) {
+		return switch (building) {
+			case "tavern" -> hasWorkstation(Job.TAVERNER);
+			case "library" -> hasWorkstation(Job.LIBRARIAN);
+			case "monument" -> !monuments().isEmpty();
+			default -> true;
+		};
+	}
+
+	private boolean hasWorkstation(Job job) {
+		return houses.values().stream().anyMatch(h -> h.workstations().stream().anyMatch(w -> w.job() == job));
 	}
 
 	/** Le bonheur moyen de la ville, sur les citoyens dont on connaît l'humeur ; vide si aucun. */
@@ -872,7 +903,7 @@ public final class Town {
 
 	/** Recalcule le palier ; renvoie l'ancien s'il a changé. */
 	public Optional<TownTier> updateTier() {
-		TownTier now = forcedTier.orElseGet(() -> TownTier.of(population(), homes().size()));
+		TownTier now = forcedTier.orElseGet(() -> TownTier.reached(this));
 		if (now == tier) {
 			return Optional.empty();
 		}

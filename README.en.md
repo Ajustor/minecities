@@ -121,10 +121,13 @@ your other mods and your playtime.
    emeralds go to the granary, everything else to the warehouse. Without couriers everyone walks there;
    with couriers, workers leave their output in their workshop and couriers do the trips. The smith
    also makes shears and iron blocks, the glassblower bottles, the archer fletches arrows.
-7. **Grow**: village (0) → town (10 inhabitants, 4 houses) → city (30, 12) → megalopolis (75, 30).
+7. **Grow**: village → town (10 inhabitants, 4 houses, happiness 3, 5 different jobs, a tavern) →
+   city (30, 12, 5, 10, a monument) → megalopolis (75, 30, 6, 16, a library). A town that no longer
+   meets its tier's conditions goes back down, and takes no more newcomers past the next tier's
+   population until it climbs.
    Each tier unlocks things (the market at Town); a City can place 2 **town hall annexes** (4 for a
    megalopolis) that extend the territory by 48 blocks around them and hold a district granary. The
-   **treasury** is the emeralds in the granary. The **megalopolis** unlocks **monuments**: the
+   **treasury** is the emeralds in the granary. The **town** also unlocks **monuments**: the
    statue, the fountain and the belfry, one of each per town, in polished stone, quartz and gold.
    Once built they make citizens happier (+1, +2 from two on) and give the town **appeal** (shown in
    the summary).

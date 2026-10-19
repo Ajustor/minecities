@@ -46,7 +46,8 @@ public record TownSnapshot(BlockPos hall, String name, String tier, int populati
 	 */
 	public record Life(int mood, boolean partying, boolean canCelebrate, long untilFestival, int festivalCost,
 			boolean alarmed, int treasury, int earnedToday, int annexes, int maxAnnexes, int appeal, String disaster,
-			String growth, int growthDays, int tavernLevel, List<String> worries) {
+			String growth, int growthDays, int tavernLevel, List<String> worries, int jobs, int nextJobs,
+			int nextMood, String nextBuilding, boolean hasBuilding) {
 	}
 
 	/**
@@ -152,6 +153,11 @@ public record TownSnapshot(BlockPos hall, String name, String tier, int populati
 		buf.writeVarInt(s.life.growthDays());
 		buf.writeVarInt(s.life.tavernLevel());
 		writeStrings(buf, s.life.worries());
+		buf.writeVarInt(s.life.jobs());
+		buf.writeVarInt(s.life.nextJobs());
+		buf.writeVarInt(s.life.nextMood());
+		buf.writeUtf(s.life.nextBuilding());
+		buf.writeBoolean(s.life.hasBuilding());
 		buf.writeUtf(s.council.mayor());
 		writeStrings(buf, s.council.deputies());
 		writeStrings(buf, s.council.decrees());
@@ -307,7 +313,8 @@ public record TownSnapshot(BlockPos hall, String name, String tier, int populati
 		boolean manager = buf.readBoolean();
 		Life life = new Life(buf.readInt(), buf.readBoolean(), buf.readBoolean(), buf.readVarLong(), buf.readVarInt(),
 				buf.readBoolean(), buf.readVarInt(), buf.readVarInt(), buf.readVarInt(), buf.readVarInt(), buf.readVarInt(),
-				buf.readUtf(), buf.readUtf(), buf.readVarInt(), buf.readVarInt(), readStrings(buf));
+				buf.readUtf(), buf.readUtf(), buf.readVarInt(), buf.readVarInt(), readStrings(buf), buf.readVarInt(),
+				buf.readVarInt(), buf.readVarInt(), buf.readUtf(), buf.readBoolean());
 		Council council = new Council(buf.readUtf(), readStrings(buf), readStrings(buf), readFlags(buf),
 				readStrings(buf), readFlags(buf), buf.readBoolean(), buf.readUtf(), buf.readVarInt(), buf.readVarInt(),
 				buf.readVarInt(), buf.readVarInt(), buf.readInt(), readStrings(buf), readFlags(buf), buf.readBoolean());

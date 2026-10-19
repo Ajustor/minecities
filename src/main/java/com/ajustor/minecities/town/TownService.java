@@ -492,7 +492,8 @@ public final class TownService {
 		for (UUID citizen : town.residents().keySet()) {
 			town.house(citizen);
 		}
-		town.assignJobs().forEach((citizen, job) -> {
+		town.stampHires(level.getGameTime());
+		town.assignJobs(level.getGameTime()).forEach((citizen, job) -> {
 			notify(level.getServer(), town, Component.translatable("message.minecities.citizen.hired",
 					town.resident(citizen).map(Resident::name).orElse("?"),
 					Component.translatable(job.job().translationKey())));

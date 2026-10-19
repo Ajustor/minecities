@@ -113,6 +113,17 @@ public class RaidScenes implements Scene {
 				: "pas d'émeraudes : le raid a-t-il été repoussé ?"));
 		stage.waitTicks(20);
 		stage.shot("raid_1_victory");
+		// Le Mauvais présage (MC-82) : un joueur qui en est porteur entre sur le territoire, un raid se lève et
+		// le présage est consommé.
+		stage.run(server -> server.getPlayerList().getPlayers().getFirst().addEffect(
+				new net.minecraft.world.effect.MobEffectInstance(net.minecraft.world.effect.MobEffects.BAD_OMEN, 6000)));
+		waitOrExplain(stage, server -> Raids.underAttack(town(server).id()), 200, "le Mauvais présage n'attire pas de raid");
+		check(stage.compute(server -> {
+			boolean consumed = !server.getPlayerList().getPlayers().getFirst()
+					.hasEffect(net.minecraft.world.effect.MobEffects.BAD_OMEN);
+			Raids.stop(server, town(server).id());
+			return consumed ? null : "le présage n'est pas consommé";
+		}));
 		stage.client(mc -> hideGui(mc, true));
 	}
 

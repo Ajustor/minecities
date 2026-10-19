@@ -106,10 +106,29 @@ public final class Raids {
 		return Math.min(12, 2 + wave + population / 10);
 	}
 
+	/** Tous les combien de jours le marchand ambulant passe à l'hôtel de ville. */
+	public static final int TRADER_DAYS = 7;
+	/** À partir de quelle vague un ravageur se joint aux pillards. */
+	public static final int RAVAGER_WAVE = 4;
+
 	/** À chaque relevé de la ville (toutes les 5 secondes) : un raid commence-t-il cette nuit ? */
 	static void consider(ServerLevel level, Town town) {
+		trader(level, town);
 		com.ajustor.minecities.McConfig config = com.ajustor.minecities.McConfig.get();
-		if (!config.raids || ACTIVE.containsKey(town.id()) || town.population() < config.raidMinPopulation) {
+		if (!config.raids || ACTIVE.containsKey(town.id())) {
+			return;
+		}
+		// Un joueur porteur du Mauvais présage qui entre sur le territoire attire un raid (MC-82), à toute
+		// heure : le présage est consommé, comme dans un village.
+		for (ServerPlayer player : level.players()) {
+			if (player.hasEffect(net.minecraft.world.effect.MobEffects.BAD_OMEN)
+					&& town.contains(level.dimension(), player.blockPosition())) {
+				player.removeEffect(net.minecraft.world.effect.MobEffects.BAD_OMEN);
+				start(level, town);
+				return;
+			}
+		}
+		if (town.population() < config.raidMinPopulation) {
 			return;
 		}
 		long spacing = config.raidSpacingDays * 24000L;
@@ -212,7 +231,9 @@ public final class Raids {
 		int distance = Math.max(24, town.radius() - 8);
 		BlockPos edge = town.hall().offset((int) (Math.cos(angle) * distance), 0, (int) (Math.sin(angle) * distance));
 		for (int i = 0; i < raid.waveSize; i++) {
-			EntityType<? extends Raider> type = i % 3 == 2 ? EntityTypes.VINDICATOR : EntityTypes.PILLAGER;
+			// Dès la quatrième vague, un ravageur ouvre la marche (MC-82).
+			EntityType<? extends Raider> type = i == 0 && raid.wave >= RAVAGER_WAVE ? EntityTypes.RAVAGER
+					: i % 3 == 2 ? EntityTypes.VINDICATOR : EntityTypes.PILLAGER;
 			Raider raider = type.create(level, EntitySpawnReason.EVENT);
 			if (raider == null) {
 				continue;
@@ -234,6 +255,39 @@ public final class Raids {
 		level.playSound(null, edge, SoundEvents.RAID_HORN.value(), SoundSource.HOSTILE, 64.0f, 1.0f);
 		TownService.notify(level.getServer(), town, Component.translatable("message.minecities.raid.wave", raid.wave,
 				raid.waves, raid.waveSize));
+	}
+
+	/**
+	 * Le marchand ambulant (MC-82) : une fois par semaine, en journée, il vient s'installer devant l'hôtel
+	 * de ville pour un jour.
+	 */
+	private static void trader(ServerLevel level, Town town) {
+		long now = level.getGameTime();
+		long time = Math.floorMod(level.getOverworldClockTime(), 24000L);
+		long last = town.chronicle().traderAt();
+		if (time < 1000 || time > 6000 || last >= 0 && now - last < TRADER_DAYS * 24000L
+				|| !level.isLoaded(town.hall())) {
+			return;
+		}
+		town.chronicle().traderCame(now);
+		if (last < 0) {
+			// La première semaine commence à la fondation : pas de marchand le premier matin.
+			return;
+		}
+		net.minecraft.world.entity.npc.wanderingtrader.WanderingTrader trader = EntityTypes.WANDERING_TRADER.create(level,
+				EntitySpawnReason.EVENT);
+		if (trader == null) {
+			return;
+		}
+		int x = town.hall().getX() + 3;
+		int z = town.hall().getZ() + 3;
+		int y = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
+		trader.snapTo(x + 0.5, y, z + 0.5, level.getRandom().nextFloat() * 360, 0);
+		trader.setDespawnDelay(24000);
+		trader.setHomeTo(town.hall(), 16);
+		level.addFreshEntity(trader);
+		TownService.notify(level.getServer(), town, Component.translatable("message.minecities.trader", town.name()));
+		Towns.get(level.getServer()).changed();
 	}
 
 	/** Les pillards qui atteignent l'hôtel de ville vident le grenier, une bouchée à la fois. */

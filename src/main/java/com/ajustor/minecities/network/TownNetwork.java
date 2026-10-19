@@ -142,7 +142,9 @@ public final class TownNetwork {
 				chronicle.alarmed(now) || Raids.underAttack(town.id()),
 				TownService.granary(level, town).map(g -> Stock.count(g, s -> s.is(Items.EMERALD))).orElse(0),
 				chronicle.earnedToday(now), town.activeAnnexes().size(), town.tier().annexes(), town.appeal(),
-				chronicle.disaster(now).orElse(""), growth.key(), growth.days(), growth.level(), worries(level, town));
+				chronicle.disaster(now).orElse(""), growth.key(), growth.days(), growth.level(), worries(level, town),
+				town.distinctJobs(), next == null ? 0 : next.minJobs(), next == null ? 0 : (int) Math.round(next.minMood() * 10),
+				next == null ? "" : next.building(), next != null && town.hasPublicBuilding(next.building()));
 		return new TownSnapshot(town.hall(), town.name(), town.tier().translationKey(), town.population(),
 				town.citizens(), town.villagers(), town.capacity(), town.homes().size(), town.workstations(),
 				(int) employed, meals, next == null ? "" : next.translationKey(),

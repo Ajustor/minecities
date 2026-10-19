@@ -32,7 +32,7 @@ public record StationSnapshot(BlockPos pos, String block, String job, String tow
 	public static final Type<StationSnapshot> TYPE = new Type<>(MineCities.id("open_station"));
 
 	/** Un travailleur du poste : son nom, ce qu'il fait ({@code working}, {@code sleeping}…), ce qui lui manque. */
-	public record Worker(UUID id, String name, String state, Optional<Component> need) {
+	public record Worker(UUID id, String name, String state, Optional<Component> need, String rank) {
 	}
 
 	/** Un minerai du puits : de quoi le montrer, combien il en reste à portée, combien le mineur en a tiré. */
@@ -63,6 +63,7 @@ public record StationSnapshot(BlockPos pos, String block, String job, String tow
 			buf.writeUtf(w.name());
 			buf.writeUtf(w.state());
 			OPTIONAL.encode(buf, w.need());
+			buf.writeUtf(w.rank());
 		}
 		buf.writeVarInt(s.sites.size());
 		for (Site site : s.sites) {
@@ -94,7 +95,8 @@ public record StationSnapshot(BlockPos pos, String block, String job, String tow
 		int count = buf.readVarInt();
 		List<Worker> workers = new ArrayList<>(count);
 		for (int i = 0; i < count; i++) {
-			workers.add(new Worker(UUIDUtil.STREAM_CODEC.decode(buf), buf.readUtf(), buf.readUtf(), OPTIONAL.decode(buf)));
+			workers.add(new Worker(UUIDUtil.STREAM_CODEC.decode(buf), buf.readUtf(), buf.readUtf(), OPTIONAL.decode(buf),
+					buf.readUtf()));
 		}
 		int siteCount = buf.readVarInt();
 		List<Site> sites = new ArrayList<>(siteCount);
