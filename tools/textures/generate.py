@@ -357,6 +357,32 @@ def hats():
     return img
 
 
+# Le chariot des caravanes et son camp (MC-80) : bois, bois sombre, bâche, rouge, fer, caisse, tonneau,
+# laiton, braises, flamme, pierre, toile de tente (voir CaravanCartModel.Tile).
+CARAVAN_TILES = ["#8a5a2b", "#5a3b22", "#e9e2cc", "#b3312c", "#6f7378", "#b08447", "#7a4e26", "#f2c94a",
+                 "#f08a24", "#ffd34a", "#8d8d8d", "#c9a46a"]
+
+
+def caravan():
+    """La texture du chariot : 512 x 256, des pavés de 128 x 64, chacun d'une couleur (un peu bruitée)."""
+    rng = random.Random(80)
+    img = Image.new("RGBA", (512, 256), (0, 0, 0, 0))
+    for i, color in enumerate(CARAVAN_TILES):
+        x0, y0 = (i % 4) * 128, (i // 4) * 64
+        base = hexc(color)
+        for y in range(64):
+            for x in range(128):
+                c = jitter(rng, base, 0.05)
+                # Le bois a du fil : des rangs plus sombres.
+                if i in (0, 1, 5, 6) and y % 3 == 0:
+                    c = shade(c, 0.9)
+                # La toile est tissée.
+                if i in (2, 11) and (x + y) % 2 == 0:
+                    c = shade(c, 0.95)
+                img.putpixel((x0 + x, y0 + y), c)
+    return img
+
+
 def sprite(rows, palette):
     """Un objet de 16 x 16 dessiné en caractères : chaque caractère est une couleur de la palette."""
     img = Image.new("RGBA", (16, 16), (0, 0, 0, 0))
@@ -465,6 +491,27 @@ PLAN = ([
     "................"], {"b": "#2f6fb5", "d": "#1d4a7c", "r": "#e8e2cf", "l": "#eaf3ff"})
 
 
+# Le bâton d'itinéraire (MC-80) : un bâton de bois, une carte roulée nouée en haut, un fanion rouge.
+# w bois, k nœud sombre, m carte, n traits de la carte, f fanion.
+ROUTE_STAFF = ([
+    "..........ff....",
+    "..........fff...",
+    ".........mmfff..",
+    "........mnmmf...",
+    ".......mmmnmm...",
+    "........mnmm....",
+    ".......kkmm.....",
+    "......wkk.......",
+    ".....ww.........",
+    "....ww..........",
+    "...ww...........",
+    "..ww............",
+    ".ww.............",
+    "ww..............",
+    "w...............",
+    "................"], {"w": "#8a5a2b", "k": "#4a2f15", "m": "#efe3c2", "n": "#b0563a", "f": "#c0392b"})
+
+
 # Le manteau des citoyens (MC-12) : un manteau de laine brune, boutonné, au col de fourrure.
 COAT = ([
     "................",
@@ -526,6 +573,7 @@ def main():
     save(house_plaque("invalid"), TEXTURES / "block/house_plaque_invalid.png")
     save(spawn_egg(), TEXTURES / "item/citizen_spawn_egg.png")
     save(hats(), TEXTURES / "entity/citizen/hats.png")
+    save(caravan(), TEXTURES / "entity/caravan.png")
     save(annex_board(), TEXTURES / "block/annex_board.png")
     save(tax_box("top"), TEXTURES / "block/tax_box_top.png")
     save(tax_box("front"), TEXTURES / "block/tax_box_front.png")
@@ -534,6 +582,7 @@ def main():
         save(sprite(rows, palette), TEXTURES / f"item/{name}.png")
     save(sprite(*GUIDE), TEXTURES / "item/guide.png")
     save(sprite(*PLAN), TEXTURES / "item/plan.png")
+    save(sprite(*ROUTE_STAFF), TEXTURES / "item/route_staff.png")
     save(sprite(*COAT), TEXTURES / "item/coat.png")
     save(coat_layer(), TEXTURES / "entity/equipment/humanoid/coat.png")
 

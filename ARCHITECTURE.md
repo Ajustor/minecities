@@ -28,7 +28,7 @@ Ce qui change d'une version à l'autre, du plus simple au plus rare :
 1. **Un renommage** (classe, champ, constante) : une règle de remplacement dans
    `stonecutter.gradle.kts`. Le code reste écrit pour la version active, sans commentaire.
 2. **Un appel dont la forme change** : une fonction de `com.ajustor.minecities.compat` (`EntityCompat`,
-   `BlockCompat`, `SoundCompat`), seul endroit du code où vivent les conditions de version
+   `BlockCompat`, `SoundCompat`, et `RenderCompat` côté client), seul endroit du code où vivent les conditions de version
    (`//? if >=26.3 {`). Le reste du mod appelle la fonction, sans savoir quelle version tourne.
 3. **Une signature qu'on surcharge ou qu'un mixin vise** (une méthode de Minecraft redéfinie par une
    classe du mod, ou ciblée par un mixin) : la condition de version directement dans la classe, à

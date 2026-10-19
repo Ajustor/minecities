@@ -4,11 +4,14 @@ import com.ajustor.minecities.block.TownHallBlockEntity;
 import com.ajustor.minecities.build.Blueprints;
 import com.ajustor.minecities.build.BuildStyle;
 import com.ajustor.minecities.build.Construction;
+import com.ajustor.minecities.caravan.CaravanCart;
+import com.ajustor.minecities.caravan.Caravans;
 import com.ajustor.minecities.citizen.CitizenEntity;
 import com.ajustor.minecities.citizen.Happiness;
 import com.ajustor.minecities.client.screen.TownHallScreen;
 import com.ajustor.minecities.network.TownNetwork;
 import com.ajustor.minecities.network.TownSnapshot;
+import com.ajustor.minecities.registry.McEntities;
 import com.ajustor.minecities.registry.McItems;
 import com.ajustor.minecities.town.Decree;
 import com.ajustor.minecities.town.Families;
@@ -42,7 +45,8 @@ import static com.ajustor.minecities.gametest.CityScenes.waitOrExplain;
 /**
  * La mairie et la maîtrise (v1.1), dans le vrai jeu : le forgeron d'une forge de niveau 4 habille le
  * garde de fer de pied en cap ; le tanneur tanne ; le maire décrète un jour férié (l'onglet Mairie) ;
- * deux villes signent un accord et une caravane porte le pain de l'une à l'autre.
+ * deux villes signent un accord et une caravane porte le pain de l'une à l'autre (elle prend corps près
+ * du joueur, et campe la nuit).
  *
  * <p>{@code ./gradlew runClientGameTest -PminecitiesGametest=council}
  */
@@ -164,7 +168,26 @@ public class CouncilScenes implements Scene {
 			town.addPartner(other.id());
 			other.addPartner(town.id());
 		});
-		waitOrExplain(stage, server -> granary(server, OTHER_HALL, Items.BREAD) > 0, 2600, "pas de caravane",
+		// Une caravane part (MC-80) : elle prend corps près du joueur, chariot, cheval et marchand.
+		waitOrExplain(stage, server -> !Caravans.get(server).active().isEmpty(), 1400, "aucune caravane ne part",
+				server -> "pain " + granary(server, HALL, Items.BREAD) + " / " + granary(server, OTHER_HALL, Items.BREAD)
+						+ ", émeraudes " + granary(server, OTHER_HALL, Items.EMERALD) + ".");
+		waitOrExplain(stage, server -> Caravans.get(server).active().getFirst().traveled() > 14
+				&& Caravans.embodied(Caravans.get(server).active().getFirst().id()) && cart(server) != null, 400,
+				"la caravane ne prend pas corps près du joueur");
+		check(stage.compute(server -> server.overworld().getEntities(net.minecraft.world.entity.EntityTypes.HORSE,
+				h -> h.entityTags().contains(Caravans.TAG)).size() == 1 ? null : "pas de cheval à la caravane"));
+		shootCart(stage, "council_caravan");
+		// La nuit, elle s'arrête et campe : tente, feu, le marchand assis.
+		stage.command("time set 15000");
+		stage.waitTicks(5);
+		double before = stage.compute(server -> Caravans.get(server).active().getFirst().traveled());
+		stage.waitTicks(60);
+		check(stage.compute(server -> Caravans.get(server).active().getFirst().traveled() == before
+				&& cart(server) != null && cart(server).camping() ? null : "la caravane ne campe pas la nuit"));
+		shootCart(stage, "council_camp");
+		stage.command("time set 1000");
+		waitOrExplain(stage, server -> granary(server, OTHER_HALL, Items.BREAD) > 0, 4800, "pas de caravane",
 				server -> "pain " + granary(server, HALL, Items.BREAD) + " / " + granary(server, OTHER_HALL, Items.BREAD)
 						+ ", émeraudes " + granary(server, OTHER_HALL, Items.EMERALD) + ".");
 		check(stage.compute(server -> granary(server, OTHER_HALL, Items.EMERALD) < 20
@@ -273,5 +296,28 @@ public class CouncilScenes implements Scene {
 			hall.setItem(1, new ItemStack(Items.COOKED_COD, 4));
 		}
 		command(server, "gamemode spectator @p");
+	}
+	/** Le chariot de la caravane, s'il a pris corps. */
+	private static CaravanCart cart(MinecraftServer server) {
+		return server.overworld().getEntities(McEntities.CARAVAN_CART, c -> true).stream().findFirst().orElse(null);
+	}
+
+	/** Une capture du chariot, vu de côté (le camp se dresse derrière lui). */
+	private static void shootCart(Stage stage, String name) {
+		double[] at = stage.compute(server -> {
+			CaravanCart cart = cart(server);
+			double yaw = Math.toRadians(cart.getYRot());
+			// L'avant du chariot, puis sa gauche (voir CaravanCart.FIRE_X).
+			double fx = -Math.sin(yaw);
+			double fz = Math.cos(yaw);
+			double lx = Math.cos(yaw);
+			double lz = Math.sin(yaw);
+			return new double[]{cart.getX() - fx * 3 - lx * 6, cart.getY() + 3.5, cart.getZ() - fz * 3 - lz * 6,
+					cart.getX() - fx * 1.5 + lx * 0.5, cart.getY() + 0.8, cart.getZ() - fz * 1.5 + lz * 0.5};
+		});
+		stage.look(at[0], at[1], at[2], at[3], at[4], at[5]);
+		stage.client(mc -> hideGui(mc, true));
+		stage.waitTicks(20);
+		stage.shot(name);
 	}
 }

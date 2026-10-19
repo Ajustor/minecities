@@ -45,6 +45,7 @@ public class MineCities implements ModInitializer {
 		com.ajustor.minecities.town.Disasters.register();
 		Borders.register();
 		Trade.register();
+		com.ajustor.minecities.caravan.Caravans.register();
 		TownCommands.register();
 		TownNetwork.register();
 		com.ajustor.minecities.network.StationNetwork.register();
