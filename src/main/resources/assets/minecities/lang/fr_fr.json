@@ -261,6 +261,7 @@
   "screen.minecities.festival": "Donner une fête (%s émeraudes)",
   "screen.minecities.locate": "Où ?",
   "screen.minecities.mood": "Bonheur moyen : %s/10",
+  "screen.minecities.mood.worries": " — pèse : %s",
   "screen.minecities.mood.short": "☺ %s",
   "screen.minecities.alarmed": "Alerte ! Les citoyens sont à l'abri.",
   "screen.minecities.partying": "La fête bat son plein !",

@@ -46,7 +46,7 @@ public record TownSnapshot(BlockPos hall, String name, String tier, int populati
 	 */
 	public record Life(int mood, boolean partying, boolean canCelebrate, long untilFestival, int festivalCost,
 			boolean alarmed, int treasury, int earnedToday, int annexes, int maxAnnexes, int appeal, String disaster,
-			String growth, int growthDays, int tavernLevel) {
+			String growth, int growthDays, int tavernLevel, List<String> worries) {
 	}
 
 	/**
@@ -89,7 +89,7 @@ public record TownSnapshot(BlockPos hall, String name, String tier, int populati
 
 	/** Un citoyen : nom, métier et faim (clés), logé ou non, conjoint, enfant, humeur (-1 si inconnue), besoin. */
 	public record CitizenRow(UUID id, String name, String job, String hunger, boolean housed, String spouse,
-			boolean child, int mood, Optional<Component> need) {
+			boolean child, int mood, Optional<Component> need, List<String> factors) {
 	}
 
 	/**
@@ -151,6 +151,7 @@ public record TownSnapshot(BlockPos hall, String name, String tier, int populati
 		buf.writeUtf(s.life.growth());
 		buf.writeVarInt(s.life.growthDays());
 		buf.writeVarInt(s.life.tavernLevel());
+		writeStrings(buf, s.life.worries());
 		buf.writeUtf(s.council.mayor());
 		writeStrings(buf, s.council.deputies());
 		writeStrings(buf, s.council.decrees());
@@ -175,6 +176,7 @@ public record TownSnapshot(BlockPos hall, String name, String tier, int populati
 			buf.writeBoolean(row.child);
 			buf.writeInt(row.mood);
 			NEED.encode(buf, row.need);
+			writeStrings(buf, row.factors);
 		}
 		buf.writeVarInt(s.buildings.size());
 		for (BuildingRow building : s.buildings) {
@@ -302,7 +304,7 @@ public record TownSnapshot(BlockPos hall, String name, String tier, int populati
 		boolean manager = buf.readBoolean();
 		Life life = new Life(buf.readInt(), buf.readBoolean(), buf.readBoolean(), buf.readVarLong(), buf.readVarInt(),
 				buf.readBoolean(), buf.readVarInt(), buf.readVarInt(), buf.readVarInt(), buf.readVarInt(), buf.readVarInt(),
-				buf.readUtf(), buf.readUtf(), buf.readVarInt(), buf.readVarInt());
+				buf.readUtf(), buf.readUtf(), buf.readVarInt(), buf.readVarInt(), readStrings(buf));
 		Council council = new Council(buf.readUtf(), readStrings(buf), readStrings(buf), readFlags(buf),
 				readStrings(buf), readFlags(buf), buf.readBoolean(), buf.readUtf(), buf.readVarInt(), buf.readVarInt(),
 				buf.readVarInt(), buf.readVarInt(), buf.readInt());
@@ -310,7 +312,8 @@ public record TownSnapshot(BlockPos hall, String name, String tier, int populati
 		List<CitizenRow> rows = new ArrayList<>(count);
 		for (int i = 0; i < count; i++) {
 			rows.add(new CitizenRow(UUIDUtil.STREAM_CODEC.decode(buf), buf.readUtf(), buf.readUtf(), buf.readUtf(),
-					buf.readBoolean(), buf.readUtf(), buf.readBoolean(), buf.readInt(), NEED.decode(buf)));
+					buf.readBoolean(), buf.readUtf(), buf.readBoolean(), buf.readInt(), NEED.decode(buf),
+					readStrings(buf)));
 		}
 		int buildingCount = buf.readVarInt();
 		List<BuildingRow> buildings = new ArrayList<>(buildingCount);

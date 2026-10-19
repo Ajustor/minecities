@@ -261,6 +261,7 @@
   "screen.minecities.festival": "Hold a festival (%s emeralds)",
   "screen.minecities.locate": "Find",
   "screen.minecities.mood": "Average happiness: %s/10",
+  "screen.minecities.mood.worries": " — weighing: %s",
   "screen.minecities.mood.short": "☺ %s",
   "screen.minecities.alarmed": "Alarm! Citizens are taking shelter.",
   "screen.minecities.partying": "The festival is in full swing!",

@@ -327,8 +327,14 @@ public class TownHallScreen extends Screen {
 		next.active = page < pages - 1;
 	}
 
+	/** Où est la souris, pour les infobulles dessinées avec le contenu des onglets. */
+	private int mouseX;
+	private int mouseY;
+
 	@Override
 	public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a) {
+		this.mouseX = mouseX;
+		this.mouseY = mouseY;
 		graphics.fill(left - 3, top - 3, left + WIDTH + 3, top + HEIGHT + 3, EDGE);
 		graphics.fill(left, top, left + WIDTH, top + HEIGHT, PAPER);
 		graphics.text(font, Component.translatable("screen.minecities.title", town.name(),
@@ -402,8 +408,24 @@ public class TownHallScreen extends Screen {
 		}
 		if (life.mood() >= 0) {
 			double mood = life.mood() / 10.0;
-			line(graphics, Component.translatable("screen.minecities.mood", String.format("%.1f", mood)), y,
-					moodColor(mood));
+			// Ce qui pèse le plus, à la suite (MC-71) : autant de raisons que la ligne en tient.
+			MutableComponent text = Component.translatable("screen.minecities.mood", String.format("%.1f", mood));
+			List<Component> worries = new java.util.ArrayList<>();
+			for (String worry : life.worries()) {
+				String[] kv = worry.split(":");
+				worries.add(Component.translatable("mood.minecities." + kv[0]).append(" (" + kv[1] + ")"));
+				if (font.width(text.copy().append(Component.translatable("screen.minecities.mood.worries",
+						net.minecraft.network.chat.ComponentUtils.formatList(worries, Component.literal(", ")))))
+						> WIDTH - 28) {
+					worries.removeLast();
+					break;
+				}
+			}
+			if (!worries.isEmpty()) {
+				text.append(Component.translatable("screen.minecities.mood.worries",
+						net.minecraft.network.chat.ComponentUtils.formatList(worries, Component.literal(", "))));
+			}
+			line(graphics, text, y, moodColor(mood));
 			y += SUMMARY_LINE;
 		}
 		if (life.alarmed()) {
@@ -454,8 +476,21 @@ public class TownHallScreen extends Screen {
 			graphics.text(font, Component.translatable(row.hunger()), left + 230, y,
 					row.hunger().endsWith("starving") || row.hunger().endsWith("hungry") ? BAD : GOOD, false);
 			if (row.mood() >= 0) {
-				graphics.text(font, Component.translatable("screen.minecities.mood.short", row.mood()), left + 300, y,
-						moodColor(row.mood()), false);
+				Component mood = Component.translatable("screen.minecities.mood.short", row.mood());
+				graphics.text(font, mood, left + 300, y, moodColor(row.mood()), false);
+				// Au survol : ce qui fait son humeur (MC-71).
+				if (!row.factors().isEmpty() && mouseX >= left + 300 && mouseX < left + 300 + font.width(mood)
+						&& mouseY >= y && mouseY < y + 9) {
+					List<Component> lines = new java.util.ArrayList<>();
+					for (String factor : row.factors()) {
+						String[] kv = factor.split(":");
+						int delta = Integer.parseInt(kv[1]);
+						lines.add(Component.literal((delta > 0 ? "+" : "") + delta + " ")
+								.append(Component.translatable("mood.minecities." + kv[0]))
+								.withColor(delta > 0 ? GOOD : delta < 0 ? BAD : FADED));
+					}
+					graphics.setComponentTooltipForNextFrame(font, lines, mouseX, mouseY);
+				}
 			}
 			Component second = row.need().<Component>map(n -> Component.literal("« ").append(n).append(" »"))
 					.orElse(row.spouse().isEmpty() ? (row.housed() ? Component.empty()

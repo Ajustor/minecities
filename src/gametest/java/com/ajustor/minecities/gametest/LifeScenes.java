@@ -176,6 +176,10 @@ public class LifeScenes implements Scene {
 				town(server), server.getPlayerList().getPlayers().getFirst()));
 		check(snapshot.life().mood() >= 0 && snapshot.buildings().size() == 2 ? null
 				: "écran : bonheur " + snapshot.life().mood() + ", bâtiments " + snapshot.buildings());
+		// Les raisons de l'humeur arrivent à l'écran : celles de chaque citoyen, et ce qui pèse sur la ville (MC-71).
+		check(snapshot.rows().stream().anyMatch(r -> !r.factors().isEmpty()) && snapshot.life().worries().size() <= 3
+				&& snapshot.life().worries().stream().allMatch(w -> w.matches("[a-z_]+:[0-9]+")) ? null
+				: "raisons : " + snapshot.life().worries() + " ; " + snapshot.rows().getFirst().factors());
 		stage.client(mc -> {
 			hideGui(mc, false);
 			mc.gui.setScreen(new TownHallScreen(snapshot));
