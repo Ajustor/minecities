@@ -108,6 +108,63 @@ public final class PlanNetwork {
 		}
 	}
 
+	/** Ce que coûterait ce schéma dans ce style : l'interface le demande au survol d'un plan (MC-76). */
+	public record CostRequest(String blueprint, String style) implements CustomPacketPayload {
+		public static final Type<CostRequest> TYPE = new Type<>(MineCities.id("plan_cost_request"));
+		public static final StreamCodec<FriendlyByteBuf, CostRequest> CODEC = StreamCodec.composite(
+				ByteBufCodecs.STRING_UTF8, CostRequest::blueprint, ByteBufCodecs.STRING_UTF8, CostRequest::style,
+				CostRequest::new);
+
+		@Override
+		public Type<? extends CustomPacketPayload> type() {
+			return TYPE;
+		}
+	}
+
+	/** Un matériau du coût : l'objet (son identifiant), combien il en faut, combien les réserves en ont. */
+	public record Material(String item, int needed, int stocked) {
+	}
+
+	/** Le coût d'un schéma : les émeraudes payées à la commande, et les matériaux les plus nombreux. */
+	public record CostPayload(String blueprint, String style, int emeralds, List<Material> materials)
+			implements CustomPacketPayload {
+		public static final Type<CostPayload> TYPE = new Type<>(MineCities.id("plan_cost"));
+		public static final StreamCodec<FriendlyByteBuf, CostPayload> CODEC = StreamCodec.of(CostPayload::write,
+				CostPayload::read);
+
+		private static void write(FriendlyByteBuf buf, CostPayload c) {
+			buf.writeUtf(c.blueprint);
+			buf.writeUtf(c.style);
+			buf.writeVarInt(c.emeralds);
+			buf.writeVarInt(c.materials.size());
+			for (Material m : c.materials) {
+				buf.writeUtf(m.item());
+				buf.writeVarInt(m.needed());
+				buf.writeVarInt(m.stocked());
+			}
+		}
+
+		private static CostPayload read(FriendlyByteBuf buf) {
+			String blueprint = buf.readUtf();
+			String style = buf.readUtf();
+			int emeralds = buf.readVarInt();
+			int count = buf.readVarInt();
+			List<Material> materials = new ArrayList<>(count);
+			for (int i = 0; i < count; i++) {
+				materials.add(new Material(buf.readUtf(), buf.readVarInt(), buf.readVarInt()));
+			}
+			return new CostPayload(blueprint, style, emeralds, materials);
+		}
+
+		@Override
+		public Type<? extends CustomPacketPayload> type() {
+			return TYPE;
+		}
+	}
+
+	/** Combien de matériaux le coût montre, les plus nombreux d'abord. */
+	private static final int COST_LINES = 10;
+
 	/** Les chantiers dont chaque joueur voit le fantôme, et combien de blocs il en restait à l'envoi. */
 	private static final Map<UUID, Map<UUID, Integer>> SHOWN = new HashMap<>();
 
@@ -119,9 +176,51 @@ public final class PlanNetwork {
 		PayloadTypeRegistry.serverboundPlay().register(ActionPayload.TYPE, ActionPayload.CODEC);
 		ServerPlayNetworking.registerGlobalReceiver(ActionPayload.TYPE,
 				(payload, context) -> act(context.player(), payload.action()));
+		PayloadTypeRegistry.serverboundPlay().register(CostRequest.TYPE, CostRequest.CODEC);
+		PayloadTypeRegistry.clientboundPlay().register(CostPayload.TYPE, CostPayload.CODEC);
+		ServerPlayNetworking.registerGlobalReceiver(CostRequest.TYPE, (payload, context) -> cost(context.player(), payload));
 		ServerTickEvents.END_SERVER_TICK.register(PlanNetwork::tick);
 		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> SHOWN.remove(handler.getPlayer().getUUID()));
 		ServerLifecycleEvents.SERVER_STOPPED.register(server -> SHOWN.clear());
+	}
+
+	/** Le coût de ce schéma, pour ce joueur : ce qu'en ont les réserves de sa ville (MC-76). */
+	private static void cost(ServerPlayer player, CostRequest request) {
+		if (ServerPlayNetworking.canSend(player, CostPayload.TYPE)) {
+			costOf(player, request).ifPresent(cost -> ServerPlayNetworking.send(player, cost));
+		}
+	}
+
+	/** Le coût de ce schéma pour ce joueur ; vide si le schéma n'existe pas. */
+	public static Optional<CostPayload> costOf(ServerPlayer player, CostRequest request) {
+		ServerLevel level = player.level();
+		Optional<Blueprint> blueprint = Optional.ofNullable(net.minecraft.resources.Identifier.tryParse(request.blueprint()))
+				.flatMap(id -> Blueprints.get(level.getServer(), id));
+		if (blueprint.isEmpty()) {
+			return Optional.empty();
+		}
+		com.ajustor.minecities.build.BuildStyle style = com.ajustor.minecities.build.BuildStyle
+				.fromSerializedName(request.style()).orElse(com.ajustor.minecities.build.BuildStyle.PLAINS);
+		Map<net.minecraft.world.item.Item, Integer> needs = BuildPlan.materials(BuildPlan.of(blueprint.get(), style,
+				net.minecraft.core.BlockPos.ZERO, net.minecraft.world.level.block.Rotation.NONE));
+		Towns towns = Towns.get(level.getServer());
+		Optional<com.ajustor.minecities.town.Town> town = towns.at(level.dimension(), player.blockPosition())
+				.or(() -> towns.memberOf(player.getUUID()).stream().findFirst());
+		List<net.minecraft.world.Container> stores = new ArrayList<>();
+		town.ifPresent(t -> com.ajustor.minecities.town.Storage.stores(t).forEach(pos -> {
+			if (level.isLoaded(pos) && level.getBlockEntity(pos) instanceof net.minecraft.world.Container c) {
+				stores.add(c);
+			}
+		}));
+		List<Material> materials = needs.entrySet().stream()
+				.sorted(Map.Entry.<net.minecraft.world.item.Item, Integer>comparingByValue().reversed())
+				.limit(COST_LINES)
+				.map(e -> new Material(net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(e.getKey()).toString(),
+						e.getValue(), stores.stream().mapToInt(c -> com.ajustor.minecities.town.Stock.count(c,
+								s -> s.is(e.getKey()))).sum()))
+				.toList();
+		return Optional.of(new CostPayload(request.blueprint(), request.style(),
+				com.ajustor.minecities.town.Budget.cost(blueprint.get().level()), materials));
 	}
 
 	/** Le plan que tient ce joueur, en main ou dans l'autre main. */

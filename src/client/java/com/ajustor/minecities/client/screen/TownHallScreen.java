@@ -706,6 +706,10 @@ public class TownHallScreen extends Screen {
 			graphics.text(font, detail, left + 22, y + 9, plan.locked().isEmpty() ? ACCENT : BAD, false);
 			graphics.text(font, Component.translatable("screen.minecities.plans.size", plan.width(), plan.depth(),
 					plan.height()), left + 22 + Math.max(110, font.width(detail) + 10), y + 9, FADED, false);
+			// Au survol : ce que le bâtiment coûte, et ce que les réserves en ont (MC-76).
+			if (mouseX >= left + 14 && mouseX < left + WIDTH - 84 && mouseY >= y && mouseY < y + 18) {
+				graphics.setComponentTooltipForNextFrame(font, PlanCosts.tooltip(plan.id(), STYLES[style]), mouseX, mouseY);
+			}
 			y += ROW;
 		}
 		if (!town.manager()) {

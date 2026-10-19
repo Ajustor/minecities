@@ -27,6 +27,7 @@ public class MineCitiesClient implements ClientModInitializer {
 				context.client().gui.setScreen(new com.ajustor.minecities.client.screen.StationScreen(payload));
 			}
 		});
+		com.ajustor.minecities.client.screen.PlanCosts.register();
 		ClientPlayNetworking.registerGlobalReceiver(com.ajustor.minecities.network.PlanNetwork.PlanSnapshot.TYPE,
 				(payload, context) -> context.client().gui.setScreen(
 						new com.ajustor.minecities.client.screen.PlanScreen(payload)));

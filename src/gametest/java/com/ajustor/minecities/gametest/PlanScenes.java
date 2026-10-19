@@ -148,6 +148,22 @@ public class PlanScenes implements Scene {
 		check(plan(snapshot, HOUSE).filter(p -> p.locked().isEmpty()).isPresent()
 				&& plan(snapshot, MARKET).filter(p -> !p.locked().isEmpty()).isPresent() ? null
 				: "les plans : " + snapshot.plans());
+		// Le coût d'un plan, au survol (MC-76) : une maison de niveau 2 se paie en émeraudes, ses matériaux
+		// d'abord les plus nombreux, avec ce qu'en ont les réserves.
+		check(stage.compute(server -> {
+			Optional<PlanNetwork.CostPayload> cost = PlanNetwork.costOf(player(server),
+					new PlanNetwork.CostRequest("minecities:house_2", "plains"));
+			if (cost.isEmpty() || cost.get().emeralds() <= 0 || cost.get().materials().isEmpty()) {
+				return "le coût : " + cost;
+			}
+			List<PlanNetwork.Material> m = cost.get().materials();
+			for (int i = 1; i < m.size(); i++) {
+				if (m.get(i).needed() > m.get(i - 1).needed()) {
+					return "le coût n'est pas trié : " + m;
+				}
+			}
+			return null;
+		}));
 		stage.client(mc -> {
 			hideGui(mc, false);
 			mc.gui.setScreen(new TownHallScreen(snapshot));
