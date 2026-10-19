@@ -28,6 +28,25 @@ public class MineCitiesClient implements ClientModInitializer {
 			}
 		});
 		com.ajustor.minecities.client.screen.PlanCosts.register();
+		// À quoi sert chaque objet du mod : une ligne grise sous son nom (MC-73).
+		net.fabricmc.fabric.api.client.item.v1.ItemTooltipCallback.EVENT.register((stack, context, flag, lines) -> {
+			net.minecraft.resources.Identifier id = net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(stack.getItem());
+			if (!id.getNamespace().equals(com.ajustor.minecities.MineCities.MOD_ID)) {
+				return;
+			}
+			String key = "item.minecities." + id.getPath() + ".desc";
+			net.minecraft.network.chat.Component line = null;
+			if (net.minecraft.locale.Language.getInstance().has(key)) {
+				line = net.minecraft.network.chat.Component.translatable(key);
+			} else if (id.getPath().endsWith("_station")) {
+				line = net.minecraft.network.chat.Component.translatable("item.minecities.station.desc",
+						net.minecraft.network.chat.Component.translatable("job.minecities."
+								+ id.getPath().substring(0, id.getPath().length() - "_station".length())));
+			}
+			if (line != null) {
+				lines.add(Math.min(1, lines.size()), line.copy().withStyle(net.minecraft.ChatFormatting.GRAY));
+			}
+		});
 		ClientPlayNetworking.registerGlobalReceiver(com.ajustor.minecities.network.PlanNetwork.PlanSnapshot.TYPE,
 				(payload, context) -> context.client().gui.setScreen(
 						new com.ajustor.minecities.client.screen.PlanScreen(payload)));
@@ -44,6 +63,9 @@ public class MineCitiesClient implements ClientModInitializer {
 			// Une décision du maire rafraîchit l'écran déjà ouvert ; sinon on l'ouvre.
 			if (context.client().gui.screen() instanceof TownHallScreen open && open.shows(payload.town())) {
 				open.refresh(payload.town());
+			} else if (context.client().gui.screen() instanceof com.ajustor.minecities.client.screen.ManageScreen manage
+					&& manage.shows(payload.town())) {
+				manage.refresh(payload.town());
 			} else if (context.client().gui.screen() instanceof com.ajustor.minecities.client.screen.TownMapScreen map
 					&& map.shows(payload.town())) {
 				map.refresh(payload.town());

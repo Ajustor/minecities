@@ -56,7 +56,7 @@ public class GuideScenes implements Scene {
 			check(player.getRecipeBook().contains(ResourceKey.create(Registries.RECIPE, MineCities.id("town_hall"))),
 					"le livre de recettes ne montre pas l'hôtel de ville");
 			List<Component> pages = Guide.pages();
-			check(pages.size() == 34, "le guide a " + pages.size() + " pages");
+			check(pages.size() == 44, "le guide a " + pages.size() + " pages");
 			List<String> missing = new ArrayList<>();
 			List<Integer> targets = new ArrayList<>();
 			List<String> links = new ArrayList<>();
@@ -64,7 +64,7 @@ public class GuideScenes implements Scene {
 				walk(page, missing, targets, links);
 			}
 			check(missing.isEmpty(), "pages sans traduction : " + missing);
-			check(targets.size() == 11 && targets.getFirst() == 3 && targets.getLast() == pages.size(),
+			check(targets.size() == 15 && targets.getFirst() == 4 && targets.getLast() == pages.size(),
 					"le sommaire mène aux pages " + targets);
 			check(links.size() == 1 && links.getFirst().startsWith(Guide.SITE + "report.html?version="),
 					"le lien du formulaire : " + links);
