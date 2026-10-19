@@ -227,6 +227,20 @@ public class ElectionScenes implements Scene {
 			Towns.get(server).changed();
 			return wrong.isEmpty() ? null : String.join(" ; ", wrong);
 		}));
+		// Le maire coupe les élections (MC-91) : aucune ne s'ouvre, une pétition est refusée, le maire reste ;
+		// rétablies, le mandat repart.
+		check(stage.compute(server -> {
+			ServerLevel level = server.overworld();
+			Town town = town(server);
+			UUID mayor = town.mayor();
+			Elections.toggle(level, town);
+			boolean off = town.election().disabled() && town.election().phase() == Election.Phase.NONE
+					&& Elections.sign(level, town, FakePlayer.get(level, RIVAL)).orElse(null) == Elections.Refusal.DISABLED;
+			Elections.tick(level, town, town.election().termEnds() + 1);
+			boolean quiet = town.election().phase() == Election.Phase.NONE && town.mayor().equals(mayor);
+			Elections.toggle(level, town);
+			return off && quiet && !town.election().disabled() ? null : "couper les élections : " + off + " " + quiet;
+		}));
 	}
 
 	private static ServerPlayer mayor(MinecraftServer server) {

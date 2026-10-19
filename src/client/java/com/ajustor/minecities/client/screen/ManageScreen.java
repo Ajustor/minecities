@@ -84,6 +84,14 @@ public class ManageScreen extends Screen {
 				b -> send("rename:" + name.getValue().trim(), TownActionPayload.NONE)).bounds(left + 216, top + 26, 94, 16)
 				.build());
 		rename.active = mayor;
+		// Les élections de la ville, au maire (MC-91).
+		Button elections = addRenderableWidget(Button.builder(Component.translatable(town.council().elections()
+						? "screen.minecities.manage.elections.on" : "screen.minecities.manage.elections.off"),
+				b -> send("elections.toggle", TownActionPayload.NONE))
+				.tooltip(net.minecraft.client.gui.components.Tooltip.create(
+						Component.translatable("screen.minecities.manage.elections.tooltip")))
+				.bounds(left + 10, top + HEIGHT - 24, 120, 18).build());
+		elections.active = mayor;
 
 		List<TownSnapshot.PlayerRow> players = players();
 		int y = top + 62;
@@ -122,7 +130,7 @@ public class ManageScreen extends Screen {
 		pager(towns.size(), TOWN_ROWS, top + 120, townPage, p -> townPage = p);
 
 		addRenderableWidget(Button.builder(Component.translatable("screen.minecities.manage.back"),
-				b -> minecraft.gui.setScreen(parent)).bounds(left + WIDTH / 2 - 40, top + HEIGHT - 24, 80, 18).build());
+				b -> minecraft.gui.setScreen(parent)).bounds(left + WIDTH - 90, top + HEIGHT - 24, 80, 18).build());
 	}
 
 	private static <T> List<T> page(List<T> all, int page, int rows) {

@@ -32,7 +32,7 @@ public record TownSnapshot(BlockPos hall, String name, String tier, int populati
 	 */
 	public record Council(String mayor, List<String> deputies, List<String> decrees, List<Boolean> decreed,
 			List<String> partners, List<Boolean> open, boolean budget, String tax, int perAdult, int taxes, int wages,
-			int works, int taxBox, List<String> towns, List<Boolean> offered, boolean mayorView) {
+			int works, int taxBox, List<String> towns, List<Boolean> offered, boolean mayorView, boolean elections) {
 	}
 
 	/**
@@ -174,6 +174,7 @@ public record TownSnapshot(BlockPos hall, String name, String tier, int populati
 		writeStrings(buf, s.council.towns());
 		writeFlags(buf, s.council.offered());
 		buf.writeBoolean(s.council.mayorView());
+		buf.writeBoolean(s.council.elections());
 		buf.writeVarInt(s.rows.size());
 		for (CitizenRow row : s.rows) {
 			UUIDUtil.STREAM_CODEC.encode(buf, row.id);
@@ -317,7 +318,8 @@ public record TownSnapshot(BlockPos hall, String name, String tier, int populati
 				buf.readVarInt(), buf.readVarInt(), buf.readUtf(), buf.readBoolean());
 		Council council = new Council(buf.readUtf(), readStrings(buf), readStrings(buf), readFlags(buf),
 				readStrings(buf), readFlags(buf), buf.readBoolean(), buf.readUtf(), buf.readVarInt(), buf.readVarInt(),
-				buf.readVarInt(), buf.readVarInt(), buf.readInt(), readStrings(buf), readFlags(buf), buf.readBoolean());
+				buf.readVarInt(), buf.readVarInt(), buf.readInt(), readStrings(buf), readFlags(buf), buf.readBoolean(),
+				buf.readBoolean());
 		int count = buf.readVarInt();
 		List<CitizenRow> rows = new ArrayList<>(count);
 		for (int i = 0; i < count; i++) {

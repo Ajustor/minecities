@@ -200,6 +200,9 @@ public class CitizenEntity extends PathfinderMob {
 		// Le repas passe avant la fête : affamé, on ne danse pas jusqu'à défaillir.
 		goalSelector.addGoal(2, new EatGoal(this));
 		goalSelector.addGoal(3, new FestivalGoal(this));
+		// La cérémonie de mariage, puis les enfants qui suivent leurs parents (MC-81).
+		goalSelector.addGoal(3, new WeddingGoal(this));
+		goalSelector.addGoal(5, new ChildGoal(this));
 		goalSelector.addGoal(4, new FarmerGoal(this));
 		goalSelector.addGoal(4, new CookGoal(this, Job.COOK));
 		goalSelector.addGoal(4, new CookGoal(this, Job.BAKER));
@@ -266,6 +269,30 @@ public class CitizenEntity extends PathfinderMob {
 
 	public Optional<UUID> townId() {
 		return Optional.ofNullable(townId);
+	}
+
+	/** Où il se tient pour son mariage, et jusqu'à quand (MC-81) ; pas sauvegardé : la cérémonie est brève. */
+	private BlockPos weddingSpot;
+	private long weddingUntil;
+
+	/** Sa place à la cérémonie de mariage, tant qu'elle dure. */
+	public Optional<BlockPos> wedding() {
+		return weddingSpot != null && level().getGameTime() < weddingUntil ? Optional.of(weddingSpot) : Optional.empty();
+	}
+
+	public void wed(BlockPos spot, long until) {
+		weddingSpot = spot.immutable();
+		weddingUntil = until;
+	}
+
+	public void endWedding() {
+		weddingSpot = null;
+	}
+
+	/** Son conjoint, s'il est là. */
+	public Optional<CitizenEntity> spouseEntity() {
+		return resident.flatMap(Resident::spouse).flatMap(id -> level().getEntity(id) instanceof CitizenEntity c
+				? Optional.of(c) : Optional.empty());
 	}
 
 	public Optional<Town> town() {

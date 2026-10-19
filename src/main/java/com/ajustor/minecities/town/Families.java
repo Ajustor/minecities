@@ -215,12 +215,11 @@ public final class Families {
 		level.playSound(null, town.hall(), SoundEvents.BELL_BLOCK, SoundSource.BLOCKS, 2.0f, 1.0f);
 		level.sendParticles(ParticleTypes.HEART, town.hall().getX() + 0.5, town.hall().getY() + 1.5,
 				town.hall().getZ() + 0.5, 12, 0.8, 0.5, 0.8, 0);
-		for (UUID id : new UUID[]{request.first(), request.second()}) {
-			if (level.getEntity(id) instanceof CitizenEntity citizen) {
-				citizen.say("married", Component.translatable("speech.minecities.married"));
-				citizen.act(com.ajustor.minecities.citizen.Action.CHEER, 60);
-				level.sendParticles(ParticleTypes.HEART, citizen.getX(), citizen.getY() + 2, citizen.getZ(), 5,
-						0.3, 0.3, 0.3, 0);
+		// La cérémonie (MC-81) : les deux mariés viennent face à face devant l'hôtel de ville.
+		UUID[] couple = {request.first(), request.second()};
+		for (int i = 0; i < couple.length; i++) {
+			if (level.getEntity(couple[i]) instanceof CitizenEntity citizen) {
+				citizen.wed(town.hall().south(3).east(i == 0 ? -1 : 1), level.getGameTime() + 2400);
 			}
 		}
 		level.getServer().getPlayerList().broadcastSystemMessage(Component.translatable(
