@@ -40,6 +40,10 @@ public class RobustScenes implements Scene {
 		return "robust";
 	}
 
+	/** Le bloc qu'un mod de protection imaginaire défend (MC-85) ; l'écoute ne s'inscrit qu'une fois. */
+	private static final BlockPos PROTECTED = new BlockPos(5, Y, 5);
+	private static boolean PROTECTION_LISTENED;
+
 	@Override
 	public void play(Stage stage) {
 		Families.setMinimum(0);
@@ -78,6 +82,19 @@ public class RobustScenes implements Scene {
 		}));
 		check(stage.compute(server -> Towns.get(server).all().size() == 1 ? null
 				: "une seconde ville a été fondée au lieu de retrouver la première"));
+		// Un mod de protection (MC-85) : un bloc qu'il protège contre le maire, ses citoyens n'y touchent pas.
+		check(stage.compute(server -> {
+			if (!PROTECTION_LISTENED) {
+				PROTECTION_LISTENED = true;
+				net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents.BEFORE.register(
+						(level, player, pos, state, entity) -> !pos.equals(PROTECTED));
+			}
+			Town town = town(server).orElseThrow();
+			ServerLevel level = server.overworld();
+			return !com.ajustor.minecities.town.Protection.mayBreak(level, town, PROTECTED)
+					&& com.ajustor.minecities.town.Protection.mayBreak(level, town, PROTECTED.east()) ? null
+					: "la protection n'est pas demandée";
+		}));
 
 		// Un citoyen supprimé sans mourir : au bout du délai, il est rayé.
 		int before = McConfig.get().missingCitizenMinutes;

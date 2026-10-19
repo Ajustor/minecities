@@ -148,6 +148,8 @@
   "message.minecities.builder.make_way": "%s, bâtisseur, a besoin de la place où vous êtes : écartez-vous du chantier.",
   "chat.minecities.say": "<%s> %s",
   "speech.minecities.needs_tool": "Il me faut %s !",
+  "message.minecities.protected": "%s ne peut pas casser en %s : le terrain est protégé.",
+  "speech.minecities.protected": "Ce terrain est protégé !",
   "speech.minecities.stores_full": "Plus de place dans les réserves !",
   "speech.minecities.missing": "Il me manque %s × %s !",
   "speech.minecities.make_way": "Pardon, laissez-moi la place !",

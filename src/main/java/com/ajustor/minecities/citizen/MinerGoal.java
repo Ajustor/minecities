@@ -272,6 +272,13 @@ class MinerGoal extends WorkGoal {
 			}
 			return;
 		}
+		if (!com.ajustor.minecities.town.Protection.mayBreak(level(), town(), pos)) {
+			// Un terrain protégé (MC-85) : il ne creuse pas plus loin.
+			citizen.complain("protected", Component.translatable("message.minecities.protected", citizen.getName(),
+					pos.toShortString()), Component.translatable("speech.minecities.protected"));
+			rest(IDLE_LONG);
+			return;
+		}
 		if (state.is(ConventionalBlockTags.ORES)) {
 			extracted.merge(com.ajustor.minecities.town.Mines.oreKey(state), 1, Integer::sum);
 		}
