@@ -25,14 +25,26 @@ public record Resident(String name, Optional<BlockPos> home, Optional<BlockPos> 
 			Codec.LONG.optionalFieldOf("last_birth", 0L).forGetter(Resident::lastBirth)
 	).apply(i, Resident::new));
 
-	/** Un emploi : le métier, l'atelier (sa plaque) et le poste de travail. */
-	public record Employment(Job job, BlockPos workshop, BlockPos station) {
+	/**
+	 * Un emploi : le métier, l'atelier (sa plaque), le poste de travail, et depuis quand il l'exerce
+	 * (MC-83 : l'expérience ; -1 tant que la ville ne l'a pas noté).
+	 */
+	public record Employment(Job job, BlockPos workshop, BlockPos station, long hiredAt) {
 		public static final Codec<Employment> CODEC = RecordCodecBuilder.create(i -> i.group(
 				Codec.STRING.xmap(s -> Job.fromSerializedName(s).orElse(Job.FARMER), Job::serializedName)
 						.fieldOf("job").forGetter(Employment::job),
 				BlockPos.CODEC.fieldOf("workshop").forGetter(Employment::workshop),
-				BlockPos.CODEC.fieldOf("station").forGetter(Employment::station)
+				BlockPos.CODEC.fieldOf("station").forGetter(Employment::station),
+				Codec.LONG.optionalFieldOf("hired_at", -1L).forGetter(Employment::hiredAt)
 		).apply(i, Employment::new));
+
+		public Employment(Job job, BlockPos workshop, BlockPos station) {
+			this(job, workshop, station, -1L);
+		}
+
+		public Employment hired(long now) {
+			return new Employment(job, workshop, station, now);
+		}
 	}
 
 	public Resident(String name, Optional<BlockPos> home, Optional<BlockPos> bed, Optional<Employment> job) {

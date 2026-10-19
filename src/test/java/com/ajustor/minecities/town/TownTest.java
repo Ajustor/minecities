@@ -76,6 +76,18 @@ class TownTest {
 	}
 
 	@Test
+	void experienceGrowsWithTheDaysInTheJob() {
+		// Apprenti, compagnon dès 2 jours, confirmé dès 5, expert dès 10 (MC-83) ; sans date : apprenti.
+		Resident.Employment job = new Resident.Employment(Job.FARMER, PLAQUE, BED_A, 1000);
+		assertEquals(Experience.APPRENTICE, Experience.of(job, 1000 + 24000));
+		assertEquals(Experience.JOURNEYMAN, Experience.of(job, 1000 + 2 * 24000));
+		assertEquals(Experience.SKILLED, Experience.of(job, 1000 + 7 * 24000));
+		assertEquals(Experience.EXPERT, Experience.of(job, 1000 + 30 * 24000));
+		assertEquals(Experience.APPRENTICE, Experience.of(new Resident.Employment(Job.FARMER, PLAQUE, BED_A), 1_000_000));
+		assertTrue(Experience.EXPERT.pace() < Experience.APPRENTICE.pace());
+	}
+
+	@Test
 	void newcomersGetAFreeBed() {
 		Town town = town();
 		town.putHouse(new House(PLAQUE, List.of(BED_A, BED_B), List.of(), 30));

@@ -187,12 +187,14 @@ public final class StationNetwork {
 
 	/** Un travailleur : ce qu'il fait, d'après ce qu'on voit de lui. */
 	private static StationSnapshot.Worker worker(ServerLevel level, UUID id, Resident resident) {
+		String rank = resident.job().map(j -> com.ajustor.minecities.town.Experience.of(j, level.getGameTime())
+				.serializedName()).orElse("");
 		if (!(level.getEntity(id) instanceof CitizenEntity citizen)) {
-			return new StationSnapshot.Worker(id, resident.name(), "away", Optional.empty());
+			return new StationSnapshot.Worker(id, resident.name(), "away", Optional.empty(), rank);
 		}
 		String state = citizen.isSleeping() ? "sleeping" : citizen.illness().isPresent() ? "sick"
 				: citizen.hunger() < Hunger.HUNGRY ? "hungry" : "working";
-		return new StationSnapshot.Worker(id, resident.name(), state, citizen.lastNeed());
+		return new StationSnapshot.Worker(id, resident.name(), state, citizen.lastNeed(), rank);
 	}
 
 	/** Un chantier : son nom, et combien de blocs de son plan sont posés. */

@@ -142,6 +142,11 @@ public class StationScreen extends Screen {
 		y = workersTop();
 		for (StationSnapshot.Worker worker : station.workers().stream().limit(MAX_WORKERS).toList()) {
 			graphics.text(font, Component.literal(worker.name()), left + 12, y, INK, false);
+			// Son rang (MC-83), après ce qu'il fait.
+			if (!worker.rank().isEmpty()) {
+				graphics.text(font, Component.translatable("experience.minecities." + worker.rank()), left + 196, y,
+						FADED, false);
+			}
 			graphics.text(font, Component.translatable("screen.minecities.station.worker." + worker.state()),
 					left + 120, y, worker.state().equals("working") ? GOOD : ACCENT, false);
 			int needY = y + 10;

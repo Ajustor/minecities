@@ -131,10 +131,12 @@ abstract class WorkGoal extends Goal {
 		// fait gagner du temps (un dixième par niveau).
 		float level = citizen.job().map(j -> town().buildingLevel(j.workshop())).orElse(1);
 		float workshop = Math.max(0.6f, 1.1f - 0.1f * level);
-		// Malade, il traîne encore.
+		// Malade, il traîne encore ; expérimenté, il s'y remet plus vite (MC-83).
 		double sick = citizen.illness().map(Disease::pace).orElse(1.0);
+		float experience = citizen.job().map(j -> com.ajustor.minecities.town.Experience.of(j, citizen.level()
+				.getGameTime()).pace()).orElse(1f);
 		idleUntil = citizen.level().getGameTime() + Math.round(ticks * Happiness.workPace(citizen.mood()) * workshop
-				* sick);
+				* sick * experience);
 	}
 
 	protected ServerLevel level() {

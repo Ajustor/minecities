@@ -468,6 +468,11 @@ public final class Town {
 	 * les nouveaux emplois.
 	 */
 	public Map<UUID, Resident.Employment> assignJobs() {
+		return assignJobs(-1L);
+	}
+
+	/** De même, en notant quand chacun est embauché (son expérience part de là). */
+	public Map<UUID, Resident.Employment> assignJobs(long now) {
 		Set<BlockPos> taken = new HashSet<>();
 		residents.values().forEach(r -> r.job().ifPresent(j -> taken.add(j.station())));
 		Map<UUID, Resident.Employment> hired = new LinkedHashMap<>();
@@ -483,13 +488,19 @@ public final class Town {
 				if (jobless.isEmpty()) {
 					return hired;
 				}
-				Resident.Employment employment = new Resident.Employment(station.job(), house.plaque(), station.pos());
+				Resident.Employment employment = new Resident.Employment(station.job(), house.plaque(), station.pos(), now);
 				residents.put(jobless.get(), residents.get(jobless.get()).employed(employment));
 				taken.add(station.pos());
 				hired.put(jobless.get(), employment);
 			}
 		}
 		return hired;
+	}
+
+	/** Les emplois dont on ne sait pas depuis quand ils durent (une ancienne sauvegarde) partent d'aujourd'hui. */
+	public void stampHires(long now) {
+		residents.replaceAll((id, r) -> r.job().filter(j -> j.hiredAt() < 0).map(j -> r.employed(j.hired(now)))
+				.orElse(r));
 	}
 
 	/** Combien de citoyens exercent ce métier. */
