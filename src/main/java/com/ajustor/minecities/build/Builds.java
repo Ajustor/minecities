@@ -157,7 +157,9 @@ public final class Builds {
 			java.util.Map.entry(com.ajustor.minecities.town.Job.LIBRARIAN, "library"),
 			java.util.Map.entry(com.ajustor.minecities.town.Job.TAVERNER, "tavern"),
 			java.util.Map.entry(com.ajustor.minecities.town.Job.TANNER, "tannery"),
-			java.util.Map.entry(com.ajustor.minecities.town.Job.CARPENTER, "carpentry"));
+			java.util.Map.entry(com.ajustor.minecities.town.Job.CARPENTER, "carpentry"),
+			java.util.Map.entry(com.ajustor.minecities.town.Job.COURIER, "courier_post"),
+			java.util.Map.entry(com.ajustor.minecities.town.Job.ARCHER, "archery"));
 
 	/**
 	 * Le schéma qui remplacerait ce bâtiment fait à la main (qui compte pour le niveau 1) : le niveau 2
