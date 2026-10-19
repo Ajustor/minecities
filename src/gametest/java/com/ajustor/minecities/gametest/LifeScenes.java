@@ -192,7 +192,19 @@ public class LifeScenes implements Scene {
 		stage.client(mc -> ((TownHallScreen) mc.gui.screen()).select(TownHallScreen.Tab.BUILDINGS));
 		stage.waitTicks(3);
 		stage.shot("life_3_buildings");
+		// Une grande échelle d'interface : l'écran se réduit pour tenir, et garde son bouton Fermer (MC-77).
+		int[] scale = new int[1];
 		stage.client(mc -> {
+			scale[0] = mc.options.guiScale().get();
+			mc.options.guiScale().set(6);
+			mc.resizeGui();
+			mc.gui.setScreen(new TownHallScreen(snapshot));
+		});
+		stage.waitTicks(5);
+		stage.shot("life_3b_large_scale");
+		stage.client(mc -> {
+			mc.options.guiScale().set(scale[0]);
+			mc.resizeGui();
 			mc.gui.setScreen(null);
 			hideGui(mc, true);
 		});

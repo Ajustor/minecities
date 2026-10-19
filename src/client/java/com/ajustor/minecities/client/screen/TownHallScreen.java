@@ -7,6 +7,7 @@ import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.core.BlockPos;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 
@@ -100,8 +101,12 @@ public class TownHallScreen extends Screen {
 
 	@Override
 	protected void init() {
-		left = (width - WIDTH) / 2;
-		top = (height - HEIGHT) / 2;
+		// Une petite fenêtre, ou une grande échelle d'interface : l'écran se réduit pour tenir (MC-77).
+		scale = Math.min(1f, Math.min((width - 8f) / (WIDTH + 6), (height - 8f) / (HEIGHT + 6)));
+		left = ((int) (width / scale) - WIDTH) / 2;
+		top = ((int) (height / scale) - HEIGHT) / 2;
+		addRenderableWidget(Button.builder(Component.literal("×"), b -> onClose())
+				.bounds(left + WIDTH - 20, top + 5, 14, 14).build());
 		int x = left + 10;
 		for (Tab t : Tab.values()) {
 			Component label = Component.translatable("screen.minecities.tab." + t.name().toLowerCase());
@@ -343,11 +348,22 @@ public class TownHallScreen extends Screen {
 	/** Où est la souris, pour les infobulles dessinées avec le contenu des onglets. */
 	private int mouseX;
 	private int mouseY;
+	/** La souris à l'écran, pour placer les infobulles (dessinées hors de la réduction). */
+	private int screenX;
+	private int screenY;
+	/** La réduction de l'écran quand il ne tient pas (1 : taille normale). */
+	private float scale = 1;
 
 	@Override
-	public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a) {
+	public void extractRenderState(GuiGraphicsExtractor graphics, int screenMouseX, int screenMouseY, float a) {
+		screenX = screenMouseX;
+		screenY = screenMouseY;
+		int mouseX = (int) (screenMouseX / scale);
+		int mouseY = (int) (screenMouseY / scale);
 		this.mouseX = mouseX;
 		this.mouseY = mouseY;
+		graphics.pose().pushMatrix();
+		graphics.pose().scale(scale, scale);
 		graphics.fill(left - 3, top - 3, left + WIDTH + 3, top + HEIGHT + 3, EDGE);
 		graphics.fill(left, top, left + WIDTH, top + HEIGHT, PAPER);
 		graphics.text(font, Component.translatable("screen.minecities.title", town.name(),
@@ -372,6 +388,32 @@ public class TownHallScreen extends Screen {
 			graphics.fill(bx - 2, by - 1, bx + font.width(count) + 2, by + 9, BAD);
 			graphics.text(font, count, bx, by, 0xFFFFFFFF, false);
 		}
+		graphics.pose().popMatrix();
+	}
+
+	/** Les clics et la molette, ramenés à l'écran réduit. */
+	private MouseButtonEvent scaled(MouseButtonEvent event) {
+		return new MouseButtonEvent(event.x() / scale, event.y() / scale, event.buttonInfo());
+	}
+
+	@Override
+	public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+		return super.mouseClicked(scaled(event), doubleClick);
+	}
+
+	@Override
+	public boolean mouseReleased(MouseButtonEvent event) {
+		return super.mouseReleased(scaled(event));
+	}
+
+	@Override
+	public boolean mouseDragged(MouseButtonEvent event, double dx, double dy) {
+		return super.mouseDragged(scaled(event), dx / scale, dy / scale);
+	}
+
+	@Override
+	public boolean mouseScrolled(double x, double y, double scrollX, double scrollY) {
+		return super.mouseScrolled(x / scale, y / scale, scrollX, scrollY);
 	}
 
 	private void line(GuiGraphicsExtractor graphics, Component text, int y, int color) {
@@ -502,7 +544,7 @@ public class TownHallScreen extends Screen {
 								.append(Component.translatable("mood.minecities." + kv[0]))
 								.withColor(delta > 0 ? GOOD : delta < 0 ? BAD : FADED));
 					}
-					graphics.setComponentTooltipForNextFrame(font, lines, mouseX, mouseY);
+					graphics.setComponentTooltipForNextFrame(font, lines, screenX, screenY);
 				}
 			}
 			Component second = row.need().<Component>map(n -> Component.literal("« ").append(n).append(" »"))
@@ -708,7 +750,8 @@ public class TownHallScreen extends Screen {
 					plan.height()), left + 22 + Math.max(110, font.width(detail) + 10), y + 9, FADED, false);
 			// Au survol : ce que le bâtiment coûte, et ce que les réserves en ont (MC-76).
 			if (mouseX >= left + 14 && mouseX < left + WIDTH - 84 && mouseY >= y && mouseY < y + 18) {
-				graphics.setComponentTooltipForNextFrame(font, PlanCosts.tooltip(plan.id(), STYLES[style]), mouseX, mouseY);
+				graphics.setComponentTooltipForNextFrame(font, PlanCosts.tooltip(plan.id(), STYLES[style]), screenX,
+						screenY);
 			}
 			y += ROW;
 		}
