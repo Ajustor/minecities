@@ -626,6 +626,26 @@ public final class Town {
 		return Optional.ofNullable(moods.get(citizen));
 	}
 
+	/** Combien de métiers différents la ville exerce. */
+	public int distinctJobs() {
+		return (int) residents.values().stream().flatMap(r -> r.job().stream()).map(Resident.Employment::job)
+				.distinct().count();
+	}
+
+	/** La ville a-t-elle ce bâtiment public (MC-68) : une taverne, un monument, une bibliothèque ? */
+	public boolean hasPublicBuilding(String building) {
+		return switch (building) {
+			case "tavern" -> hasWorkstation(Job.TAVERNER);
+			case "library" -> hasWorkstation(Job.LIBRARIAN);
+			case "monument" -> !monuments().isEmpty();
+			default -> true;
+		};
+	}
+
+	private boolean hasWorkstation(Job job) {
+		return houses.values().stream().anyMatch(h -> h.workstations().stream().anyMatch(w -> w.job() == job));
+	}
+
 	/** Le bonheur moyen de la ville, sur les citoyens dont on connaît l'humeur ; vide si aucun. */
 	public Optional<Double> averageMood() {
 		return moods.isEmpty() ? Optional.empty()
@@ -883,7 +903,7 @@ public final class Town {
 
 	/** Recalcule le palier ; renvoie l'ancien s'il a changé. */
 	public Optional<TownTier> updateTier() {
-		TownTier now = forcedTier.orElseGet(() -> TownTier.of(population(), homes().size()));
+		TownTier now = forcedTier.orElseGet(() -> TownTier.reached(this));
 		if (now == tier) {
 			return Optional.empty();
 		}

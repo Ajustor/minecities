@@ -101,6 +101,11 @@ public final class Families {
 		if (town.population() < min) {
 			return new Growth("newcomers", min, 0);
 		}
+		// Le plafond du palier (MC-68) : sans monter de palier, plus personne n'arrive.
+		TownTier next = town.tier().next();
+		if (next != null && town.population() >= next.minCitizens()) {
+			return new Growth("capped", next.minCitizens(), 0);
+		}
 		java.util.Optional<Resident.Employment> taverner = town.residents().values().stream()
 				.flatMap(r -> r.job().stream()).filter(j -> j.job() == Job.TAVERNER).findFirst();
 		if (taverner.isEmpty()) {

@@ -197,7 +197,7 @@ version du mod, les autres mods et le temps de jeu.
    la **grande ville** peut poser 2 **mairies annexes** (4 en mégalopole) : posées sur le territoire
    à 40 blocs au moins de l'hôtel de ville, elles l'étendent de 48 blocs autour d'elles et gardent
    un grenier où mangent les citoyens du quartier. Le **trésor** est l'émeraude du grenier. La
-   **mégalopole** ouvre les **monuments** : la statue, la fontaine et le beffroi, un de chaque par
+   **ville** ouvre aussi les **monuments** : la statue, la fontaine et le beffroi, un de chaque par
    ville, en pierre polie, quartz et or. Bâtis, ils rendent les citoyens plus heureux (+1, +2 à partir
    de deux) et donnent de l'**attrait** à la ville (montré dans le résumé).
 9. **Les raids** : une ville d'au moins 8 habitants attire les pillards. Au crépuscule, une fois tous
@@ -232,12 +232,16 @@ version du mod, les autres mods et le temps de jeu.
    celle qui en manque, contre des émeraudes au cours des villageois (il faut un marchand au départ, et
    les deux greniers chargés).
 
-| Palier | Population (citoyens + villageois) | Maisons | Rayon du territoire |
-|---|---|---|---|
-| Village | 0 | 0 | 48 |
-| Ville | 10 | 4 | 80 |
-| Grande ville | 30 | 12 | 128 |
-| Mégalopole | 75 | 30 | 224 |
+| Palier | Population (citoyens + villageois) | Maisons | Bonheur moyen | Métiers différents | Bâtiment public | Rayon du territoire |
+|---|---|---|---|---|---|---|
+| Village | 0 | 0 | — | — | — | 48 |
+| Ville | 10 | 4 | 3 | 5 | une taverne | 80 |
+| Grande ville | 30 | 12 | 5 | 10 | un monument | 128 |
+| Mégalopole | 75 | 30 | 6 | 16 | une bibliothèque | 224 |
+
+Une ville qui ne remplit plus les conditions de son palier redescend (un point de bonheur de marge) ;
+tant qu'elle n'a pas monté, elle n'accueille plus de nouveaux venus au-delà de la population du palier
+suivant.
 
 ### Configuration
 

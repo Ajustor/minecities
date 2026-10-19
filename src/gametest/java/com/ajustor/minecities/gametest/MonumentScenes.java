@@ -84,7 +84,7 @@ public class MonumentScenes implements Scene {
 				Blueprint b = blueprint.get();
 				Map<net.minecraft.world.item.Item, Integer> cost = BuildPlan.materials(BuildPlan.of(b, BuildStyle.PLAINS,
 						BlockPos.ZERO, Rotation.NONE));
-				if (!b.kind().equals("monument") || b.tier() != TownTier.MEGALOPOLIS || b.width() > 11 || b.depth() > 11
+				if (!b.kind().equals("monument") || b.tier() != TownTier.TOWN || b.width() > 11 || b.depth() > 11
 						|| !cost.containsKey(Items.GOLD_BLOCK) || !cost.containsKey(Items.QUARTZ_PILLAR)) {
 					wrong.add(monument + " : " + b.kind() + " " + b.tier() + " " + b.width() + "x" + b.depth() + " "
 							+ cost);
@@ -99,11 +99,12 @@ public class MonumentScenes implements Scene {
 			Town town = town(server);
 			Blueprint statue = blueprint(server, Monument.STATUE);
 			List<String> wrong = new ArrayList<>();
-			town.forceTier(Optional.of(TownTier.CITY));
+			// Les monuments s'ouvrent à la ville (MC-68 : il en faut un pour devenir grande ville).
+			town.forceTier(Optional.of(TownTier.VILLAGE));
 			TownService.retier(level, town);
 			Optional<Component> locked = Builds.check(level, town, statue, STATUE, Rotation.NONE);
-			if (locked.isEmpty() || !text(locked.get()).contains("megalopolis")) {
-				wrong.add("ouverte à la cité : " + locked.map(MonumentScenes::text));
+			if (locked.isEmpty() || !text(locked.get()).contains("town")) {
+				wrong.add("ouverte au village : " + locked.map(MonumentScenes::text));
 			}
 			town.forceTier(Optional.of(TownTier.MEGALOPOLIS));
 			TownService.retier(level, town);

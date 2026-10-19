@@ -523,9 +523,20 @@ public class TownHallScreen extends Screen {
 			line(graphics, Component.translatable("screen.minecities.next", Component.translatable(town.nextTier())),
 					y, ACCENT);
 			y += SUMMARY_LINE;
+			TownSnapshot.Life progress = town.life();
 			line(graphics, Component.translatable("screen.minecities.next.needs", town.population(),
-					town.nextPopulation(), town.homes(), town.nextHouses()), y, FADED);
+					town.nextPopulation(), town.homes(), town.nextHouses(),
+					String.format("%.1f", Math.max(0, progress.mood()) / 10.0), String.format("%.0f", progress.nextMood() / 10.0),
+					progress.jobs(), progress.nextJobs()), y, FADED);
 			y += SUMMARY_LINE;
+			// Le bâtiment public du palier (MC-68).
+			if (!progress.nextBuilding().isEmpty()) {
+				line(graphics, Component.translatable(progress.hasBuilding() ? "screen.minecities.next.building.ok"
+								: "screen.minecities.next.building.missing",
+						Component.translatable("requirement.minecities." + progress.nextBuilding())), y,
+						progress.hasBuilding() ? GOOD : BAD);
+				y += SUMMARY_LINE;
+			}
 		}
 		if (!town.requests().isEmpty()) {
 			y += 6;

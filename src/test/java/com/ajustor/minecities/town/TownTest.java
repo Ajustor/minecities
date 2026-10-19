@@ -157,9 +157,26 @@ class TownTest {
 		}
 		assertTrue(town.updateTier().isEmpty());
 		town.welcome(UUID.randomUUID(), "Dixième", 0);
+		// Dix habitants ne suffisent plus (MC-68) : il faut aussi du bonheur, cinq métiers et une taverne.
+		assertTrue(town.updateTier().isEmpty());
+		BlockPos workshop = new BlockPos(0, 64, 40);
+		List<House.Workstation> stations = new java.util.ArrayList<>();
+		Job[] jobs = {Job.TAVERNER, Job.FARMER, Job.COOK, Job.LUMBERJACK, Job.FISHERMAN};
+		for (int i = 0; i < jobs.length; i++) {
+			stations.add(new House.Workstation(workshop.east(i + 1), jobs[i]));
+		}
+		town.putHouse(new House(workshop, List.of(), List.of(), stations, 30));
+		town.assignJobs();
+		town.residents().keySet().forEach(id -> town.setMood(id, 7));
 		assertEquals(TownTier.VILLAGE, town.updateTier().orElseThrow());
 		assertEquals(TownTier.TOWN, town.tier());
 		assertEquals(TownTier.TOWN.radius(), town.radius());
+		// Un peu moins heureuse, elle garde son palier ; vraiment malheureuse, elle redescend.
+		town.residents().keySet().forEach(id -> town.setMood(id, 2));
+		assertTrue(town.updateTier().isEmpty());
+		town.residents().keySet().forEach(id -> town.setMood(id, 1));
+		assertEquals(TownTier.TOWN, town.updateTier().orElseThrow());
+		assertEquals(TownTier.VILLAGE, town.tier());
 	}
 
 	@Test
