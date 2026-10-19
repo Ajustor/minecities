@@ -540,7 +540,7 @@
   "guide.minecities.growth.1": "Paliers (habitants, maisons) :\nVillage\nVille : 10 et 4\nGrande ville : 30 et 12\nMégalopole : 75 et 30\n\nChaque palier étend le territoire et ouvre de nouveaux métiers.",
   "guide.minecities.growth.2": "Dès la grande ville, posez des mairies annexes à 40 blocs au moins de l'hôtel de ville : elles étendent le territoire et ont leur grenier.",
   "guide.minecities.health": "Santé",
-  "guide.minecities.health.1": "Sous la pluie sans manteau, on attrape un rhume ou la fièvre ; manger de la chair putréfiée donne la dysenterie.\n\nUn malade travaille plus lentement, déprime, et contamine ses voisins.",
+  "guide.minecities.health.1": "Sous la pluie sans manteau, on attrape un rhume ou la fièvre. Manger de la chair putréfiée donne la dysenterie.\n\nUn malade travaille plus lentement, déprime, et contamine ses voisins.",
   "guide.minecities.health.2": "Le médecin soigne avec le remède, pris aux réserves :\nRhume : fiole de miel\nDysenterie : seau de lait\nFièvre : pastèque scintillante (il la prépare)\n\nLe manteau du tisserand protège de la pluie.",
   "guide.minecities.city": "La grande ville",
   "guide.minecities.city.1": "Monuments : statue, fontaine, beffroi, un de chaque, dans l'onglet Plans.\n\nIls rendent les citoyens plus heureux et donnent de l'attrait : la taverne attire plus vite.",
