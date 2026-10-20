@@ -61,6 +61,17 @@ public class CitizenRenderer extends HumanoidMobRenderer<CitizenEntity, CitizenR
 		state.job = entity.jobIndex();
 	}
 
+	/** À terre (MC-80) : couché sur le flanc, comme un mob qui tombe. */
+	@Override
+	protected void setupRotations(State state, com.mojang.blaze3d.vertex.PoseStack poseStack, float bodyRot,
+			float scale) {
+		super.setupRotations(state, poseStack, bodyRot, scale);
+		if (state.action == Action.DOWN) {
+			poseStack.translate(0, 0.15, 0);
+			poseStack.mulPose(new org.joml.Matrix4f().rotationZ((float) Math.toRadians(90)));
+		}
+	}
+
 	@Override
 	protected boolean shouldShowName(CitizenEntity entity, double distanceSqr) {
 		return entity.speech().isPresent() && distanceSqr < 32 * 32

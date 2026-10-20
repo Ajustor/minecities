@@ -244,6 +244,11 @@ public class CitizenEntity extends PathfinderMob {
 		targetSelector.addGoal(2, new NearestAttackableTargetGoal<>(this, Mob.class, 10, true, false,
 				(target, level) -> isDefender() && target instanceof Enemy && !(isGuard() && target instanceof Creeper)
 						&& town().filter(t -> t.contains(level.dimension(), target.blockPosition())).isPresent()));
+		// Et les hors-la-loi de leur ville (ceux qui ont pillé une de ses caravanes, MC-80), sur son territoire.
+		targetSelector.addGoal(2, new NearestAttackableTargetGoal<>(this, Player.class, 10, true, false,
+				(target, level) -> isDefender() && town().filter(t -> t.contains(level.dimension(), target.blockPosition())
+						&& com.ajustor.minecities.caravan.Caravans.outlaw(level.getServer(), target.getUUID(), t.id()))
+						.isPresent()));
 		goalSelector.addGoal(5, new MoveTowardsRestrictionGoal(this, 0.6));
 		goalSelector.addGoal(6, new WaterAvoidingRandomStrollGoal(this, 0.5));
 		goalSelector.addGoal(7, new InteractGoal(this, CitizenEntity.class, 6.0f, 0.03f));
@@ -274,19 +279,65 @@ public class CitizenEntity extends PathfinderMob {
 	/** Il mène une caravane (MC-80) : la caravane le place, il n'appartient à aucune ville en route. */
 	private boolean traveler;
 
+	/** Mis à terre (par des bandits, une bête) : il ne se bat plus jusqu'à la fin de l'escarmouche. */
+	private boolean downed;
+
 	/** En fait le marchand d'une caravane, sous ce nom. */
 	public void travel(String name) {
+		travel(name, Job.MERCHANT);
+	}
+
+	/** En fait un membre d'une caravane (le marchand, un garde d'escorte), sous ce nom. */
+	public void travel(String name, Job job) {
+		travel(name.isEmpty() ? null : Component.literal(name), job);
+	}
+
+	public void travel(Component name, Job job) {
 		traveler = true;
 		setNoAi(true);
-		com.ajustor.minecities.compat.EntityCompat.invulnerable(this);
-		entityData.set(JOB, Job.MERCHANT.ordinal());
-		if (!name.isEmpty()) {
-			setCustomName(Component.literal(name));
+		entityData.set(JOB, job.ordinal());
+		if (name != null) {
+			setCustomName(name);
 		}
 	}
 
 	public boolean traveler() {
 		return traveler;
+	}
+
+	public boolean downed() {
+		return downed;
+	}
+
+	/** Il se relève, une fois l'escarmouche passée. */
+	public void recover() {
+		downed = false;
+		setHealth(getMaxHealth());
+		act(Action.NONE, 0);
+	}
+
+	/**
+	 * Un membre de caravane (MC-80) : les bandits et les bêtes le mettent à terre sans le tuer ; un
+	 * joueur, lui, peut le tuer. La caravane apprend qui l'a frappé.
+	 */
+	@Override
+	public boolean hurtServer(ServerLevel level, DamageSource source, float amount) {
+		if (!traveler) {
+			return super.hurtServer(level, source, amount);
+		}
+		boolean player = source.getEntity() instanceof Player;
+		if (player) {
+			com.ajustor.minecities.caravan.Caravans.attacked(this, (Player) source.getEntity());
+		} else if (downed) {
+			return false;
+		} else if (amount >= getHealth()) {
+			super.hurtServer(level, source, Math.max(0, getHealth() - 1));
+			setHealth(1);
+			downed = true;
+			act(Action.DOWN, Integer.MAX_VALUE);
+			return true;
+		}
+		return super.hurtServer(level, source, amount);
 	}
 
 	/** Où il se tient pour son mariage, et jusqu'à quand (MC-81) ; pas sauvegardé : la cérémonie est brève. */

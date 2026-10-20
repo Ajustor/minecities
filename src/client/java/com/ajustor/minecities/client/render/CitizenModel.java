@@ -101,6 +101,14 @@ public class CitizenModel extends HumanoidModel<CitizenRenderer.State> {
 				leftLeg.xRot = Math.max(0, -beat) * -0.6f;
 				head.zRot = beat * 0.12f;
 			}
+			case DOWN -> {
+				// À terre (le corps est couché par le rendu) : bras ballants, tête renversée.
+				rightArm.xRot = -0.3f;
+				leftArm.xRot = 0.2f;
+				rightArm.zRot = 0.6f;
+				leftArm.zRot = -0.5f;
+				head.xRot = -0.4f;
+			}
 			case NONE -> {
 			}
 		}

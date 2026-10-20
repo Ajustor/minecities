@@ -319,7 +319,9 @@ public class CouncilScenes implements Scene {
 			com.ajustor.minecities.caravan.Stall stall = stall(server);
 			Town other = Towns.get(server).byHall(server.overworld().dimension(), OTHER_HALL).orElseThrow();
 			int rings = stall.wares().stream().filter(w -> w.is(McItems.GOLD_RING)).mapToInt(ItemStack::getCount).sum();
-			if (rings != RINGS - 2 || granary(server, HALL, McItems.GOLD_RING) != 2) {
+			// Le marchand en a peut-être vendu une au marché avant le départ ; au grenier, il en garde deux.
+			if (rings < 1 || rings + granary(server, HALL, McItems.GOLD_RING) > RINGS
+					|| granary(server, HALL, McItems.GOLD_RING) > 2) {
 				return "l'échoppe n'a pas les bagues : " + rings + " à l'étal, " + granary(server, HALL, McItems.GOLD_RING)
 						+ " au grenier";
 			}
@@ -354,19 +356,21 @@ public class CouncilScenes implements Scene {
 		stage.shot("council_stall_trade");
 		stage.run(server -> server.getPlayerList().getPlayers().getFirst().closeContainer());
 		stage.client(mc -> hideGui(mc, true));
-		// Une bague vendue : une de moins à l'étal, sept émeraudes à la caisse ; puis les deux autres.
+		// Une bague vendue : une de moins à l'étal, son prix à la caisse ; puis les autres.
 		check(stage.compute(server -> {
 			com.ajustor.minecities.caravan.Stall stall = stall(server);
+			int before = stall.wares().stream().mapToInt(ItemStack::getCount).sum();
 			Caravans.get(server).sold(stall.id(), McItems.GOLD_RING);
 			int rings = stall.wares().stream().mapToInt(ItemStack::getCount).sum();
-			return rings == RINGS - 3 && stall.earned() == com.ajustor.minecities.caravan.Stall.lot(McItems.GOLD_RING)
+			return rings == before - 1 && stall.earned() == com.ajustor.minecities.caravan.Stall.lot(McItems.GOLD_RING)
 					.emeralds() ? null : "la vente ne se compte pas : " + rings + " bagues, " + stall.earned() + " émeraudes";
 		}));
 		int before = stage.compute(server -> granary(server, HALL, Items.EMERALD));
 		int earned = stage.compute(server -> {
 			com.ajustor.minecities.caravan.Stall stall = stall(server);
-			Caravans.get(server).sold(stall.id(), McItems.GOLD_RING);
-			Caravans.get(server).sold(stall.id(), McItems.GOLD_RING);
+			for (int i = 0; i < RINGS && stall.hasWares(); i++) {
+				Caravans.get(server).sold(stall.id(), McItems.GOLD_RING);
+			}
 			return stall.earned();
 		});
 		// L'échoppe vide ferme dès que le grenier de sa ville est chargé : le joueur y retourne.

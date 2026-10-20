@@ -19,6 +19,8 @@ public class CaravanCartRenderer extends EntityRenderer<CaravanCart, CaravanCart
 	public static class State extends EntityRenderState {
 		public float yRot;
 		public boolean camping;
+		/** Le chemin parcouru, en blocs : les roues tournent d'autant. */
+		public float rolled;
 	}
 
 	/** La lumière la plus vive : le feu du camp luit dans la nuit. */
@@ -42,6 +44,7 @@ public class CaravanCartRenderer extends EntityRenderer<CaravanCart, CaravanCart
 		super.extractRenderState(cart, state, partialTicks);
 		state.yRot = cart.getYRot(partialTicks);
 		state.camping = cart.camping();
+		state.rolled = cart.rolled(partialTicks);
 	}
 
 	/** Le camp déborde loin du chariot : on le dessine même quand le chariot sort du champ. */

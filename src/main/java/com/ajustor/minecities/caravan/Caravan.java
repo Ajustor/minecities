@@ -24,7 +24,11 @@ public final class Caravan {
 			Codec.LONG.optionalFieldOf("departed", 0L).forGetter(c -> c.departed),
 			Codec.STRING.optionalFieldOf("merchant", "").forGetter(c -> c.merchant),
 			net.minecraft.core.BlockPos.CODEC.listOf().optionalFieldOf("path", List.of()).forGetter(c -> c.path),
-			ItemStack.CODEC.listOf().optionalFieldOf("wares", List.of()).forGetter(c -> List.copyOf(c.wares))
+			ItemStack.CODEC.listOf().optionalFieldOf("wares", List.of()).forGetter(c -> List.copyOf(c.wares)),
+			Codec.INT.optionalFieldOf("escort", 0).forGetter(c -> c.escort),
+			Codec.INT.optionalFieldOf("bandits", 0).forGetter(c -> c.bandits),
+			Codec.DOUBLE.optionalFieldOf("ambush_at", -1.0).forGetter(c -> c.ambushAt),
+			Codec.BOOL.optionalFieldOf("ambushed", false).forGetter(c -> c.ambushed)
 	).apply(i, Caravan::new));
 
 	private final UUID id;
@@ -39,9 +43,16 @@ public final class Caravan {
 	private final List<net.minecraft.core.BlockPos> path;
 	/** Ce que le marchand vendra à son échoppe, à l'arrivée (pas encore payé : c'est au vendeur). */
 	private final List<ItemStack> wares;
+	/** Les gardes de sa ville qui l'escortent. */
+	private final int escort;
+	/** L'embuscade qui l'attend : tant de bandits, à cette distance du départ (négative : aucune). */
+	private final int bandits;
+	private final double ambushAt;
+	private boolean ambushed;
 
 	private Caravan(UUID id, UUID from, UUID to, List<ItemStack> cargo, double traveled, long departed,
-			String merchant, List<net.minecraft.core.BlockPos> path, List<ItemStack> wares) {
+			String merchant, List<net.minecraft.core.BlockPos> path, List<ItemStack> wares, int escort, int bandits,
+			double ambushAt, boolean ambushed) {
 		this.id = id;
 		this.from = from;
 		this.to = to;
@@ -51,11 +62,51 @@ public final class Caravan {
 		this.merchant = merchant;
 		this.path = List.copyOf(path);
 		this.wares = new ArrayList<>(wares.stream().map(ItemStack::copy).toList());
+		this.escort = escort;
+		this.bandits = bandits;
+		this.ambushAt = ambushAt;
+		this.ambushed = ambushed;
 	}
 
 	public static Caravan depart(UUID from, UUID to, List<ItemStack> cargo, List<ItemStack> wares, long now,
-			String merchant, List<net.minecraft.core.BlockPos> path) {
-		return new Caravan(UUID.randomUUID(), from, to, cargo, 0, now, merchant, path, wares);
+			String merchant, List<net.minecraft.core.BlockPos> path, int escort, int bandits, double ambushAt) {
+		return new Caravan(UUID.randomUUID(), from, to, cargo, 0, now, merchant, path, wares, escort, bandits,
+				ambushAt, false);
+	}
+
+	public int escort() {
+		return escort;
+	}
+
+	public int bandits() {
+		return bandits;
+	}
+
+	/** L'embuscade est-elle à tendre, ici ? */
+	public boolean ambushDue() {
+		return !ambushed && ambushAt >= 0 && traveled >= ambushAt;
+	}
+
+	public void setAmbushed() {
+		ambushed = true;
+	}
+
+	/**
+	 * Le pillage : la moitié de chaque marchandise (cargaison et étal) quitte la caravane ; ce qui est
+	 * pris est rendu, pour aller aux bandits.
+	 */
+	public List<ItemStack> plunder() {
+		List<ItemStack> taken = new ArrayList<>();
+		for (List<ItemStack> goods : List.of(cargo, wares)) {
+			for (ItemStack stack : goods) {
+				int share = stack.getCount() / 2;
+				if (share > 0) {
+					taken.add(stack.split(share));
+				}
+			}
+			goods.removeIf(ItemStack::isEmpty);
+		}
+		return taken;
 	}
 
 	/** Ce que le marchand vendra à son échoppe. */

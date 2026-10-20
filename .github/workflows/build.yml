@@ -72,7 +72,7 @@ jobs:
         minecraft: ['26.2', '26.3']
         scenes:
           - build
-          - data,budget,tavern,city,work,countryside,village,family,raid,life,market,robust,industry,crafts,council,logistics,guide,structures,plans,jade,residents,elections,monuments,health,map,disasters,stations,mine
+          - data,budget,tavern,city,work,countryside,village,family,raid,life,market,robust,industry,crafts,council,caravans,logistics,guide,structures,plans,jade,residents,elections,monuments,health,map,disasters,stations,mine
     name: scenes ${{ matrix.minecraft }} (${{ matrix.scenes == 'build' && 'bâtisseur' || 'les autres' }})
     steps:
       - name: checkout repository

@@ -19,8 +19,18 @@ import org.joml.Matrix4f;
 /** L'échoppe d'une caravane ({@link CaravanStallModel}), avec ses marchandises sur le comptoir. */
 public class CaravanStallRenderer extends EntityRenderer<CaravanStall, CaravanStallRenderer.State> {
 	private static final Identifier TEXTURE = MineCities.id("textures/entity/caravan.png");
-	/** Où se posent les marchandises sur le comptoir (en pixels, de gauche à droite vu du client). */
-	private static final float[] SPOTS = {12, 0, -12};
+	/**
+	 * Où se montrent les marchandises (en pixels, dans le repère de CaravanStallModel) : pour chacune,
+	 * trois exemplaires sur le comptoir, deux sur l'étagère, et dans une caisse de devant pour la
+	 * première et la dernière. Chaque place : x, y, z, taille, à plat (1) ou debout (0).
+	 */
+	private static final float[][][] SPOTS = {
+			{{23, 16, 1, 0.42f, 0}, {18, 16, 0, 0.42f, 0}, {13, 16, 1.5f, 0.42f, 0},
+					{20, 21.6f, -12.5f, 0.38f, 0}, {20, 30.6f, -12.5f, 0.38f, 0}, {21, 6.2f, 10.5f, 0.5f, 1}, {19, 6.4f, 9.5f, 0.5f, 1}},
+			{{5, 16, 1, 0.42f, 0}, {0, 16, 0, 0.42f, 0}, {-5, 16, 1.5f, 0.42f, 0},
+					{2, 21.6f, -12.5f, 0.38f, 0}, {-2, 30.6f, -12.5f, 0.38f, 0}},
+			{{-13, 16, 1, 0.42f, 0}, {-18, 16, 0, 0.42f, 0}, {-23, 16, 1.5f, 0.42f, 0},
+					{-20, 21.6f, -12.5f, 0.38f, 0}, {-20, 30.6f, -12.5f, 0.38f, 0}, {-21, 6.2f, 10.5f, 0.5f, 1}, {-23, 6.4f, 11.5f, 0.5f, 1}}};
 
 	public static class State extends EntityRenderState {
 		public float yRot;
@@ -61,16 +71,21 @@ public class CaravanStallRenderer extends EntityRenderer<CaravanStall, CaravanSt
 		poseStack.pushPose();
 		poseStack.mulPose(new Matrix4f().rotationY((float) Math.toRadians(-state.yRot)));
 		RenderCompat.submitModel(collector, model, state, poseStack, TEXTURE, state.lightCoords, state.outlineColor);
-		// Les marchandises, debout sur le comptoir, tournées vers le client.
+		// Les marchandises, tournées vers le client : sur le comptoir, l'étagère, dans les caisses.
 		for (int i = 0; i < CaravanStall.SHOWN; i++) {
 			if (state.wares[i].isEmpty()) {
 				continue;
 			}
-			poseStack.pushPose();
-			poseStack.translate(SPOTS[i] / 16f, CaravanStallModel.COUNTER / 16f + 0.25f, 0.05f);
-			poseStack.scale(0.5f, 0.5f, 0.5f);
-			state.wares[i].submit(poseStack, collector, state.lightCoords, OverlayTexture.NO_OVERLAY, state.outlineColor);
-			poseStack.popPose();
+			for (float[] spot : SPOTS[i]) {
+				poseStack.pushPose();
+				poseStack.translate(spot[0] / 16f, spot[1] / 16f + (spot[4] > 0 ? 0 : spot[3] * 0.5f), spot[2] / 16f);
+				if (spot[4] > 0) {
+					poseStack.mulPose(new Matrix4f().rotationX((float) Math.toRadians(-90)));
+				}
+				poseStack.scale(spot[3], spot[3], spot[3]);
+				state.wares[i].submit(poseStack, collector, state.lightCoords, OverlayTexture.NO_OVERLAY, state.outlineColor);
+				poseStack.popPose();
+			}
 		}
 		poseStack.popPose();
 		super.submit(state, poseStack, collector, camera);
