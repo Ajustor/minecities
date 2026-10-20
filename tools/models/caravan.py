@@ -85,22 +85,25 @@ def cart():
     wheel(m, "cart", "wheel_back_r", -17, 11, -19, 11, -1)
     # La bâche, sur ses arceaux, évasée aux deux bouts.
     # Le corps de la bâche, puis ses bouts : les côtés s'allongent, le haut se relève un peu (évasé).
-    m.cube("cart", "canvas_l", "CANVAS", (14, 29, -33), (1, 13, 62))
-    m.cube("cart", "canvas_r", "CANVAS", (-15, 29, -33), (1, 13, 62))
-    for part, z0, length, rx, pz in (("", -27, 54, 0, 0), ("_front", 27, 3, -9, 27), ("_back", -34, 7, 9, -27)):
-        m.cube("cart", f"canvas_top{part}", "CANVAS", (-8, 48, z0), (16, 1, length), (rx, 0, 0), (0, 48, pz))
-        m.cube("cart", f"shoulder_l{part}", "CANVAS", (8, 47, z0), (8.5, 1, length), (0, 0, -45), (8, 48, pz))
-        m.cube("cart", f"shoulder_r{part}", "CANVAS", (-16.5, 47, z0), (8.5, 1, length), (0, 0, 45), (-8, 48, pz))
+    # Assez haute pour que le cocher, assis devant, ait la tête sous l'avancée.
+    side = 21          # la hauteur des côtés, depuis le haut de la caisse (y 29)
+    top = 29 + side + 6  # le haut de la bâche
+    m.cube("cart", "canvas_l", "CANVAS", (14, 29, -33), (1, side, 62))
+    m.cube("cart", "canvas_r", "CANVAS", (-15, 29, -33), (1, side, 62))
+    for part, z0, length, rx, pz in (("", -27, 54, 0, 0), ("_front", 27, 5, -9, 27), ("_back", -34, 7, 9, -27)):
+        m.cube("cart", f"canvas_top{part}", "CANVAS", (-8, top, z0), (16, 1, length), (rx, 0, 0), (0, top, pz))
+        m.cube("cart", f"shoulder_l{part}", "CANVAS", (8, top - 1, z0), (8.5, 1, length), (0, 0, -45), (8, top, pz))
+        m.cube("cart", f"shoulder_r{part}", "CANVAS", (-16.5, top - 1, z0), (8.5, 1, length), (0, 0, 45), (-8, top, pz))
     for i, z in enumerate((-26, -13, 0, 13, 26)):
-        m.cube("cart", f"bow_l_{i}", "TENT", (15, 29, z - 0.6), (0.5, 13, 1.2))
-        m.cube("cart", f"bow_r_{i}", "TENT", (-15.5, 29, z - 0.6), (0.5, 13, 1.2))
-        m.cube("cart", f"bow_top_{i}", "TENT", (-8, 49, z - 0.6), (16, 0.5, 1.2))
-        m.cube("cart", f"bow_sl_{i}", "TENT", (8, 48, z - 0.6), (8.5, 0.5, 1.2), (0, 0, -45), (8, 48, z))
-        m.cube("cart", f"bow_sr_{i}", "TENT", (-16.5, 48, z - 0.6), (8.5, 0.5, 1.2), (0, 0, 45), (-8, 48, z))
+        m.cube("cart", f"bow_l_{i}", "TENT", (15, 29, z - 0.6), (0.5, side, 1.2))
+        m.cube("cart", f"bow_r_{i}", "TENT", (-15.5, 29, z - 0.6), (0.5, side, 1.2))
+        m.cube("cart", f"bow_top_{i}", "TENT", (-8, top + 1, z - 0.6), (16, 0.5, 1.2))
+        m.cube("cart", f"bow_sl_{i}", "TENT", (8, top, z - 0.6), (8.5, 0.5, 1.2), (0, 0, -45), (8, top, z))
+        m.cube("cart", f"bow_sr_{i}", "TENT", (-16.5, top, z - 0.6), (8.5, 0.5, 1.2), (0, 0, 45), (-8, top, z))
     # L'ombre sous la bâche, vue par l'avant ; l'arrière est fermé, froncé.
-    m.cube("cart", "shade", "DARK", (-13, 29, 24), (26, 18, 1))
-    m.cube("cart", "pucker", "CANVAS", (-12, 31, -33), (24, 14, 1))
-    m.cube("cart", "pucker_hole", "DARK", (-2, 36, -33.4), (4, 4, 0.5))
+    m.cube("cart", "shade", "DARK", (-13, 29, 24), (26, top - 30, 1))
+    m.cube("cart", "pucker", "CANVAS", (-12, 31, -33), (24, top - 34, 1))
+    m.cube("cart", "pucker_hole", "DARK", (-2, 40, -33.4), (4, 4, 0.5))
     # Le banc du cocher, son dossier, le marchepied ; le frein ; la lanterne.
     # Le banc du cocher, devant l'ouverture de la bâche, au-dessus du panneau avant.
     m.cube("cart", "seat", "WOOD", (-11, 29, 32), (22, 1.5, 5))

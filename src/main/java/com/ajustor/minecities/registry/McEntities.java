@@ -35,7 +35,7 @@ public final class McEntities {
 			BuiltInRegistries.ENTITY_TYPE, CARAVAN_CART_KEY,
 			EntityType.Builder.<com.ajustor.minecities.caravan.CaravanCart>of(com.ajustor.minecities.caravan.CaravanCart::new,
 							MobCategory.MISC)
-					.sized(2.4F, 3.1F)
+					.sized(2.4F, 3.6F)
 					.clientTrackingRange(10)
 					.updateInterval(2)
 					.build(CARAVAN_CART_KEY));
