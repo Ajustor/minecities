@@ -130,7 +130,7 @@ def releases(data, fr):
                         + ("Télécharger" if fr else "Download") + f" {html.escape(a['name'])}</a>" for a in jars) \
             or f'<a href="{html.escape(r.get("html_url", REPO))}">GitHub</a>'
         versions = ", ".join(minecraft_of(a["name"]) for a in jars) or "26.2"
-        details = f"Minecraft {versions} · Fabric Loader ≥ 0.19.3 · Fabric API · Java 25\"
+        details = f"Minecraft {versions} · Fabric Loader ≥ 0.19.3 · Fabric API · Java 25"
         out.append(f'<div class="release"><h2>{tag} {badge}</h2><p>{date} · {details}</p><p>{link}</p></div>')
     return "\n".join(out)
 
