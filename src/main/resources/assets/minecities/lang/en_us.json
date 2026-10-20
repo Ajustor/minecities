@@ -938,5 +938,11 @@
   "message.minecities.route.removed": "Waypoint removed (%s left).",
   "message.minecities.caravan.departed": "A caravan leaves %s for %s: %s.",
   "message.minecities.caravan.coming": "A caravan from %s is on its way to %s: %s.",
-  "message.minecities.caravan.arrived": "The caravan from %s reached %s: %s in the granary."
+  "message.minecities.caravan.arrived": "The caravan from %s reached %s: %s in the granary.",
+  "entity.minecities.caravan_cart": "Caravan Wagon",
+  "entity.minecities.caravan_stall": "Caravan Stall",
+  "screen.minecities.stall": "Stall from %s",
+  "message.minecities.stall.opened": "%s, from %s, opens a stall at the edge of %s: %s.",
+  "message.minecities.stall.closed": "%s packs up the stall and heads home: %s emeralds to the granary, with the unsold goods.",
+  "message.minecities.stall.empty": "%s has nothing left to sell."
 }

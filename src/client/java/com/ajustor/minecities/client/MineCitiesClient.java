@@ -16,6 +16,7 @@ public class MineCitiesClient implements ClientModInitializer {
 	public void onInitializeClient() {
 		EntityRendererRegistry.register(McEntities.CITIZEN, CitizenRenderer::new);
 		EntityRendererRegistry.register(McEntities.CARAVAN_CART, com.ajustor.minecities.client.render.CaravanCartRenderer::new);
+		EntityRendererRegistry.register(McEntities.CARAVAN_STALL, com.ajustor.minecities.client.render.CaravanStallRenderer::new);
 		com.ajustor.minecities.client.render.GhostRenderer.register();
 		Guide.opener = player -> Minecraft.getInstance().gui.setScreen(
 				new BookViewScreen(new BookViewScreen.BookAccess(Guide.pages())));

@@ -37,6 +37,20 @@ public final class McEntities {
 					.updateInterval(2)
 					.build(CARAVAN_CART_KEY));
 
+	private static final ResourceKey<EntityType<?>> CARAVAN_STALL_KEY =
+			ResourceKey.create(Registries.ENTITY_TYPE, MineCities.id("caravan_stall"));
+
+	/** L'échoppe d'une caravane arrivée (MC-80) : comme le chariot, recréée près des joueurs. */
+	public static final EntityType<com.ajustor.minecities.caravan.CaravanStall> CARAVAN_STALL = Registry.register(
+			BuiltInRegistries.ENTITY_TYPE, CARAVAN_STALL_KEY,
+			EntityType.Builder.<com.ajustor.minecities.caravan.CaravanStall>of(com.ajustor.minecities.caravan.CaravanStall::new,
+							MobCategory.MISC)
+					.sized(2.6F, 2.4F)
+					.noSave()
+					.clientTrackingRange(10)
+					.updateInterval(20)
+					.build(CARAVAN_STALL_KEY));
+
 	private McEntities() {
 	}
 

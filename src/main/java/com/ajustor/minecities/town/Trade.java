@@ -135,7 +135,8 @@ public final class Trade {
 			paid += price(item, goods.getCount());
 			cargo.add(goods);
 		}
-		if (cargo.isEmpty()) {
+		java.util.List<ItemStack> wares = road ? wares(from, cargo) : java.util.List.of();
+		if (cargo.isEmpty() && wares.isEmpty()) {
 			return;
 		}
 		// Le grenier du vendeur plein : ce qui n'y entre pas retourne à l'acheteur, au lieu de disparaître.
@@ -148,7 +149,7 @@ public final class Trade {
 		if (road) {
 			String merchant = seller.residents().values().stream().filter(r -> r.job()
 					.filter(j -> j.job() == Job.MERCHANT).isPresent()).map(Resident::name).findFirst().orElse("");
-			caravans.depart(level, seller, buyer, cargo, merchant);
+			caravans.depart(level, seller, buyer, cargo, wares, merchant);
 		} else {
 			for (ItemStack goods : cargo) {
 				ItemStack rest = Stock.insert(to, goods);
@@ -166,4 +167,41 @@ public final class Trade {
 
 	/** Combien de marchandises différentes une caravane emporte au plus. */
 	private static final int CARGO_KINDS = 4;
+	/** Ce que le marchand emporte pour son échoppe : tant de marchandises, tant de pièces de chacune. */
+	private static final int WARE_KINDS = 3;
+	private static final int WARE_LOAD = 16;
+	/** Un bijou part à l'échoppe tant qu'il en reste ce nombre au grenier. */
+	private static final int JEWELS_KEPT = 2;
+
+	/**
+	 * Ce que le marchand prend pour son échoppe (MC-80) : de ce que sa ville a en trop (nourriture,
+	 * marchandises au cours des villageois, bijoux), autre chose que la cargaison, par lots entiers. Ce
+	 * n'est pas vendu à l'avance : la recette et les invendus reviendront au grenier.
+	 */
+	static java.util.List<ItemStack> wares(TownHallBlockEntity from, java.util.List<ItemStack> cargo) {
+		java.util.List<ItemStack> wares = new java.util.ArrayList<>();
+		for (int i = 0; i < from.getContainerSize() && wares.size() < WARE_KINDS; i++) {
+			ItemStack stack = from.getItem(i);
+			if (stack.isEmpty() || cargo.stream().anyMatch(c -> c.is(stack.getItem()))
+					|| wares.stream().anyMatch(w -> w.is(stack.getItem()))) {
+				continue;
+			}
+			Item item = stack.getItem();
+			boolean jewel = Market.value(item).isPresent();
+			if (!jewel && !TownService.isFood(stack) && Market.rate(item).isEmpty()) {
+				continue;
+			}
+			int kept = jewel ? JEWELS_KEPT : PLENTY;
+			int lot = com.ajustor.minecities.caravan.Stall.lot(item).count();
+			int count = Math.min(WARE_LOAD, Stock.count(from, s -> s.is(item)) - kept) / lot * lot;
+			if (count <= 0) {
+				continue;
+			}
+			ItemStack goods = Stock.take(from, s -> s.is(item), count);
+			if (!goods.isEmpty()) {
+				wares.add(goods);
+			}
+		}
+		return wares;
+	}
 }

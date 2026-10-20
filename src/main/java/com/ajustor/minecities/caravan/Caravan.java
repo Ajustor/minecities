@@ -23,7 +23,8 @@ public final class Caravan {
 			Codec.DOUBLE.optionalFieldOf("traveled", 0.0).forGetter(c -> c.traveled),
 			Codec.LONG.optionalFieldOf("departed", 0L).forGetter(c -> c.departed),
 			Codec.STRING.optionalFieldOf("merchant", "").forGetter(c -> c.merchant),
-			net.minecraft.core.BlockPos.CODEC.listOf().optionalFieldOf("path", List.of()).forGetter(c -> c.path)
+			net.minecraft.core.BlockPos.CODEC.listOf().optionalFieldOf("path", List.of()).forGetter(c -> c.path),
+			ItemStack.CODEC.listOf().optionalFieldOf("wares", List.of()).forGetter(c -> List.copyOf(c.wares))
 	).apply(i, Caravan::new));
 
 	private final UUID id;
@@ -36,9 +37,11 @@ public final class Caravan {
 	private final String merchant;
 	/** Son itinéraire, fixé au départ (les retouches de la route vaudront pour la suivante). */
 	private final List<net.minecraft.core.BlockPos> path;
+	/** Ce que le marchand vendra à son échoppe, à l'arrivée (pas encore payé : c'est au vendeur). */
+	private final List<ItemStack> wares;
 
 	private Caravan(UUID id, UUID from, UUID to, List<ItemStack> cargo, double traveled, long departed,
-			String merchant, List<net.minecraft.core.BlockPos> path) {
+			String merchant, List<net.minecraft.core.BlockPos> path, List<ItemStack> wares) {
 		this.id = id;
 		this.from = from;
 		this.to = to;
@@ -47,11 +50,17 @@ public final class Caravan {
 		this.departed = departed;
 		this.merchant = merchant;
 		this.path = List.copyOf(path);
+		this.wares = new ArrayList<>(wares.stream().map(ItemStack::copy).toList());
 	}
 
-	public static Caravan depart(UUID from, UUID to, List<ItemStack> cargo, long now, String merchant,
-			List<net.minecraft.core.BlockPos> path) {
-		return new Caravan(UUID.randomUUID(), from, to, cargo, 0, now, merchant, path);
+	public static Caravan depart(UUID from, UUID to, List<ItemStack> cargo, List<ItemStack> wares, long now,
+			String merchant, List<net.minecraft.core.BlockPos> path) {
+		return new Caravan(UUID.randomUUID(), from, to, cargo, 0, now, merchant, path, wares);
+	}
+
+	/** Ce que le marchand vendra à son échoppe. */
+	public List<ItemStack> wares() {
+		return wares;
 	}
 
 	public List<net.minecraft.core.BlockPos> path() {

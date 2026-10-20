@@ -5,6 +5,7 @@ import com.ajustor.minecities.build.Blueprints;
 import com.ajustor.minecities.build.BuildStyle;
 import com.ajustor.minecities.build.Construction;
 import com.ajustor.minecities.caravan.CaravanCart;
+import com.ajustor.minecities.caravan.CaravanStall;
 import com.ajustor.minecities.caravan.Caravans;
 import com.ajustor.minecities.citizen.CitizenEntity;
 import com.ajustor.minecities.citizen.Happiness;
@@ -46,7 +47,7 @@ import static com.ajustor.minecities.gametest.CityScenes.waitOrExplain;
  * La mairie et la maîtrise (v1.1), dans le vrai jeu : le forgeron d'une forge de niveau 4 habille le
  * garde de fer de pied en cap ; le tanneur tanne ; le maire décrète un jour férié (l'onglet Mairie) ;
  * deux villes signent un accord et une caravane porte le pain de l'une à l'autre (elle prend corps près
- * du joueur, et campe la nuit).
+ * du joueur, campe la nuit, et son marchand tient échoppe à l'arrivée).
  *
  * <p>{@code ./gradlew runClientGameTest -PminecitiesGametest=council}
  */
@@ -161,9 +162,13 @@ public class CouncilScenes implements Scene {
 			return home && !town(server).decreed(Decree.CURFEW) ? null : "le couvre-feu ne renvoie personne";
 		}));
 
-		// Un accord de commerce : la voisine n'a pas de pain, la ville en a trop.
+		// Un accord de commerce : la voisine n'a pas de pain, la ville en a trop ; et des bagues de
+		// joaillier, que le marchand vendra à son échoppe (MC-80).
 		stage.run(server -> {
 			Town town = town(server);
+			if (server.overworld().getBlockEntity(HALL) instanceof TownHallBlockEntity granary) {
+				Stock.insert(granary, new ItemStack(McItems.GOLD_RING, RINGS));
+			}
 			Town other = Towns.get(server).byHall(server.overworld().dimension(), OTHER_HALL).orElseThrow();
 			town.addPartner(other.id());
 			other.addPartner(town.id());
@@ -194,6 +199,7 @@ public class CouncilScenes implements Scene {
 				? null : "la voisine n'a pas payé la caravane : émeraudes " + granary(server, HALL, Items.EMERALD) + " / "
 						+ granary(server, OTHER_HALL, Items.EMERALD) + ", pain " + granary(server, HALL, Items.BREAD) + " / "
 						+ granary(server, OTHER_HALL, Items.BREAD)));
+		stall(stage);
 
 		// L'onglet Mairie : le maire, les décrets, l'accord.
 		TownSnapshot snapshot = stage.compute(server -> TownNetwork.snapshot(server.overworld(),
@@ -297,6 +303,90 @@ public class CouncilScenes implements Scene {
 		}
 		command(server, "gamemode spectator @p");
 	}
+	/** Les bagues mises au grenier pour l'échoppe ; le marchand en laisse deux à la ville. */
+	private static final int RINGS = 5;
+
+	/**
+	 * L'échoppe (MC-80) : à l'arrivée, le marchand s'installe en bordure de la voisine avec les bagues de
+	 * sa ville ; près du joueur, elle prend corps ; le troc s'ouvre ; chaque lot vendu quitte l'étal et
+	 * paie ; tout vendu, il remballe, et les émeraudes rentrent au grenier de sa ville.
+	 */
+	private static void stall(Stage stage) {
+		waitOrExplain(stage, server -> stall(server) != null, 200, "pas d'échoppe à l'arrivée",
+				server -> "bagues au grenier " + granary(server, HALL, McItems.GOLD_RING) + ", échoppes "
+						+ Caravans.get(server).stalls().size() + ".");
+		check(stage.compute(server -> {
+			com.ajustor.minecities.caravan.Stall stall = stall(server);
+			Town other = Towns.get(server).byHall(server.overworld().dimension(), OTHER_HALL).orElseThrow();
+			int rings = stall.wares().stream().filter(w -> w.is(McItems.GOLD_RING)).mapToInt(ItemStack::getCount).sum();
+			if (rings != RINGS - 2 || granary(server, HALL, McItems.GOLD_RING) != 2) {
+				return "l'échoppe n'a pas les bagues : " + rings + " à l'étal, " + granary(server, HALL, McItems.GOLD_RING)
+						+ " au grenier";
+			}
+			// En bordure de la voisine : dans la ville, mais loin de l'hôtel de ville.
+			return other.contains(server.overworld().dimension(), stall.pos())
+					&& stall.pos().distSqr(OTHER_HALL) > 12 * 12 ? null : "l'échoppe n'est pas en bordure : " + stall.pos();
+		}));
+		// Le joueur s'approche : l'échoppe, le chariot dételé, le cheval et le marchand prennent corps.
+		BlockPos at = stage.compute(server -> stall(server).pos());
+		stage.command("tp @p " + at.getX() + " " + (at.getY() + 1) + " " + (at.getZ() + 6));
+		waitOrExplain(stage, server -> Caravans.stallEmbodied(stall(server).id()) && booth(server) != null, 200,
+				"l'échoppe ne prend pas corps près du joueur");
+		double[] look = stage.compute(server -> {
+			CaravanStall booth = booth(server);
+			double yaw = Math.toRadians(booth.getYRot());
+			double fx = -Math.sin(yaw);
+			double fz = Math.cos(yaw);
+			return new double[]{booth.getX() + fx * 6 + Math.cos(yaw) * 2.5, booth.getY() + 2.6,
+					booth.getZ() + fz * 6 + Math.sin(yaw) * 2.5, booth.getX(), booth.getY() + 1.2, booth.getZ()};
+		});
+		stage.look(look[0], look[1], look[2], look[3], look[4], look[5]);
+		stage.client(mc -> hideGui(mc, true));
+		stage.waitTicks(20);
+		stage.shot("council_stall");
+		// Le troc, sur l'écran des villageois.
+		stage.run(server -> Caravans.trade(server.getPlayerList().getPlayers().getFirst(), stall(server).id()));
+		stage.waitTicks(10);
+		check(stage.compute(server -> server.getPlayerList().getPlayers().getFirst().containerMenu
+				instanceof net.minecraft.world.inventory.MerchantMenu ? null : "le troc ne s'ouvre pas"));
+		stage.client(mc -> hideGui(mc, false));
+		stage.waitTicks(5);
+		stage.shot("council_stall_trade");
+		stage.run(server -> server.getPlayerList().getPlayers().getFirst().closeContainer());
+		stage.client(mc -> hideGui(mc, true));
+		// Une bague vendue : une de moins à l'étal, sept émeraudes à la caisse ; puis les deux autres.
+		check(stage.compute(server -> {
+			com.ajustor.minecities.caravan.Stall stall = stall(server);
+			Caravans.get(server).sold(stall.id(), McItems.GOLD_RING);
+			int rings = stall.wares().stream().mapToInt(ItemStack::getCount).sum();
+			return rings == RINGS - 3 && stall.earned() == com.ajustor.minecities.caravan.Stall.lot(McItems.GOLD_RING)
+					.emeralds() ? null : "la vente ne se compte pas : " + rings + " bagues, " + stall.earned() + " émeraudes";
+		}));
+		int before = stage.compute(server -> granary(server, HALL, Items.EMERALD));
+		int earned = stage.compute(server -> {
+			com.ajustor.minecities.caravan.Stall stall = stall(server);
+			Caravans.get(server).sold(stall.id(), McItems.GOLD_RING);
+			Caravans.get(server).sold(stall.id(), McItems.GOLD_RING);
+			return stall.earned();
+		});
+		// L'échoppe vide ferme dès que le grenier de sa ville est chargé : le joueur y retourne.
+		stage.command("tp @p 0.5 " + (Y + 1) + " 3.5");
+		waitOrExplain(stage, server -> stall(server) == null, 200, "l'échoppe vide ne ferme pas");
+		check(stage.compute(server -> granary(server, HALL, Items.EMERALD) >= before + earned
+				&& booth(server) == null ? null : "la recette n'est pas rentrée : " + before + " + " + earned + " ≠ "
+				+ granary(server, HALL, Items.EMERALD)));
+	}
+
+	/** L'échoppe de la ville chez la voisine, s'il y en a une. */
+	private static com.ajustor.minecities.caravan.Stall stall(MinecraftServer server) {
+		return Caravans.get(server).stalls().stream().filter(s -> s.from().equals(town(server).id())).findFirst()
+				.orElse(null);
+	}
+
+	private static CaravanStall booth(MinecraftServer server) {
+		return server.overworld().getEntities(McEntities.CARAVAN_STALL, c -> true).stream().findFirst().orElse(null);
+	}
+
 	/** Le chariot de la caravane, s'il a pris corps. */
 	private static CaravanCart cart(MinecraftServer server) {
 		return server.overworld().getEntities(McEntities.CARAVAN_CART, c -> true).stream().findFirst().orElse(null);
