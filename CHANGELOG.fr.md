@@ -1,5 +1,83 @@
 # Journal des modifications
 
+## 1.10.0 — 2026-10-20
+
+### Nouveautés
+
+- Le mod est disponible pour Minecraft 26.3 en plus de 26.2 : chaque version a son jar.
+- Le livre de recettes montre toutes les recettes du mod (hôtel de ville, plaque, postes…), sans mod de recettes.
+- Le budget de la ville : un impôt quotidien au taux fixé par le maire, versé dans une boîte à impôts, le salaire des gardes et des archers, et des chantiers payants à partir du niveau 2.
+- La taverne : un tavernier sert à boire, égaie la ville et attire de nouveaux habitants ; le Résumé dit quand arrive le prochain.
+- Les matériaux des bâtiments de niveau 3 et 4 se fabriquent en ville sur commande des chantiers (forgeron, charpentier, maçon, tisserand) ou s'achètent au marché ; le marchand fournit aussi la pioche du mineur et les cisailles de l'apiculteur.
+- Le mineur garde un peu d'andésite (pour l'andésite polie du maçon) et de gravier (pour le silex).
+- Le message de fondation explique la croissance : nouveaux venus jusqu'au minimum, puis la taverne, et où trouver le grenier.
+- L'éleveur tond et trait, le garde ramasse le butin des monstres, le médecin prépare la pastèque scintillante, le marchand achète les matières premières qui manquent.
+- Le marchand vend aussi ce que la ville fabrique (pain, plats, miel, livres, briques, verre…), plus cher que les ingrédients.
+- Le logis compte pour le bonheur : belle maison (+1, +2 au niveau 4), maison surpeuplée ou sans lampe (−1).
+- Deux décrets de plus, couvre-feu et frontières ouvertes ; les décrets se prennent à partir du palier Ville.
+- Nouveaux bâtiments, niveaux 1 à 4 : le relais du livreur et le pas de tir de l'archer.
+- La maîtrise des ateliers de niveau 4 demande un livre prêté par le bibliothécaire ; l'écran du poste dit où elle en est.
+- Chaque métier a sa spécialité de maître (gâteau, double fournée, tapis teints, meilleurs cours, soins de zone, travail deux fois plus rapide…).
+- L'hôtel de ville montre ce qui pèse sur le bonheur : dans le résumé, et en infobulle sur l'humeur de chaque citoyen.
+- Les écrans de l'hôtel de ville, de la carte et des postes se mettent à jour d'eux-mêmes toutes les deux secondes.
+- Survoler un plan montre le coût du bâtiment : émeraudes et matériaux, avec ce qu'en ont les réserves.
+- Les objets du mod disent à quoi ils servent, et les boutons des écrans ont une infobulle.
+- Un écran « Gérer la mairie » : renommer la ville, nommer des adjoints, transmettre la mairie, signer ou rompre des accords, sans commande.
+- La faim et le malheur font baisser les affinités ; deux époux qui ne s'entendent plus se séparent.
+- La commande /town, en anglais, fait la même chose que /ville.
+- Le résumé de l'hôtel de ville estime combien de jours tient la nourriture du grenier.
+- Le maire peut suspendre un chantier et le reprendre plus tard, depuis l'établi du bâtisseur.
+- Les citoyens ne cassent plus de blocs sur un terrain protégé par un mod de protection.
+- Les travailleurs gagnent de l'expérience dans leur métier : jusqu'à 30 % plus rapides, rang affiché sur leur poste.
+- Le Mauvais présage attire un raid sur la ville, un ravageur se joint aux grosses vagues, et un marchand ambulant passe chaque semaine.
+- Monter de palier demande aussi du bonheur, des métiers variés et un bâtiment public (taverne, monument, bibliothèque) ; une ville qui ne les a plus redescend.
+- Le maire peut couper (et rétablir) les élections de sa ville ; un scrutin en cours est alors annulé.
+- Les enfants suivent leurs parents et vont à l'école près de la bibliothèque ; les mariés se retrouvent devant l'hôtel de ville pour la cérémonie.
+- Les caravanes de commerce prennent la route : un chariot bâché tiré par un cheval, mené par le marchand, qui campe la nuit ; le bâton d'itinéraire trace leur chemin.
+- Les marchands des caravanes tiennent échoppe à l'entrée de la ville où ils arrivent et vendent aux joueurs les produits de leur ville.
+- Les caravanes voyagent sous escorte et peuvent tomber dans une embuscade de bandits ; un joueur peut piller un chariot, au risque de devenir hors-la-loi.
+- Les caravanes ont un grand chariot bâché de l'Ouest aux roues qui tournent, mené par le marchand assis au banc du cocher ; l'échoppe est plus grande et montre ses marchandises.
+
+### Corrections
+
+- Les artisans ne restent plus bloqués à rendre puis reprendre leurs matériaux sans jamais travailler.
+- Dissoudre une ville pendant que ses citoyens travaillent ne fait plus planter le serveur.
+- Retirer la tour d'un archer posté en haut ne fait plus planter le serveur.
+- Un entonnoir ne peut plus vider le grenier de l'hôtel de ville ou d'une annexe (il peut toujours le remplir).
+- Seuls le maire et ses adjoints peuvent démolir une mairie annexe.
+- L'interface d'un bâtiment ne peut plus servir à déclarer une maison sans plaque ni à surcharger le serveur.
+- Un citoyen resté loin des joueurs (au travail, hors de portée) n'est plus rayé de la ville pour disparition, et les citoyens ne prennent plus les portails.
+- Un citoyen qui quitte la ville rend au grenier ce qu'il portait (ou le laisse au sol) au lieu de le faire disparaître.
+- L'hôtel de ville se fabrique avec un lingot d'or au lieu d'une cloche, introuvable sans village.
+- Les artisans ne restent plus bloqués quand les ingrédients d'un ouvrage sont rangés dans des coffres différents.
+- Le cuisinier et le boulanger vont chercher leurs ingrédients dans toutes les réserves au lieu de rester bloqués sur un coffre incomplet.
+- Les citoyens mangent ce qu'ils portent quand les garde-manger sont vides, et ceux qui nourrissent la ville continuent de travailler quand ils ont faim.
+- Le mineur ne perd plus les minerais qui ne tiennent pas dans ses poches, ni ceux d'après une pioche cassée.
+- Le marchand ne fait plus disparaître ce qu'il porte quand le grenier est plein.
+- Les artisans et le forgeron interrompus (repas, nuit) reprennent leur ouvrage au lieu de rapporter leurs matières.
+- Tous les citoyens combattent les incendies, et plus seulement la moitié d'entre eux.
+- Un citoyen affamé pendant une fête va manger au lieu de danser jusqu'à défaillir.
+- Un citoyen qui ne peut pas atteindre sa cible (derrière une clôture, sur un toit) y renonce et passe à autre chose.
+- Le bâtisseur n'attend plus indéfiniment un livreur qui ne vient pas : il va chercher lui-même ses matériaux.
+- Quand les réserves sont pleines, le livreur prévient le maire au lieu de rester planté devant le grenier.
+- Une maison à cheval sur une zone non chargée n'est plus effacée (habitants expulsés, emplois perdus) à chaque relevé.
+- Les élections ne retiennent plus que les candidats et les voix des membres de la ville, et ne relancent plus de tours sans fin faute de votes.
+- La mairie ne se transmet qu'à un habitant (et pas pendant une élection), les adjoints sont choisis parmi les habitants, un palier mal écrit est refusé, les anciens schémas ne se commandent plus, et deux villes ne portent plus le même nom.
+- L'armure des gardes, les émeraudes des caravanes et les objets posés au sol par les citoyens ne se perdent plus (ni ne s'accumulent à jamais).
+- L'établi du bâtisseur n'est offert qu'une fois par joueur, l'espacement des raids survit au redémarrage du serveur, et le démontage de l'hôtel de ville est plus sûr.
+- Le bâtisseur ne renonce plus à aller chercher ses matériaux au grenier quand il redescend de ses échafaudages.
+- Les messages de refus et d'outil manquant disent juste (plus de « mariages » hors du registre, plus de « d'des cisailles »).
+- Registre des mariages paginé, poste libre qui dit s'il manque un habitant, refus de fondation avec la distance et la direction.
+- Deux villes voisines se partagent le terrain là où leurs territoires se chevauchent ; une ville ne se fonde plus contre une annexe.
+- Un chantier ne peut plus écraser une maison déclarée, un bâtiment fini, l'hôtel de ville ou une annexe ; les murs mitoyens restent.
+- Une ville abîmée dans la sauvegarde n'est plus effacée : elle est gardée telle quelle et ses citoyens restent.
+- Un chantier ne se termine plus avec un lit ou une porte à moitié posé.
+- L'écran de l'hôtel de ville tient à toutes les échelles d'interface et a un bouton Fermer.
+- La bâche du chariot des caravanes est plus haute : le marchand y conduit tête couverte, sans la traverser.
+
+### Performances
+
+- Moins de calculs côté serveur : demandes réseau espacées, plans des chantiers gardés en mémoire, gardes et mineurs plus sobres.
 ## 1.9.1 — 2026-10-14
 
 ### Corrections

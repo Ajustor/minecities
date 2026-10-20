@@ -1,5 +1,83 @@
 # Changelog
 
+## 1.10.0 — 2026-10-20
+
+### New features
+
+- The mod is available for Minecraft 26.3 as well as 26.2: each version has its own jar.
+- The recipe book shows all of the mod's recipes (town hall, plaque, stations…), without a recipe mod.
+- Town budget: a daily tax at a rate set by the mayor, paid into a tax box, wages for guards and archers, and construction that costs emeralds from level 2.
+- The tavern: an innkeeper serves drinks, cheers the town up and draws new residents; the Summary tells when the next one arrives.
+- Materials for level 3 and 4 buildings are made in town when construction sites ask for them (smith, carpenter, mason, weaver) or bought at the market; the merchant also supplies the miner's pickaxe and the beekeeper's shears.
+- The miner keeps some andesite (for the mason's polished andesite) and gravel (for flint).
+- The founding message explains growth: newcomers up to the minimum, then the tavern, and where the granary is.
+- The breeder shears and milks, guards pick up mob loot, the doctor brews glistering melon, the merchant buys missing raw materials.
+- The merchant also sells what the town makes (bread, dishes, honey, books, bricks, glass…), above the price of the ingredients.
+- Homes count for happiness: fine house (+1, +2 at level 4), overcrowded or unlit house (−1).
+- Two more decrees, curfew and open borders; decrees can be taken from the Town tier.
+- New buildings, levels 1 to 4: the courier post and the archery range.
+- Mastery of level-4 workshops needs a book lent by the librarian; the station screen shows its state.
+- Every job has a master specialty (cake, double batch, dyed carpets, better prices, area healing, twice-as-fast work…).
+- The town hall shows what weighs on happiness: in the summary, and as a tooltip on each citizen's mood.
+- The town hall, map and station screens update themselves every two seconds.
+- Hovering a blueprint shows the building's cost: emeralds and materials, with what the stores already hold.
+- Mod items tell what they are for, and screen buttons have tooltips.
+- A "Manage the town hall" screen: rename the town, appoint deputies, hand over the town hall, sign or end agreements, without commands.
+- Hunger and unhappiness lower affinities; spouses who no longer get along separate.
+- The /town command does the same as /ville.
+- The town hall summary estimates how many days the granary food will last.
+- The mayor can pause a building site and resume it later, from the builder's bench.
+- Citizens no longer break blocks on land protected by a protection mod.
+- Workers gain experience in their job: up to 30% faster, rank shown on their station.
+- Bad Omen draws a raid on the town, a ravager joins the big waves, and a wandering trader visits every week.
+- Moving up a tier also needs happiness, varied jobs and a public building (tavern, monument, library); a town that loses them goes back down.
+- The mayor can switch their town's elections off (and back on); a vote in progress is then cancelled.
+- Children follow their parents and go to school by the library; newlyweds meet in front of the town hall for the ceremony.
+- Trade caravans now travel: a covered wagon pulled by a horse, led by the merchant, that camps at night; the route staff draws their path.
+- Caravan merchants set up a stall at the edge of the town they reach and sell their home town's goods to players.
+- Caravans travel under escort and can be ambushed by bandits; players can plunder a wagon, at the risk of becoming outlaws.
+- Caravans now use a large covered Western wagon with turning wheels, driven by the merchant on the driver's bench; the stall is bigger and displays its goods.
+
+### Fixes
+
+- Craftspeople no longer get stuck returning and taking back their materials without ever working.
+- Disbanding a town while its citizens are working no longer crashes the server.
+- Removing the tower of an archer standing on top no longer crashes the server.
+- A hopper can no longer empty the granary of a town hall or annex (it can still fill it).
+- Only the mayor and deputies can tear down a town annex.
+- The building screen can no longer be used to declare a house without a plaque or to overload the server.
+- A citizen left far from players (at work, out of range) is no longer struck off as missing, and citizens no longer use portals.
+- A citizen leaving the town returns what they carried to the granary (or leaves it on the ground) instead of making it vanish.
+- The town hall is crafted with a gold ingot instead of a bell, which can't be found without a village.
+- Craftspeople no longer get stuck when the ingredients of an item are stored in different chests.
+- The cook and the baker gather their ingredients from every store instead of getting stuck on an incomplete chest.
+- Citizens eat what they carry when pantries are empty, and those who feed the town keep working when hungry.
+- The miner no longer loses ores that don't fit in their pockets, nor those mined after their pickaxe breaks.
+- The merchant no longer makes what they carry vanish when the granary is full.
+- Interrupted craftspeople and the smith (meal, night) resume their work instead of carrying their materials back.
+- All citizens now fight fires, not just half of them.
+- A citizen who gets hungry during a festival goes to eat instead of dancing until exhausted.
+- A citizen who can't reach their target (behind a fence, on a roof) gives up and moves on.
+- The builder no longer waits forever for a courier who doesn't come: they fetch their materials themselves.
+- When the stores are full, the courier tells the mayor instead of standing stuck in front of the granary.
+- A house straddling an unloaded area is no longer struck off (residents evicted, jobs lost) on every survey.
+- Elections only count candidates and votes from town members, and no longer restart rounds endlessly when nobody votes.
+- The mayoralty can only be handed to a resident (and not during an election), deputies are picked among residents, a misspelled tier is refused, old blueprints can no longer be ordered, and two towns no longer share a name.
+- Guards' armour, caravan emeralds and items citizens set down no longer get lost (nor pile up forever).
+- The builder's bench is given only once per player, raid spacing survives a server restart, and tearing down the town hall is safer.
+- The builder no longer gives up fetching materials from the granary while climbing down their scaffolding.
+- Refusal and missing-tool messages are accurate (no more "marriages" outside the registry).
+- Paged marriage registry, vacant stations that tell when a resident is missing, founding refusal with distance and direction.
+- Neighbouring towns share the ground where their territories overlap; a town can no longer be founded against an annex.
+- A building site can no longer crush a declared house, a finished building, the town hall or an annex; shared walls stay.
+- A damaged town in the save is no longer wiped: it is kept as is and its citizens stay.
+- A building site no longer finishes with a half-placed bed or door.
+- The town hall screen fits at every GUI scale and has a Close button.
+- The caravan wagon's canvas is taller, so the merchant driving it no longer pokes through.
+
+### Performance
+
+- Less server work: spaced network requests, cached site plans, lighter guards and miners.
 ## 1.9.1 — 2026-10-14
 
 ### Fixes
