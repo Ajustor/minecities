@@ -43,4 +43,13 @@ public final class EntityCompat {
 		entity.swing(hand);
 		//?}
 	}
+
+	/** L'entité ne peut plus être blessée (sauf par le vide ou une commande). */
+	public static void invulnerable(net.minecraft.world.entity.Entity entity) {
+		//? if >=26.3 {
+		/*entity.setPermanentlyInvulnerable(true);
+		*///?} else {
+		entity.setInvulnerable(true);
+		//?}
+	}
 }

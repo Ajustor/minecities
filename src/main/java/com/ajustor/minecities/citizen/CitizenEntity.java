@@ -271,6 +271,24 @@ public class CitizenEntity extends PathfinderMob {
 		return Optional.ofNullable(townId);
 	}
 
+	/** Il mène une caravane (MC-80) : la caravane le place, il n'appartient à aucune ville en route. */
+	private boolean traveler;
+
+	/** En fait le marchand d'une caravane, sous ce nom. */
+	public void travel(String name) {
+		traveler = true;
+		setNoAi(true);
+		com.ajustor.minecities.compat.EntityCompat.invulnerable(this);
+		entityData.set(JOB, Job.MERCHANT.ordinal());
+		if (!name.isEmpty()) {
+			setCustomName(Component.literal(name));
+		}
+	}
+
+	public boolean traveler() {
+		return traveler;
+	}
+
 	/** Où il se tient pour son mariage, et jusqu'à quand (MC-81) ; pas sauvegardé : la cérémonie est brève. */
 	private BlockPos weddingSpot;
 	private long weddingUntil;
@@ -586,7 +604,8 @@ public class CitizenEntity extends PathfinderMob {
 	@Override
 	public void aiStep() {
 		super.aiStep();
-		if (!(level() instanceof ServerLevel serverLevel)) {
+		// Un marchand de caravane (MC-80) : la caravane le place ; il n'a ni ville ni besoins en route.
+		if (traveler || !(level() instanceof ServerLevel serverLevel)) {
 			return;
 		}
 		doors.tick();

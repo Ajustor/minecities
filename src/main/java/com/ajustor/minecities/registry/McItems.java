@@ -60,6 +60,9 @@ public final class McItems {
 	public static final Item GUIDE = register("guide", GuideItem::new, new Item.Properties().stacksTo(1));
 	/** Le plan d'un bâtiment, pris à l'hôtel de ville : posé au sol, il montre le fantôme du bâtiment. */
 	public static final Item PLAN = register("plan", PlanItem::new, new Item.Properties().stacksTo(1));
+	/** Le bâton d'itinéraire (MC-80) : il trace la route des caravanes d'un accord de commerce. */
+	public static final Item ROUTE_STAFF = register("route_staff", com.ajustor.minecities.caravan.RouteStaffItem::new,
+			new Item.Properties().stacksTo(1));
 	public static final Item CITIZEN_SPAWN_EGG = register("citizen_spawn_egg", SpawnEggItem::new,
 			new Item.Properties().spawnEgg(McEntities.CITIZEN));
 
@@ -92,6 +95,7 @@ public final class McItems {
 				.displayItems((parameters, output) -> {
 					output.accept(GUIDE);
 					output.accept(COAT);
+					output.accept(ROUTE_STAFF);
 					output.accept(TOWN_HALL);
 					output.accept(HOUSE_PLAQUE);
 					output.accept(TOWN_ANNEX);

@@ -5,8 +5,6 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.sounds.SoundEvents;
-import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -17,12 +15,13 @@ import java.util.Set;
 
 /**
  * Le commerce entre villes (brief 07). Deux maires qui signent un accord (chacun de son côté) ouvrent
- * une route : une fois par minute, une caravane part du marché de la ville qui a trop d'une
- * marchandise vers celle qui en manque, et la seconde paie la première en émeraudes, au cours des
- * villageois. Il faut un marchand au départ, et les deux greniers chargés.
+ * une route : une fois par jour au plus dans chaque sens, une caravane part du marché de la ville
+ * qui a trop de marchandises vers celle qui en manque ; la seconde paie la première en émeraudes, au
+ * cours des villageois, dès le départ. La caravane fait ensuite le trajet ({@link
+ * com.ajustor.minecities.caravan.Caravans}). Il faut un marchand au départ, et les deux greniers chargés.
  */
 public final class Trade {
-	/** Une caravane par minute au plus et par route. */
+	/** On regarde chaque minute si une caravane peut partir (une par jour et par sens, voir Caravans). */
 	private static final int INTERVAL = 1200;
 	/** Au-delà de tant, une ville a de quoi vendre ; en dessous de tant, elle manque. */
 	static final int PLENTY = 64;
@@ -93,15 +92,29 @@ public final class Trade {
 		}
 	}
 
-	/** Une caravane du vendeur vers l'acheteur, s'il y a quelque chose à porter et de quoi payer. */
+	/**
+	 * Une caravane du vendeur vers l'acheteur (MC-80), une par jour et par sens : elle charge ce dont
+	 * l'acheteur manque et que le vendeur a en trop, l'acheteur la paie au départ, et elle prend la
+	 * route ; sa cargaison entre au grenier de l'acheteur à l'arrivée. D'une dimension à l'autre, pas de
+	 * route : la livraison est immédiate, comme avant.
+	 */
 	private static void caravan(MinecraftServer server, Town seller, TownHallBlockEntity from, Town buyer,
 			TownHallBlockEntity to) {
 		if (seller.workers(Job.MERCHANT) == 0) {
 			return;
 		}
-		for (int i = 0; i < from.getContainerSize(); i++) {
+		ServerLevel level = server.getLevel(seller.dimension());
+		com.ajustor.minecities.caravan.Caravans caravans = com.ajustor.minecities.caravan.Caravans.get(server);
+		boolean road = level != null && seller.dimension().equals(buyer.dimension());
+		if (road && !caravans.mayDepart(seller, buyer, level.getGameTime())) {
+			return;
+		}
+		java.util.List<ItemStack> cargo = new java.util.ArrayList<>();
+		int paid = 0;
+		for (int i = 0; i < from.getContainerSize() && cargo.size() < CARGO_KINDS; i++) {
 			ItemStack stack = from.getItem(i);
-			if (stack.isEmpty() || !(TownService.isFood(stack) || Market.rate(stack.getItem()).isPresent())) {
+			if (stack.isEmpty() || !(TownService.isFood(stack) || Market.rate(stack.getItem()).isPresent())
+					|| cargo.stream().anyMatch(c -> c.is(stack.getItem()))) {
 				continue;
 			}
 			Item item = stack.getItem();
@@ -114,33 +127,43 @@ public final class Trade {
 				continue;
 			}
 			ItemStack goods = Stock.take(from, s -> s.is(item), count);
-			ItemStack rest = Stock.insert(to, goods);
-			if (!rest.isEmpty()) {
-				Stock.insert(from, rest);
-			}
-			int delivered = goods.getCount() - rest.getCount();
-			if (delivered <= 0) {
+			if (goods.isEmpty()) {
 				continue;
 			}
-			int paid = price(item, delivered);
-			Stock.take(to, s -> s.is(Items.EMERALD), paid);
-			// Le grenier du vendeur plein : ce qui n'y entre pas retourne à l'acheteur, au lieu de disparaître.
-			ItemStack unpaid = Stock.insert(from, new ItemStack(Items.EMERALD, paid));
-			if (!unpaid.isEmpty()) {
-				Stock.insert(to, unpaid);
-				paid -= unpaid.getCount();
-			}
-			seller.chronicle().earn(server.overworld().getGameTime(), paid);
-			Component message = Component.translatable("message.minecities.trade.caravan", seller.name(), delivered,
-					Component.translatable(item.getDescriptionId()), buyer.name(), paid);
-			TownService.notify(server, seller, message);
-			TownService.notify(server, buyer, message);
-			ServerLevel level = server.getLevel(buyer.dimension());
-			if (level != null) {
-				level.playSound(null, buyer.hall(), SoundEvents.WANDERING_TRADER_YES, SoundSource.NEUTRAL, 1.0f, 1.0f);
-			}
-			Towns.get(server).changed();
+			// L'acheteur paie au départ.
+			Stock.take(to, s -> s.is(Items.EMERALD), price(item, goods.getCount()));
+			paid += price(item, goods.getCount());
+			cargo.add(goods);
+		}
+		if (cargo.isEmpty()) {
 			return;
 		}
+		// Le grenier du vendeur plein : ce qui n'y entre pas retourne à l'acheteur, au lieu de disparaître.
+		ItemStack unpaid = Stock.insert(from, new ItemStack(Items.EMERALD, paid));
+		if (!unpaid.isEmpty()) {
+			Stock.insert(to, unpaid);
+			paid -= unpaid.getCount();
+		}
+		seller.chronicle().earn(server.overworld().getGameTime(), paid);
+		if (road) {
+			String merchant = seller.residents().values().stream().filter(r -> r.job()
+					.filter(j -> j.job() == Job.MERCHANT).isPresent()).map(Resident::name).findFirst().orElse("");
+			caravans.depart(level, seller, buyer, cargo, merchant);
+		} else {
+			for (ItemStack goods : cargo) {
+				ItemStack rest = Stock.insert(to, goods);
+				if (!rest.isEmpty()) {
+					Stock.insert(from, rest);
+				}
+			}
+			Component message = Component.translatable("message.minecities.caravan.arrived", seller.name(), buyer.name(),
+					com.ajustor.minecities.caravan.Caravans.describe(cargo));
+			TownService.notify(server, seller, message);
+			TownService.notify(server, buyer, message);
+		}
+		Towns.get(server).changed();
 	}
+
+	/** Combien de marchandises différentes une caravane emporte au plus. */
+	private static final int CARGO_KINDS = 4;
 }
