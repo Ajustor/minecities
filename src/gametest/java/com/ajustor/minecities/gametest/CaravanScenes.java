@@ -78,6 +78,18 @@ public class CaravanScenes implements Scene {
 	private static void escort(Stage stage) {
 		UUID id = launch(stage, 2, 1, AMBUSH);
 		watch(stage, id);
+		// Les roues tournent quand il roule (côté client : sans fenêtre, rien à voir).
+		java.util.concurrent.atomic.AtomicReference<Float> rolled = new java.util.concurrent.atomic.AtomicReference<>();
+		stage.waitTicks(60);
+		stage.client(mc -> mc.level.entitiesForRendering().forEach(e -> {
+			if (e instanceof CaravanCart cart) {
+				rolled.set(cart.rolled(1));
+			}
+		}));
+		check(rolled.get() == null || rolled.get() > 1 ? null : "les roues ne tournent pas : " + rolled.get());
+		// Un petit film : le chariot passe devant la caméra, roues tournantes (avec -PminecitiesFilm).
+		stage.look(19, Y + 2.2, 11, 19, Y + 1.2, 4);
+		stage.film("caravans_roule", 40, 3, server -> false);
 		waitOrExplain(stage, server -> !Caravans.bandits(id).isEmpty(), 600, "pas d'embuscade",
 				server -> "parcouru " + caravan(server, id).map(Caravan::traveled).orElse(-1.0));
 		stage.waitTicks(25);

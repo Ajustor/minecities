@@ -66,6 +66,8 @@ public final class Caravans extends SavedData {
 	/** L'échoppe s'installe à tant de blocs en deçà de la limite de la ville, et à côté de la route. */
 	private static final double EDGE = 4;
 	private static final double ROADSIDE = 3.5;
+	/** Le chariot suit le cheval à tant de blocs (de centre à centre). */
+	private static final double CART_BEHIND = 3.7;
 	/** Une caravane sur tant tombe dans une embuscade, entre deux villes. */
 	private static final double AMBUSH_CHANCE = 0.35;
 	/** Les gardes d'une ville qui partent avec une caravane, au plus. */
@@ -498,16 +500,17 @@ public final class Caravans extends SavedData {
 			float yaw = stall.yaw();
 			booth.snapTo(at.x, at.y, at.z, yaw, 0);
 			// Le chariot dételé à côté de l'échoppe, le long de la route ; le cheval devant lui.
-			Vec3 parked = local(at, yaw, -3.6, -1.2);
+			Vec3 parked = local(at, yaw, -5.2, -1.4);
 			cart.snapTo(parked.x, at.y, parked.z, yaw + 90, 0);
-			Vec3 ahead = local(parked, yaw + 90, 0, 3.2);
+			cart.addTag(TAG);
+			Vec3 ahead = local(parked, yaw + 90, 0, CART_BEHIND);
 			horse.snapTo(ahead.x, at.y, ahead.z, yaw + 90, 0);
 			horse.setNoAi(true);
 			com.ajustor.minecities.compat.EntityCompat.invulnerable(horse);
 			horse.setPersistenceRequired();
 			horse.addTag(TAG);
 			// Le marchand derrière son comptoir.
-			Vec3 behind = local(at, yaw, 0, -0.75);
+			Vec3 behind = local(at, yaw, 0, -0.5);
 			merchant.snapTo(behind.x, at.y, behind.z, yaw, 0);
 			merchant.setYHeadRot(yaw);
 			merchant.setYBodyRot(yaw);
@@ -590,6 +593,7 @@ public final class Caravans extends SavedData {
 			return;
 		}
 		cart.snapTo(at.x, at.y, at.z, 0, 0);
+		cart.addTag(TAG);
 		horse.snapTo(at.x, at.y, at.z, 0, 0);
 		horse.setNoAi(true);
 		com.ajustor.minecities.compat.EntityCompat.invulnerable(horse);
@@ -647,8 +651,9 @@ public final class Caravans extends SavedData {
 	}
 
 	/**
-	 * Place ses membres le long de la route : le cheval devant, le chariot derrière lui, le marchand à
-	 * côté du chariot. La nuit, le camp : le chariot dételé, le marchand près du feu.
+	 * Place ses membres le long de la route : le cheval devant, le chariot derrière lui, le marchand sur
+	 * le banc du cocher, l'escorte de part et d'autre. La nuit, le camp : le marchand descend s'asseoir
+	 * près du feu, les gardes veillent.
 	 */
 	private static void move(ServerLevel level, Caravan caravan, boolean night) {
 		Crew crew = CREWS.get(caravan.id());
@@ -659,13 +664,30 @@ public final class Caravans extends SavedData {
 		double s = caravan.traveled();
 		float yaw = Itinerary.yaw(path, s);
 		place(level, crew.horse, path, s, 0, yaw);
-		place(level, crew.cart, path, s - 3.2, 0, yaw);
+		place(level, crew.cart, path, s - CART_BEHIND, 0, yaw);
 		boolean fray = FRAYS.containsKey(caravan.id());
+		// Le marchand conduit, sauf la nuit (il descend au camp) ou à terre.
+		if (level.getEntity(crew.merchant) instanceof CitizenEntity merchant && merchant.isAlive()
+				&& level.getEntity(crew.cart) instanceof CaravanCart wagon) {
+			boolean drives = !night && !merchant.downed();
+			if (drives && !merchant.isPassenger()) {
+				merchant.startRiding(wagon, true, true);
+			} else if (!drives && merchant.isPassenger()) {
+				merchant.stopRiding();
+			}
+			if (merchant.isPassenger()) {
+				merchant.setYRot(yaw);
+				merchant.setYHeadRot(yaw);
+				merchant.setYBodyRot(yaw);
+			} else if (drives) {
+				// Il n'a pas pu monter : il marche à côté du chariot.
+				place(level, crew.merchant, path, s - 2.5, 1.6, yaw);
+			}
+		}
 		if (!fray) {
-			place(level, crew.merchant, path, s - 2.5, 1.4, yaw);
 			// L'escorte marche de part et d'autre du chariot.
 			for (int i = 0; i < crew.escorts.size(); i++) {
-				place(level, crew.escorts.get(i), path, s - 3.0 - (i / 2) * 3.0, i % 2 == 0 ? -1.8 : 1.8, yaw);
+				place(level, crew.escorts.get(i), path, s - CART_BEHIND - (i / 2) * 3.0, i % 2 == 0 ? -2.4 : 2.4, yaw);
 			}
 		}
 		if (level.getEntity(crew.cart) instanceof CaravanCart cart) {

@@ -26,13 +26,16 @@ public final class McEntities {
 	private static final ResourceKey<EntityType<?>> CARAVAN_CART_KEY =
 			ResourceKey.create(Registries.ENTITY_TYPE, MineCities.id("caravan_cart"));
 
-	/** Le chariot d'une caravane (MC-80) : placé par la caravane, jamais sauvegardé (elle le recrée). */
+	/**
+	 * Le chariot d'une caravane (MC-80) : placé par la caravane, qui le recrée près des joueurs. Il peut
+	 * être sauvegardé (le marchand ne monte que dans une entité qui peut l'être), mais il porte
+	 * l'étiquette des caravanes : relu d'une sauvegarde, il s'efface.
+	 */
 	public static final EntityType<com.ajustor.minecities.caravan.CaravanCart> CARAVAN_CART = Registry.register(
 			BuiltInRegistries.ENTITY_TYPE, CARAVAN_CART_KEY,
 			EntityType.Builder.<com.ajustor.minecities.caravan.CaravanCart>of(com.ajustor.minecities.caravan.CaravanCart::new,
 							MobCategory.MISC)
-					.sized(1.6F, 1.8F)
-					.noSave()
+					.sized(2.4F, 3.1F)
 					.clientTrackingRange(10)
 					.updateInterval(2)
 					.build(CARAVAN_CART_KEY));
@@ -45,7 +48,7 @@ public final class McEntities {
 			BuiltInRegistries.ENTITY_TYPE, CARAVAN_STALL_KEY,
 			EntityType.Builder.<com.ajustor.minecities.caravan.CaravanStall>of(com.ajustor.minecities.caravan.CaravanStall::new,
 							MobCategory.MISC)
-					.sized(2.6F, 2.4F)
+					.sized(3.6F, 2.6F)
 					.noSave()
 					.clientTrackingRange(10)
 					.updateInterval(20)
