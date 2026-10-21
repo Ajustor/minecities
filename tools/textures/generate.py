@@ -5,6 +5,7 @@ Usage : python tools/textures/generate.py
 Les PNG sont écrits dans src/main/resources/assets/minecities/textures. Modifier ce script puis le
 relancer plutôt que de retoucher les PNG à la main : la prochaine génération les écraserait.
 """
+import math
 import random
 from pathlib import Path
 
@@ -629,6 +630,65 @@ def coat_layer():
     return img
 
 
+def mod_icon():
+    """L'icône du mod : une petite ville sur sa colline, l'hôtel de ville et son beffroi au centre,
+    une bannière rouge, deux maisons. Dessinée en 32 x 32, agrandie quatre fois (pixels nets)."""
+    rng = random.Random(2026)
+    img = Image.new("RGBA", (32, 32), (0, 0, 0, 0))
+
+    def box(x, y, w, h, color, amount=0.05):
+        fill(img, rng, x, y, w, h, hexc(color), amount)
+
+    # Le ciel, plus clair vers l'horizon, et un soleil.
+    for y in range(32):
+        t = y / 31
+        sky = tuple(int(a + (b - a) * t) for a, b in zip((86, 150, 230), (170, 210, 245)))
+        for x in range(32):
+            img.putpixel((x, y), sky + (255,))
+    box(24, 3, 4, 4, "#ffe27a", 0.02)
+    box(25, 2, 2, 6, "#ffe27a", 0.02)
+    box(23, 4, 6, 2, "#ffe27a", 0.02)
+    # La colline, herbe sur terre.
+    for x in range(32):
+        top = 23 + int(round(1.6 * math.cos((x - 16) / 9)))
+        top = 46 - top
+        box(x, top, 1, 32 - top, "#6b4a2b", 0.08)
+        box(x, top, 1, 2, "#5aa83c", 0.08)
+    # La maison de gauche : murs de chêne, toit rouge.
+    box(2, 17, 8, 6, "#b88a50")
+    for i in range(5):
+        box(1 + i, 16 - i, 10 - 2 * i, 1, "#b3312c")
+    box(4, 19, 2, 4, "#5a3b22")
+    box(7, 18, 2, 2, "#9fd4e8", 0.02)
+    # La maison de droite : murs blancs, toit bleu.
+    box(22, 18, 8, 5, "#e9e2cc")
+    for i in range(4):
+        box(21 + i, 17 - i, 10 - 2 * i, 1, "#2f4f9e")
+    box(27, 20, 2, 3, "#5a3b22")
+    box(23, 19, 2, 2, "#9fd4e8", 0.02)
+    # L'hôtel de ville : pierre, grande porte, fenêtres, frise dorée.
+    box(10, 13, 12, 10, "#a9adb3")
+    box(10, 12, 12, 1, "#7d7f84")
+    box(10, 16, 12, 1, "#e8c13a", 0.02)
+    box(14, 18, 4, 5, "#5a3b22")
+    box(15, 18, 2, 1, "#3a2616")
+    box(11, 18, 2, 2, "#9fd4e8", 0.02)
+    box(19, 18, 2, 2, "#9fd4e8", 0.02)
+    box(11, 13, 2, 2, "#9fd4e8", 0.02)
+    box(19, 13, 2, 2, "#9fd4e8", 0.02)
+    # Le beffroi, sa cloche, son toit pointu et le drapeau rouge et or.
+    box(13, 6, 6, 6, "#a9adb3")
+    box(14, 7, 4, 4, "#3a3a3a", 0.02)
+    box(15, 8, 2, 2, "#e8c13a", 0.02)
+    for i in range(3):
+        box(12 + i, 5 - i, 8 - 2 * i, 1, "#2f4f9e")
+    box(15, 0, 1, 3, "#e8e2cf", 0.02)
+    box(16, 0, 3, 2, "#b3312c", 0.03)
+    box(19, 0, 1, 1, "#b3312c", 0.03)
+    box(17, 0, 1, 1, "#e8c13a", 0.02)
+    return img.resize((128, 128), Image.NEAREST)
+
+
 def save(img, path):
     path.parent.mkdir(parents=True, exist_ok=True)
     img.save(path)
@@ -639,6 +699,7 @@ def main():
     for i in range(len(OUTFITS)):
         save(citizen_skin(i), TEXTURES / f"entity/citizen/citizen_{i}.png")
     save(bandit_skin(), TEXTURES / "entity/bandit.png")
+    save(mod_icon(), ROOT / "src/main/resources/assets/minecities/icon.png")
     save(house_plaque(), TEXTURES / "block/house_plaque.png")
     save(house_plaque("valid"), TEXTURES / "block/house_plaque_valid.png")
     save(house_plaque("invalid"), TEXTURES / "block/house_plaque_invalid.png")
