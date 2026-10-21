@@ -24,6 +24,8 @@ loom {
 }
 
 repositories {
+	// Mod Menu, pour l'écran de réglages (facultatif, comme Jade).
+	maven("https://maven.terraformersmc.com/releases/") { name = "TerraformersMC" }
 	// Jade, pour l'intégration facultative (compat/jade) : Modrinth sert ses versions en Maven.
 	exclusiveContent {
 		forRepository {
@@ -43,6 +45,9 @@ dependencies {
 	// Jade n'est pas requis : on compile contre lui, sans l'embarquer. -PminecitiesJade le met dans le jeu
 	// des runs et des scènes, pour voir les infobulles.
 	compileOnly(jade)
+	// Mod Menu n'est pas requis non plus : son entrée (client/config/ModMenuIntegration) n'est chargée que
+	// s'il est là.
+	"clientCompileOnly"("com.terraformersmc:modmenu:${sc.properties.get<String>("deps.modmenu")}")
 	if (hasProperty("minecitiesJade")) {
 		runtimeOnly(jade)
 	}

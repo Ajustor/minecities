@@ -1,0 +1,12 @@
+{
+	"required": true,
+	"minVersion": "0.8",
+	"package": "com.ajustor.minecities.client.mixin",
+	"compatibilityLevel": "JAVA_25",
+	"client": [
+		"ClientLanguageMixin"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	}
+}

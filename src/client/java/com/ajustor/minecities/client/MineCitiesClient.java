@@ -14,6 +14,8 @@ import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
 public class MineCitiesClient implements ClientModInitializer {
 	@Override
 	public void onInitializeClient() {
+		// La langue du mod (Mod Menu), avant que les traductions ne se chargent.
+		com.ajustor.minecities.client.config.ClientConfig.load();
 		EntityRendererRegistry.register(McEntities.CITIZEN, CitizenRenderer::new);
 		EntityRendererRegistry.register(McEntities.CARAVAN_CART, com.ajustor.minecities.client.render.CaravanCartRenderer::new);
 		EntityRendererRegistry.register(McEntities.CARAVAN_STALL, com.ajustor.minecities.client.render.CaravanStallRenderer::new);

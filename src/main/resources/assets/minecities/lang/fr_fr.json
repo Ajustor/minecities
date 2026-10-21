@@ -955,5 +955,11 @@
   "message.minecities.caravan.guarded": "Le chariot est défendu : rien à prendre tant qu'un défenseur tient debout.",
   "message.minecities.caravan.thief": "%s a pillé une caravane de la ville, et on l'a su : hors-la-loi pour trois jours.",
   "message.minecities.caravan.outlaw": "On vous a vu : vous êtes hors-la-loi dans les deux villes pour trois jours. Leurs gardes vous attaqueront.",
-  "message.minecities.stall.outlaw": "%s ne commerce pas avec les pilleurs de caravanes."
+  "message.minecities.stall.outlaw": "%s ne commerce pas avec les pilleurs de caravanes.",
+  "config.minecities.title": "Réglages de MineCities",
+  "config.minecities.language": "Langue du mod",
+  "config.minecities.language.game": "Celle du jeu",
+  "config.minecities.language.tooltip": "La langue des textes de MineCities seuls (écrans, guide, messages), indépendante de celle du jeu. Elle change tout de suite, sans redémarrer.",
+  "modmenu.summaryTranslation.minecities": "Des villes vivantes dans l'esprit vanilla : fondez une ville et devenez-en le maire.",
+  "modmenu.descriptionTranslation.minecities": "Des villes vivantes dans l'esprit vanilla : fondez une ville avec un hôtel de ville et devenez-en le maire, bâtissez des maisons à votre façon, nourrissez vos citoyens, et passez du village à la ville, à la grande ville et à la mégalopole."
 }
