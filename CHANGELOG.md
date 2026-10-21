@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.11.0 — 2026-10-21
+
+### New features
+
+- The mod now has its own icon in the mod list.
+- MineCities' language can be set apart from the game's, live, from Mod Menu.
 ## 1.10.0 — 2026-10-20
 
 ### New features

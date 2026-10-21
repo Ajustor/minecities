@@ -1,5 +1,11 @@
 # Journal des modifications
 
+## 1.11.0 — 2026-10-21
+
+### Nouveautés
+
+- Le mod a son icône dans la liste des mods.
+- La langue de MineCities se règle à part de celle du jeu, en direct, depuis Mod Menu.
 ## 1.10.0 — 2026-10-20
 
 ### Nouveautés
