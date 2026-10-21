@@ -955,5 +955,11 @@
   "message.minecities.caravan.guarded": "The wagon is defended: nothing to take while a defender still stands.",
   "message.minecities.caravan.thief": "%s plundered one of the town's caravans and was found out: outlaw for three days.",
   "message.minecities.caravan.outlaw": "You were seen: you are an outlaw in both towns for three days. Their guards will attack you.",
-  "message.minecities.stall.outlaw": "%s does not trade with caravan robbers."
+  "message.minecities.stall.outlaw": "%s does not trade with caravan robbers.",
+  "config.minecities.title": "MineCities Settings",
+  "config.minecities.language": "Mod language",
+  "config.minecities.language.game": "Same as the game",
+  "config.minecities.language.tooltip": "The language of MineCities' own texts (screens, guide, messages), independent from the game's. It changes right away, no restart needed.",
+  "modmenu.summaryTranslation.minecities": "Living towns, vanilla style: found a town and become its mayor.",
+  "modmenu.descriptionTranslation.minecities": "Living towns, vanilla style: found a town with a town hall and become its mayor, build houses your own way, feed your citizens, and grow from village to town, city and megalopolis."
 }

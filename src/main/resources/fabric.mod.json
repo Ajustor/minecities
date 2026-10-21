@@ -22,10 +22,17 @@
 		],
 		"jade": [
 			"com.ajustor.minecities.compat.jade.MineCitiesJadePlugin"
+		],
+		"modmenu": [
+			"com.ajustor.minecities.client.config.ModMenuIntegration"
 		]
 	},
 	"mixins": [
-		"minecities.mixins.json"
+		"minecities.mixins.json",
+		{
+			"config": "minecities.client.mixins.json",
+			"environment": "client"
+		}
 	],
 	"depends": {
 		"fabricloader": ">=0.19.3",
@@ -34,6 +41,7 @@
 		"fabric-api": ">=0.161.0"
 	},
 	"suggests": {
-		"jade": "*"
+		"jade": "*",
+		"modmenu": "*"
 	}
 }
