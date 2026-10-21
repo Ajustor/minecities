@@ -12,6 +12,7 @@
 		"issues": "https://github.com/Ajustor/minecities/issues"
 	},
 	"license": "MIT",
+	"icon": "assets/minecities/icon.png",
 	"environment": "*",
 	"entrypoints": {
 		"main": [
