@@ -189,7 +189,7 @@ abstract class WorkGoal extends Goal {
 
 	/**
 	 * Renonce-t-il à une cible qu'il n'approche plus ? Oui, sauf ceux qui ont leur propre façon d'y aller
-	 * (le bâtisseur, sur ses échafaudages). Le grenier de l'hôtel de ville, lui, n'est jamais laissé de côté.
+	 * (le bâtisseur, autour de son chantier). Le grenier de l'hôtel de ville, lui, n'est jamais laissé de côté.
 	 */
 	protected boolean givesUp() {
 		return true;

@@ -7,6 +7,7 @@ import com.ajustor.minecities.build.BuildPlan;
 import com.ajustor.minecities.build.BuildStyle;
 import com.ajustor.minecities.build.Builds;
 import com.ajustor.minecities.build.Construction;
+import com.ajustor.minecities.citizen.CitizenEntity;
 import com.ajustor.minecities.registry.McItems;
 import com.ajustor.minecities.town.House;
 import com.ajustor.minecities.town.Job;
@@ -35,8 +36,9 @@ import static com.ajustor.minecities.gametest.CityScenes.waitOrExplain;
 /**
  * Le bâtisseur, dans le vrai jeu : un atelier à quatre tables d'artisan et deux tables de cartographie
  * (quatre bâtisseurs et deux livreurs), une petite maison commandée
- * (style plaines) avec ses matériaux au grenier ; le bâtisseur la bâtit, elle se déclare toute
- * seule ; puis on l'agrandit en grande maison, au même endroit.
+ * (style plaines), adossée à une butte, avec ses matériaux au grenier ; le bâtisseur la bâtit, elle se
+ * déclare toute seule ; puis on l'agrandit en grande maison, au même endroit (le toit se pose depuis le
+ * sol, sans échafaudage).
  *
  * <p>{@code ./gradlew runClientGameTest -PminecitiesGametest=build}
  */
@@ -60,6 +62,7 @@ public class BuildScenes implements Scene {
 	public void play(Stage stage) {
 		// Cette scène compte ses citoyens : pas de nouveaux venus pour atteindre le minimum.
 		com.ajustor.minecities.town.Families.setMinimum(0);
+		walled.clear();
 		stage.command("time set 1000");
 		stage.command("gamerule advance_time false");
 		stage.command("gamerule spawn_mobs false");
@@ -90,10 +93,9 @@ public class BuildScenes implements Scene {
 		stage.look(-16, Y + 9, -2, -11, Y + 1, 9);
 		stage.waitTicks(40);
 		// Le chantier filmé : une image par seconde de jeu.
-		stage.film("petite_maison", 240, 20,
-				server -> town(server).constructions().stream().allMatch(Construction::done));
-		waitOrExplain(stage, server -> town(server).constructions().stream().allMatch(Construction::done), 9000,
-				"la petite maison n'a pas été bâtie", BuildScenes::progress);
+		stage.film("petite_maison", 240, 20, BuildScenes::built);
+		waitOrExplain(stage, BuildScenes::built, 9000, "la petite maison n'a pas été bâtie", BuildScenes::progress);
+		check(walled.isEmpty() ? null : "des citoyens se sont retrouvés dans un mur pendant le chantier : " + walled);
 		check(stage.compute(server -> homeBeds(server) == 2 ? null
 				: "la petite maison n'est pas déclarée avec deux lits : " + town(server).houses()));
 		stage.waitTicks(20);
@@ -105,8 +107,8 @@ public class BuildScenes implements Scene {
 			return Builds.upgrade(server.overworld(), town(server), ORIGIN.offset(3, 1, 3))
 					.map(c -> "agrandissement refusé : " + c.getString()).orElse(null);
 		}));
-		waitOrExplain(stage, server -> town(server).constructions().stream().allMatch(Construction::done), 15000,
-				"la grande maison n'a pas été bâtie", BuildScenes::progress);
+		waitOrExplain(stage, BuildScenes::built, 15000, "la grande maison n'a pas été bâtie", BuildScenes::progress);
+		check(walled.isEmpty() ? null : "des citoyens se sont retrouvés dans un mur pendant le chantier : " + walled);
 		check(stage.compute(server -> homeBeds(server) == 4 ? null
 				: "la grande maison n'est pas déclarée avec quatre lits : " + town(server).houses()));
 		stage.look(-16, Y + 9, -2, -10, Y + 1, 9);
@@ -122,10 +124,9 @@ public class BuildScenes implements Scene {
 					.map(c -> "bâtisse refusée : " + c.getString()).orElse(null);
 		}));
 		stage.look(-19, Y + 8, -3, -10, Y + 3, 9);
-		stage.film("manoir", 300, 20,
-				server -> town(server).constructions().stream().allMatch(Construction::done));
-		waitOrExplain(stage, server -> town(server).constructions().stream().allMatch(Construction::done), 15000,
-				"la bâtisse n'a pas été bâtie", BuildScenes::progress);
+		stage.film("manoir", 300, 20, BuildScenes::built);
+		waitOrExplain(stage, BuildScenes::built, 15000, "la bâtisse n'a pas été bâtie", BuildScenes::progress);
+		check(walled.isEmpty() ? null : "des citoyens se sont retrouvés dans un mur pendant le chantier : " + walled);
 		check(stage.compute(server -> homeBeds(server) == 6
 				&& server.overworld().getBlockState(ORIGIN.offset(1, 0, 1)).is(Blocks.STONE_BRICKS)
 				&& server.overworld().getBlockState(ORIGIN.offset(2, 1, 1)).is(Blocks.BRICKS)
@@ -135,6 +136,19 @@ public class BuildScenes implements Scene {
 		stage.look(-18, Y + 7, -3, -10, Y + 3, 9);
 		stage.waitTicks(20);
 		stage.shot("build_3_manor");
+	}
+
+	/** Les citoyens surpris dans un mur pendant le chantier. */
+	private static final java.util.Set<String> walled = java.util.concurrent.ConcurrentHashMap.newKeySet();
+
+	/** Le chantier est-il fini ? En passant, on note qui est dans un mur. */
+	private static boolean built(MinecraftServer server) {
+		for (CitizenEntity c : CityScenes.citizens(server)) {
+			if (c.isInWall()) {
+				walled.add(c.getName().getString() + " en " + c.blockPosition().toShortString());
+			}
+		}
+		return town(server).constructions().stream().allMatch(Construction::done);
 	}
 
 	private static String progress(MinecraftServer server) {
@@ -207,7 +221,6 @@ public class BuildScenes implements Scene {
 			hall.setItem(slot++, new ItemStack(Items.IRON_SHOVEL));
 			hall.setItem(slot++, new ItemStack(Items.IRON_AXE));
 		}
-		hall.setItem(slot++, new ItemStack(Items.SCAFFOLDING, 32));
 		// De quoi payer le chantier (MC-57 : à partir du niveau 2).
 		hall.setItem(slot++, new ItemStack(Items.EMERALD, 32));
 		for (Map.Entry<Item, Integer> e : needs.entrySet()) {
@@ -238,6 +251,17 @@ public class BuildScenes implements Scene {
 		command(server, "fill -12 %d 8 -10 %d 9 minecraft:short_grass".formatted(Y, Y));
 		command(server, "setblock -9 %d 10 minecraft:mossy_cobblestone".formatted(Y));
 		command(server, "setblock -11 %d 11 minecraft:dirt".formatted(Y));
+		// Une butte contre le côté ouest du chantier, en pente douce : le bâtisseur s'y tient pour bâtir
+		// ce côté-là, sans y être remis « dehors » dans la terre, à y étouffer.
+		for (int x = -19; x <= -15; x++) {
+			for (int z = -2; z <= 18; z++) {
+				int height = Math.min(4, Math.min(-x - 13, z + 2));
+				for (int y = Y; y < Y + height; y++) {
+					level.setBlockAndUpdate(new BlockPos(x, y, z), (y == Y + height - 1 ? Blocks.GRASS_BLOCK
+							: Blocks.DIRT).defaultBlockState());
+				}
+			}
+		}
 		// Une vache au milieu du terrain : le bâtisseur doit la faire sortir pour bâtir.
 		command(server, "summon minecraft:cow -11 %d 9".formatted(Y));
 		// L'atelier du bâtisseur, bâti à la main : une table d'artisan.

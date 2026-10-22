@@ -26,7 +26,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.ScaffoldingBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.Property;
@@ -38,8 +37,8 @@ import java.util.UUID;
 
 /**
  * Le bâtisseur, à la table d'artisan. Il prend le premier chantier commandé par le maire et le bâtit
- * d'après son schéma, un bloc toutes les demi-secondes, depuis le pied du chantier (dehors) ou du
- * haut d'un échafaudage qu'il dresse et démonte à la fin : il dégage avec le bon outil (pioche, pelle,
+ * d'après son schéma, un bloc toutes les demi-secondes, depuis le pied du chantier (dehors), à toute
+ * hauteur : il dégage avec le bon outil (pioche, pelle,
  * hache, qui s'usent), puis pose, en allant chercher outils et matériaux au grenier (ou dans les
  * coffres de son atelier) ; s'il en manque, le maire est prévenu. Plusieurs bâtisseurs travaillent
  * ensemble au même chantier, chacun au bloc suivant. Ce qu'il retire du terrain va au grenier. Le bâtiment fini se déclare tout seul.
@@ -47,8 +46,6 @@ import java.util.UUID;
 class BuilderGoal extends WorkGoal {
 	/** Il pose à cette distance (à l'horizontale), depuis le pied du chantier. */
 	private static final double REACH = 8.0;
-	/** Il pose jusqu'à 4 blocs au-dessus de ses pieds ; plus haut, il monte sur un échafaudage. */
-	private static final int CLIMB = 4;
 	/** Un bloc toutes les 4 ticks : cinq par seconde. */
 	private static final int PACE = 4;
 
@@ -65,8 +62,6 @@ class BuilderGoal extends WorkGoal {
 	private List<BuildPlan.Placement> plan;
 	private int cooldown;
 	private boolean delivering;
-	/** Là où il se tient, au sommet d'un échafaudage ; vide quand il est au sol. */
-	private BlockPos perch;
 	private int repathOut;
 	private int stuckInside;
 	private int lastCall = -100;
@@ -92,8 +87,8 @@ class BuilderGoal extends WorkGoal {
 		}
 		Construction construction = site.get();
 		if (citizen.isInWall()) {
-			// Pris dans un mur malgré tout : il est remis dehors, devant le chantier.
-			BlockPos out = outside(construction, construction.origin());
+			// Pris dans un mur malgré tout : il est remis dehors, au bord du chantier le plus proche.
+			BlockPos out = outside(construction, citizen.blockPosition());
 			citizen.snapTo(out.getX() + 0.5, out.getY(), out.getZ() + 0.5);
 			citizen.getNavigation().stop();
 		}
@@ -115,8 +110,7 @@ class BuilderGoal extends WorkGoal {
 			for (BuildPlan.Placement p : plan.subList(construction.step(), plan.size())) {
 				BuildPlan.material(p.state()).ifPresent(needed::add);
 			}
-			java.util.function.Predicate<ItemStack> kept = s -> isTool(s) || s.is(Items.SCAFFOLDING)
-					|| needed.contains(s.getItem());
+			java.util.function.Predicate<ItemStack> kept = s -> isTool(s) || needed.contains(s.getItem());
 			// Rien que des outils et des matériaux utiles : il n'y a rien à rapporter.
 			if (delivering || citizen.inventory().stream().anyMatch(s -> !s.isEmpty() && !kept.test(s))) {
 				delivering = !deliver(kept, HAUL);
@@ -284,8 +278,7 @@ class BuilderGoal extends WorkGoal {
 			fetchTool(tool.get());
 			return;
 		}
-		// Il travaille du dehors : il ne s'emmure pas dans le bâtiment qu'il élève. Trop haut pour le
-		// sol, il monte sur un échafaudage dressé contre le chantier.
+		// Il travaille du dehors : il ne s'emmure pas dans le bâtiment qu'il élève.
 		if (!position(construction, p.pos())) {
 			return;
 		}
@@ -431,111 +424,40 @@ class BuilderGoal extends WorkGoal {
 		return (int) citizen.inventory().stream().filter(ItemStack::isEmpty).count();
 	}
 
-	/** À portée : 8 blocs à l'horizontale, 4 en hauteur (au-delà, il lui faut un échafaudage). */
 	@Override
 	protected double speed() {
 		return 0.85;
 	}
 
+	/** À portée : 8 blocs à l'horizontale, à toute hauteur. */
 	private boolean near(BlockPos pos) {
 		double dx = citizen.getX() - (pos.getX() + 0.5);
 		double dz = citizen.getZ() - (pos.getZ() + 0.5);
-		return dx * dx + dz * dz <= REACH * REACH && Math.abs(citizen.getY() - pos.getY()) <= CLIMB;
+		return dx * dx + dz * dz <= REACH * REACH;
 	}
 
 	/**
-	 * Se met en place pour poser ce bloc : au pied du chantier, dehors, s'il est assez bas ; sinon au
-	 * sommet d'une colonne d'échafaudage dressée au pied du chantier, qu'il monte au besoin. Renvoie
-	 * vrai quand il est en place.
+	 * Se met en place pour poser ce bloc : au pied du chantier, dehors, à portée à l'horizontale ; il
+	 * pose à toute hauteur de là. Renvoie vrai quand il est en place.
 	 */
 	private boolean position(Construction construction, BlockPos pos) {
-		int ground = construction.origin().getY();
-		int standY = pos.getY() - ground <= CLIMB ? ground : pos.getY() - 2;
+		if (level().getBlockState(citizen.blockPosition().below()).is(Blocks.SCAFFOLDING)) {
+			// Resté sur un échafaudage d'avant (un monde d'une version précédente) : il redescend.
+			descend();
+			return false;
+		}
+		// Le sol au pied du chantier n'est pas toujours celui du chantier : une butte, un creux.
 		BlockPos foot = outside(construction, pos);
-		if (standY > ground) {
-			// Une colonne déjà dressée à portée fait l'affaire.
-			for (BlockPos column : construction.scaffolding()) {
-				double dx = column.getX() - pos.getX();
-				double dz = column.getZ() - pos.getZ();
-				if (dx * dx + dz * dz <= (REACH - 1) * (REACH - 1)) {
-					foot = new BlockPos(column.getX(), ground, column.getZ());
-					break;
-				}
-			}
-		}
-		BlockPos stand = new BlockPos(foot.getX(), standY, foot.getZ());
-		if (perch != null && !perch.equals(stand)) {
-			// Ailleurs : il redescend et remporte sa colonne, pour la dresser là où il va.
-			BlockPos column = perch;
-			descend(ground);
-			takeDown(construction, column);
-			return false;
-		}
-		if (perch == null && citizen.getY() > ground + 1.5) {
-			// Perché sans le savoir (après un rechargement) : il redescend.
-			descend(ground);
-			return false;
-		}
 		if (inside(construction)) {
 			leave(foot);
 			return false;
 		}
 		stuckInside = 0;
-		if (standY == ground) {
-			if (!near(pos)) {
-				goTo(foot);
-				return false;
-			}
-			return true;
-		}
-		if (perch != null) {
-			if (near(pos)) {
-				return true;
-			}
-			// Hors de portée depuis cette colonne : il redescend, pour aller s'installer ailleurs.
-			BlockPos column = perch;
-			descend(ground);
-			takeDown(construction, column);
+		if (!near(pos)) {
+			goTo(foot);
 			return false;
 		}
-		// Au pied de la colonne...
-		if (citizen.distanceToSqr(foot.getX() + 0.5, foot.getY(), foot.getZ() + 0.5) > 2.0 * 2.0) {
-			// Jusqu'au pied même de la colonne : « à portée » ne suffit pas.
-			walkExactly(foot);
-			return false;
-		}
-		// ... il la dresse, un échafaudage à la fois...
-		for (int y = ground; y < standY; y++) {
-			BlockPos cell = new BlockPos(foot.getX(), y, foot.getZ());
-			BlockState there = level().getBlockState(cell);
-			if (there.is(Blocks.SCAFFOLDING)) {
-				continue;
-			}
-			if (!there.canBeReplaced()) {
-				// La place est prise (un arbre, un mur voisin) : il pose de là où il est, en tendant le bras.
-				return true;
-			}
-			if (count(Items.SCAFFOLDING) == 0) {
-				fetch(construction, Items.SCAFFOLDING);
-				return false;
-			}
-			consume(Items.SCAFFOLDING);
-			level().setBlock(cell, Blocks.SCAFFOLDING.defaultBlockState()
-					.setValue(ScaffoldingBlock.DISTANCE, ScaffoldingBlock.getDistance(level(), cell)), Block.UPDATE_ALL);
-			level().playSound(null, cell, SoundEvents.SCAFFOLDING_PLACE, SoundSource.BLOCKS, 1.0f, 1.0f);
-			construction.scaffolding().add(cell);
-			EntityCompat.swing(citizen, InteractionHand.MAIN_HAND);
-			cooldown = pace();
-			Towns.get(level().getServer()).changed();
-			return false;
-		}
-		// ... puis il y grimpe.
-		citizen.getNavigation().stop();
-		citizen.snapTo(foot.getX() + 0.5, standY, foot.getZ() + 0.5, citizen.getYRot(), citizen.getXRot());
-		citizen.setDeltaMovement(net.minecraft.world.phys.Vec3.ZERO);
-		level().playSound(null, stand, SoundEvents.SCAFFOLDING_STEP, SoundSource.BLOCKS, 1.0f, 1.0f);
-		perch = stand;
-		return near(pos);
+		return true;
 	}
 
 	/**
@@ -599,53 +521,24 @@ class BuilderGoal extends WorkGoal {
 		return true;
 	}
 
-	private void walkExactly(BlockPos target) {
-		if (--repathOut <= 0 || citizen.getNavigation().isDone()) {
-			repathOut = 20;
-			citizen.getNavigation().moveTo(target.getX() + 0.5, target.getY(), target.getZ() + 0.5, 0, speed());
-		}
-	}
-
-	/** Redescend au pied de son échafaudage. */
-	private void descend(int ground) {
-		BlockPos at = perch != null ? perch : citizen.blockPosition();
-		citizen.snapTo(at.getX() + 0.5, ground, at.getZ() + 0.5, citizen.getYRot(), citizen.getXRot());
+	/** Redescend au pied de l'échafaudage où il se tient. */
+	private void descend() {
+		BlockPos at = citizen.blockPosition();
+		BlockPos base = footing(at.getX(), at.getY(), at.getZ());
+		citizen.snapTo(base.getX() + 0.5, base.getY(), base.getZ() + 0.5, citizen.getYRot(), citizen.getXRot());
 		citizen.setDeltaMovement(net.minecraft.world.phys.Vec3.ZERO);
 		citizen.fallDistance = 0;
-		perch = null;
 	}
 
 	/**
-	 * Démonte d'un coup la colonne d'échafaudage à cet endroit ; les échafaudages retournent dans ses
-	 * poches. Ainsi il ne lui en faut jamais plus d'une colonne à la fois.
+	 * Démonte les échafaudages laissés par un chantier d'une version précédente, du haut vers le bas ;
+	 * ils retournent dans ses poches, puis au grenier.
 	 */
-	private void takeDown(Construction construction, BlockPos column) {
-		List<BlockPos> cells = construction.scaffolding().stream()
-				.filter(c -> c.getX() == column.getX() && c.getZ() == column.getZ())
-				.sorted(java.util.Comparator.comparingInt((BlockPos c) -> c.getY()).reversed()).toList();
-		for (BlockPos cell : cells) {
-			if (level().getBlockState(cell).is(Blocks.SCAFFOLDING)) {
-				level().removeBlock(cell, false);
-				citizen.carry(new ItemStack(Items.SCAFFOLDING));
-			}
-			construction.scaffolding().remove(cell);
-		}
-		if (!cells.isEmpty()) {
-			level().playSound(null, column, SoundEvents.SCAFFOLDING_BREAK, SoundSource.BLOCKS, 1.0f, 1.0f);
-			Towns.get(level().getServer()).changed();
-		}
-	}
-
-	/** Démonte ses échafaudages, du haut vers le bas ; ils retournent dans ses poches. */
 	private void dismantle(Construction construction) {
-		if (perch != null) {
-			descend(construction.origin().getY());
-			return;
-		}
 		List<BlockPos> scaffolding = construction.scaffolding();
 		BlockPos top = scaffolding.stream().max(java.util.Comparator.comparingInt(BlockPos::getY)).orElseThrow();
 		if (citizen.distanceToSqr(top.getX() + 0.5, citizen.getY(), top.getZ() + 0.5) > REACH * REACH) {
-			goTo(new BlockPos(top.getX(), construction.origin().getY(), top.getZ()));
+			goTo(footing(top.getX(), top.getY(), top.getZ()));
 			return;
 		}
 		if (level().getBlockState(top).is(Blocks.SCAFFOLDING)) {
@@ -662,11 +555,6 @@ class BuilderGoal extends WorkGoal {
 	@Override
 	protected void onStop() {
 		citizen.town().flatMap(t -> t.activeConstruction()).ifPresent(c -> c.release(citizen.getUUID()));
-		// Le soir venu ou la faim pressante, il ne reste pas perché.
-		if (perch != null && citizen.level() instanceof ServerLevel) {
-			descend(citizen.town().flatMap(t -> t.activeConstruction()).map(c -> c.origin().getY())
-					.orElse(perch.getY()));
-		}
 	}
 
 	/** Est-il dans l'emprise du chantier ? */
@@ -677,8 +565,8 @@ class BuilderGoal extends WorkGoal {
 				&& at.getY() >= construction.min().getY() - 1 && at.getY() <= construction.max().getY();
 	}
 
-	/** Le point au pied de l'emprise, juste dehors, le plus proche de ce bloc. */
-	private static BlockPos outside(Construction construction, BlockPos pos) {
+	/** Le point au pied de l'emprise, juste dehors, le plus proche de ce bloc, sur le sol qu'on y trouve. */
+	private BlockPos outside(Construction construction, BlockPos pos) {
 		BlockPos min = construction.min();
 		BlockPos max = construction.max();
 		int x = Math.clamp(pos.getX(), min.getX() - 1, max.getX() + 1);
@@ -696,7 +584,42 @@ class BuilderGoal extends WorkGoal {
 		} else {
 			z = max.getZ() + 1;
 		}
-		return new BlockPos(x, construction.origin().getY(), z);
+		return footing(x, construction.origin().getY(), z);
+	}
+
+	/** Jusqu'où il cherche le sol, en montant puis en descendant. */
+	private static final int FOOTING = 16;
+
+	/**
+	 * Où se tenir à la verticale de (x, z), à partir de cette hauteur : la première case dégagée en
+	 * montant (le chantier adossé à une butte), puis le sol en descendant (un creux, le pied d'un
+	 * échafaudage). Sans quoi, remis dehors à la hauteur du chantier, il le serait dans la butte, à y
+	 * étouffer.
+	 */
+	private BlockPos footing(int x, int y, int z) {
+		BlockPos.MutableBlockPos at = new BlockPos.MutableBlockPos(x, y, z);
+		for (int up = 0; up < FOOTING && !open(at); up++) {
+			at.move(net.minecraft.core.Direction.UP);
+		}
+		if (!open(at)) {
+			return new BlockPos(x, y, z);
+		}
+		for (int down = 0; down < FOOTING && passable(at.below()) && level().getFluidState(at.below()).isEmpty()
+				&& at.getY() > level().getMinY(); down++) {
+			at.move(net.minecraft.core.Direction.DOWN);
+		}
+		return at.immutable();
+	}
+
+	/** Y tient-il debout : rien de solide aux pieds ni à la tête ? */
+	private boolean open(BlockPos pos) {
+		return passable(pos) && passable(pos.above());
+	}
+
+	/** Rien de solide là ; un échafaudage se traverse (on monte dedans, on en descend). */
+	private boolean passable(BlockPos pos) {
+		BlockState state = level().getBlockState(pos);
+		return state.is(Blocks.SCAFFOLDING) || state.getCollisionShape(level(), pos).isEmpty();
 	}
 
 	private int count(Item item) {
@@ -715,7 +638,7 @@ class BuilderGoal extends WorkGoal {
 		}
 	}
 
-	/** Sur ses échafaudages, il avance par à-coups : il ne renonce pas à une cible faute de s'en approcher. */
+	/** Il avance par à-coups autour du chantier : il ne renonce pas à une cible faute de s'en approcher. */
 	@Override
 	protected boolean givesUp() {
 		return false;
@@ -798,9 +721,8 @@ class BuilderGoal extends WorkGoal {
 	}
 
 	/**
-	 * Un autre bâtisseur du chantier qui porte ce matériau sans en avoir besoin tout de suite : pour des
-	 * échafaudages, il n'est pas perché dessus ; pour un matériau, aucun des blocs qu'il a réservés ne le
-	 * demande.
+	 * Un autre bâtisseur du chantier qui porte ce matériau sans en avoir besoin tout de suite : aucun des
+	 * blocs qu'il a réservés ne le demande.
 	 */
 	private Optional<CitizenEntity> lender(Construction construction, Item item) {
 		BlockPos site = construction.origin();
@@ -811,9 +733,7 @@ class BuilderGoal extends WorkGoal {
 			if (other.inventory().stream().noneMatch(s -> s.is(item))) {
 				continue;
 			}
-			boolean busy = item == Items.SCAFFOLDING ? other.getY() > site.getY() + 1.5
-					: claimsNeeding(construction, other, item);
-			if (!busy) {
+			if (!claimsNeeding(construction, other, item)) {
 				return Optional.of(other);
 			}
 		}
@@ -833,17 +753,16 @@ class BuilderGoal extends WorkGoal {
 	}
 
 	/**
-	 * Va trouver ce bâtisseur et lui prend ce qu'il faut de ce matériau (tous ses échafaudages, ou de
-	 * quoi finir le chantier, une brassée au plus).
+	 * Va trouver ce bâtisseur et lui prend ce qu'il faut de ce matériau (de quoi finir le chantier, une
+	 * brassée au plus).
 	 */
 	private void borrow(Construction construction, CitizenEntity lender, Item item) {
 		if (citizen.distanceToSqr(lender) > REACH * REACH) {
 			goTo(lender.blockPosition());
 			return;
 		}
-		int wanted = item == Items.SCAFFOLDING ? Integer.MAX_VALUE : Math.max(1, Math.min(HAUL,
-				(int) plan.subList(construction.step(), plan.size()).stream()
-						.filter(p -> BuildPlan.material(p.state()).filter(item::equals).isPresent()).count()));
+		int wanted = Math.max(1, Math.min(HAUL, (int) plan.subList(construction.step(), plan.size()).stream()
+				.filter(p -> BuildPlan.material(p.state()).filter(item::equals).isPresent()).count()));
 		for (ItemStack stack : lender.inventory()) {
 			if (wanted <= 0 || freeSlots() == 0) {
 				break;

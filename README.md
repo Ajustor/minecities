@@ -87,7 +87,7 @@ version du mod, les autres mods et le temps de jeu.
      (Loin de l'eau, un baril reste un garde-manger.)
    - **Table d'artisan → bâtisseur** : il bâtit les chantiers commandés par le maire (voir plus bas),
      avec le bon outil pour dégager le terrain : **pioche** (pierre), **pelle** (terre), **hache** (bois).
-     Il travaille depuis le pied du chantier ou du haut d'**échafaudages** qu'il dresse et démonte ;
+     Il travaille depuis le pied du chantier, à toute hauteur, sans échafaudage ;
      il demande à qui se trouve sur son chemin de s'écarter. Plusieurs bâtisseurs se partagent un
      chantier, chacun son bloc.
    - **Table de cartographie → livreur** : il porte aux bâtisseurs les matériaux qu'ils réclament,
@@ -175,7 +175,7 @@ version du mod, les autres mods et le temps de jeu.
    déclare tout seul une fois fini. `/ville upgrade`, dans un bâtiment bâti par la ville,
    l'améliore : les premiers niveaux ont un toit plat en gradins, les améliorations un toit à deux
    pans en escaliers et une fondation de pierre taillée. Chaque bâtiment a un perron (une marche
-   devant la porte), et il faut des échafaudages au grenier pour les toits. Petite maison → grande maison → manoir ;
+   devant la porte). Petite maison → grande maison → manoir ;
    chaque atelier (ferme avec son champ, cuisine, scierie, étable avec son enclos, pêcherie avec son
    bassin, atelier du bâtisseur) → son grand atelier, à deux postes. Pour la défense : la **caserne**
    (deux lits, deux meules ; agrandie, trois), la **tour de garde** (une table d'archerie, un poste
