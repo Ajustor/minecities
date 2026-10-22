@@ -1,5 +1,14 @@
 # Journal des modifications
 
+## 1.11.1 — 2026-10-22
+
+### Nouveautés
+
+- Le bâtisseur pose à toute hauteur depuis le pied du chantier : plus besoin d'échafaudages.
+
+### Corrections
+
+- Le bâtisseur n'est plus remis dans la terre (à y étouffer) quand son chantier est adossé à une butte.
 ## 1.11.0 — 2026-10-21
 
 ### Nouveautés

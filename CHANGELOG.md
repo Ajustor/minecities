@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.11.1 — 2026-10-22
+
+### New features
+
+- The builder places blocks at any height from the foot of the site: no more scaffolding needed.
+
+### Fixes
+
+- The builder is no longer put back inside the ground (to suffocate there) when the site backs onto a hill.
 ## 1.11.0 — 2026-10-21
 
 ### New features
