@@ -37,8 +37,8 @@ import static com.ajustor.minecities.gametest.CityScenes.waitOrExplain;
  * Le bâtisseur, dans le vrai jeu : un atelier à quatre tables d'artisan et deux tables de cartographie
  * (quatre bâtisseurs et deux livreurs), une petite maison commandée
  * (style plaines), adossée à une butte, avec ses matériaux au grenier ; le bâtisseur la bâtit, elle se
- * déclare toute seule ; puis on l'agrandit en grande maison, au même endroit (son haut, du haut de ses
- * échafaudages).
+ * déclare toute seule ; puis on l'agrandit en grande maison, au même endroit (le toit se pose depuis le
+ * sol, sans échafaudage).
  *
  * <p>{@code ./gradlew runClientGameTest -PminecitiesGametest=build}
  */
@@ -63,7 +63,6 @@ public class BuildScenes implements Scene {
 		// Cette scène compte ses citoyens : pas de nouveaux venus pour atteindre le minimum.
 		com.ajustor.minecities.town.Families.setMinimum(0);
 		walled.clear();
-		scaffolded = false;
 		stage.command("time set 1000");
 		stage.command("gamerule advance_time false");
 		stage.command("gamerule spawn_mobs false");
@@ -110,8 +109,6 @@ public class BuildScenes implements Scene {
 		}));
 		waitOrExplain(stage, BuildScenes::built, 15000, "la grande maison n'a pas été bâtie", BuildScenes::progress);
 		check(walled.isEmpty() ? null : "des citoyens se sont retrouvés dans un mur pendant le chantier : " + walled);
-		// Son toit monte bien au-delà de ce qu'on atteint depuis le sol.
-		check(scaffolded ? null : "les bâtisseurs n'ont dressé aucun échafaudage pour le haut de la grande maison");
 		check(stage.compute(server -> homeBeds(server) == 4 ? null
 				: "la grande maison n'est pas déclarée avec quatre lits : " + town(server).houses()));
 		stage.look(-16, Y + 9, -2, -10, Y + 1, 9);
@@ -141,19 +138,15 @@ public class BuildScenes implements Scene {
 		stage.shot("build_3_manor");
 	}
 
-	/** Les citoyens surpris dans un mur pendant le chantier ; et si un échafaudage a été dressé. */
+	/** Les citoyens surpris dans un mur pendant le chantier. */
 	private static final java.util.Set<String> walled = java.util.concurrent.ConcurrentHashMap.newKeySet();
-	private static volatile boolean scaffolded;
 
-	/** Le chantier est-il fini ? En passant, on note qui est dans un mur et si les échafaudages sont dressés. */
+	/** Le chantier est-il fini ? En passant, on note qui est dans un mur. */
 	private static boolean built(MinecraftServer server) {
 		for (CitizenEntity c : CityScenes.citizens(server)) {
 			if (c.isInWall()) {
 				walled.add(c.getName().getString() + " en " + c.blockPosition().toShortString());
 			}
-		}
-		if (town(server).constructions().stream().anyMatch(c -> !c.scaffolding().isEmpty())) {
-			scaffolded = true;
 		}
 		return town(server).constructions().stream().allMatch(Construction::done);
 	}
@@ -228,7 +221,6 @@ public class BuildScenes implements Scene {
 			hall.setItem(slot++, new ItemStack(Items.IRON_SHOVEL));
 			hall.setItem(slot++, new ItemStack(Items.IRON_AXE));
 		}
-		hall.setItem(slot++, new ItemStack(Items.SCAFFOLDING, 32));
 		// De quoi payer le chantier (MC-57 : à partir du niveau 2).
 		hall.setItem(slot++, new ItemStack(Items.EMERALD, 32));
 		for (Map.Entry<Item, Integer> e : needs.entrySet()) {

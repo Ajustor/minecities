@@ -56,7 +56,7 @@ your other mods and your playtime.
    - **Hay bale standing alone → breeder**: breeds animals, culls the surplus.
    - **Barrel by the water → fisherman** (fishing rod).
    - **Crafter → builder** (pickaxe, shovel, axe to clear the ground): builds ordered constructions,
-     from the ground and from scaffolding he sets up and takes down. Several builders share a site.
+     from the foot of the site, at any height, without scaffolding. Several builders share a site.
    - **Cartography table → courier**: brings builders the materials they call for; otherwise shuttles
      workshop output to the warehouse and stocks each workshop with what its trade consumes.
    - **Carpenter's bench → carpenter**: planks, sticks, bowls, and the doors, fences, stairs, slabs and

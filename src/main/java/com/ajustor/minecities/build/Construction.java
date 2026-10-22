@@ -70,7 +70,7 @@ public final class Construction {
 		claims.clear();
 		return paused;
 	}
-	/** Les échafaudages que le bâtisseur a montés, à démonter avant de finir. */
+	/** Les échafaudages montés par les versions précédentes, à démonter avant de finir. */
 	private final List<BlockPos> scaffolding;
 	/** Les blocs du plan déjà faits au-delà de {@code step} (non sauvegardé : on les revoit au besoin). */
 	private final BitSet placed = new BitSet();

@@ -247,7 +247,7 @@ class CourierGoal extends WorkGoal {
 		citizen.getLookControl().setLookAt(customer);
 		double dx = citizen.getX() - customer.getX();
 		double dz = citizen.getZ() - customer.getZ();
-		// Au pied du bâtisseur (qui peut être perché sur un échafaudage) : il lui fait passer la
+		// Au pied du bâtisseur (même s'il est plus haut, sur une butte) : il lui fait passer la
 		// livraison, jusqu'à 10 blocs de haut.
 		// Arrivé au pied du bâtisseur selon goTo (à trois blocs), il donne : sans quoi il resterait
 		// planté là, ni assez près pour donner, ni assez loin pour repartir.
