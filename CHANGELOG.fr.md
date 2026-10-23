@@ -1,5 +1,10 @@
 # Journal des modifications
 
+## 1.14.0 — 2026-10-23
+
+### Nouveautés
+
+- Le bâtisseur passe les blocs dont le matériau manque, pose tout le reste, puis réclame d'un coup ce qui manque.
 ## 1.13.0 — 2026-10-23
 
 ### Nouveautés

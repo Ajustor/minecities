@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.14.0 — 2026-10-23
+
+### New features
+
+- The builder skips blocks whose material is missing, places everything else, then asks for all missing materials at once.
 ## 1.13.0 — 2026-10-23
 
 ### New features
