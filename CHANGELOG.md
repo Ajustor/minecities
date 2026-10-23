@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.13.0 — 2026-10-23
+
+### New features
+
+- The builder's station shows what the building sites are missing, and a button deposits it from your inventory in one click.
 ## 1.12.0 — 2026-10-23
 
 ### New features

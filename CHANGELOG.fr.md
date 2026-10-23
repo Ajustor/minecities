@@ -1,5 +1,10 @@
 # Journal des modifications
 
+## 1.13.0 — 2026-10-23
+
+### Nouveautés
+
+- Le poste du bâtisseur montre ce qui manque aux chantiers, et un bouton le dépose de votre inventaire en un clic.
 ## 1.12.0 — 2026-10-23
 
 ### Nouveautés
