@@ -371,7 +371,7 @@ public final class PlanNetwork {
 				continue;
 			}
 			if (!Integer.valueOf(blocks.size()).equals(shown.get(entry.getKey()))) {
-				ServerPlayNetworking.send(player, new GhostPayload(entry.getKey(), true, blocks));
+				ServerPlayNetworking.send(player, new GhostPayload(entry.getKey(), true, false, blocks));
 				shown.put(entry.getKey(), blocks.size());
 			}
 		}
