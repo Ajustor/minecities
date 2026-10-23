@@ -65,13 +65,10 @@ public final class Builds {
 			return Optional.of(Component.translatable("message.minecities.build.locked",
 					blueprint.displayName(), Component.translatable(blueprint.tier().translationKey())));
 		}
-		BlockPos[] bounds = BuildPlan.bounds(blueprint, origin, rotation);
-		for (BlockPos corner : new BlockPos[]{bounds[0], bounds[1], new BlockPos(bounds[0].getX(), 0, bounds[1].getZ()),
-				new BlockPos(bounds[1].getX(), 0, bounds[0].getZ())}) {
-			if (!town.contains(level.dimension(), corner)) {
-				return Optional.of(Component.translatable("message.minecities.build.outside", town.name()));
-			}
+		if (outside(level, town, blueprint, origin, rotation)) {
+			return Optional.of(Component.translatable("message.minecities.build.outside", town.name()));
 		}
+		BlockPos[] bounds = BuildPlan.bounds(blueprint, origin, rotation);
 		if (town.constructions().stream().anyMatch(c -> !c.done() && c.overlaps(bounds[0], bounds[1]))) {
 			return Optional.of(Component.translatable("message.minecities.build.overlap"));
 		}
@@ -89,6 +86,18 @@ public final class Builds {
 			return Optional.of(Component.translatable("message.minecities.build.monument_once", blueprint.displayName()));
 		}
 		return Optional.empty();
+	}
+
+	/** L'emprise de ce chantier sort-elle du territoire de la ville (un de ses coins au moins) ? */
+	public static boolean outside(ServerLevel level, Town town, Blueprint blueprint, BlockPos origin, Rotation rotation) {
+		BlockPos[] bounds = BuildPlan.bounds(blueprint, origin, rotation);
+		for (BlockPos corner : new BlockPos[]{bounds[0], bounds[1], new BlockPos(bounds[0].getX(), 0, bounds[1].getZ()),
+				new BlockPos(bounds[1].getX(), 0, bounds[0].getZ())}) {
+			if (!town.contains(level.dimension(), corner)) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/**

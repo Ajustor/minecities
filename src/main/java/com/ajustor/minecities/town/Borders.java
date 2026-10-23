@@ -22,7 +22,8 @@ import java.util.UUID;
 /**
  * Les frontières des villes, pour les joueurs (brief 05) : en entrant sur un territoire, un titre
  * souhaite la bienvenue ; en sortant, un mot au-dessus de la barre d'action. Un hôtel de ville ou une
- * plaque de maison en main, le contour des territoires voisins se dessine en particules.
+ * plaque de maison ou un plan en main, le contour des territoires voisins se dessine en particules :
+ * on voit si le bâtiment tombe dedans.
  */
 public final class Borders {
 	/** Toutes les demi-secondes. */
@@ -61,7 +62,8 @@ public final class Borders {
 				}
 			}
 			WHERE.put(player.getUUID(), now);
-			if (player.isHolding(McItems.TOWN_HALL) || player.isHolding(McItems.HOUSE_PLAQUE)) {
+			if (player.isHolding(McItems.TOWN_HALL) || player.isHolding(McItems.HOUSE_PLAQUE)
+					|| player.isHolding(McItems.PLAN)) {
 				for (Town town : towns.all()) {
 					if (town.dimension().equals(level.dimension())) {
 						outline(level, player, town, town.hall(), town.radius());

@@ -31,7 +31,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Le fantôme des bâtiments proposés (brief 09) : les blocs du plan, dessinés avec leur texture mais
  * en transparence et teintés de bleu, là où le bâtiment s'élèvera. Les chantiers en cours (MC-23),
- * montrés à qui tient le plan, sont teintés d'ambre. Les blocs déjà en place ne se dessinent pas.
+ * montrés à qui tient le plan, sont teintés d'ambre ; une proposition qui sort de la ville, de rouge. Les blocs déjà en place ne se dessinent pas.
  */
 public final class GhostRenderer {
 	/** Au-delà, on ne dessine pas le fantôme. */
@@ -44,6 +44,10 @@ public final class GhostRenderer {
 	private static final int SITE_RED = 255;
 	private static final int SITE_GREEN = 190;
 	private static final int SITE_BLUE = 90;
+	/** La teinte d'une proposition hors du territoire : rouge. */
+	private static final int OUTSIDE_RED = 255;
+	private static final int OUTSIDE_GREEN = 80;
+	private static final int OUTSIDE_BLUE = 80;
 	private static final Direction[] SIDES = {Direction.DOWN, Direction.UP, Direction.NORTH, Direction.SOUTH,
 			Direction.WEST, Direction.EAST, null};
 
@@ -58,7 +62,8 @@ public final class GhostRenderer {
 			if (payload.blocks().isEmpty()) {
 				GHOSTS.remove(payload.owner());
 			} else {
-				GHOSTS.put(payload.owner(), new GhostPayload(payload.owner(), payload.site(), List.copyOf(payload.blocks())));
+				GHOSTS.put(payload.owner(), new GhostPayload(payload.owner(), payload.site(), payload.outside(),
+						List.copyOf(payload.blocks())));
 			}
 		});
 		ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> GHOSTS.clear());
@@ -68,6 +73,11 @@ public final class GhostRenderer {
 	/** Combien de fantômes sont affichés (pour les scènes). */
 	public static int count() {
 		return (int) GHOSTS.values().stream().filter(g -> !g.site()).count();
+	}
+
+	/** Combien de fantômes hors du territoire sont affichés (pour les scènes). */
+	public static int outside() {
+		return (int) GHOSTS.values().stream().filter(GhostPayload::outside).count();
 	}
 
 	/** Combien de chantiers en cours sont affichés (pour les scènes). */
@@ -87,17 +97,20 @@ public final class GhostRenderer {
 		Vec3 camera = context.levelState().cameraRenderState.pos;
 		List<GhostPayload.Block> blocks = new ArrayList<>();
 		List<GhostPayload.Block> sites = new ArrayList<>();
+		List<GhostPayload.Block> outside = new ArrayList<>();
 		for (GhostPayload ghost : GHOSTS.values()) {
+			List<GhostPayload.Block> into = ghost.site() ? sites : ghost.outside() ? outside : blocks;
 			for (GhostPayload.Block block : ghost.blocks()) {
 				BlockPos pos = block.pos();
 				if (camera.distanceToSqr(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5) <= VIEW * VIEW
 						&& !level.getBlockState(pos).equals(block.state())) {
-					(ghost.site() ? sites : blocks).add(block);
+					into.add(block);
 				}
 			}
 		}
 		draw(context, minecraft, camera, blocks, RED, GREEN, BLUE);
 		draw(context, minecraft, camera, sites, SITE_RED, SITE_GREEN, SITE_BLUE);
+		draw(context, minecraft, camera, outside, OUTSIDE_RED, OUTSIDE_GREEN, OUTSIDE_BLUE);
 	}
 
 	private static void draw(LevelRenderContext context, Minecraft minecraft, Vec3 camera,

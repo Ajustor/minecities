@@ -142,6 +142,32 @@ public class PlanScenes implements Scene {
 		stage.client(mc -> check(GhostRenderer.count() == 0 ? null : "le fantôme reste après l'abandon"));
 		stage.shot("plans_2_cancelled");
 
+		// Au bord du territoire, face au dehors : la proposition reste, en rouge, mais ne se valide pas.
+		check(stage.compute(server -> {
+			ServerPlayer player = player(server);
+			player.teleportTo(0.5, Y, town(server).radius() - 2 + 0.5);
+			if (run(server, player, "ville build " + HOUSE) != 0) {
+				return "/ville build hors du territoire n'a pas refusé";
+			}
+			if (!Proposals.of(player.getUUID()).filter(Proposals.Proposal::outside).isPresent()) {
+				return "pas de proposition hors du territoire : " + Proposals.of(player.getUUID());
+			}
+			run(server, player, "ville build confirm");
+			return town(server).activeConstruction().isEmpty() ? null : "le chantier hors du territoire est commandé";
+		}));
+		stage.waitTicks(20);
+		stage.client(mc -> check(GhostRenderer.outside() == 1 ? null : "le client n'a pas de fantôme rouge"));
+		int radius = stage.compute(server -> town(server).radius());
+		stage.look(0.5, Y + 6, radius - 10, 0.5, Y + 2, radius + 6);
+		stage.waitTicks(80);
+		stage.shot("plans_2_outside");
+		check(stage.compute(server -> {
+			ServerPlayer player = player(server);
+			run(server, player, "ville build cancel");
+			player.teleportTo(0.5, Y, 12.5);
+			return Proposals.of(player.getUUID()).isEmpty() ? null : "la proposition hors du territoire reste";
+		}));
+
 		// L'onglet Plans : la petite maison est ouverte, le marché attend la ville.
 		TownSnapshot snapshot = stage.compute(server -> TownNetwork.snapshot(server.overworld(), town(server),
 				player(server)));
@@ -280,8 +306,9 @@ public class PlanScenes implements Scene {
 	/** Une esplanade d'herbe, pour voir le fantôme. */
 	private static void build(MinecraftServer server) {
 		ServerLevel level = server.overworld();
+		// Jusqu'au-delà du bord du territoire (48 blocs), pour la proposition qui en sort.
 		for (int x = -24; x <= 24; x++) {
-			for (int z = -12; z <= 36; z++) {
+			for (int z = -12; z <= 64; z++) {
 				level.setBlockAndUpdate(new BlockPos(x, Y - 1, z), net.minecraft.world.level.block.Blocks.GRASS_BLOCK
 						.defaultBlockState());
 				for (int y = Y; y < Y + 12; y++) {

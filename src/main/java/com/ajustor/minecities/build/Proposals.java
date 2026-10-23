@@ -59,6 +59,8 @@ public final class Proposals {
 		private BlockPos origin;
 		private Rotation rotation;
 		private long expires;
+		/** L'emprise sort du territoire : le fantôme se teinte de rouge, et on ne peut pas valider. */
+		private boolean outside;
 		private final Set<UUID> viewers = new HashSet<>();
 
 		private Proposal(UUID owner, ResourceKey<Level> dimension, UUID town, Blueprint blueprint, BuildStyle style,
@@ -89,6 +91,10 @@ public final class Proposals {
 			return rotation;
 		}
 
+		public boolean outside() {
+			return outside;
+		}
+
 		/** Le milieu de l'emprise, au sol. */
 		private BlockPos center() {
 			BlockPos[] bounds = BuildPlan.bounds(blueprint, origin, rotation);
@@ -116,7 +122,8 @@ public final class Proposals {
 	/**
 	 * Propose ce schéma à cet endroit, à la place de la proposition d'avant. Renvoie le refus, s'il y
 	 * en a un : pas le maire ni un adjoint, schéma pas encore ouvert à ce palier, emprise hors du
-	 * territoire ou sur un chantier en cours.
+	 * territoire ou sur un chantier en cours. Hors du territoire, la proposition reste, son fantôme en
+	 * rouge : on voit de combien elle dépasse, et on la déplace ou la tourne.
 	 */
 	public static Optional<Component> propose(ServerLevel level, ServerPlayer player, Town town, Blueprint blueprint,
 			BuildStyle style, BlockPos origin, Rotation rotation) {
@@ -124,18 +131,28 @@ public final class Proposals {
 			return Optional.of(Component.translatable("command.minecities.not_manager"));
 		}
 		Optional<Component> refusal = Builds.check(level, town, blueprint, origin, rotation);
-		if (refusal.isPresent()) {
+		boolean outside = refusal.isPresent() && Builds.outside(level, town, blueprint, origin, rotation);
+		if (refusal.isPresent() && !outside) {
 			return refusal;
 		}
 		cancel(level.getServer(), player.getUUID());
 		Proposal proposal = new Proposal(player.getUUID(), level.dimension(), town.id(), blueprint, style, origin,
 				rotation, level.getGameTime() + LIFETIME);
+		proposal.outside = outside;
 		PROPOSALS.put(player.getUUID(), proposal);
 		show(level, proposal);
-		player.sendSystemMessage(Component.translatable("message.minecities.proposal", blueprint.displayName(),
-				Component.translatable(style.translationKey())).withStyle(ChatFormatting.GOLD));
-		player.sendSystemMessage(buttons());
+		if (outside) {
+			return refusal;
+		}
+		announce(player, proposal);
 		return Optional.empty();
+	}
+
+	/** Le chantier proposé, et les boutons pour le tourner, le valider ou l'abandonner. */
+	private static void announce(ServerPlayer player, Proposal proposal) {
+		player.sendSystemMessage(Component.translatable("message.minecities.proposal", proposal.blueprint.displayName(),
+				Component.translatable(proposal.style.translationKey())).withStyle(ChatFormatting.GOLD));
+		player.sendSystemMessage(buttons());
 	}
 
 	/** Tourne la proposition d'un quart de tour, autour du milieu de son emprise. */
@@ -155,14 +172,24 @@ public final class Proposals {
 			return Optional.of(Component.translatable("message.minecities.proposal.none"));
 		}
 		Optional<Component> refusal = Builds.check(level, town.get(), proposal.blueprint, origin, next);
-		if (refusal.isPresent()) {
+		boolean outside = refusal.isPresent() && Builds.outside(level, town.get(), proposal.blueprint, origin, next);
+		if (refusal.isPresent() && !outside) {
 			return refusal;
 		}
+		boolean entered = proposal.outside && !outside;
 		proposal.origin = origin;
 		proposal.rotation = next;
+		proposal.outside = outside;
 		proposal.expires = level.getGameTime() + LIFETIME;
 		proposal.viewers.clear();
 		show(level, proposal);
+		if (outside) {
+			return refusal;
+		}
+		if (entered) {
+			// Rentrée dans la ville : maintenant, on peut la valider.
+			announce(player, proposal);
+		}
 		return Optional.empty();
 	}
 
@@ -243,7 +270,7 @@ public final class Proposals {
 				continue;
 			}
 			if (ghost == null) {
-				ghost = new GhostPayload(proposal.owner, false, ghost(proposal));
+				ghost = new GhostPayload(proposal.owner, false, proposal.outside, ghost(proposal));
 			}
 			if (ServerPlayNetworking.canSend(player, GhostPayload.TYPE)) {
 				ServerPlayNetworking.send(player, ghost);
