@@ -207,7 +207,9 @@ public final class StationNetwork {
 		int total = com.ajustor.minecities.build.Builds.plan(level.getServer(), c).size();
 		Component name = blueprint.<Component>map(com.ajustor.minecities.build.Blueprint::displayName)
 				.orElse(Component.literal(c.blueprint().getPath()));
-		return new StationSnapshot.Site(name, c.origin(), Math.min(c.step(), total), total, c.id(), c.paused());
+		// Les blocs posés, où qu'ils soient dans le plan : le bâtisseur en passe quand un matériau manque.
+		int placed = (int) java.util.stream.IntStream.range(0, total).filter(c::isPlaced).count();
+		return new StationSnapshot.Site(name, c.origin(), placed, total, c.id(), c.paused());
 	}
 
 	/** Le compte rendu d'un dépôt pour les chantiers : ce qui a été déposé, ou qu'il n'avait rien d'utile. */
