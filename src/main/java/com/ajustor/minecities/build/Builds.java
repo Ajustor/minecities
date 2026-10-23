@@ -1,6 +1,8 @@
 package com.ajustor.minecities.build;
 
+import com.ajustor.minecities.town.Job;
 import com.ajustor.minecities.town.Stock;
+import com.ajustor.minecities.town.Storage;
 import com.ajustor.minecities.town.Town;
 import com.ajustor.minecities.town.TownService;
 import com.ajustor.minecities.town.Towns;
@@ -10,13 +12,19 @@ import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.Container;
+import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Rotation;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 /** Commander un chantier, l'agrandir, et le montrer au joueur. */
 public final class Builds {
@@ -290,6 +298,83 @@ public final class Builds {
 					item.getName(new ItemStack(item)), Math.min(stocked, count))
 					.withStyle(stocked >= count ? ChatFormatting.GREEN : ChatFormatting.YELLOW));
 		}));
+	}
+
+	/**
+	 * Ce qui manque aux chantiers de la ville : les matériaux des blocs qui restent à poser, moins ce
+	 * que les réserves où les bâtisseurs se servent (ateliers, entrepôt, grenier) en ont déjà. Dans
+	 * l'ordre des plans.
+	 */
+	public static Map<Item, Integer> shortages(ServerLevel level, Town town) {
+		Map<Item, Integer> needs = new LinkedHashMap<>();
+		for (Construction c : town.constructions()) {
+			if (c.done()) {
+				continue;
+			}
+			List<BuildPlan.Placement> plan = plan(level.getServer(), c);
+			for (int i = 0; i < plan.size(); i++) {
+				if (!c.isPlaced(i)) {
+					BuildPlan.material(plan.get(i).state()).ifPresent(item -> needs.merge(item, 1, Integer::sum));
+				}
+			}
+		}
+		if (needs.isEmpty()) {
+			return needs;
+		}
+		List<Container> supplies = supplies(level, town);
+		needs.replaceAll((item, count) -> count - supplies.stream().mapToInt(c -> Stock.count(c, s -> s.is(item))).sum());
+		needs.values().removeIf(count -> count <= 0);
+		return needs;
+	}
+
+	/** Les réserves chargées où les bâtisseurs prennent leurs matériaux : leurs ateliers, l'entrepôt, le grenier. */
+	private static List<Container> supplies(ServerLevel level, Town town) {
+		Set<BlockPos> positions = new LinkedHashSet<>();
+		town.residents().values().forEach(r -> r.job().filter(j -> j.job() == Job.BUILDER)
+				.flatMap(j -> town.house(j.workshop())).ifPresent(h -> positions.addAll(h.containers())));
+		positions.addAll(Storage.stores(town));
+		List<Container> containers = new ArrayList<>();
+		for (BlockPos pos : positions) {
+			if (level.isLoaded(pos) && level.getBlockEntity(pos) instanceof Container c) {
+				containers.add(c);
+			}
+		}
+		return containers;
+	}
+
+	/**
+	 * Le joueur apporte ce qui manque aux chantiers : on prend dans son inventaire (pas ce qu'il porte
+	 * sur lui) jusqu'à ce qui manque de chaque matériau, et on le range où les bâtisseurs le cherchent
+	 * (l'entrepôt, sinon le grenier). Ce qui ne trouve pas de place lui reste. Renvoie ce qui a été
+	 * déposé.
+	 */
+	public static Map<Item, Integer> supply(ServerLevel level, Town town, ServerPlayer player) {
+		Map<Item, Integer> given = new LinkedHashMap<>();
+		Inventory inventory = player.getInventory();
+		for (Map.Entry<Item, Integer> e : shortages(level, town).entrySet()) {
+			int wanted = e.getValue();
+			for (int i = 0; i < Inventory.INVENTORY_SIZE && wanted > 0; i++) {
+				ItemStack slot = inventory.getItem(i);
+				if (!slot.is(e.getKey())) {
+					continue;
+				}
+				ItemStack moving = slot.copyWithCount(Math.min(wanted, slot.getCount()));
+				ItemStack rest = level.getBlockEntity(Storage.depot(level, town, moving)) instanceof Container c
+						? Stock.insert(c, moving) : moving;
+				int moved = moving.getCount() - rest.getCount();
+				if (moved == 0) {
+					// Plus de place dans les réserves pour celui-là.
+					break;
+				}
+				slot.shrink(moved);
+				wanted -= moved;
+				given.merge(e.getKey(), moved, Integer::sum);
+			}
+		}
+		if (!given.isEmpty()) {
+			inventory.setChanged();
+		}
+		return given;
 	}
 
 	/** Trace l'emprise au sol en particules, pour le joueur seul. */

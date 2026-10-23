@@ -230,6 +230,37 @@ public class StationScenes implements Scene {
 			return wrong.isEmpty() ? null : String.join(" ; ", wrong);
 		}));
 
+		// Ce qui manque au chantier, et le maire qui le dépose de son inventaire : jusqu'à ce qu'il en faut,
+		// pas plus, et rien de ce qui ne manque pas.
+		check(stage.compute(server -> {
+			ServerLevel level = server.overworld();
+			Town town = town(server);
+			ServerPlayer mayor = mayor(server);
+			List<StationSnapshot.Shortage> missing = StationNetwork.snapshot(level, bench).orElseThrow().missing();
+			if (missing.isEmpty()) {
+				return "rien ne manque au chantier, réserves vides";
+			}
+			net.minecraft.world.item.Item item = missing.getFirst().item();
+			int needed = missing.getFirst().count();
+			int given = Math.min(needed + 3, item.getDefaultMaxStackSize());
+			int deposit = Math.min(needed, given);
+			mayor.getInventory().clearContent();
+			mayor.getInventory().add(new ItemStack(item, given));
+			mayor.getInventory().add(new ItemStack(net.minecraft.world.item.Items.DIAMOND, 5));
+			int stored = com.ajustor.minecities.town.Storage.count(level, town, s -> s.is(item));
+			java.util.Map<net.minecraft.world.item.Item, Integer> supplied = Builds.supply(level, town, mayor);
+			int left = mayor.getInventory().countItem(item);
+			int now = Builds.shortages(level, town).getOrDefault(item, 0);
+			int storedNow = com.ajustor.minecities.town.Storage.count(level, town, s -> s.is(item));
+			boolean diamonds = mayor.getInventory().countItem(net.minecraft.world.item.Items.DIAMOND) == 5;
+			mayor.getInventory().clearContent();
+			return supplied.equals(java.util.Map.of(item, deposit)) && left == given - deposit
+					&& now == needed - deposit && storedNow == stored + deposit && diamonds ? null
+					: "dépôt de " + given + " " + item + " (il en manquait " + needed + ") : déposé " + supplied
+							+ ", reste " + left + ", manque encore " + now + ", réserves " + stored + " → " + storedNow
+							+ ", diamants gardés " + diamonds;
+		}));
+
 		// L'interface d'un bâtiment bâti à la main : pas d'amélioration ; d'un bâtiment bâti par la ville : si.
 		check(stage.compute(server -> {
 			ServerLevel level = server.overworld();
