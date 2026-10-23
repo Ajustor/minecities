@@ -124,6 +124,7 @@ public final class StationNetwork {
 		Optional<Town> town = Towns.get(level.getServer()).at(level.dimension(), pos);
 		List<StationSnapshot.Worker> workers = new ArrayList<>();
 		List<StationSnapshot.Site> sites = new ArrayList<>();
+		List<StationSnapshot.Shortage> missing = new ArrayList<>();
 		String status;
 		String detail = "";
 		if (town.isEmpty()) {
@@ -154,6 +155,8 @@ public final class StationNetwork {
 						sites.add(site(level, c));
 					}
 				}
+				com.ajustor.minecities.build.Builds.shortages(level, t)
+						.forEach((item, count) -> missing.add(new StationSnapshot.Shortage(item, count)));
 			}
 		}
 		// Le puits du mineur : son état, ce qu'il peut encore donner et ce qu'il a donné.
@@ -182,7 +185,8 @@ public final class StationNetwork {
 						.anyMatch(w -> w.pos().equals(pos))).findFirst()
 				.map(h -> com.ajustor.minecities.town.Mastery.state(level, t, h.plaque()))).orElse("");
 		return Optional.of(new StationSnapshot(pos, state.getBlock().getDescriptionId(), job.serializedName(),
-				town.map(Town::name).orElse(""), status, detail, workers, sites, manager, mineState, ores, mastery));
+				town.map(Town::name).orElse(""), status, detail, workers, sites, manager, mineState, ores, mastery,
+				missing));
 	}
 
 	/** Un travailleur : ce qu'il fait, d'après ce qu'on voit de lui. */
@@ -206,6 +210,24 @@ public final class StationNetwork {
 		return new StationSnapshot.Site(name, c.origin(), Math.min(c.step(), total), total, c.id(), c.paused());
 	}
 
+	/** Le compte rendu d'un dépôt pour les chantiers : ce qui a été déposé, ou qu'il n'avait rien d'utile. */
+	private static Component supplied(Map<net.minecraft.world.item.Item, Integer> given) {
+		if (given.isEmpty()) {
+			return Component.translatable("message.minecities.build.supplied_none")
+					.withStyle(net.minecraft.ChatFormatting.YELLOW);
+		}
+		net.minecraft.network.chat.MutableComponent list = Component.empty();
+		given.forEach((item, count) -> {
+			if (!list.getSiblings().isEmpty()) {
+				list.append(", ");
+			}
+			list.append(Component.translatable("message.minecities.build.supplied_item", count,
+					item.getName(new net.minecraft.world.item.ItemStack(item))));
+		});
+		return Component.translatable("message.minecities.build.supplied", list)
+				.withStyle(net.minecraft.ChatFormatting.GREEN);
+	}
+
 	private static void act(ServerPlayer player, ActionPayload payload) {
 		ServerLevel level = player.level();
 		if (player.distanceToSqr(Vec3.atCenterOf(payload.pos())) > REACH * REACH) {
@@ -226,6 +248,16 @@ public final class StationNetwork {
 				player.sendSystemMessage(Component.translatable(paused ? "message.minecities.build.paused"
 						: "message.minecities.build.resumed", site(level, c).name()).withStyle(net.minecraft.ChatFormatting.GOLD));
 			});
+			open(level, payload.pos(), player);
+			return;
+		}
+		if (payload.action().equals("supply")) {
+			// Le joueur dépose, de son inventaire, ce qui manque aux chantiers de la ville.
+			Optional<Town> town = Towns.get(level.getServer()).at(level.dimension(), payload.pos());
+			if (town.isPresent() && job(level, payload.pos(), level.getBlockState(payload.pos()))
+					.filter(j -> j == Job.BUILDER).isPresent()) {
+				player.sendSystemMessage(supplied(com.ajustor.minecities.build.Builds.supply(level, town.get(), player)));
+			}
 			open(level, payload.pos(), player);
 			return;
 		}

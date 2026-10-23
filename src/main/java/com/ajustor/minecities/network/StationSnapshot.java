@@ -25,9 +25,11 @@ import java.util.UUID;
  * @param mine   pour le mineur : l'état du puits ({@code new}, {@code digging}, {@code exhausted},
  *               {@code closed}), vide sinon
  * @param ores   pour le mineur : ce que le puits peut encore donner, et ce qu'il a déjà donné
+ * @param missing pour le bâtisseur : ce qui manque aux chantiers, que les réserves n'ont pas
  */
 public record StationSnapshot(BlockPos pos, String block, String job, String town, String status, String detail,
-		List<Worker> workers, List<Site> sites, boolean manager, String mine, List<Ore> ores, String mastery)
+		List<Worker> workers, List<Site> sites, boolean manager, String mine, List<Ore> ores, String mastery,
+		List<Shortage> missing)
 		implements CustomPacketPayload {
 	public static final Type<StationSnapshot> TYPE = new Type<>(MineCities.id("open_station"));
 
@@ -41,6 +43,10 @@ public record StationSnapshot(BlockPos pos, String block, String job, String tow
 
 	/** Un chantier : le bâtiment, où, combien de blocs posés sur combien, et s'il est fini. */
 	public record Site(Component name, BlockPos origin, int placed, int total, UUID id, boolean paused) {
+	}
+
+	/** Un matériau qui manque aux chantiers, et combien. */
+	public record Shortage(net.minecraft.world.item.Item item, int count) {
 	}
 
 	private static final StreamCodec<RegistryFriendlyByteBuf, Optional<Component>> OPTIONAL =
@@ -83,6 +89,11 @@ public record StationSnapshot(BlockPos pos, String block, String job, String tow
 			buf.writeVarInt(ore.mined());
 		}
 		buf.writeUtf(s.mastery);
+		buf.writeVarInt(s.missing.size());
+		for (Shortage shortage : s.missing) {
+			buf.writeVarInt(net.minecraft.core.registries.BuiltInRegistries.ITEM.getId(shortage.item()));
+			buf.writeVarInt(shortage.count());
+		}
 	}
 
 	private static StationSnapshot read(RegistryFriendlyByteBuf buf) {
@@ -111,8 +122,15 @@ public record StationSnapshot(BlockPos pos, String block, String job, String tow
 		for (int i = 0; i < oreCount; i++) {
 			ores.add(new Ore(net.minecraft.world.item.ItemStack.STREAM_CODEC.decode(buf), buf.readVarInt(), buf.readVarInt()));
 		}
+		String mastery = buf.readUtf();
+		int missingCount = buf.readVarInt();
+		List<Shortage> missing = new ArrayList<>(missingCount);
+		for (int i = 0; i < missingCount; i++) {
+			missing.add(new Shortage(net.minecraft.core.registries.BuiltInRegistries.ITEM.byId(buf.readVarInt()),
+					buf.readVarInt()));
+		}
 		return new StationSnapshot(pos, block, job, town, status, detail, workers, sites, manager, mine, ores,
-				buf.readUtf());
+				mastery, missing);
 	}
 
 	@Override
