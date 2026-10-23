@@ -40,7 +40,8 @@ import java.util.UUID;
  * d'après son schéma, un bloc toutes les demi-secondes, depuis le pied du chantier (dehors), à toute
  * hauteur : il dégage avec le bon outil (pioche, pelle,
  * hache, qui s'usent), puis pose, en allant chercher outils et matériaux au grenier (ou dans les
- * coffres de son atelier) ; s'il en manque, le maire est prévenu. Plusieurs bâtisseurs travaillent
+ * coffres de son atelier) ; s'il en manque, il passe les blocs qui en ont besoin et pose tout le reste,
+ * puis réclame au maire tout ce qui manque d'un coup. Plusieurs bâtisseurs travaillent
  * ensemble au même chantier, chacun au bloc suivant. Ce qu'il retire du terrain va au grenier. Le bâtiment fini se déclare tout seul.
  */
 class BuilderGoal extends WorkGoal {
@@ -65,6 +66,13 @@ class BuilderGoal extends WorkGoal {
 	private int repathOut;
 	private int stuckInside;
 	private int lastCall = -100;
+	/**
+	 * Les matériaux introuvables (ni aux réserves, ni chez un autre bâtisseur, ni à scier), jusqu'à
+	 * quand : il passe les blocs qui en ont besoin, puis regarde de nouveau.
+	 */
+	private final Map<Item, Long> shortages = new java.util.HashMap<>();
+	/** Il regarde de nouveau si un matériau introuvable est arrivé toutes les 20 secondes. */
+	private static final int RECHECK = 400;
 
 	BuilderGoal(CitizenEntity citizen) {
 		super(citizen, Job.BUILDER);
@@ -145,6 +153,11 @@ class BuilderGoal extends WorkGoal {
 			return;
 		}
 		int index = choose(construction);
+		if (index < 0 && !shortages.isEmpty()) {
+			// Il a posé tout ce qu'il pouvait : il réclame d'un coup ce qui manque, et attend.
+			claimShortages(construction);
+			return;
+		}
 		if (index < 0) {
 			// Tout ce qui est à faire est réservé par les autres bâtisseurs : il attend son tour.
 			cooldown = 20;
@@ -176,12 +189,17 @@ class BuilderGoal extends WorkGoal {
 	 * Choisit le bloc à poser : celui qu'il a déjà réservé, sinon, parmi les prochains du plan que
 	 * personne d'autre n'a réservés, le premier qu'il peut poser tout de suite (il a le matériau et
 	 * l'outil), à défaut le premier libre. Ainsi plusieurs bâtisseurs se partagent le chantier sans
-	 * se gêner. Renvoie -1 si tout est réservé.
+	 * se gêner. Les blocs dont le matériau est introuvable ne comptent pas : il va plus loin dans le
+	 * plan. Renvoie -1 si tout est réservé ou en attente d'un matériau.
 	 */
 	private int choose(Construction construction) {
+		long now = level().getGameTime();
+		shortages.entrySet().removeIf(e -> e.getValue() <= now || count(e.getKey()) > 0);
 		int fallback = -1;
-		int end = Math.min(plan.size(), construction.step() + WINDOW);
-		for (int i = construction.step(); i < end; i++) {
+		int seen = 0;
+		for (int i = construction.step(); i < plan.size() && seen < WINDOW; i++) {
+			// La fenêtre compte les blocs qui restent à faire : ceux déjà posés plus loin (passés devant un
+			// matériau manquant) ne la remplissent pas.
 			if (construction.isPlaced(i)) {
 				continue;
 			}
@@ -191,6 +209,10 @@ class BuilderGoal extends WorkGoal {
 				construction.markPlaced(i);
 				continue;
 			}
+			if (waiting(p)) {
+				continue;
+			}
+			seen++;
 			Optional<UUID> owner = construction.claimant(i);
 			if (owner.filter(citizen.getUUID()::equals).isPresent()) {
 				return i;
@@ -206,6 +228,58 @@ class BuilderGoal extends WorkGoal {
 			}
 		}
 		return fallback;
+	}
+
+	/**
+	 * Ce bloc attend-il un matériau introuvable ? Tant qu'il en manque, il ne pose pas non plus ce qui
+	 * ne tiendrait pas encore (une torche, une porte sans son appui, du sable sur le vide) : l'appui
+	 * qu'il a passé viendra d'abord.
+	 */
+	private boolean waiting(BuildPlan.Placement p) {
+		if (shortages.isEmpty()) {
+			return false;
+		}
+		Optional<Item> material = BuildPlan.material(p.state());
+		if (material.filter(m -> shortages.containsKey(m) && count(m) == 0).isPresent()) {
+			return true;
+		}
+		if (p.state().isAir()) {
+			return false;
+		}
+		return !p.state().canSurvive(level(), p.pos())
+				|| p.state().getBlock() instanceof net.minecraft.world.level.block.FallingBlock
+						&& net.minecraft.world.level.block.FallingBlock.isFree(level().getBlockState(p.pos().below()));
+	}
+
+	/**
+	 * Il a posé tout ce qu'il pouvait : il dit ce qui manque encore (combien de chaque matériau pour
+	 * finir le chantier), et le maire en est prévenu d'un seul message.
+	 */
+	private void claimShortages(Construction construction) {
+		Map<Item, Integer> left = new java.util.LinkedHashMap<>();
+		for (int i = construction.step(); i < plan.size(); i++) {
+			if (!construction.isPlaced(i)) {
+				BuildPlan.material(plan.get(i).state()).filter(shortages::containsKey)
+						.ifPresent(m -> left.merge(m, 1, Integer::sum));
+			}
+		}
+		if (left.isEmpty()) {
+			shortages.clear();
+			return;
+		}
+		net.minecraft.network.chat.MutableComponent list = Component.empty();
+		left.forEach((item, count) -> {
+			if (!list.getSiblings().isEmpty()) {
+				list.append(", ");
+			}
+			list.append(Component.translatable("message.minecities.build.supplied_item", count,
+					item.getName(new ItemStack(item))));
+		});
+		String key = "short:" + left.keySet().stream().map(i -> net.minecraft.core.registries.BuiltInRegistries.ITEM
+				.getKey(i).toString()).sorted().collect(java.util.stream.Collectors.joining(","));
+		citizen.complain(key, Component.translatable("message.minecities.builder.short", citizen.getName(), list),
+				Component.translatable("speech.minecities.short", list));
+		rest(RECHECK);
 	}
 
 	/** A-t-il de quoi poser ce bloc tout de suite : le matériau, et l'outil pour dégager ? */
@@ -693,12 +767,15 @@ class BuilderGoal extends WorkGoal {
 			return;
 		}
 		if (source.isEmpty()) {
+			// Introuvable : il passe les blocs qui en ont besoin et continue le reste du chantier ; il
+			// le réclamera quand il aura posé tout ce qu'il pouvait.
 			int needed = Math.max(1, (int) plan.subList(construction.step(), plan.size()).stream()
 					.filter(p -> BuildPlan.material(p.state()).filter(item::equals).isPresent()).count());
-			citizen.complain("material:" + item, Component.translatable("message.minecities.builder.missing",
-					citizen.getName(), needed, item.getName(new ItemStack(item))),
-					Component.translatable("speech.minecities.missing", needed, item.getName(new ItemStack(item))));
-			rest(400);
+			citizen.need("material:" + item, Component.translatable("speech.minecities.missing", needed,
+					item.getName(new ItemStack(item))));
+			shortages.put(item, level().getGameTime() + RECHECK);
+			construction.release(citizen.getUUID());
+			cooldown = 1;
 			return;
 		}
 		if (goTo(source.get())) {

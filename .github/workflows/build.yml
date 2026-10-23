@@ -71,9 +71,9 @@ jobs:
         # Les versions de Minecraft de settings.gradle.kts.
         minecraft: ['26.2', '26.3']
         scenes:
-          - build
+          - build,shortage
           - data,budget,tavern,city,work,countryside,village,family,raid,life,market,robust,industry,crafts,council,caravans,logistics,guide,structures,plans,jade,residents,elections,monuments,health,map,disasters,stations,mine
-    name: scenes ${{ matrix.minecraft }} (${{ matrix.scenes == 'build' && 'bâtisseur' || 'les autres' }})
+    name: scenes ${{ matrix.minecraft }} (${{ matrix.scenes == 'build,shortage' && 'bâtisseur' || 'les autres' }})
     steps:
       - name: checkout repository
         uses: actions/checkout@v6
