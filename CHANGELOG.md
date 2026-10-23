@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.12.0 — 2026-10-23
+
+### New features
+
+- Holding the plan shows the town's border, and the ghost of a building that would stick out of it turns red.
 ## 1.11.1 — 2026-10-22
 
 ### New features

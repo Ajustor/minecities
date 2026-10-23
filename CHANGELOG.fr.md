@@ -1,5 +1,10 @@
 # Journal des modifications
 
+## 1.12.0 — 2026-10-23
+
+### Nouveautés
+
+- Avec le plan en main, le contour de la ville s'affiche, et le fantôme d'un bâtiment qui en sortirait se teinte de rouge.
 ## 1.11.1 — 2026-10-22
 
 ### Nouveautés
