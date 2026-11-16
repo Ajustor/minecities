@@ -2,7 +2,6 @@ package com.ajustor.minecities.town;
 
 import com.ajustor.minecities.citizen.Action;
 import com.ajustor.minecities.citizen.CitizenEntity;
-import com.ajustor.minecities.mixin.MobAccessor;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.ChatFormatting;
@@ -22,7 +21,6 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.goal.Goal;
-import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.entity.raid.Raider;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -247,8 +245,6 @@ public final class Raids {
 			raider.setCanJoinRaid(false);
 			raider.setPersistenceRequired();
 			raider.getGoalSelector().addGoal(4, new MarchOnHall(raider, town.hall()));
-			((MobAccessor) raider).minecities$targetSelector().addGoal(3,
-					new NearestAttackableTargetGoal<>(raider, CitizenEntity.class, true));
 			level.addFreshEntity(raider);
 			raid.raiders.add(raider.getUUID());
 		}

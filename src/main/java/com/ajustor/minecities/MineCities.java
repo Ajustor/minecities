@@ -39,6 +39,7 @@ public class MineCities implements ModInitializer {
 		TownService.register();
 		Blueprints.register();
 		Raids.register();
+		com.ajustor.minecities.citizen.Prey.register();
 		Festivals.register();
 		Alarms.register();
 		com.ajustor.minecities.town.Highlights.register();
