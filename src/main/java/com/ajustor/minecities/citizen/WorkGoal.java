@@ -463,6 +463,9 @@ abstract class WorkGoal extends Goal {
 	/** Le poste de travail est-il toujours là ? */
 	protected boolean stationStands() {
 		Resident.Employment work = employment();
+		if (town().isYard(work.station())) {
+			return true;
+		}
 		return town().house(work.workshop()).map(House::workstations)
 				.filter(l -> l.stream().anyMatch(w -> w.pos().equals(work.station()))).isPresent();
 	}

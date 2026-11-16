@@ -36,8 +36,8 @@ import java.util.Optional;
 import java.util.UUID;
 
 /**
- * Le bâtisseur, à la table d'artisan. Il prend le premier chantier commandé par le maire et le bâtit
- * d'après son schéma, un bloc toutes les demi-secondes, depuis le pied du chantier (dehors), à toute
+ * Le bâtisseur, à la table d'artisan (dans un atelier, ou posée seule : un poste isolé). Il prend le premier chantier commandé par le maire et le bâtit
+ * d'après son schéma, d'autant plus vite que son atelier est de haut niveau, depuis le pied du chantier (dehors), à toute
  * hauteur : il dégage avec le bon outil (pioche, pelle,
  * hache, qui s'usent), puis pose, en allant chercher outils et matériaux au grenier (ou dans les
  * coffres de son atelier) ; s'il en manque, il passe les blocs qui en ont besoin et pose tout le reste,
@@ -47,12 +47,25 @@ import java.util.UUID;
 class BuilderGoal extends WorkGoal {
 	/** Il pose à cette distance (à l'horizontale), depuis le pied du chantier. */
 	private static final double REACH = 8.0;
-	/** Un bloc toutes les 4 ticks : cinq par seconde. */
-	private static final int PACE = 4;
+	/**
+	 * Le temps entre deux blocs, en ticks, selon le niveau de son atelier : au niveau 1 (un simple poste
+	 * ou une cabane faite main), un bloc toutes les demi-secondes ; chaque niveau, mieux outillé, le
+	 * presse, jusqu'à près de sept blocs par seconde au niveau 4.
+	 */
+	private static final int[] PACE = {10, 7, 5, 3};
+	/** Son allure entre deux tâches, selon le niveau de son atelier. */
+	private static final double[] STRIDE = {0.7, 0.8, 0.9, 1.0};
+
+	/** Le niveau de son atelier, de 1 à 4. */
+	private int workshopLevel() {
+		int level = citizen.job().map(j -> town().buildingLevel(j.workshop())).orElse(1);
+		return Math.clamp(level, 1, PACE.length);
+	}
 
 	/** Le temps entre deux blocs : moitié moins pour un maître (MC-63). */
 	private int pace() {
-		return master() ? PACE / 2 : PACE;
+		int pace = PACE[workshopLevel() - 1];
+		return master() ? Math.max(1, pace / 2) : pace;
 	}
 	/** Il emporte au plus tant de chaque matériau par voyage. */
 	private static final int HAUL = 64;
@@ -500,7 +513,7 @@ class BuilderGoal extends WorkGoal {
 
 	@Override
 	protected double speed() {
-		return 0.85;
+		return STRIDE[workshopLevel() - 1];
 	}
 
 	/** À portée : 8 blocs à l'horizontale, à toute hauteur. */

@@ -30,7 +30,7 @@ public final class Town {
 	/** L'état civil de la ville (à part : un codec ne prend que 16 champs à la fois). */
 	private record Head(UUID id, String name, ResourceKey<Level> dimension, BlockPos hall, UUID mayor,
 			String mayorName, List<UUID> deputies, long founded, Membership membership, Election election,
-			Map<UUID, BlockPos> whereabouts) {
+			Map<UUID, BlockPos> whereabouts, List<BlockPos> yards) {
 		static final MapCodec<Head> CODEC = RecordCodecBuilder.mapCodec(i -> i.group(
 				UUIDUtil.CODEC.fieldOf("id").forGetter(Head::id),
 				Codec.STRING.fieldOf("name").forGetter(Head::name),
@@ -43,13 +43,15 @@ public final class Town {
 				Membership.CODEC.forGetter(Head::membership),
 				Election.CODEC.forGetter(Head::election),
 				Codec.unboundedMap(UUIDUtil.STRING_CODEC, BlockPos.CODEC).optionalFieldOf("whereabouts", Map.of())
-						.forGetter(Head::whereabouts)
+						.forGetter(Head::whereabouts),
+				BlockPos.CODEC.listOf().optionalFieldOf("yards", List.of()).forGetter(Head::yards)
 		).apply(i, Head::new));
 	}
 
 	public static final Codec<Town> CODEC = RecordCodecBuilder.create(i -> i.group(
 			Head.CODEC.forGetter(t -> new Head(t.id, t.name, t.dimension, t.hall, t.mayor, t.mayorName,
-					List.copyOf(t.deputies), t.founded, t.membership, t.election, Map.copyOf(t.whereabouts))),
+					List.copyOf(t.deputies), t.founded, t.membership, t.election, Map.copyOf(t.whereabouts),
+					List.copyOf(t.yards))),
 			House.CODEC.listOf().optionalFieldOf("houses", List.of()).forGetter(t -> List.copyOf(t.houses.values())),
 			Codec.unboundedMap(UUIDUtil.STRING_CODEC, Resident.CODEC).optionalFieldOf("residents", Map.of())
 					.forGetter(t -> t.residents),
@@ -85,6 +87,7 @@ public final class Town {
 		town.membership = head.membership();
 		town.election = head.election();
 		town.whereabouts.putAll(head.whereabouts());
+		town.yards.addAll(head.yards());
 		return town;
 	}));
 
@@ -126,6 +129,12 @@ public final class Town {
 	private final Set<UUID> partners = new java.util.LinkedHashSet<>();
 	/** Les galeries des mineurs, par treuil. */
 	private final Map<BlockPos, Mine> mines = new LinkedHashMap<>();
+	/**
+	 * Les postes de bâtisseur posés hors de tout bâtiment déclaré : un bâtisseur s'y fait embaucher
+	 * quand même (il faut bien quelqu'un pour bâtir sa première cabane). Un tel poste est son propre
+	 * atelier, de niveau 1.
+	 */
+	private final Set<BlockPos> yards = new java.util.LinkedHashSet<>();
 	/** Depuis quand la ville a perdu son hôtel de ville (détruit), s'il faut en reposer un. */
 	private Optional<Long> orphanedAt = Optional.empty();
 	/** Quand chaque citoyen a été vu pour la dernière fois (non sauvegardé). */
@@ -430,7 +439,15 @@ public final class Town {
 	public void putHouse(House house) {
 		houses.put(house.plaque(), house);
 		List<BlockPos> stations = house.workstations().stream().map(House.Workstation::pos).toList();
+		// Un poste isolé qu'un bâtiment déclaré entoure désormais en devient un poste : son bâtisseur le garde.
+		List<BlockPos> absorbed = stations.stream().filter(yards::contains).toList();
+		absorbed.forEach(yards::remove);
 		residents.replaceAll((uuid, r) -> {
+			Optional<Resident.Employment> work = r.job();
+			if (work.isPresent() && absorbed.contains(work.get().station()) && work.get().workshop().equals(work.get().station())) {
+				Resident.Employment j = work.get();
+				r = r.employed(new Resident.Employment(j.job(), house.plaque(), j.station(), j.hiredAt()));
+			}
 			if (r.home().filter(house.plaque()::equals).isPresent()
 					&& r.bed().filter(house.beds()::contains).isEmpty()) {
 				r = r.evicted();
@@ -494,6 +511,21 @@ public final class Town {
 				hired.put(jobless.get(), employment);
 			}
 		}
+		for (BlockPos yard : yards) {
+			if (taken.contains(yard) || !Job.BUILDER.unlockedAt(tier)) {
+				continue;
+			}
+			Optional<UUID> jobless = residents.entrySet().stream()
+					.filter(e -> e.getValue().job().isEmpty() && !e.getValue().isChild())
+					.map(Map.Entry::getKey).findFirst();
+			if (jobless.isEmpty()) {
+				return hired;
+			}
+			Resident.Employment employment = new Resident.Employment(Job.BUILDER, yard, yard, now);
+			residents.put(jobless.get(), residents.get(jobless.get()).employed(employment));
+			taken.add(yard);
+			hired.put(jobless.get(), employment);
+		}
 		return hired;
 	}
 
@@ -503,6 +535,37 @@ public final class Town {
 				.orElse(r));
 	}
 
+	/** Les postes de bâtisseur isolés (hors de tout bâtiment déclaré). */
+	public Set<BlockPos> yards() {
+		return java.util.Collections.unmodifiableSet(yards);
+	}
+
+	/** Ce poste est-il un poste de bâtisseur isolé ? */
+	public boolean isYard(BlockPos pos) {
+		return yards.contains(pos);
+	}
+
+	/**
+	 * Retient un poste de bâtisseur posé hors de tout bâtiment ; faux s'il l'est déjà, ou si un bâtiment
+	 * déclaré l'a déjà pour poste.
+	 */
+	public boolean addYard(BlockPos pos) {
+		if (houses.values().stream().anyMatch(h -> h.workstations().stream().anyMatch(w -> w.pos().equals(pos)))) {
+			return false;
+		}
+		return yards.add(pos.immutable());
+	}
+
+	/** Oublie un poste isolé (il a disparu) ; son bâtisseur se retrouve sans emploi. */
+	public boolean removeYard(BlockPos pos) {
+		if (!yards.remove(pos)) {
+			return false;
+		}
+		residents.replaceAll((uuid, r) -> r.job().filter(j -> j.station().equals(pos) && j.workshop().equals(pos))
+				.isPresent() ? r.unemployed() : r);
+		return true;
+	}
+
 	/** Combien de citoyens exercent ce métier. */
 	public int workers(Job job) {
 		return (int) residents.values().stream().filter(r -> r.job().filter(j -> j.job() == job).isPresent()).count();
@@ -510,7 +573,7 @@ public final class Town {
 
 	/** Les postes de travail de la ville, et combien sont occupés. */
 	public int workstations() {
-		return houses.values().stream().mapToInt(h -> h.workstations().size()).sum();
+		return houses.values().stream().mapToInt(h -> h.workstations().size()).sum() + yards.size();
 	}
 
 	public int capacity() {

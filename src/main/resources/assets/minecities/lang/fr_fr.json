@@ -118,7 +118,7 @@
   "command.minecities.blueprints": "%s schéma(s) :",
   "command.minecities.blueprints.entry": " - %s (%s) : %s × %s, %s de haut, %s",
   "command.minecities.build.ordered": "Chantier commandé : %s, style %s, à %s. Le bâtisseur s'y mettra.",
-  "command.minecities.build.no_builder": "La ville n'a pas de bâtisseur : il faut un atelier avec une table d'artisan.",
+  "command.minecities.build.no_builder": "La ville n'a pas de bâtisseur : posez une table d'artisan sur son territoire, dans un atelier ou en plein air.",
   "command.minecities.build.none": "Aucun chantier en cours.",
   "command.minecities.build.cancelled": "Chantier annulé ; ce qui est posé reste.",
   "command.minecities.build.upgrade": "Agrandissement commandé.",

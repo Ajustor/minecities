@@ -118,7 +118,7 @@
   "command.minecities.blueprints": "%s blueprint(s):",
   "command.minecities.blueprints.entry": " - %s (%s): %s × %s, %s high, %s",
   "command.minecities.build.ordered": "Construction ordered: %s, %s style, in %s. The builder will get to it.",
-  "command.minecities.build.no_builder": "The town has no builder: it needs a workshop with a crafter.",
+  "command.minecities.build.no_builder": "The town has no builder: place a crafter on its territory, in a workshop or out in the open.",
   "command.minecities.build.none": "No construction in progress.",
   "command.minecities.build.cancelled": "Construction cancelled; what is placed stays.",
   "command.minecities.build.upgrade": "Enlargement ordered.",

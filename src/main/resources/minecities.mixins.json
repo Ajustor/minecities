@@ -4,6 +4,7 @@
 	"package": "com.ajustor.minecities.mixin",
 	"compatibilityLevel": "JAVA_25",
 	"mixins": [
+		"BlockItemMixin",
 		"MobAccessor"
 	],
 	"injectors": {
