@@ -27,7 +27,7 @@ public class PlanScreen extends Screen {
 	private static final int BAD = 0xFFB0201A;
 	private static final int ACCENT = 0xFF8A5A1E;
 	private static final int CHOSEN = 0x402E7D32;
-	private static final String[] STYLES = {"plains", "taiga", "desert", "savanna"};
+	private static final String[] STYLES = com.ajustor.minecities.build.BuildStyle.names();
 
 	private final PlanNetwork.PlanSnapshot plan;
 	private int style;

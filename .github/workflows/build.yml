@@ -1,8 +1,8 @@
 # Build du mod à chaque pull request et à chaque push sur master (ou à la demande) : compilation,
 # tests unitaires (relevé des maisons, villes et paliers, faim, clés fr_fr/en_us), puis les jars du mod
-# (un par version de Minecraft) en artefact téléchargeable, nommé d'après la version et le commit. En
-# parallèle, les scènes de jeu sans fenêtre (src/gametest), sur chaque version, en deux lots : le
-# bâtisseur, le plus long, seul ; toutes les autres ensemble. La release au tag est dans release.yml.
+# (un par version de Minecraft) en artefact téléchargeable, nommé d'après la version et le commit. Les
+# scènes de jeu (src/gametest) ne tournent pas ici : on les joue en local, avant de pousser
+# (./gradlew build). La release au tag est dans release.yml.
 name: build
 on:
   pull_request:
@@ -62,34 +62,6 @@ jobs:
           name: ${{ steps.jar.outputs.name }}
           path: jars/*.jar
           if-no-files-found: error
-
-  scenes:
-    runs-on: ubuntu-24.04
-    strategy:
-      fail-fast: false
-      matrix:
-        # Les versions de Minecraft de settings.gradle.kts.
-        minecraft: ['26.2', '26.3']
-        scenes:
-          - build,shortage,yard
-          - data,budget,tavern,city,work,countryside,village,family,raid,life,market,robust,industry,crafts,council,caravans,logistics,guide,structures,plans,jade,residents,elections,monuments,health,map,disasters,stations,mine
-    name: scenes ${{ matrix.minecraft }} (${{ matrix.scenes == 'build,shortage,yard' && 'bâtisseur' || 'les autres' }})
-    steps:
-      - name: checkout repository
-        uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-      - name: setup jdk
-        uses: actions/setup-java@v5
-        with:
-          java-version: '25'
-          distribution: 'microsoft'
-      - name: setup gradle
-        uses: gradle/actions/setup-gradle@v6
-      - name: make gradle wrapper executable
-        run: chmod +x ./gradlew
-      - name: play the scenes
-        run: ./gradlew ":${{ matrix.minecraft }}:runGameTest" -PminecitiesGametest=${{ matrix.scenes }}
 
   # Les données des versions de Minecraft plus récentes que celle des sources sont dérivées des
   # sources (tools/data/migrate.py) : les overlays commités doivent être ceux que donne la migration.

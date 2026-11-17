@@ -101,7 +101,8 @@ your other mods and your playtime.
    - **Smithing table → inventor**: when the town is attacked, builds an **iron golem** (4 iron
      blocks, a carved pumpkin) or a **snow golem** (2 snow blocks, a pumpkin) in front of the hall.
 6. **Have buildings built**: take a **blueprint** at the town hall (**Plans** tab, with its style:
-   plains, taiga, desert, savanna) and use it on the ground, or type `/town build <blueprint> [style]`:
+   plains, taiga, desert, savanna, snowy, cherry blossom, swamp, badlands, half-timbered: see the
+   [Buildings page](https://ajustor.github.io/minecities/buildings.html)) and use it on the ground, or type `/town build <blueprint> [style]`:
    the building's **ghost** appears in front of the mayor, translucent, for nearby players too. Sneak
    with the blueprint (or `/town build rotate`) to turn it, `/town build confirm` (or the chat button)
    to order it, `/town build cancel` to drop it at no cost; the blueprint can be reused. `/town upgrade`, or the **Upgrade** button of the building's interface (click its plaque, or

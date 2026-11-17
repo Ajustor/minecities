@@ -35,7 +35,7 @@
    "..=.=...."
   ],
   [
-   ".........",
+   ".....J...",
    ".PPPPPPP.",
    ".P     P.",
    ".P     P.",
@@ -46,7 +46,7 @@
    "........."
   ],
   [
-   ".........",
+   "SSSSSSSSS",
    "SSSSSSSSS",
    "SSSSSSSSS",
    "SSSSSSSSS",
@@ -79,11 +79,12 @@
   "C": "minecraft:chest[facing=south]",
   "D": "{door}[facing=north,half=lower,hinge=left]",
   "E": "{fence}",
+  "J": "minecraft:lantern[hanging=true]",
   "L": "minecities:house_plaque[facing=south]",
   "O": "{foundation}",
   "P": "{frame}[axis=y]",
   "S": "{roof_slab}[type=bottom]",
-  "Z": "minecraft:stone_bricks",
+  "Z": "{masonry}",
   "^": "{steps}[facing=south,half=bottom,shape=straight]",
   "_": "minecraft:coarse_dirt",
   "d": "{door}[facing=north,half=upper,hinge=left]",

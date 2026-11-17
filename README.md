@@ -150,7 +150,8 @@ version du mod, les autres mods et le temps de jeu.
      **golem de neige** (2 blocs de neige et une citrouille).
    Deux postes dans un même atelier font deux travailleurs : les ateliers agrandis en ont deux.
 7. **Faire bâtir** : le maire (ou un adjoint) commande un bâtiment d'après un **schéma**, dans un
-   **style** (plaines, taïga, désert, savane). Il prend son **plan** à l'hôtel de ville (onglet
+   **style** (plaines, taïga, désert, savane, neige, cerisier, marais, badlands, colombage :
+   voir la [page Bâtiments](https://ajustor.github.io/minecities/buildings.html)). Il prend son **plan** à l'hôtel de ville (onglet
    **Plans**, où il choisit le style) et le pose au sol, ou tape `/ville build minecities:house_1 taiga` :
    le **fantôme** du bâtiment apparaît, en transparence, pour lui et les joueurs proches. Accroupi avec
    le plan (ou `/ville build rotate`), il le tourne ; `/ville build confirm` (ou le bouton du chat) le
@@ -354,7 +355,7 @@ Gradle (`:26.2`, `:26.3`) et son jar, des mêmes sources : voir [ARCHITECTURE.md
 ./gradlew :26.2:runGameTest     # les scènes de jeu, vérifiées sur le seul serveur, sans fenêtre (rapide)
 ./gradlew :26.2:runGameTest -PminecitiesGametest=work   # une scène (data, budget, tavern, city, work, countryside, village, build, family, raid, life, market, robust, industry, crafts,
 council, logistics, guide, structures, plans, jade, residents, elections, monuments, health, map, disasters, stations, mine)
-./gradlew :26.2:runClientGameTest   # les mêmes scènes dans le vrai jeu, photographiées (versions/26.2/build/run/clientGameTest/screenshots), plus styles
+./gradlew :26.2:runClientGameTest   # les mêmes scènes dans le vrai jeu, photographiées (versions/26.2/build/run/clientGameTest/screenshots), plus styles et gallery (les images de la page Bâtiments : `python tools/captures/gallery.py`)
 ./gradlew :26.2:runClientGameTest -PminecitiesFilm   # avec les films image par image (lents)
 python tools/textures/generate.py   # régénère les textures (peaux des citoyens, plaque, œuf)
 python tools/models/town_hall.py    # régénère le modèle de l'hôtel de ville

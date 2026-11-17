@@ -14,39 +14,39 @@
   ],
   [
    ".... ......",
-   ".PWWDWWWWP.",
+   ".PWWDWWPWP.",
    ".Wt     CW.",
    ".W;      W.",
-   ".W5      W.",
+   "§W5      W§",
    ".W2      W.",
    "OW    o oW.",
-   ".PWWWWWWWP.",
-   "..........."
+   ".PWWPWWPWP.",
+   "...§..§...."
   ],
   [
    "...........",
-   ".PGWdWWWGP.",
+   ".PGWdWWPGP.",
    ".W L    +W.",
    "(W       W)",
    ".G       G.",
    "(W       W)",
    "OW       W.",
-   ".PWGWWGWWP.",
+   ".PWGPWGPWP.",
    "..=.==.=..."
   ],
   [
-   "...........",
-   ".PWWWWWWWP.",
+   ".....J.....",
+   ".PWWWWWPWP.",
    ".W       W.",
    ".W       W.",
    ".W       W.",
    ".W       W.",
    "OW       W.",
-   ".PWWWWWWWP.",
+   ".PWWPWWPWP.",
    "..........."
   ],
   [
-   "...........",
+   "<..:::....>",
    "<RRRRRRRRR>",
    "<RRRRRRRRR>",
    "<RRRRRRRRR>",
@@ -54,10 +54,10 @@
    "<RRRRRRRRR>",
    "ORRRRRRRRR>",
    "<RRRRRRRRR>",
-   "..........."
+   "<.........>"
   ],
   [
-   "...........",
+   ".<.......>.",
    ".<|||||||>.",
    ".<       >.",
    ".<       >.",
@@ -65,10 +65,10 @@
    ".<       >.",
    "O<       >.",
    ".<|||||||>.",
-   "..........."
+   ".<.......>."
   ],
   [
-   "...........",
+   "..<.....>..",
    ". <WWWWW> .",
    ". <     > .",
    ". <     > .",
@@ -76,10 +76,10 @@
    ". <     > .",
    "O <     > .",
    ". <WWWWW> .",
-   "..........."
+   "..<.....>.."
   ],
   [
-   "...........",
+   "...<...>...",
    ".  <WGW>  .",
    ".  <   >  .",
    ".  <   >  .",
@@ -87,10 +87,10 @@
    ".  <   >  .",
    "O  <   >  .",
    ".  <WGW>  .",
-   "..........."
+   "...<...>..."
   ],
   [
-   "...........",
+   "....<.>....",
    ".   <W>   .",
    ".   < >   .",
    ".   < >   .",
@@ -98,10 +98,10 @@
    ".   < >   .",
    "O   < >   .",
    ".   <W>   .",
-   "..........."
+   "....<.>...."
   ],
   [
-   "...........",
+   ".....R.....",
    ".    R    .",
    ".    R    .",
    ".    R    .",
@@ -109,7 +109,7 @@
    ".    R    .",
    "O    R    .",
    ".    R    .",
-   "..........."
+   ".....R....."
   ],
   [
    "...........",
@@ -131,6 +131,7 @@
   "+": "minecraft:potted_poppy",
   "2": "minecraft:decorated_pot",
   "5": "minecraft:cake",
+  ":": "{roof_slab}[type=top]",
   ";": "minecraft:smooth_stone_slab[type=top]",
   "<": "{roof_stairs}[facing=east,half=bottom,shape=straight]",
   "=": "{trapdoor}[facing=south,half=top,open=true]",
@@ -139,6 +140,7 @@
   "D": "{door}[facing=north,half=lower,hinge=left]",
   "F": "{foundation}",
   "G": "{window}",
+  "J": "minecraft:lantern[hanging=true]",
   "L": "minecities:house_plaque[facing=south]",
   "O": "{foundation}",
   "P": "{frame}[axis=y]",
@@ -149,7 +151,8 @@
   "f": "{floor}",
   "o": "minecraft:furnace[facing=north]",
   "t": "minecraft:torch",
-  "|": "{frame}[axis=x]"
+  "|": "{frame}[axis=x]",
+  "§": "{trapdoor}[facing=north,half=top,open=false]"
  },
  "upgrade": "minecities:bakery_3"
 }

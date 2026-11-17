@@ -14,39 +14,39 @@
   ],
   [
    ".... ......",
-   ".PWWDWWWWP.",
+   ".PWWDWWPWP.",
    ".Wt     CW.",
    ".W#     EW.",
-   ".W#     #W.",
+   "§W#     #W§",
    ".W#      W.",
    "OW#   x xW.",
-   ".PWWWWWWWP.",
-   "..........."
+   ".PWWPWWPWP.",
+   "...§..§...."
   ],
   [
    "...........",
-   ".PGWdWWWGP.",
+   ".PGWdWWPGP.",
    ".W L    +W.",
    "(W      1W)",
    ".G       G.",
    "(W       W)",
    "OW       W.",
-   ".PWGWWGWWP.",
+   ".PWGPWGPWP.",
    "..=.==.=..."
   ],
   [
-   "...........",
-   ".PWWWWWWWP.",
+   ".....J.....",
+   ".PWWWWWPWP.",
    ".W       W.",
    ".W       W.",
    ".W       W.",
    ".W       W.",
    "OW       W.",
-   ".PWWWWWWWP.",
+   ".PWWPWWPWP.",
    "..........."
   ],
   [
-   "...........",
+   "<..:::....>",
    "<RRRRRRRRR>",
    "<RRRRRRRRR>",
    "<RRRRRRRRR>",
@@ -54,10 +54,10 @@
    "<RRRRRRRRR>",
    "ORRRRRRRRR>",
    "<RRRRRRRRR>",
-   "..........."
+   "<.........>"
   ],
   [
-   "...........",
+   ".<.......>.",
    ".<|||||||>.",
    ".<       >.",
    ".<       >.",
@@ -65,10 +65,10 @@
    ".<       >.",
    "O<       >.",
    ".<|||||||>.",
-   "..........."
+   ".<.......>."
   ],
   [
-   "...........",
+   "..<.....>..",
    ". <WWWWW> .",
    ". <     > .",
    ". <     > .",
@@ -76,10 +76,10 @@
    ". <     > .",
    "O <     > .",
    ". <WWWWW> .",
-   "..........."
+   "..<.....>.."
   ],
   [
-   "...........",
+   "...<...>...",
    ".  <WGW>  .",
    ".  <   >  .",
    ".  <   >  .",
@@ -87,10 +87,10 @@
    ".  <   >  .",
    "O  <   >  .",
    ".  <WGW>  .",
-   "..........."
+   "...<...>..."
   ],
   [
-   "...........",
+   "....<.>....",
    ".   <W>   .",
    ".   < >   .",
    ".   < >   .",
@@ -98,10 +98,10 @@
    ".   < >   .",
    "O   < >   .",
    ".   <W>   .",
-   "..........."
+   "....<.>...."
   ],
   [
-   "...........",
+   ".....R.....",
    ".    R    .",
    ".    R    .",
    ".    R    .",
@@ -109,7 +109,7 @@
    ".    R    .",
    "O    R    .",
    ".    R    .",
-   "..........."
+   ".....R....."
   ],
   [
    "...........",
@@ -131,6 +131,7 @@
   "*": "minecraft:campfire[lit=true,signal_fire=false,facing=north]",
   "+": "minecraft:potted_poppy",
   "1": "minecraft:candle[candles=3,lit=true]",
+  ":": "{roof_slab}[type=top]",
   "<": "{roof_stairs}[facing=east,half=bottom,shape=straight]",
   "=": "{trapdoor}[facing=south,half=top,open=true]",
   ">": "{roof_stairs}[facing=west,half=bottom,shape=straight]",
@@ -139,6 +140,7 @@
   "E": "{fence}",
   "F": "{foundation}",
   "G": "{window}",
+  "J": "minecraft:lantern[hanging=true]",
   "L": "minecities:house_plaque[facing=south]",
   "O": "{foundation}",
   "P": "{frame}[axis=y]",
@@ -149,7 +151,8 @@
   "f": "{floor}",
   "t": "minecraft:torch",
   "x": "minecraft:chiseled_bookshelf[facing=north]",
-  "|": "{frame}[axis=x]"
+  "|": "{frame}[axis=x]",
+  "§": "{trapdoor}[facing=north,half=top,open=false]"
  },
  "upgrade": "minecities:library_3",
  "tier": "town"

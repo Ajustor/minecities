@@ -59,17 +59,20 @@ KEY = {
     "p": "minecraft:lectern[facing=north]",
     # Les matériaux des quatre niveaux (brief 11).
     "_": "minecraft:coarse_dirt",
-    "K": "minecraft:bricks",
-    "Z": "minecraft:stone_bricks",
+    # La maçonnerie du niveau 3 (soubassement, chaînes d'angle, cheminée) suit le style (v1.15).
+    "K": "{brick}",
+    "Z": "{masonry}",
     "I": "minecraft:iron_bars",
     "J": "minecraft:lantern[hanging=true]",
     "X": "minecraft:polished_andesite",
     "V": "minecraft:quartz_pillar[axis=y]",
     "H": "minecraft:white_stained_glass_pane",
     "$": "minecraft:gold_block",
-    "{": "minecraft:waxed_cut_copper_stairs[facing=east,half=bottom,shape=straight]",
-    "}": "minecraft:waxed_cut_copper_stairs[facing=west,half=bottom,shape=straight]",
-    "Y": "minecraft:waxed_cut_copper",
+    # Le toit de la demeure : cuivre, ardoise ou cuivre patiné selon le style (v1.15).
+    "{": "{fine_roof_stairs}[facing=east,half=bottom,shape=straight]",
+    "}": "{fine_roof_stairs}[facing=west,half=bottom,shape=straight]",
+    "Y": "{fine_roof}",
+    "°": "minecraft:waxed_cut_copper",
     "o": "minecraft:furnace[facing=north]",
     "%": "minecraft:blast_furnace[facing=north]",
     "&": "minecities:mine_winch[facing=north]",
@@ -115,6 +118,8 @@ KEY = {
     "[": "minecraft:bell[attachment=ceiling,facing=north]",
     "]": "minecraft:lantern[hanging=false]",
     "0": "minecraft:stone_bricks",
+    # Les appuis de fenêtre (v1.15) : une trappe fermée sous chaque fenêtre des côtés et du fond.
+    "§": "{trapdoor}[facing=north,half=top,open=false]",
 }
 
 
@@ -206,8 +211,15 @@ def rows(layers):
     return [["".join(r) for r in layer] for layer in layers]
 
 
-def porch(layers, door_x=3):
-    """Un perron au nord : une marche d'escalier devant la porte, pour monter sur la fondation."""
+ROOF_STAIRS = set("<>{}")
+
+
+def porch(layers, door_x=3, overhang=False):
+    """
+    Un perron au nord : une marche d'escalier devant la porte, pour monter sur la fondation. Avec
+    overhang (les bâtiments à niveaux, v1.15), le toit déborde aussi sur le perron : les pans
+    d'escaliers et le faîte se prolongent d'un bloc, et la porte a son auvent et sa lanterne.
+    """
     out = []
     for y, layer in enumerate(layers):
         width = len(layer[0])
@@ -216,12 +228,23 @@ def porch(layers, door_x=3):
             row[door_x] = "^"
         elif y == 1:
             row[door_x] = " "
-        out.append(["".join(row)] + list(layer))
-    return out
+        elif overhang and y >= 4:
+            for x, ch in enumerate(layer[0]):
+                if ch in ROOF_STAIRS or ch == "S" or (y >= 5 and ch in "RY"):
+                    row[x] = ch
+        out.append(row)
+    if overhang:
+        if out[4][door_x] != "S":
+            # L'auvent : trois demi-dalles hautes au ras du plafond, au-dessus de la porte.
+            for x in (door_x - 1, door_x, door_x + 1):
+                out[4][x] = ":"
+        # Une lanterne pendue sous l'auvent (ou sous le débord du toit plat), à droite de la porte.
+        out[3][door_x + 1] = "J"
+    return [["".join(row)] + list(layer) for row, layer in zip(out, layers)]
 
 
-def blueprint(name, kind, layers, upgrade=None, door_x=3, tier=None):
-    layers = porch(layers, door_x)
+def blueprint(name, kind, layers, upgrade=None, door_x=3, tier=None, overhang=False):
+    layers = porch(layers, door_x, overhang)
     used = {ch for layer in layers for row in layer for ch in row}
     data = {
         "kind": kind,
@@ -370,12 +393,12 @@ def belfry():
             layer[3][3] = "["
         layers.append(layer)
     # Le toit : une dalle de cuivre, puis une pyramide qui se resserre, une pointe d'or.
-    layers.append(square(w, "Y"))
+    layers.append(square(w, "°"))
     for k in (1, 2):
         layer = grid(w, w, " ")
         for z in range(k, w - k):
             for x in range(k, w - k):
-                layer[z][x] = "Y"
+                layer[z][x] = "°"
         layers.append(layer)
     top = grid(w, w, " ")
     top[3][3] = "$"
@@ -467,6 +490,13 @@ def levelled(level, w, d, door_x=3, beds=(), extras=None):
             layer[z][0] = layer[z][w - 1] = material
         for x, z in ((0, 0), (w - 1, 0), (0, d - 1), (w - 1, d - 1)):
             layer[z][x] = m["corner"]
+        # Des poteaux dans les longs murs (v1.15), entre les fenêtres du fond, loin de la porte : ils
+        # rythment la façade comme une charpente (rondins, puis chaînes de pierre, puis quartz).
+        if level >= 2:
+            for x in range(3, w - 2, 3):
+                layer[d - 1][x] = m["corner"]
+                if abs(x - door_x) > 1:
+                    layer[0][x] = m["corner"]
         if y == 1:
             layer[0][door_x] = "D"
         elif y == 2:
@@ -556,9 +586,14 @@ def decorate(level, layers, w, d, house):
             out[4][d][x] = "S"
     else:
         east, west, _ = m["roof"]
-        for z in range(d):
+        for z in range(d + 1):
             out[4][z][0] = east
             out[4][z][width - 1] = west
+        # Le toit déborde aussi au fond : les pans et le faîte se prolongent d'un bloc (v1.15).
+        for y in range(5, len(out)):
+            for x in range(width):
+                if out[y][d - 1][x] in ROOF_STAIRS or out[y][d - 1][x] in "RY":
+                    out[y][d][x] = out[y][d - 1][x]
     # Des volets de part et d'autre des fenêtres des côtés et du fond.
     middle = d // 2
     for dz in (-1, 1):
@@ -568,6 +603,11 @@ def decorate(level, layers, w, d, house):
         for dx in (-1, 1):
             if out[2][d][wx + 1 + dx] == ".":
                 out[2][d][wx + 1 + dx] = "="
+    # Des appuis sous les fenêtres des côtés et du fond (dès le niveau 2, les fenêtres vitrées).
+    if level >= 2:
+        out[1][middle][0] = out[1][middle][width - 1] = "§"
+        for wx in range(2, w - 2, 3):
+            out[1][d][wx + 1] = "§"
     # La cheminée, contre le mur ouest, jusqu'au-dessus du toit, et son feu.
     chimney = {1: "O", 2: "O", 3: "K", 4: "K"}[level]
     for y in range(len(out)):
@@ -708,7 +748,7 @@ def series(prints, name, make, outside=None, ext_width=8, min_tier=None):
         upgrade = f"minecities:{name}_{level + 1}" if level < 4 else None
         # La porte est en x = 4 : le décor a ajouté une colonne à l'ouest.
         prints.append(blueprint(f"{name}_{level}", "house" if name == "house" else "workshop", body,
-                                upgrade=upgrade, tier=tier, door_x=4))
+                                upgrade=upgrade, tier=tier, door_x=4, overhang=True))
 
 
 def workshop(extras, fine=False):

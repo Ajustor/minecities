@@ -128,29 +128,29 @@
    "V     V"
   ],
   [
-   "YYYYYYY",
-   "YYYYYYY",
-   "YYYYYYY",
-   "YYYYYYY",
-   "YYYYYYY",
-   "YYYYYYY",
-   "YYYYYYY"
+   "°°°°°°°",
+   "°°°°°°°",
+   "°°°°°°°",
+   "°°°°°°°",
+   "°°°°°°°",
+   "°°°°°°°",
+   "°°°°°°°"
   ],
   [
    "       ",
-   " YYYYY ",
-   " YYYYY ",
-   " YYYYY ",
-   " YYYYY ",
-   " YYYYY ",
+   " °°°°° ",
+   " °°°°° ",
+   " °°°°° ",
+   " °°°°° ",
+   " °°°°° ",
    "       "
   ],
   [
    "       ",
    "       ",
-   "  YYY  ",
-   "  YYY  ",
-   "  YYY  ",
+   "  °°°  ",
+   "  °°°  ",
+   "  °°°  ",
    "       ",
    "       "
   ],
@@ -172,9 +172,9 @@
   "H": "minecraft:white_stained_glass_pane",
   "V": "minecraft:quartz_pillar[axis=y]",
   "X": "minecraft:polished_andesite",
-  "Y": "minecraft:waxed_cut_copper",
   "[": "minecraft:bell[attachment=ceiling,facing=north]",
-  "]": "minecraft:lantern[hanging=false]"
+  "]": "minecraft:lantern[hanging=false]",
+  "°": "minecraft:waxed_cut_copper"
  },
  "tier": "town"
 }

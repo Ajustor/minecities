@@ -3,6 +3,9 @@ Installation, en français et en anglais (sélecteur de langue comme sur l'accue
 
 Usage : python3 site/build.py <dossier de sortie> [releases.json]
 
+La page Bâtiments (buildings.html) montre les captures de site/img/buildings (faites en jeu par la
+scène gallery, voir tools/captures/gallery.py), avec ce que disent les schémas et les styles du mod.
+
 La page Signaler (report.html) vient de site/report.body.html ; elle envoie le formulaire au relais
 dont l'adresse est dans REPORT_ENDPOINT (une variable du dépôt, voir tools/report-worker), et
 TURNSTILE_SITEKEY, si elle est donnée, ajoute la vérification anti-robots de Cloudflare.
@@ -22,7 +25,8 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SITE = os.path.join(ROOT, "site")
 REPO = "https://github.com/Ajustor/minecities"
 
-NAV = [("index.html", "Accueil", "Home"), ("releases.html", "Versions", "Releases"),
+NAV = [("index.html", "Accueil", "Home"), ("buildings.html", "Bâtiments", "Buildings"),
+       ("releases.html", "Versions", "Releases"),
        ("changelog.html", "Changelog", "Changelog"), ("installation.html", "Installation", "Installation"),
        ("report.html", "Signaler un bug", "Report a bug")]
 
@@ -167,6 +171,170 @@ INSTALL_EN = """
 """
 
 
+BLUEPRINTS = os.path.join(ROOT, "src", "main", "resources", "data", "minecities", "blueprint")
+LANG = os.path.join(ROOT, "src", "main", "resources", "assets", "minecities", "lang")
+STYLE_JAVA = os.path.join(ROOT, "src", "main", "java", "com", "ajustor", "minecities", "build", "BuildStyle.java")
+GALLERY_JAVA = os.path.join(ROOT, "src", "gametest", "java", "com", "ajustor", "minecities", "gametest",
+                            "GalleryScenes.java")
+
+# Ce qu'on montre de chaque style : les jetons qui font l'allure d'un bâtiment.
+PALETTE = [("wall", "Murs", "Walls"), ("frame", "Charpente", "Frame"), ("roof", "Toit", "Roof"),
+           ("floor", "Plancher", "Floor"), ("foundation", "Fondation", "Foundation"),
+           ("masonry", "Maçonnerie (niveau 3)", "Masonry (level 3)"),
+           ("fine_roof", "Toit (niveau 4)", "Roof (level 4)")]
+
+# Les noms français des blocs des styles (le site n'a pas les fichiers de langue du jeu).
+BLOCKS_FR = {
+    "oak_planks": "planches de chêne", "spruce_planks": "planches d'épicéa", "birch_planks": "planches de bouleau",
+    "acacia_planks": "planches d'acacia", "dark_oak_planks": "planches de chêne noir",
+    "cherry_planks": "planches de cerisier", "mangrove_planks": "planches de palétuvier",
+    "oak_log": "bûche de chêne", "spruce_log": "bûche d'épicéa", "acacia_log": "bûche d'acacia",
+    "dark_oak_log": "bûche de chêne noir", "cherry_log": "bûche de cerisier", "mangrove_log": "bûche de palétuvier",
+    "stripped_spruce_log": "bûche d'épicéa écorcée", "cobblestone": "pierres", "stone_bricks": "pierres taillées",
+    "mossy_stone_bricks": "pierres taillées moussues", "bricks": "briques", "sandstone": "grès",
+    "smooth_sandstone": "grès lisse", "cut_sandstone": "grès taillé", "chiseled_sandstone": "grès sculpté",
+    "red_sandstone": "grès rouge", "cut_red_sandstone": "grès rouge taillé",
+    "chiseled_red_sandstone": "grès rouge sculpté", "orange_terracotta": "terre cuite orange",
+    "terracotta": "terre cuite", "white_terracotta": "terre cuite blanche", "red_terracotta": "terre cuite rouge",
+    "polished_granite": "granite poli", "polished_diorite": "diorite polie", "polished_andesite": "andésite polie",
+    "polished_deepslate": "ardoise polie", "deepslate_tiles": "tuiles d'ardoise", "deepslate_bricks": "briques d'ardoise",
+    "snow_block": "bloc de neige", "white_concrete": "béton blanc", "waxed_cut_copper": "cuivre taillé",
+    "waxed_oxidized_cut_copper": "cuivre taillé oxydé", "waxed_weathered_cut_copper": "cuivre taillé patiné", "packed_mud": "boue compacte", "mud_bricks": "briques de boue",
+}
+
+LEVELS_FR = [("Cabane", "rondins bruts, terre battue, toit plat"),
+             ("Maison", "planches, fondation de pierre, vitres, toit à deux pans"),
+             ("Bâtisse", "maçonnerie du style, barreaux de fer, lanternes ; dès la ville"),
+             ("Demeure", "pierre polie, colonnes de quartz, vitraux, toit noble du style ; dès la grande ville")]
+LEVELS_EN = [("Hut", "raw logs, packed dirt, flat roof"),
+             ("House", "planks, stone foundation, glass, gable roof"),
+             ("Hall", "the style's masonry, iron bars, lanterns; from town tier"),
+             ("Mansion", "polished stone, quartz columns, stained glass, the style's fine roof; from city tier")]
+
+
+def styles():
+    """Les styles du mod, lus dans BuildStyle.java : (nom, description, {jeton: bloc})."""
+    source = open(STYLE_JAVA, encoding="utf-8").read()
+    out = []
+    pattern = r'(?:/\*\* (.*?) \*/\s*)?[A-Z]+\("([a-z_]+)", Map\.ofEntries\((.*?)\)\)[,;]'
+    for doc, name, body in re.findall(pattern, source, re.S):
+        tokens = dict(re.findall(r'Map\.entry\("([a-z_]+)", "minecraft:([a-z_]+)"\)', body))
+        out.append((name, doc, tokens))
+    return out
+
+
+def lang(code):
+    return json.load(open(os.path.join(LANG, code + ".json"), encoding="utf-8"))
+
+
+def blocks(name):
+    """Le nombre de blocs que pose le bâtisseur pour ce schéma (ni l'air ni « laisser tel quel »)."""
+    data = json.load(open(os.path.join(BLUEPRINTS, name + ".json"), encoding="utf-8"))
+    key = data["key"]
+    count = 0
+    for layer in data["layers"]:
+        for row in layer:
+            for ch in row:
+                block = key.get(ch, "minecraft:air")
+                # La moitié haute d'une porte, la tête d'un lit : posées avec l'autre moitié.
+                if ch != "." and block != "minecraft:air" and "half=upper" not in block and "part=head" not in block:
+                    count += 1
+    return count
+
+
+def families():
+    source = open(GALLERY_JAVA, encoding="utf-8").read()
+    block = source[source.index("FAMILIES = List.of("):]
+    block = block[:block.index(");")]
+    return re.findall(r'"([a-z_]+)"', block)
+
+
+def buildings(fr):
+    """La page Bâtiments : les styles, les quatre niveaux, chaque bâtiment, les monuments."""
+    names = lang("fr_fr" if fr else "en_us")
+    img = "img/buildings/"
+    style_names = {n: names.get("style.minecities." + n, n) for n, _, _ in styles()}
+    out = []
+    if fr:
+        out.append("<p>Le bâtisseur construit d'après des schémas, à quatre niveaux, et dans le style de votre "
+                   "choix (choisi sur le plan, ou dans l'onglet Plans de l'hôtel de ville). Chaque image montre "
+                   "un bâtiment à ses quatre niveaux, <strong>de gauche à droite : du niveau 1 au niveau 4</strong>. "
+                   "Ce sont des captures du jeu.</p>")
+        out.append(f"<h2>Les {len(style_names)} styles</h2>")
+        out.append("<p>Un même schéma change de matériaux selon le style : les quatre premiers sont ceux des "
+                   "villages du jeu, les autres s'inspirent des constructions des joueurs (village enneigé, maison "
+                   "japonaise, cabane du marais, adobe des badlands, maison à colombages). Ici, la maison.</p>")
+    else:
+        out.append("<p>The builder builds from blueprints, at four levels, in the style you pick (on the plan, or "
+                   "in the town hall's Plans tab). Each picture shows a building at its four levels, "
+                   "<strong>left to right: level 1 to level 4</strong>. These are in-game screenshots.</p>")
+        out.append(f"<h2>The {len(style_names)} styles</h2>")
+        out.append("<p>The same blueprint changes materials with the style: the first four are the game's own "
+                   "village styles, the others draw on player builds (snowy village, Japanese house, swamp hut, "
+                   "badlands adobe, half-timbered house). Here, the house.</p>")
+    out.append('<div class="gallery">')
+    for name, doc, tokens in styles():
+        title = style_names[name]
+        title = title[:1].upper() + title[1:]
+        rows = []
+        for token, lfr, len_ in PALETTE:
+            block = tokens.get(token)
+            if not block:
+                continue
+            label = BLOCKS_FR.get(block, block.replace("_", " ")) if fr else block.replace("_", " ")
+            rows.append(f"<dt>{html.escape(lfr if fr else len_)}</dt><dd>{html.escape(label)}</dd>")
+        out.append(f'<figure id="style-{name}"><a href="{img}style_{name}.jpg"><img loading="lazy" '
+                   f'src="{img}style_{name}.jpg" alt="{html.escape(title)}"></a><figcaption><strong>{html.escape(title)}</strong>'
+                   f'<dl class="palette">{"".join(rows)}</dl></figcaption></figure>')
+    out.append("</div>")
+
+    levels = LEVELS_FR if fr else LEVELS_EN
+    out.append("<h2>Les quatre niveaux</h2>" if fr else "<h2>The four levels</h2>")
+    out.append("<p>Un bâtiment s'agrandit d'un niveau à l'autre, sur place : une maison gagne deux lits, un "
+               "atelier un poste de travail (et un travailleur). Chaque niveau coûte plus de matériaux.</p>"
+               if fr else
+               "<p>A building grows from one level to the next, in place: a house gains two beds, a workshop "
+               "one more workstation (and worker). Each level costs more materials.</p>")
+    out.append("<ol>" + "".join(f"<li><strong>{html.escape(t)}</strong> : {html.escape(d)}</li>" if fr else
+                                f"<li><strong>{html.escape(t)}</strong>: {html.escape(d)}</li>"
+                                for t, d in levels) + "</ol>")
+
+    out.append("<h2>Les bâtiments</h2>" if fr else "<h2>The buildings</h2>")
+    out.append("<p>Ici en style plaines. Le nombre de blocs est celui que pose le bâtisseur, du niveau 1 au "
+               "niveau 4.</p>" if fr else
+               "<p>Shown in the plains style. The block counts are what the builder places, level 1 to 4.</p>")
+    out.append('<div class="gallery">')
+    for family in ["house"] + families():
+        label = names.get(f"blueprint.minecities.{family}_1", family)
+        label = re.split(r",\s*(?:niveau|level)", label)[0]
+        counts = " · ".join(str(blocks(f"{family}_{n}")) for n in range(1, 5))
+        src = f"{img}style_plains.jpg" if family == "house" else f"{img}building_{family}.jpg"
+        unit = "blocs" if fr else "blocks"
+        out.append(f'<figure id="{family}"><a href="{src}"><img loading="lazy" src="{src}" '
+                   f'alt="{html.escape(label)}"></a>'
+                   f'<figcaption><strong>{html.escape(label)}</strong><br>{counts} {unit}</figcaption></figure>')
+    out.append("</div>")
+
+    out.append("<h2>Les monuments</h2>" if fr else "<h2>Monuments</h2>")
+    monuments = ", ".join(names.get(f"blueprint.minecities.{m}", m) for m in ("statue", "fountain", "belfry"))
+    out.append(f"<p>{html.escape(monuments)} : un de chaque pour devenir mégalopole.</p>" if fr else
+               f"<p>{html.escape(monuments)}: one of each to become a megalopolis.</p>")
+    out.append(f'<figure class="wide"><img loading="lazy" src="{img}monuments.jpg" '
+               f'alt="{html.escape(monuments)}"></figure>')
+    return "\n".join(out)
+
+
+GALLERY_STYLE = ("<style>.gallery{display:grid;grid-template-columns:1fr;gap:20px;margin:16px 0 28px}"
+                 "@media(min-width:640px){.gallery{grid-template-columns:1fr 1fr}}"
+                 ".gallery figure,figure.wide{margin:0;background:var(--card);border-radius:8px;overflow:hidden}"
+                 ".gallery img,figure.wide img{width:100%;height:auto;display:block;aspect-ratio:16/9;"
+                 "object-fit:cover;background:var(--muted)}"
+                 ".gallery figcaption{padding:8px 12px 12px;font-size:.92rem;color:var(--muted)}"
+                 ".gallery figcaption strong{color:var(--ink);font-size:1rem}"
+                 ".palette{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;margin:6px 0 0}"
+                 ".palette dt{color:var(--muted)}.palette dd{margin:0;color:var(--ink)}</style>")
+
+
 def report(data):
     """Le formulaire de signalement : les deux langues dans un seul formulaire, les versions publiées
     dans le sélecteur (la plus récente d'abord, choisie par défaut)."""
@@ -213,6 +381,9 @@ def main(out, releases_json=None):
     for name, (tfr, ten, bfr, ben) in pages.items():
         with open(os.path.join(out, name), "w", encoding="utf-8", newline="\n") as f:
             f.write(page(head, footer, tail, name, tfr, ten, bfr, ben))
+    with open(os.path.join(out, "buildings.html"), "w", encoding="utf-8", newline="\n") as f:
+        f.write(page(head.replace("</head>", GALLERY_STYLE + "</head>", 1), footer, tail, "buildings.html",
+                     "Bâtiments et styles", "Buildings and styles", buildings(True), buildings(False)))
     with open(os.path.join(out, "report.html"), "w", encoding="utf-8", newline="\n") as f:
         f.write(page(head, footer, tail, "report.html", "Signaler un bug", "Report a bug", "", "", report(data)))
     print(f"site assemblé dans {out} ({len(data)} release(s))")
