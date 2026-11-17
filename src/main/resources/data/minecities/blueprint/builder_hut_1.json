@@ -2,70 +2,70 @@
  "kind": "workshop",
  "layers": [
   [
-   "....^....",
-   ".PPPPPPP.",
-   ".P_____P.",
-   ".P_____P.",
-   ".P_____P.",
-   ".P_____P.",
-   "OP_____P.",
-   ".PPPPPPP.",
-   "........."
+   "....^......",
+   ".PPPPPPP...",
+   ".P_____P...",
+   ".P_____P...",
+   ".P_____P...",
+   ".P_____P...",
+   "OP_____P...",
+   ".PPPPPPP...",
+   "..........."
   ],
   [
-   ".... ....",
-   ".PPPDPPP.",
-   ".Pt   CP.",
-   ".PA    P.",
-   ".Pn    P.",
-   ".P     P.",
-   "OP    cP.",
-   ".PPPPPPP.",
-   "........."
+   ".... ......",
+   ".PPPDPPP.EE",
+   ".Pt   CPα..",
+   ".PA    P.EE",
+   ".Pn    P...",
+   ".P     P.βδ",
+   "OP    cP.γβ",
+   ".PPPPPPP.δ.",
+   "..........."
   ],
   [
-   ".........",
-   ".PPPdPPP.",
-   ".P L  +P.",
-   "(P     P)",
-   ".E     E.",
-   "(P     P)",
-   "OP     P.",
-   ".PPEPPPP.",
-   "..=.=...."
+   "...........",
+   ".PPPdPPP.EE",
+   ".P L  +Pα..",
+   "(P     P)EE",
+   ".E     E...",
+   "(P     P)..",
+   "OP     P.ε.",
+   ".PPEPPPP...",
+   "..=.=......"
   ],
   [
-   ".....J...",
-   ".PPPPPPP.",
-   ".P     P.",
-   ".P     P.",
-   ".P     P.",
-   ".P     P.",
-   "OP     P.",
-   ".PPPPPPP.",
-   "........."
+   ".....J.....",
+   ".PPPPPPP.SS",
+   ".P     PαSS",
+   ".P     P.SS",
+   ".P     P...",
+   ".P     P...",
+   "OP     P...",
+   ".PPPPPPP...",
+   "..........."
   ],
   [
-   "SSSSSSSSS",
-   "SSSSSSSSS",
-   "SSSSSSSSS",
-   "SSSSSSSSS",
-   "SSSSSSSSS",
-   "SSSSSSSSS",
-   "OSSSSSSSS",
-   "SSSSSSSSS",
-   "SSSSSSSSS"
+   "SSSSSSSSS..",
+   "SSSSSSSSS..",
+   "SSSSSSSSS..",
+   "SSSSSSSSS..",
+   "SSSSSSSSS..",
+   "SSSSSSSSS..",
+   "OSSSSSSSS..",
+   "SSSSSSSSS..",
+   "SSSSSSSSS.."
   ],
   [
-   ".........",
-   ".........",
-   ".........",
-   ".........",
-   ".........",
-   ".........",
-   "*........",
-   ".........",
-   "........."
+   "...........",
+   "...........",
+   "...........",
+   "...........",
+   "...........",
+   "...........",
+   "*..........",
+   "...........",
+   "..........."
   ]
  ],
  "key": {
@@ -89,7 +89,12 @@
   "c": "minecraft:crafter",
   "d": "{door}[facing=north,half=upper,hinge=left]",
   "n": "minecraft:anvil[facing=east]",
-  "t": "minecraft:torch"
+  "t": "minecraft:torch",
+  "α": "minecraft:ladder[facing=east]",
+  "β": "minecraft:cobblestone",
+  "γ": "minecraft:oak_planks",
+  "δ": "minecraft:bricks",
+  "ε": "minecraft:oak_slab[type=bottom]"
  },
  "upgrade": "minecities:builder_hut_2"
 }

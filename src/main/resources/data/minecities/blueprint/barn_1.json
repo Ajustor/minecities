@@ -14,8 +14,8 @@
   ],
   [
    ".... ............",
-   ".PPPDPPP.........",
-   ".Pt   CP.........",
+   "αPPRDRPP.........",
+   "αPt   CP.........",
    ".P2    P.........",
    ".P6    P.........",
    ".P     P.........",
@@ -25,7 +25,7 @@
   ],
   [
    ".................",
-   ".PPPdPPP.........",
+   ".PPRdRPP.........",
    ".P L  +P.........",
    "(P     P)........",
    ".E     E.........",
@@ -36,7 +36,7 @@
   ],
   [
    ".....J...........",
-   ".PPPPPPP.........",
+   ".PP|||PP.........",
    ".P     P.........",
    ".P     P.........",
    ".P     P.........",
@@ -84,13 +84,16 @@
   "L": "minecities:house_plaque[facing=south]",
   "O": "{foundation}",
   "P": "{frame}[axis=y]",
+  "R": "{roof}",
   "S": "{roof_slab}[type=bottom]",
   "^": "{steps}[facing=south,half=bottom,shape=straight]",
   "_": "minecraft:coarse_dirt",
   "d": "{door}[facing=north,half=upper,hinge=left]",
   "g": "{fence_gate}[facing=north]",
   "h": "minecraft:hay_block[axis=y]",
-  "t": "minecraft:torch"
+  "t": "minecraft:torch",
+  "|": "{frame}[axis=x]",
+  "α": "minecraft:hay_block[axis=z]"
  },
  "upgrade": "minecities:barn_2"
 }

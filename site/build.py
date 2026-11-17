@@ -300,9 +300,14 @@ def buildings(fr):
                                 for t, d in levels) + "</ol>")
 
     out.append("<h2>Les bâtiments</h2>" if fr else "<h2>The buildings</h2>")
-    out.append("<p>Ici en style plaines. Le nombre de blocs est celui que pose le bâtisseur, du niveau 1 au "
-               "niveau 4.</p>" if fr else
-               "<p>Shown in the plains style. The block counts are what the builder places, level 1 to 4.</p>")
+    out.append("<p>Chaque bâtiment a sa signature, qui se reconnaît de loin et s'étoffe avec le niveau : le "
+               "couloir de tir et la tour de guet de l'archer, le chevalement de la mine, le quai et le grenier "
+               "de l'entrepôt, la halle du marché, l'étage en encorbellement de la taverne… Ici en style plaines. "
+               "Le nombre de blocs est celui que pose le bâtisseur, du niveau 1 au niveau 4.</p>" if fr else
+               "<p>Every building has its own signature, recognisable from afar and richer with each level: the "
+               "archer's shooting lane and watchtower, the mine's headframe, the warehouse's loading dock and "
+               "loft, the market hall, the tavern's jettied upper floor… Shown in the plains style. The block "
+               "counts are what the builder places, level 1 to 4.</p>")
     out.append('<div class="gallery">')
     for family in ["house"] + families():
         label = names.get(f"blueprint.minecities.{family}_1", family)

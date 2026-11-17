@@ -2,70 +2,92 @@
  "kind": "workshop",
  "layers": [
   [
-   "....^....",
-   ".PPPPPPP.",
-   ".P_____P.",
-   ".P_____P.",
-   ".P_____P.",
-   ".P_____P.",
-   "OP_____P.",
-   ".PPPPPPP.",
-   "........."
+   "....^......",
+   ".PPPPPPP...",
+   ".P_____P...",
+   ".P_____P...",
+   ".P_____P...",
+   ".P_____P...",
+   "OP_____P...",
+   ".PPPPPPP...",
+   "..........."
   ],
   [
-   ".... ....",
-   ".PPPDPPP.",
-   ".Pt   CP.",
-   ".PC    P.",
-   ".P2    P.",
-   ".P     P.",
-   "OP    ¤P.",
-   ".PPPPPPP.",
-   "........."
+   ".... ......",
+   "EPPPDPPP...",
+   ".Pt   CP..E",
+   ".PC    P..E",
+   ".P2    P..E",
+   ".P     P..E",
+   "OP    ¤P...",
+   ".PPPPPPP...",
+   "..........."
   ],
   [
-   ".........",
-   ".PPPdPPP.",
-   ".P L  +P.",
-   "(P     P)",
-   ".E     E.",
-   "(P     P)",
-   "OP     P.",
-   ".PPEPPPP.",
-   "..=.=...."
+   "...........",
+   "αPPPdPPP...",
+   ".P L  +P...",
+   "(P     P)..",
+   ".E     E...",
+   "(P     P)..",
+   "OP     P...",
+   ".PPEPPPP...",
+   "..=.=......"
   ],
   [
-   ".....J...",
-   ".PPPPPPP.",
-   ".P     P.",
-   ".P     P.",
-   ".P     P.",
-   ".P     P.",
-   "OP     P.",
-   ".PPPPPPP.",
-   "........."
+   ".....J.....",
+   ".PPPPPPP...",
+   ".P     P...",
+   ".P     P...",
+   ".P     P...",
+   ".P     P...",
+   "OP     P...",
+   ".PPPPPPP...",
+   "..........."
   ],
   [
-   "SSSSSSSSS",
-   "SSSSSSSSS",
-   "SSSSSSSSS",
-   "SSSSSSSSS",
-   "SSSSSSSSS",
-   "SSSSSSSSS",
-   "OSSSSSSSS",
-   "SSSSSSSSS",
-   "SSSSSSSSS"
+   "SSSSSSSSS..",
+   "SSSSSSSSS..",
+   "SSSSSSSSS..",
+   "SSSSSSSSS..",
+   "SSSSSSSSS..",
+   "SSSSSSSSS..",
+   "OSSSSSSSS..",
+   "SSSSSSSSS..",
+   "SSSSSSSSS.."
   ],
   [
-   ".........",
-   ".........",
-   ".........",
-   ".........",
-   ".........",
-   ".........",
-   "*........",
-   ".........",
-   "........."
+   "...........",
+   "...........",
+   ".....E.....",
+   "...........",
+   "...........",
+   "...........",
+   "*..........",
+   "...........",
+   "..........."
+  ],
+  [
+   "...........",
+   "...........",
+   ".....E.....",
+   "...........",
+   "...........",
+   "...........",
+   "...........",
+   "...........",
+   "..........."
+  ],
+  [
+   "...........",
+   "...........",
+   ".....β.....",
+   "...........",
+   "...........",
+   "...........",
+   "...........",
+   "...........",
+   "..........."
   ]
  ],
  "key": {
@@ -88,7 +110,9 @@
   "_": "minecraft:coarse_dirt",
   "d": "{door}[facing=north,half=upper,hinge=left]",
   "t": "minecraft:torch",
-  "¤": "minecities:courier_station[facing=north]"
+  "¤": "minecities:courier_station[facing=north]",
+  "α": "minecraft:barrel[facing=north]",
+  "β": "minecraft:blue_banner[rotation=8]"
  },
  "upgrade": "minecities:courier_post_2"
 }

@@ -3,25 +3,25 @@
  "layers": [
   [
    "....^..........",
-   ".PPPPPPP..OOOOO",
-   ".P_____P..O~~~O",
-   ".P_____P..O~~~O",
-   ".P_____P..O~~~O",
-   ".P_____P..O~~~O",
-   "OP_____P..O~~~O",
-   ".PPPPPPP..OOOOO",
-   "..........OOOOO"
+   ".PPPPPPPf.OOOOO",
+   ".P_____Pf.O~~~O",
+   ".P_____Pf.O~~~O",
+   ".P_____Pf.O~~~O",
+   ".P_____Pf.O~~~O",
+   "OP_____Pf.O~~~O",
+   ".PPPPPPPf.OOOOO",
+   "........f.OOOOO"
   ],
   [
    ".... ..........",
-   ".PPPDPPP.      ",
-   ".Pt   CP.      ",
-   ".P2    P.      ",
+   ".PPPDPPPα      ",
+   ".Pt   CPα      ",
+   ".P2   rP.      ",
    ".P@    P.      ",
    ".P     P.      ",
-   "OP    rP.      ",
+   "OP     PE      ",
    ".PPPPPPP.      ",
-   ".........      "
+   "........E      "
   ],
   [
    "...............",
@@ -30,9 +30,9 @@
    "(P     P)......",
    ".E     E.......",
    "(P     P)......",
-   "OP     P.......",
-   ".PPEPPPP.......",
-   "..=.=.........."
+   "OP     PE......",
+   ".PPEPPPPγ......",
+   "..=.=...E......"
   ],
   [
    ".....J.........",
@@ -41,9 +41,9 @@
    ".P     P.......",
    ".P     P.......",
    ".P     P.......",
-   "OP     P.......",
-   ".PPPPPPP.......",
-   "..............."
+   "OP     PE......",
+   ".PPPPPPPE......",
+   "........E......"
   ],
   [
    "SSSSSSSSS......",
@@ -88,9 +88,12 @@
   "^": "{steps}[facing=south,half=bottom,shape=straight]",
   "_": "minecraft:coarse_dirt",
   "d": "{door}[facing=north,half=upper,hinge=left]",
+  "f": "{floor}",
   "r": "minecraft:barrel[facing=up]",
   "t": "minecraft:torch",
-  "~": "minecraft:water"
+  "~": "minecraft:water",
+  "α": "minecraft:barrel[facing=east]",
+  "γ": "{trapdoor}[facing=east,half=top,open=true]"
  },
  "upgrade": "minecities:fishery_2"
 }
