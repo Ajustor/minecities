@@ -2,70 +2,70 @@
  "kind": "workshop",
  "layers": [
   [
-   "....^....",
-   ".PPPPPPP.",
-   ".P_____P.",
-   ".P_____P.",
-   ".P_____P.",
-   ".P_____P.",
-   "OP_____P.",
-   ".PPPPPPP.",
-   "........."
+   "....^.......",
+   ".PPPPPPP....",
+   ".P_____P....",
+   ".P_____P....",
+   ".P_____P....",
+   ".P_____P....",
+   "OP_____P....",
+   ".PPPPPPP....",
+   "............"
   ],
   [
-   ".... ....",
-   ".PPPDPPP.",
-   ".Pt   CP.",
-   ".PP    P.",
-   ".PP    P.",
-   ".P     P.",
-   "OP    lP.",
-   ".PPPPPPP.",
-   "........."
+   ".... .......",
+   ".PPPDPPP.βββ",
+   ".Pt   CP.βββ",
+   ".P¦    P...P",
+   ".P¦    P.αα.",
+   ".P     P.αα.",
+   "OP    lP.αα.",
+   ".PPPPPPP...P",
+   "............"
   ],
   [
-   ".........",
-   ".PPPdPPP.",
-   ".P L  +P.",
-   "(P     P)",
-   ".E     E.",
-   "(P     P)",
-   "OP     P.",
-   ".PPEPPPP.",
-   "..=.=...."
+   "............",
+   ".PPPdPPP.αα.",
+   ".P L  +P.αα.",
+   "(P     P)..P",
+   ".E     E.α..",
+   "(P     P)α..",
+   "OP     P.α..",
+   ".PPEPPPP...P",
+   "..=.=......."
   ],
   [
-   ".....J...",
-   ".PPPPPPP.",
-   ".P     P.",
-   ".P     P.",
-   ".P     P.",
-   ".P     P.",
-   "OP     P.",
-   ".PPPPPPP.",
-   "........."
+   ".....J......",
+   ".PPPPPPP....",
+   ".P     P....",
+   ".P     P...P",
+   ".P     P....",
+   ".P     P....",
+   "OP     P....",
+   ".PPPPPPP...P",
+   "............"
   ],
   [
-   "SSSSSSSSS",
-   "SSSSSSSSS",
-   "SSSSSSSSS",
-   "SSSSSSSSS",
-   "SSSSSSSSS",
-   "SSSSSSSSS",
-   "OSSSSSSSS",
-   "SSSSSSSSS",
-   "SSSSSSSSS"
+   "SSSSSSSSS...",
+   "SSSSSSSSS...",
+   "SSSSSSSSS...",
+   "SSSSSSSSSSSS",
+   "SSSSSSSSSSSS",
+   "SSSSSSSSSSSS",
+   "OSSSSSSSSSSS",
+   "SSSSSSSSSSSS",
+   "SSSSSSSSS..."
   ],
   [
-   ".........",
-   ".........",
-   ".........",
-   ".........",
-   ".........",
-   ".........",
-   "*........",
-   ".........",
-   "........."
+   "............",
+   "............",
+   "............",
+   "............",
+   "............",
+   "............",
+   "*...........",
+   "............",
+   "............"
   ]
  ],
  "key": {
@@ -87,7 +87,10 @@
   "_": "minecraft:coarse_dirt",
   "d": "{door}[facing=north,half=upper,hinge=left]",
   "l": "{stripped_log}[axis=y]",
-  "t": "minecraft:torch"
+  "t": "minecraft:torch",
+  "¦": "minecraft:oak_log[axis=y]",
+  "α": "minecraft:spruce_log[axis=z]",
+  "β": "minecraft:oak_log[axis=z]"
  },
  "upgrade": "minecities:sawmill_2"
 }

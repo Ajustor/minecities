@@ -12,8 +12,13 @@ La porte est au nord, précédée d'un perron (une marche d'escalier en z = 0, c
 surélève le plancher d'un bloc) ; la plaque est accrochée à l'intérieur du mur nord, et déclare le
 bâtiment une fois fini. Modifier ce script puis le relancer plutôt que retoucher les JSON.
 """
+import importlib
 import json
+import sys
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from sig import Building  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "src/main/resources/data/minecities/blueprint"
@@ -96,6 +101,9 @@ KEY = {
     "|": "{frame}[axis=x]",
     # Le mobilier (v1.3) : rien qui soit un poste de travail, pour ne pas créer d'emploi par mégarde.
     "A": "minecraft:crafting_table",
+    # Un billot, en bûche non écorcée : une bûche écorcée posée seule est le poste du bûcheron (le
+    # colombage du style neige en est une).
+    "¦": "minecraft:oak_log[axis=y]",
     "1": "minecraft:candle[candles=3,lit=true]",
     "2": "minecraft:decorated_pot",
     "3": "minecraft:cauldron",
@@ -243,13 +251,17 @@ def porch(layers, door_x=3, overhang=False):
     return [["".join(row)] + list(layer) for row, layer in zip(out, layers)]
 
 
-def blueprint(name, kind, layers, upgrade=None, door_x=3, tier=None, overhang=False):
+def blueprint(name, kind, layers, upgrade=None, door_x=3, tier=None, overhang=False, key=None):
     layers = porch(layers, door_x, overhang)
     used = {ch for layer in layers for row in layer for ch in row}
+    full = {**KEY, **(key or {})}
+    unknown = sorted(ch for ch in used if ch != "." and ch not in full)
+    if unknown:
+        raise ValueError(f"{name} : caractères sans bloc {unknown}")
     data = {
         "kind": kind,
         "layers": layers,
-        "key": {ch: KEY[ch] for ch in sorted(used) if ch != "."},
+        "key": {ch: full[ch] for ch in sorted(used) if ch != "."},
     }
     if upgrade:
         data["upgrade"] = upgrade
@@ -649,8 +661,8 @@ FURNITURE = {
     "house": ["A", "T", "2", "@", "C", ":", "T", "@"],
     "kitchen": [";", ";", "3", "T", "5", "2", ";", "@"],
     "bakery": [";", "5", "2", ";", "6", "T", "5", "@"],
-    "sawmill": ["P", "P", "2", "A", "@", "P", "T", "2"],
-    "builder_hut": ["A", "n", "2", "T", "P", "@", "2", "A"],
+    "sawmill": ["¦", "¦", "2", "A", "@", "¦", "T", "2"],
+    "builder_hut": ["A", "n", "2", "T", "¦", "@", "2", "A"],
     "smithy": ["n", "3", "I", "2", "T", "n", "I", "2"],
     "infirmary": ["3", "@", "T", "9", "@", "2", "T", "9"],
     "inventor_workshop": ["n", "A", "2", "T", "6", "@", "n", "2"],
@@ -667,7 +679,7 @@ FURNITURE = {
     "apiary": ["@", "@", "2", "T", "@", "2", "6", "@"],
     "tannery": ["3", "2", "T", "@", "3", "2", "A", "@"],
     "library": ["#", "T", "#", "@", "#", "T", "#", "2"],
-    "carpentry": ["P", "P", "2", "A", "T", "@", "P", "2"],
+    "carpentry": ["¦", "¦", "2", "A", "T", "@", "¦", "2"],
     "tavern": ["y", "T", "2", "T", "y", "2", "T", "@"],
     "courier_post": ["C", "2", "T", "@", "C", "2", "T", "@"],
     "archery": ["I", "2", "T", "A", "I", "@", "2", "T"],
@@ -721,6 +733,18 @@ def furnish(level, out, family):
     return out
 
 
+def fishery_level(level):
+    """
+    La pêcherie : ses tonneaux le long du mur est, du côté du bassin. Un tonneau n'est le poste du
+    pêcheur qu'à six blocs de l'eau au plus : alignés au fond, seul le plus à l'est l'était.
+    """
+    w, d = WORKSHOP_SIZES[level]
+    extras = {(w - 2, 1, 1): "C"}
+    for z in range(2, 2 + level):
+        extras[(w - 2, 1, z)] = "r"
+    return decorate(level, levelled(level, w, d, extras=extras), w, d, False)
+
+
 def warehouse_level(level):
     """
     L'entrepôt (brief 12) : son registre près de la porte, et des rangées de coffres le long des murs,
@@ -735,10 +759,53 @@ def warehouse_level(level):
     return decorate(level, levelled(level, w, d, extras=extras), w, d, False)
 
 
+SIGNATURES = Path(__file__).resolve().parent / "signatures"
+# --only <famille> : ne charge que la signature de cette famille, vérifie, et n'écrit rien.
+ONLY = None
+PREVIEW = None
+# Ce qu'une signature ne doit ni ôter ni déplacer dans la pièce : plaque, coffres, lits, postes.
+VITAL = set("LCbB?skl hrcmaineu4¤¥pojqvzwxN!&%".replace(" ", ""))
+
+
+def signature(name):
+    """Le module signatures/<name>.py (KEY, apply), ou None."""
+    if not (SIGNATURES / f"{name}.py").exists():
+        return None
+    if ONLY is not None and name != ONLY:
+        return None
+    module = importlib.import_module(f"signatures.{name}")
+    clash = sorted(set(getattr(module, "KEY", {})) & (set(KEY) | {".", " "}))
+    if clash:
+        raise ValueError(f"signatures/{name}.py : caractères déjà pris dans generate.KEY {clash}")
+    return module
+
+
+def check(name, layers, before, w, d):
+    """Ce qu'une signature ne doit pas casser : la grille, la porte, la plaque, les postes, le coffre."""
+    width, depth = len(layers[0][0]), len(layers[0])
+    for y, layer in enumerate(layers):
+        assert len(layer) == depth and all(len(row) == width for row in layer), \
+            f"{name} : couche {y} pas rectangulaire"
+    assert layers[1][0][4] == "D" and layers[2][0][4] == "d", f"{name} : la porte a bougé (x = 4, z = 0)"
+    for (x, y, z), ch in before.items():
+        assert layers[y][z][x] == ch, f"{name} : {ch!r} en {(x, y, z)} a disparu (plaque, poste, coffre, lit)"
+    assert width >= w + 2 and depth >= d + 1, f"{name} : la grille a rétréci"
+
+
 def series(prints, name, make, outside=None, ext_width=8, min_tier=None):
     """Les quatre niveaux d'un bâtiment : nom_1 … nom_4, chacun s'améliore en le suivant."""
+    sign = signature(name)
     for level in range(1, 5):
         layers = furnish(level, make(level), name)
+        if sign is not None:
+            # La signature du bâtiment (v1.16) : voir sig.py.
+            w0, d0 = len(layers[0][0]) - 2, len(layers[0]) - 1
+            before = {(x, y, z): ch for y in range(1, 4) for z, row in enumerate(layers[y])
+                      for x, ch in enumerate(row) if ch in VITAL and 1 <= x <= w0 and z < d0}
+            building = Building(name, level, layers, w0, d0, LEVELS[level])
+            sign.apply(building)
+            layers = building.layers
+            check(f"{name}_{level}", layers, before, w0, d0)
         w = len(layers[0][0])
         d = len(layers[0])
         body = extend(layers, w, d, ext_width, outside(w)) if outside else rows(layers)
@@ -748,7 +815,8 @@ def series(prints, name, make, outside=None, ext_width=8, min_tier=None):
         upgrade = f"minecities:{name}_{level + 1}" if level < 4 else None
         # La porte est en x = 4 : le décor a ajouté une colonne à l'ouest.
         prints.append(blueprint(f"{name}_{level}", "house" if name == "house" else "workshop", body,
-                                upgrade=upgrade, tier=tier, door_x=4, overhang=True))
+                                upgrade=upgrade, tier=tier, door_x=4, overhang=True,
+                                key=getattr(sign, "KEY", None)))
 
 
 def workshop(extras, fine=False):
@@ -793,7 +861,7 @@ def main():
         series(prints, name, lambda level, s=station: workshop_level(level, s))
     series(prints, "farm", lambda level: workshop_level(level, "k"), outside=field)
     series(prints, "barn", lambda level: workshop_level(level, "h"), outside=lambda w: pen)
-    series(prints, "fishery", lambda level: workshop_level(level, "r"), outside=lambda w: pond, ext_width=6)
+    series(prints, "fishery", fishery_level, outside=lambda w: pond, ext_width=6)
     series(prints, "market", lambda level: workshop_level(level, "p", more={(1, 1, 4): "y", (2, 1, 4): "y"}),
            min_tier="town")
     series(prints, "barracks", lambda level: workshop_level(level, "m",
@@ -892,6 +960,14 @@ def main():
         kept.append((name, data))
     prints = kept
 
+    if ONLY is not None:
+        # Vérification seule (la signature est passée) et l'aperçu demandé : rien n'est écrit.
+        for name, data in prints:
+            if name.startswith(ONLY + "_") and name[len(ONLY) + 1:].isdigit():
+                if PREVIEW == "all" or name == f"{ONLY}_{PREVIEW}":
+                    preview(name, data)
+        print(f"{ONLY} : signature vérifiée")
+        return
     OUT.mkdir(parents=True, exist_ok=True)
     for name, data in prints:
         path = OUT / f"{name}.json"
@@ -899,5 +975,42 @@ def main():
         print(path.relative_to(ROOT))
 
 
+def preview(name, data):
+    """Le schéma en texte : la façade (vue du nord), le côté est, le dessus, puis chaque couche."""
+    layers = data["layers"]
+    height, depth, width = len(layers), len(layers[0]), len(layers[0][0])
+
+    def seen(cells):
+        for ch in cells:
+            if ch not in ". ":
+                return ch
+        return " "
+    print(f"=== {name} : {width} de large (x), {depth} de profondeur (z), {height} de haut (y) ===")
+    print("(la rangée z = 0 est le perron ajouté par porch : dans sig.py, z est donc décalé de 1)")
+    print("-- façade (vue du nord) --")
+    for y in reversed(range(height)):
+        print(f"{y:2d} " + "".join(seen(layers[y][z][x] for z in range(depth)) for x in range(width)))
+    print("-- côté est (vue de l'est, le nord à gauche) --")
+    for y in reversed(range(height)):
+        print(f"{y:2d} " + "".join(seen(layers[y][z][x] for x in reversed(range(width))) for z in range(depth)))
+    print("-- dessus (le nord en haut) --")
+    for z in range(depth):
+        print(f"{z:2d} " + "".join(seen(layers[y][z][x] for y in reversed(range(height))) for x in range(width)))
+    for y in range(height):
+        print(f"-- couche {y} --")
+        for z, row in enumerate(layers[y]):
+            print(f"{z:2d} {row}")
+    print("-- clé --")
+    for ch, block in data["key"].items():
+        print(f"  {ch!r}: {block}")
+
+
 if __name__ == "__main__":
+    # python tools/blueprints/generate.py                       écrit tous les schémas
+    # python tools/blueprints/generate.py --only archery        vérifie la signature, n'écrit rien
+    # python tools/blueprints/generate.py --only archery 2      et affiche le niveau 2 en texte (all : les 4)
+    sys.stdout.reconfigure(encoding="utf-8")
+    if len(sys.argv) > 2 and sys.argv[1] == "--only":
+        ONLY = sys.argv[2]
+        PREVIEW = sys.argv[3] if len(sys.argv) > 3 else None
     main()

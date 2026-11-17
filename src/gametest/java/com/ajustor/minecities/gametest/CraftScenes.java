@@ -168,8 +168,15 @@ public class CraftScenes implements Scene {
 		waitOrExplain(stage, server -> citizens(server).isEmpty(), 400, "les artisans ne sont pas partis");
 	}
 
+	/**
+	 * Les ateliers en deux rangées, assez écartés pour leurs signatures (v1.16 : jusqu'à 15 de large). Le
+	 * marché et la bibliothèque restent où ils étaient : le marchand fait le même chemin jusqu'à la mairie.
+	 */
 	private static BlockPos origin(int i) {
-		return new BlockPos(-30 + 12 * (i % 4), Y, i < 4 ? -30 : -16);
+		if (i >= 4) {
+			return new BlockPos(new int[]{-36, -18, -6}[i - 4], Y, -16);
+		}
+		return new BlockPos(-30 + 18 * i, Y, -30);
 	}
 
 	private static Town town(MinecraftServer server) {

@@ -3,36 +3,36 @@
  "layers": [
   [
    "....^............",
-   ".FFFFFFFFF..OOOOO",
-   ".FfffffffF..O~~~O",
-   ".FfffffffF..O~~~O",
-   ".FfffffffF..O~~~O",
-   ".FfffffffF..O~~~O",
-   "OFfffffffF..O~~~O",
-   ".FFFFFFFFF..OOOOO",
-   "............OOOOO"
+   ".FFFFFFFFFf.OOOOO",
+   ".FfffffffFf.O~~~O",
+   ".FfffffffFf.O~~~O",
+   ".FfffffffFf.O~~~O",
+   ".FfffffffFf.O~~~O",
+   "OFfffffffFf.O~~~O",
+   ".FFFFFFFFFf.OOOOO",
+   "..........f.OOOOO"
   ],
   [
    ".... ............",
-   ".PWWDWWPWP.      ",
-   ".Wt     CW.      ",
-   ".W2      W.      ",
-   "§W@      W§      ",
+   ".PWWDWWPWPα      ",
+   ".Wt     CWα      ",
+   ".W2     rW.      ",
+   "§W@     rW§      ",
    ".WE      W.      ",
-   "OW    r rW.      ",
+   "OW      tWE      ",
    ".PWWPWWPWP.      ",
-   "...§..§....      "
+   "...§..§...E      "
   ],
   [
    ".................",
-   ".PGWdWWPGP.......",
+   ".PGWdWWPGPβ......",
    ".W L    +W.......",
    "(W       W)......",
    ".G       G.......",
    "(W1      W)......",
-   "OW       W.......",
-   ".PWGPWGPWP.......",
-   "..=.==.=........."
+   "OW       WE......",
+   ".PWGPWGPWPδ......",
+   "..=.==.=..E......"
   ],
   [
    ".....J...........",
@@ -41,9 +41,9 @@
    ".W       W.......",
    ".W       W.......",
    ".W       W.......",
-   "OW       W.......",
-   ".PWWPWWPWP.......",
-   "................."
+   "OW       WE......",
+   ".PWWPWWPWPE......",
+   "..........E......"
   ],
   [
    "<..:::....>......",
@@ -154,7 +154,10 @@
   "t": "minecraft:torch",
   "|": "{frame}[axis=x]",
   "~": "minecraft:water",
-  "§": "{trapdoor}[facing=north,half=top,open=false]"
+  "§": "{trapdoor}[facing=north,half=top,open=false]",
+  "α": "minecraft:barrel[facing=east]",
+  "β": "minecraft:barrel[facing=north]",
+  "δ": "minecraft:dried_kelp_block"
  },
  "upgrade": "minecities:fishery_3"
 }

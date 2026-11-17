@@ -106,9 +106,12 @@ public final class BuildPlan {
 			return 3;
 		}
 		Block block = state.getBlock();
-		// Les lanternes pendues après le plafond ou l'auvent qui les porte.
+		// Les lanternes pendues après le plafond ou l'auvent qui les porte ; les échelles et les
+		// bannières après le mur où elles s'accrochent.
 		if (block instanceof DoorBlock || block instanceof BedBlock || block instanceof BaseTorchBlock
-				|| block instanceof LanternBlock || state.is(McBlocks.HOUSE_PLAQUE)) {
+				|| block instanceof LanternBlock || block instanceof net.minecraft.world.level.block.LadderBlock
+				|| block instanceof net.minecraft.world.level.block.AbstractBannerBlock
+				|| state.is(McBlocks.HOUSE_PLAQUE)) {
 			return 2;
 		}
 		return 1;

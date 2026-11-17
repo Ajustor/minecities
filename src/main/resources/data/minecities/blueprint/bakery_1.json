@@ -2,70 +2,81 @@
  "kind": "workshop",
  "layers": [
   [
-   "....^....",
-   ".PPPPPPP.",
-   ".P_____P.",
-   ".P_____P.",
-   ".P_____P.",
-   ".P_____P.",
-   "OP_____P.",
-   ".PPPPPPP.",
-   "........."
+   "....^......",
+   ".PPPPPPPOOO",
+   ".P_____POOO",
+   ".P_____POOO",
+   ".P_____P...",
+   ".P_____P...",
+   "OP_____P...",
+   ".PPPPPPP...",
+   "..........."
   ],
   [
-   ".... ....",
-   ".PPPDPPP.",
-   ".Pt   CP.",
-   ".P;    P.",
-   ".P5    P.",
-   ".P     P.",
-   "OP    oP.",
-   ".PPPPPPP.",
-   "........."
+   ".... ......",
+   ".PPPDPPPOαO",
+   ".Pt   CPOOO",
+   ".P;    POOO",
+   ".P5    P...",
+   ".P     P...",
+   "OP    oP...",
+   ".PPPPPPP...",
+   "..........."
   ],
   [
-   ".........",
-   ".PPPdPPP.",
-   ".P L  +P.",
-   "(P     P)",
-   ".E     E.",
-   "(P     P)",
-   "OP     P.",
-   ".PPEPPPP.",
-   "..=.=...."
+   "...........",
+   ".PPPdPPP.O.",
+   ".P L  +POOO",
+   "(P     P)O.",
+   ".E     E...",
+   "(P     P)..",
+   "OP     P...",
+   ".PPEPPPP...",
+   "..=.=......"
   ],
   [
-   ".....J...",
-   ".PPPPPPP.",
-   ".P     P.",
-   ".P     P.",
-   ".P     P.",
-   ".P     P.",
-   "OP     P.",
-   ".PPPPPPP.",
-   "........."
+   ".....J.....",
+   ".PPPPPPP...",
+   ".P     P.O.",
+   ".P     P...",
+   ".P     P...",
+   ".P     P...",
+   "OP     P...",
+   ".PPPPPPP...",
+   "..........."
   ],
   [
-   "SSSSSSSSS",
-   "SSSSSSSSS",
-   "SSSSSSSSS",
-   "SSSSSSSSS",
-   "SSSSSSSSS",
-   "SSSSSSSSS",
-   "OSSSSSSSS",
-   "SSSSSSSSS",
-   "SSSSSSSSS"
+   "SSSSSSSSS..",
+   "SSSSSSSSS..",
+   "SSSSSSSSSO.",
+   "SSSSSSSSS..",
+   "SSSSSSSSS..",
+   "SSSSSSSSS..",
+   "OSSSSSSSS..",
+   "SSSSSSSSS..",
+   "SSSSSSSSS.."
   ],
   [
-   ".........",
-   ".........",
-   ".........",
-   ".........",
-   ".........",
-   ".........",
-   "*........",
-   ".........",
-   "........."
+   "...........",
+   "...........",
+   ".........O.",
+   "...........",
+   "...........",
+   "...........",
+   "*..........",
+   "...........",
+   "..........."
+  ],
+  [
+   "...........",
+   "...........",
+   ".........*.",
+   "...........",
+   "...........",
+   "...........",
+   "...........",
+   "...........",
+   "..........."
   ]
  ],
  "key": {
@@ -89,7 +100,8 @@
   "_": "minecraft:coarse_dirt",
   "d": "{door}[facing=north,half=upper,hinge=left]",
   "o": "minecraft:furnace[facing=north]",
-  "t": "minecraft:torch"
+  "t": "minecraft:torch",
+  "α": "minecraft:campfire[lit=false,signal_fire=false,facing=north]"
  },
  "upgrade": "minecities:bakery_2"
 }
