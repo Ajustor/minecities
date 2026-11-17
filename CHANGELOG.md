@@ -1,11 +1,16 @@
 # Changelog
 
+## 1.16.0 — 2026-11-17
+
+### New features
+
+- Every building has its own signature, visible from afar and richer at each level: shooting lane and watchtower, mine headframe, warehouse loading dock and loft, market hall, two-storey tavern, library tower, and many more.
+- The fishery puts all its fishermen to work: its barrels now line the pond.
+- In the snowy style, the chopping blocks of the sawmill, carpentry and builder's hut no longer create lumberjack jobs.
 ## 1.15.0 — 2026-11-17
 
 ### New features
 
-- Five new building styles (snowy, cherry blossom, swamp, badlands, half-timbered); buildings get overhanging roofs, a lit porch canopy, wall posts and window sills; level 3 masonry and the level 4 roof follow the style.
-- A Buildings page on the website shows every building at its four levels and the nine styles.
 - The builder can work at a crafter placed in the open; he builds slower at level 1 and speeds up as his workshop levels up.
 
 ### Fixes

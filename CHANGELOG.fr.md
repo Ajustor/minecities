@@ -1,11 +1,16 @@
 # Journal des modifications
 
+## 1.16.0 — 2026-11-17
+
+### Nouveautés
+
+- Chaque bâtiment a sa signature, visible de loin et plus riche à chaque niveau : couloir de tir et tour de guet, chevalement de la mine, quai et grenier de l'entrepôt, halle du marché, taverne à étage, tour de la bibliothèque, et bien d'autres.
+- La pêcherie fait travailler tous ses pêcheurs : ses tonneaux longent désormais le bassin.
+- Dans le style neige, les billots de la scierie, de la charpenterie et de la cabane du bâtisseur ne créent plus de postes de bûcheron.
 ## 1.15.0 — 2026-11-17
 
 ### Nouveautés
 
-- Cinq nouveaux styles de construction (neige, cerisier, marais, badlands, colombage) ; les bâtiments ont un toit qui déborde, un auvent éclairé sur la porte, des poteaux et des appuis de fenêtre ; la maçonnerie du niveau 3 et le toit du niveau 4 suivent le style.
-- Une page Bâtiments sur le site montre chaque bâtiment à ses quatre niveaux et les neuf styles.
 - Le bâtisseur peut travailler à une table d'artisan posée en plein air ; il bâtit plus lentement au niveau 1 et accélère avec le niveau de son atelier.
 
 ### Corrections
