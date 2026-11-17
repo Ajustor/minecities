@@ -4,6 +4,8 @@
 
 ### New features
 
+- Five new building styles (snowy, cherry blossom, swamp, badlands, half-timbered); buildings get overhanging roofs, a lit porch canopy, wall posts and window sills; level 3 masonry and the level 4 roof follow the style.
+- A Buildings page on the website shows every building at its four levels and the nine styles.
 - The builder can work at a crafter placed in the open; he builds slower at level 1 and speeds up as his workshop levels up.
 
 ### Fixes

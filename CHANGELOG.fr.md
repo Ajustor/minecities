@@ -4,6 +4,8 @@
 
 ### Nouveautés
 
+- Cinq nouveaux styles de construction (neige, cerisier, marais, badlands, colombage) ; les bâtiments ont un toit qui déborde, un auvent éclairé sur la porte, des poteaux et des appuis de fenêtre ; la maçonnerie du niveau 3 et le toit du niveau 4 suivent le style.
+- Une page Bâtiments sur le site montre chaque bâtiment à ses quatre niveaux et les neuf styles.
 - Le bâtisseur peut travailler à une table d'artisan posée en plein air ; il bâtit plus lentement au niveau 1 et accélère avec le niveau de son atelier.
 
 ### Corrections
