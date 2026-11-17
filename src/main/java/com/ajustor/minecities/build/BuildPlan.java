@@ -12,6 +12,7 @@ import net.minecraft.world.level.block.BedBlock;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.DoorBlock;
+import net.minecraft.world.level.block.LanternBlock;
 import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BedPart;
@@ -105,8 +106,9 @@ public final class BuildPlan {
 			return 3;
 		}
 		Block block = state.getBlock();
+		// Les lanternes pendues après le plafond ou l'auvent qui les porte.
 		if (block instanceof DoorBlock || block instanceof BedBlock || block instanceof BaseTorchBlock
-				|| state.is(McBlocks.HOUSE_PLAQUE)) {
+				|| block instanceof LanternBlock || state.is(McBlocks.HOUSE_PLAQUE)) {
 			return 2;
 		}
 		return 1;

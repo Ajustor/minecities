@@ -77,8 +77,9 @@ class BlueprintTest {
 			assertTrue(here > beds);
 			beds = (int) here;
 		}
-		assertTrue(read("house_1").cells().stream().noneMatch(c -> c.template().contains("bricks")));
-		assertTrue(read("house_3").cells().stream().anyMatch(c -> c.template().equals("minecraft:bricks")));
+		assertTrue(read("house_1").cells().stream().noneMatch(c -> c.template().contains("{brick}")));
+		assertTrue(read("house_3").cells().stream().anyMatch(c -> c.template().equals("{brick}")));
+		assertEquals("minecraft:bricks", BuildStyle.PLAINS.resolve("{brick}"));
 		assertTrue(read("house_4").cells().stream().anyMatch(c -> c.template().equals("minecraft:gold_block")));
 	}
 
@@ -98,7 +99,8 @@ class BlueprintTest {
 		assertEquals("minecraft:sandstone", BuildStyle.DESERT.resolve("{foundation}"));
 		for (BuildStyle style : BuildStyle.values()) {
 			for (String token : new String[]{"foundation", "floor", "wall", "frame", "roof", "roof_slab", "window",
-					"door", "bed", "fence", "fence_gate", "stripped_log", "roof_stairs", "fine_foundation", "steps"}) {
+					"door", "bed", "fence", "fence_gate", "stripped_log", "roof_stairs", "fine_foundation", "steps",
+					"trapdoor", "carpet", "masonry", "brick", "fine_roof", "fine_roof_stairs"}) {
 				assertFalse(style.resolve("{" + token + "}").contains("{"), style + " : " + token);
 			}
 		}

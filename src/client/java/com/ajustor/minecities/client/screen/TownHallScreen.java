@@ -51,7 +51,7 @@ public class TownHallScreen extends Screen {
 
 	public enum Tab { SUMMARY, CITIZENS, BUILDINGS, REGISTRY, COUNCIL, RESIDENTS, ELECTION, PLANS }
 
-	private static final String[] STYLES = {"plains", "taiga", "desert", "savanna"};
+	private static final String[] STYLES = com.ajustor.minecities.build.BuildStyle.names();
 
 	private TownSnapshot town;
 	private Tab tab = Tab.SUMMARY;

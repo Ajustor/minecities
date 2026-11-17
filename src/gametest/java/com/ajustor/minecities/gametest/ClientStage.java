@@ -64,6 +64,11 @@ final class ClientStage implements Stage {
 	}
 
 	@Override
+	public void resize(int width, int height) {
+		context.getInput().resizeWindow(width, height);
+	}
+
+	@Override
 	public void look(double x, double y, double z, double tx, double ty, double tz) {
 		double dx = tx - x, dy = ty - y, dz = tz - z;
 		float yaw = (float) Math.toDegrees(Math.atan2(-dx, dz));

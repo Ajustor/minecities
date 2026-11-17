@@ -35,7 +35,7 @@
    "..=.=...."
   ],
   [
-   ".........",
+   ".....J...",
    ".PPPPPPP.",
    ".P     P.",
    ".P     P.",
@@ -46,7 +46,7 @@
    "........."
   ],
   [
-   ".........",
+   "SSSSSSSSS",
    "SSSSSSSSS",
    "SSSSSSSSS",
    "SSSSSSSSS",
@@ -81,6 +81,7 @@
   "C": "minecraft:chest[facing=south]",
   "D": "{door}[facing=north,half=lower,hinge=left]",
   "E": "{fence}",
+  "J": "minecraft:lantern[hanging=true]",
   "L": "minecities:house_plaque[facing=south]",
   "O": "{foundation}",
   "P": "{frame}[axis=y]",

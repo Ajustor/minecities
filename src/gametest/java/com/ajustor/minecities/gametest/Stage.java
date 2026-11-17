@@ -42,6 +42,10 @@ public interface Stage {
 	/** Agit sur le client : la caméra, l'interface, les écrans (rien sans fenêtre). */
 	void client(Consumer<net.minecraft.client.Minecraft> action);
 
+	/** Redimensionne la fenêtre, pour des captures plus grandes (rien sans fenêtre). */
+	default void resize(int width, int height) {
+	}
+
 	/** Se poste à (x, y, z), les yeux vers (tx, ty, tz) (rien sans fenêtre). */
 	void look(double x, double y, double z, double tx, double ty, double tz);
 
