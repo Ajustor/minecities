@@ -52,6 +52,9 @@ public class MineCitiesClient implements ClientModInitializer {
 				lines.add(Math.min(1, lines.size()), line.copy().withStyle(net.minecraft.ChatFormatting.GRAY));
 			}
 		});
+		ClientPlayNetworking.registerGlobalReceiver(com.ajustor.minecities.field.FieldNetwork.FieldSnapshot.TYPE,
+				(payload, context) -> context.client().gui.setScreen(
+						new com.ajustor.minecities.client.screen.FieldScreen(payload)));
 		ClientPlayNetworking.registerGlobalReceiver(com.ajustor.minecities.network.PlanNetwork.PlanSnapshot.TYPE,
 				(payload, context) -> context.client().gui.setScreen(
 						new com.ajustor.minecities.client.screen.PlanScreen(payload)));

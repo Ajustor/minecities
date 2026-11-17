@@ -75,7 +75,10 @@ version du mod, les autres mods et le temps de jeu.
    du bâtisseur** : posé dans une maison déclarée, la ville a son premier bâtisseur.
    - **Composteur → fermier** : il lui faut une **houe** (dans un coffre de l'atelier ou au
      grenier). Il récolte les cultures mûres à 16 blocs du composteur, replante, et porte la
-     récolte au grenier.
+     récolte au grenier. Avec le **piquet de champ** (bâton, ficelle, graines de blé), tracez
+     des champs n'importe où dans la ville : deux clics aux coins, puis la culture à choisir (blé,
+     carottes, patates, betteraves, citrouilles, pastèques ou au choix). Les fermiers y arrachent
+     l'herbe, labourent, sèment cette culture (semences prises au grenier) et la récoltent.
    - **Fumoir → cuisinier** : il cuit la viande, le poisson et les pommes de terre du grenier, fait
      du pain (3 blés), des biscuits (blé et cacao), des soupes (champignons, betteraves), le ragoût de
      lapin et la tarte à la citrouille quand le grenier a ce qu'il faut (et des bols).

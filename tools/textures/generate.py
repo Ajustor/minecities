@@ -583,6 +583,27 @@ ROUTE_STAFF = ([
     "................"], {"w": "#8a5a2b", "k": "#4a2f15", "m": "#efe3c2", "n": "#b0563a", "f": "#c0392b"})
 
 
+# Le piquet de champ : un piquet de bois pointu, un cordeau enroulé et un ruban jaune (le blé).
+FIELD_MARKER = ([
+    "..........yy....",
+    ".........yYyy...",
+    "........kyyYy...",
+    ".......wkky.....",
+    "......wwk.......",
+    ".....wsssw......",
+    "....wssssw......",
+    "...wwsssw.......",
+    "..wwwss.........",
+    "..www...........",
+    ".www............",
+    ".ww.............",
+    "ww..............",
+    "p...............",
+    "................",
+    "................"], {"w": "#a0703a", "k": "#5a3a1a", "s": "#e8e2cf", "y": "#e8c547", "Y": "#b8922a",
+                         "p": "#6b4a26"})
+
+
 # Le manteau des citoyens (MC-12) : un manteau de laine brune, boutonné, au col de fourrure.
 COAT = ([
     "................",
@@ -715,6 +736,7 @@ def main():
     save(sprite(*GUIDE), TEXTURES / "item/guide.png")
     save(sprite(*PLAN), TEXTURES / "item/plan.png")
     save(sprite(*ROUTE_STAFF), TEXTURES / "item/route_staff.png")
+    save(sprite(*FIELD_MARKER), TEXTURES / "item/field_marker.png")
     save(sprite(*COAT), TEXTURES / "item/coat.png")
     save(coat_layer(), TEXTURES / "entity/equipment/humanoid/coat.png")
 

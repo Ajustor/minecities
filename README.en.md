@@ -50,6 +50,10 @@ your other mods and your playtime.
    what they lack, "Find", and the builder's sites with their progress). On founding, the mayor
    gets the **builder's bench**: placed in a declared house, it gives the town its first builder.
    - **Composter → farmer** (needs a hoe): harvests and replants fields, delivers the harvest.
+     With the **field marker** (stick, string, wheat seeds), lay out fields anywhere in town: two
+     clicks at the corners, then pick the crop (wheat, carrots, potatoes, beetroots, pumpkins,
+     melons or any). Farmers clear the grass, till, sow that crop (seeds from the granary) and
+     harvest it.
    - **Smoker → cook**: cooks raw food, bakes bread and cookies, makes soups, rabbit stew and
      pumpkin pie when the granary has the ingredients.
    - **Stripped log standing alone → lumberjack** (axe): fells nearby trees and replants.
