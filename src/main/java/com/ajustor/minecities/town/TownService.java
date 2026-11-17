@@ -551,6 +551,7 @@ public final class TownService {
 					town.removeHouse(house.plaque());
 				}
 			}
+			checkYards(level, town);
 			forgetMissing(level, town, now);
 			census(level, town);
 			settle(level, town);
@@ -559,6 +560,38 @@ public final class TownService {
 			Raids.consider(level, town);
 			towns.changed();
 		}
+	}
+
+	/** Les postes de bâtisseur isolés qui ont disparu (cassés, remplacés) sont oubliés. */
+	private static void checkYards(ServerLevel level, Town town) {
+		for (BlockPos yard : List.copyOf(town.yards())) {
+			if (level.isLoaded(yard) && Job.ofWorkstation(level, yard, level.getBlockState(yard))
+					.filter(j -> j == Job.BUILDER).isEmpty()) {
+				town.removeYard(yard);
+			}
+		}
+	}
+
+	/**
+	 * Un bloc vient d'être posé : un poste de bâtisseur hors de tout bâtiment déclaré, sur le territoire
+	 * d'une ville, devient un poste isolé, et un bâtisseur s'y fait embaucher sans attendre.
+	 */
+	public static void blockPlaced(ServerLevel level, BlockPos pos) {
+		if (Job.ofWorkstation(level, pos, level.getBlockState(pos)).filter(j -> j == Job.BUILDER).isEmpty()) {
+			return;
+		}
+		Towns towns = Towns.get(level.getServer());
+		Optional<Town> found = towns.at(level.dimension(), pos);
+		if (found.isEmpty()) {
+			return;
+		}
+		Town town = found.get();
+		// Dans un bâtiment déclaré, c'est le relevé de sa plaque qui en fera un poste.
+		if (town.houses().stream().anyMatch(h -> h.encloses(pos)) || !town.addYard(pos)) {
+			return;
+		}
+		settle(level, town);
+		towns.changed();
 	}
 
 	/**

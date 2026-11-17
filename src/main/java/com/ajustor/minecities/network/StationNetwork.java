@@ -132,7 +132,7 @@ public final class StationNetwork {
 		} else {
 			Town t = town.get();
 			boolean declared = t.houses().stream().anyMatch(h -> h.workstations().stream()
-					.anyMatch(w -> w.pos().equals(pos) && w.job() == job));
+					.anyMatch(w -> w.pos().equals(pos) && w.job() == job)) || job == Job.BUILDER && t.isYard(pos);
 			for (Map.Entry<UUID, Resident> e : t.residents().entrySet()) {
 				Optional<Resident.Employment> employment = e.getValue().job();
 				if (employment.isPresent() && employment.get().job() == job && employment.get().station().equals(pos)) {
