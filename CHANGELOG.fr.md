@@ -1,5 +1,10 @@
 # Journal des modifications
 
+## 1.17.0 — 2026-11-17
+
+### Nouveautés
+
+- Le piquet de champ trace les champs des fermiers : deux clics aux coins, puis la culture à choisir (blé, carottes, patates, betteraves, citrouilles, pastèques ou au choix). Les fermiers y arrachent l'herbe, labourent, sèment cette culture avec les semences du grenier et la récoltent.
 ## 1.16.0 — 2026-11-17
 
 ### Nouveautés

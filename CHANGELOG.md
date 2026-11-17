@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.17.0 — 2026-11-17
+
+### New features
+
+- The field marker lays out the farmers' fields: two clicks at the corners, then pick the crop (wheat, carrots, potatoes, beetroots, pumpkins, melons or any). Farmers clear the grass, till, sow that crop with seeds from the granary and harvest it.
 ## 1.16.0 — 2026-11-17
 
 ### New features
