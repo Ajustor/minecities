@@ -58,7 +58,7 @@ public class GuideScenes implements Scene {
 			check(player.getRecipeBook().contains(ResourceKey.create(Registries.RECIPE, MineCities.id("town_hall"))),
 					"le livre de recettes ne montre pas l'hôtel de ville");
 			List<Component> pages = Guide.pages();
-			check(pages.size() == 44, "le guide a " + pages.size() + " pages");
+			check(pages.size() == 45, "le guide a " + pages.size() + " pages");
 			List<String> missing = new ArrayList<>();
 			List<Integer> targets = new ArrayList<>();
 			List<String> links = new ArrayList<>();

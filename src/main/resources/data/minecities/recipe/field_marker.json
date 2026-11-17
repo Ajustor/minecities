@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "minecraft:stick",
+    "minecraft:string",
+    "minecraft:wheat_seeds"
+  ],
+  "result": {
+    "id": "minecities:field_marker",
+    "count": 1
+  }
+}

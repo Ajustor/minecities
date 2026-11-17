@@ -30,7 +30,7 @@ public final class Town {
 	/** L'état civil de la ville (à part : un codec ne prend que 16 champs à la fois). */
 	private record Head(UUID id, String name, ResourceKey<Level> dimension, BlockPos hall, UUID mayor,
 			String mayorName, List<UUID> deputies, long founded, Membership membership, Election election,
-			Map<UUID, BlockPos> whereabouts, List<BlockPos> yards) {
+			Map<UUID, BlockPos> whereabouts, List<BlockPos> yards, List<Field> fields) {
 		static final MapCodec<Head> CODEC = RecordCodecBuilder.mapCodec(i -> i.group(
 				UUIDUtil.CODEC.fieldOf("id").forGetter(Head::id),
 				Codec.STRING.fieldOf("name").forGetter(Head::name),
@@ -44,14 +44,15 @@ public final class Town {
 				Election.CODEC.forGetter(Head::election),
 				Codec.unboundedMap(UUIDUtil.STRING_CODEC, BlockPos.CODEC).optionalFieldOf("whereabouts", Map.of())
 						.forGetter(Head::whereabouts),
-				BlockPos.CODEC.listOf().optionalFieldOf("yards", List.of()).forGetter(Head::yards)
+				BlockPos.CODEC.listOf().optionalFieldOf("yards", List.of()).forGetter(Head::yards),
+				Field.CODEC.listOf().optionalFieldOf("fields", List.of()).forGetter(Head::fields)
 		).apply(i, Head::new));
 	}
 
 	public static final Codec<Town> CODEC = RecordCodecBuilder.create(i -> i.group(
 			Head.CODEC.forGetter(t -> new Head(t.id, t.name, t.dimension, t.hall, t.mayor, t.mayorName,
 					List.copyOf(t.deputies), t.founded, t.membership, t.election, Map.copyOf(t.whereabouts),
-					List.copyOf(t.yards))),
+					List.copyOf(t.yards), List.copyOf(t.fields))),
 			House.CODEC.listOf().optionalFieldOf("houses", List.of()).forGetter(t -> List.copyOf(t.houses.values())),
 			Codec.unboundedMap(UUIDUtil.STRING_CODEC, Resident.CODEC).optionalFieldOf("residents", Map.of())
 					.forGetter(t -> t.residents),
@@ -88,6 +89,7 @@ public final class Town {
 		town.election = head.election();
 		town.whereabouts.putAll(head.whereabouts());
 		town.yards.addAll(head.yards());
+		town.fields.addAll(head.fields());
 		return town;
 	}));
 
@@ -135,6 +137,8 @@ public final class Town {
 	 * atelier, de niveau 1.
 	 */
 	private final Set<BlockPos> yards = new java.util.LinkedHashSet<>();
+	/** Les champs tracés au piquet de champ : où les fermiers labourent et quoi y semer. */
+	private final List<Field> fields = new java.util.ArrayList<>();
 	/** Depuis quand la ville a perdu son hôtel de ville (détruit), s'il faut en reposer un. */
 	private Optional<Long> orphanedAt = Optional.empty();
 	/** Quand chaque citoyen a été vu pour la dernière fois (non sauvegardé). */
@@ -533,6 +537,33 @@ public final class Town {
 	public void stampHires(long now) {
 		residents.replaceAll((id, r) -> r.job().filter(j -> j.hiredAt() < 0).map(j -> r.employed(j.hired(now)))
 				.orElse(r));
+	}
+
+	/** Les champs tracés au piquet de champ. */
+	public List<Field> fields() {
+		return java.util.Collections.unmodifiableList(fields);
+	}
+
+	public Optional<Field> field(UUID id) {
+		return fields.stream().filter(f -> f.id().equals(id)).findFirst();
+	}
+
+	/** Le champ où se trouve ce bloc. */
+	public Optional<Field> fieldAt(BlockPos pos) {
+		return fields.stream().filter(f -> f.contains(pos)).findFirst();
+	}
+
+	public void addField(Field field) {
+		fields.add(field);
+	}
+
+	/** Remplace le champ de même identifiant (une autre culture). */
+	public void updateField(Field field) {
+		fields.replaceAll(f -> f.id().equals(field.id()) ? field : f);
+	}
+
+	public boolean removeField(UUID id) {
+		return fields.removeIf(f -> f.id().equals(id));
 	}
 
 	/** Les postes de bâtisseur isolés (hors de tout bâtiment déclaré). */

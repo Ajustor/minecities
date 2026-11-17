@@ -13,6 +13,11 @@ public final class SoundCompat {
 	*///?} else {
 	public static final SoundEvent AXE_STRIP = SoundEvents.AXE_STRIP;
 	//?}
+	//? if >=26.3 {
+	/*public static final SoundEvent HOE_TILL = SoundEvents.HOE_TILL.value();
+	*///?} else {
+	public static final SoundEvent HOE_TILL = SoundEvents.HOE_TILL;
+	//?}
 
 	private SoundCompat() {
 	}

@@ -52,6 +52,7 @@ public class MineCities implements ModInitializer {
 		com.ajustor.minecities.network.StationNetwork.register();
 		com.ajustor.minecities.network.BuildingNetwork.register();
 		com.ajustor.minecities.network.PlanNetwork.register();
+		com.ajustor.minecities.field.FieldNetwork.register();
 		Guide.register();
 		com.ajustor.minecities.build.Proposals.register();
 	}
