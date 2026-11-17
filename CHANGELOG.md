@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.15.0 — 2026-11-17
+
+### New features
+
+- The builder can work at a crafter placed in the open; he builds slower at level 1 and speeds up as his workshop levels up.
+
+### Fixes
+
+- Zombies, illagers and ravagers now attack citizens.
 ## 1.14.0 — 2026-10-23
 
 ### New features

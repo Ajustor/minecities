@@ -1,5 +1,14 @@
 # Journal des modifications
 
+## 1.15.0 — 2026-11-17
+
+### Nouveautés
+
+- Le bâtisseur peut travailler à une table d'artisan posée en plein air ; il bâtit plus lentement au niveau 1 et accélère avec le niveau de son atelier.
+
+### Corrections
+
+- Les zombies, illageois et ravageurs attaquent désormais les citoyens.
 ## 1.14.0 — 2026-10-23
 
 ### Nouveautés
